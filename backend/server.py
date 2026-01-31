@@ -792,14 +792,17 @@ async def get_song_requests(current_user: dict = Depends(get_current_user)):
     async for request in db.song_requests.find(
         {"event_id": str(current_event["_id"]), "status": "pending"}
     ).sort("votes", -1).limit(50):
+        user_id = str(current_user["_id"])
         requests.append({
             "id": str(request["_id"]),
             "song_title": request["song_title"],
             "artist_name": request["artist_name"],
             "user_name": request["user_name"],
             "votes": request["votes"],
+            "times_requested": request.get("times_requested", 1),
             "requested_at": request["requested_at"],
-            "can_vote": str(current_user["_id"]) not in request.get("voters", [])
+            "can_vote": user_id not in request.get("voters", []),
+            "can_request": user_id not in request.get("requesters", [])
         })
     
     return requests
