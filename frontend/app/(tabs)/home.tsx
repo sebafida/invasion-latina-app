@@ -7,9 +7,11 @@ import {
   TouchableOpacity,
   RefreshControl,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { Stack } from 'expo-router';
 import { theme } from '../../src/config/theme';
 import { useAuthStore } from '../../src/store/authStore';
 import api from '../../src/config/api';
@@ -66,12 +68,43 @@ export default function HomeScreen() {
   };
   
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={loading} onRefresh={loadNextEvent} tintColor={theme.colors.primary} />
-      }
-    >
+    <>
+      {/* ============================================ */}
+      {/* CUSTOM HEADER WITH LOGO */}
+      {/* ============================================ */}
+      {/* TODO: Replace the Ionicons logo with your actual "INVASION LATINA" logo image */}
+      {/* Use: <Image source={require('../../assets/logo-small.png')} style={styles.headerLogo} resizeMode="contain" /> */}
+      <Stack.Screen
+        options={{
+          headerStyle: {
+            backgroundColor: theme.colors.black,
+          },
+          headerTitle: () => (
+            <View style={styles.headerLogoContainer}>
+              <Ionicons name="flame" size={32} color={theme.colors.primary} />
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.headerLogoText}>INVASION</Text>
+                <Text style={styles.headerLogoSubtext}>LATINA</Text>
+              </View>
+            </View>
+          ),
+          headerRight: () => (
+            <TouchableOpacity style={styles.notificationButton}>
+              <Ionicons name="notifications-outline" size={24} color={theme.colors.textPrimary} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      {/* ============================================ */}
+      {/* END CUSTOM HEADER */}
+      {/* ============================================ */}
+      
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={loadNextEvent} tintColor={theme.colors.primary} />
+        }
+      >
       <LinearGradient
         colors={[theme.colors.black, theme.colors.primary + '33', theme.colors.black]}
         style={styles.gradient}
