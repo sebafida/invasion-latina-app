@@ -165,6 +165,54 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xxl,
   },
   
+  // Logo Styles
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.xxl,
+  },
+  logoIconWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: theme.colors.black,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.md,
+    borderWidth: 3,
+    borderColor: theme.colors.primary,
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  logoText: {
+    fontSize: 42,
+    fontWeight: theme.fontWeight.black,
+    color: theme.colors.primary,
+    letterSpacing: 6,
+    textShadowColor: theme.colors.primary,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 15,
+  },
+  logoSubtext: {
+    fontSize: 24,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.secondary,
+    letterSpacing: 8,
+    marginTop: theme.spacing.xs,
+  },
+  logoUnderline: {
+    width: 120,
+    height: 2,
+    backgroundColor: theme.colors.primary,
+    marginTop: theme.spacing.sm,
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+  },
+  
   // Header
   header: {
     marginBottom: theme.spacing.xxl,
