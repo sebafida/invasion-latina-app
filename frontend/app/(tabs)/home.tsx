@@ -8,10 +8,9 @@ import {
   RefreshControl,
   Dimensions,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
-import { useAuthStore } from '../../src/store/authStore';
+import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/config/api';
 
 const { width } = Dimensions.get('window');
