@@ -1,24 +1,30 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, StatusBar } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../src/config/theme';
-import { useAuthStore } from '../src/store/authStore';
 import { Button } from '../src/components/Button';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { isAuthenticated, isLoading, loadUser } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    loadUser();
+    checkAuth();
   }, []);
   
-  useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      // Navigate to main app
-      router.replace('/(tabs)/home');
+  const checkAuth = async () => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        router.replace('/(tabs)/home');
+      }
+    } catch (error) {
+      console.log('Auth check error:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [isAuthenticated, isLoading]);
+  };
   
   if (isLoading) {
     return (
