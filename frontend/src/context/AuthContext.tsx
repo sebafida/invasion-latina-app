@@ -34,17 +34,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       const response = await api.post('/auth/login', { email, password });
-      const { access_token, user_id, name, role } = response.data;
+      const { access_token, id, email: userEmail, name, role, loyalty_points, badges } = response.data;
       
       await AsyncStorage.setItem('auth_token', access_token);
       
       setToken(access_token);
-      setUser({ id: user_id, email, name, role, loyalty_points: 0, badges: [] });
+      setUser({ 
+        id, 
+        email: userEmail, 
+        name, 
+        role, 
+        loyalty_points: loyalty_points || 0, 
+        badges: badges || [] 
+      });
       setIsAuthenticated(true);
-      
-      await loadUser();
     } catch (error: any) {
-      throw new Error(error.response?.data?.detail || 'Login failed');
+      console.error('Login error:', error);
+      throw new Error(error.response?.data?.detail || error.message || 'Login failed');
     } finally {
       setIsLoading(false);
     }
