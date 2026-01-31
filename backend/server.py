@@ -384,7 +384,7 @@ async def firebase_login(token_data: FirebaseTokenData):
             user = user_dict
         
         # Create access token
-        access_token = create_access_token(data={"sub": user["email"]})
+        access_token = create_access_token(data={"sub": str(user["_id"])})
         
         return UserResponse(
             id=str(user["_id"]),
