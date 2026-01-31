@@ -1,30 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../src/config/theme';
+import { useAuth } from '../src/context/AuthContext';
 import { Button } from '../src/components/Button';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated, isLoading } = useAuth();
   
   useEffect(() => {
-    checkAuth();
-  }, []);
-  
-  const checkAuth = async () => {
-    try {
-      const token = await AsyncStorage.getItem('auth_token');
-      if (token) {
-        router.replace('/(tabs)/home');
-      }
-    } catch (error) {
-      console.log('Auth check error:', error);
-    } finally {
-      setIsLoading(false);
+    if (isAuthenticated && !isLoading) {
+      router.replace('/(tabs)/home');
     }
-  };
+  }, [isAuthenticated, isLoading]);
   
   if (isLoading) {
     return (
@@ -38,52 +28,55 @@ export default function WelcomeScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={styles.content}>
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <Text style={styles.logo}>INVASION</Text>
-            <Text style={styles.logoSubtitle}>LATINA</Text>
-            <View style={styles.neonLine} />
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <View style={styles.logoIconWrapper}>
+            <Ionicons name="flame" size={80} color={theme.colors.primary} />
           </View>
+          <Text style={styles.logo}>INVASION</Text>
+          <Text style={styles.logoSubtitle}>LATINA</Text>
+          <View style={styles.neonLine} />
+        </View>
+        
+        {/* Tagline */}
+        <Text style={styles.tagline}>
+          The Biggest Latino-Reggaeton Party in Belgium
+        </Text>
+        
+        {/* Features */}
+        <View style={styles.featuresContainer}>
+          <FeatureItem icon="🎵" text="Request & Vote Songs Live" />
+          <FeatureItem icon="🎟️" text="Buy Tickets Instantly" />
+          <FeatureItem icon="👑" text="VIP Table Booking" />
+          <FeatureItem icon="🛍️" text="Exclusive Merchandise" />
+        </View>
+        
+        {/* CTA Buttons */}
+        <View style={styles.buttonContainer}>
+          <Button
+            title="Get Started"
+            onPress={() => router.push('/auth/register')}
+            variant="primary"
+            size="lg"
+            fullWidth
+          />
           
-          {/* Tagline */}
-          <Text style={styles.tagline}>
-            The Biggest Latino-Reggaeton Party in Belgium
-          </Text>
-          
-          {/* Features */}
-          <View style={styles.featuresContainer}>
-            <FeatureItem icon="🎵" text="Request & Vote Songs Live" />
-            <FeatureItem icon="🎟️" text="Buy Tickets Instantly" />
-            <FeatureItem icon="👑" text="VIP Table Booking" />
-            <FeatureItem icon="🛍️" text="Exclusive Merchandise" />
-          </View>
-          
-          {/* CTA Buttons */}
-          <View style={styles.buttonContainer}>
-            <Button
-              title="Get Started"
-              onPress={() => router.push('/auth/register')}
-              variant="primary"
-              size="lg"
-              fullWidth
-            />
-            
-            <TouchableOpacity
-              style={styles.loginLink}
-              onPress={() => router.push('/auth/login')}
-            >
-              <Text style={styles.loginText}>
-                Already have an account? <Text style={styles.loginTextBold}>Log In</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
-          
-          {/* Venue Info */}
-          <View style={styles.venueInfo}>
-            <Text style={styles.venueText}>📍 Mirano Continental, Brussels</Text>
-            <Text style={styles.venueSubtext}>16 Years of Latin Passion</Text>
-          </View>
-        </ScrollView>
+          <TouchableOpacity
+            style={styles.loginLink}
+            onPress={() => router.push('/auth/login')}
+          >
+            <Text style={styles.loginText}>
+              Already have an account? <Text style={styles.loginTextBold}>Log In</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Venue Info */}
+        <View style={styles.venueInfo}>
+          <Text style={styles.venueText}>📍 Mirano Continental, Brussels</Text>
+          <Text style={styles.venueSubtext}>16 Years of Latin Passion</Text>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -107,23 +100,30 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xxl,
   },
   
-  // Logo
   logoContainer: {
     alignItems: 'center',
     marginBottom: theme.spacing.xl,
   },
+  logoIconWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: theme.colors.cardBackground,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.md,
+    borderWidth: 3,
+    borderColor: theme.colors.primary,
+  },
   logo: {
     fontSize: 56,
-    fontWeight: theme.fontWeight.black,
+    fontWeight: '900' as any,
     color: theme.colors.primary,
     letterSpacing: 4,
-    textShadowColor: theme.colors.primary,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
   },
   logoSubtitle: {
     fontSize: 32,
-    fontWeight: theme.fontWeight.bold,
+    fontWeight: '700' as any,
     color: theme.colors.secondary,
     letterSpacing: 8,
   },
@@ -132,13 +132,8 @@ const styles = StyleSheet.create({
     height: 3,
     backgroundColor: theme.colors.primary,
     marginTop: theme.spacing.md,
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
   },
   
-  // Tagline
   tagline: {
     fontSize: theme.fontSize.lg,
     color: theme.colors.textSecondary,
@@ -147,7 +142,6 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   
-  // Features
   featuresContainer: {
     marginBottom: theme.spacing.xxl,
   },
@@ -168,11 +162,10 @@ const styles = StyleSheet.create({
   featureText: {
     fontSize: theme.fontSize.md,
     color: theme.colors.textPrimary,
-    fontWeight: theme.fontWeight.semibold,
+    fontWeight: '600' as any,
     flex: 1,
   },
   
-  // Buttons
   buttonContainer: {
     marginBottom: theme.spacing.xl,
   },
@@ -186,10 +179,9 @@ const styles = StyleSheet.create({
   },
   loginTextBold: {
     color: theme.colors.primary,
-    fontWeight: theme.fontWeight.bold,
+    fontWeight: '700' as any,
   },
   
-  // Venue
   venueInfo: {
     alignItems: 'center',
     paddingTop: theme.spacing.lg,
@@ -206,7 +198,6 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
   },
   
-  // Loading
   loadingText: {
     color: theme.colors.textPrimary,
     fontSize: theme.fontSize.lg,

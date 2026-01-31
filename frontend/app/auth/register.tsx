@@ -10,14 +10,13 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../../src/config/theme';
-import { useAuthStore } from '../../src/store/authStore';
+import { useAuth } from '../../src/context/AuthContext';
 import { Button } from '../../src/components/Button';
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { register } = useAuthStore();
+  const { register } = useAuth();
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -54,85 +53,80 @@ export default function RegisterScreen() {
   
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={[theme.colors.black, theme.colors.primary + '22', theme.colors.black]}
-        style={styles.gradient}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardView}
-        >
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>Join Invasion Latina</Text>
-              <Text style={styles.subtitle}>Create your account and get ready to party</Text>
-            </View>
-            
-            {/* Form */}
-            <View style={styles.form}>
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Full Name</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="John Doe"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={name}
-                  onChangeText={setName}
-                  autoCapitalize="words"
-                />
-              </View>
-              
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="your@email.com"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-              
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Password</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Min. 6 characters"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                />
-              </View>
-              
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Confirm Password</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Re-enter password"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                />
-              </View>
-              
-              <Button
-                title="Create Account"
-                onPress={handleRegister}
-                loading={loading}
-                fullWidth
-                size="lg"
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Join Invasion Latina</Text>
+            <Text style={styles.subtitle}>Create your account and get ready to party</Text>
+          </View>
+          
+          {/* Form */}
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Full Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="John Doe"
+                placeholderTextColor={theme.colors.textMuted}
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
               />
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </LinearGradient>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="your@email.com"
+                placeholderTextColor={theme.colors.textMuted}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Min. 6 characters"
+                placeholderTextColor={theme.colors.textMuted}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Confirm Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Re-enter password"
+                placeholderTextColor={theme.colors.textMuted}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+            </View>
+            
+            <Button
+              title="Create Account"
+              onPress={handleRegister}
+              loading={loading}
+              fullWidth
+              size="lg"
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -141,9 +135,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.black,
-  },
-  gradient: {
-    flex: 1,
   },
   keyboardView: {
     flex: 1,
@@ -159,7 +150,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: theme.fontSize.xxxl,
-    fontWeight: theme.fontWeight.black,
+    fontWeight: '900' as any,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
   },
@@ -175,7 +166,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.semibold,
+    fontWeight: '600' as any,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
   },

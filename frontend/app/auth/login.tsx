@@ -11,14 +11,14 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
-import { useAuthStore } from '../../src/store/authStore';
+import { useAuth } from '../../src/context/AuthContext';
 import { Button } from '../../src/components/Button';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuthStore();
+  const { login } = useAuth();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,106 +43,80 @@ export default function LoginScreen() {
   
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={[theme.colors.black, theme.colors.primary + '22', theme.colors.black]}
-        style={styles.gradient}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardView}
-        >
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            {/* ============================================ */}
-            {/* LOGO SECTION - REPLACE WITH YOUR ACTUAL LOGO */}
-            {/* ============================================ */}
-            {/* TODO: Replace the Ionicons below with your actual "INVASION LATINA" logo */}
-            {/* Use: <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" /> */}
-            <View style={styles.logoContainer}>
-              <View style={styles.logoIconWrapper}>
-                <Ionicons name="flame" size={80} color={theme.colors.primary} />
-              </View>
-              <Text style={styles.logoText}>INVASION</Text>
-              <Text style={styles.logoSubtext}>LATINA</Text>
-              <View style={styles.logoUnderline} />
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <View style={styles.logoIconWrapper}>
+              <Ionicons name="flame" size={80} color={theme.colors.primary} />
             </View>
-            {/* ============================================ */}
-            {/* END LOGO SECTION */}
-            {/* ============================================ */}
-            
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>Welcome Back</Text>
-              <Text style={styles.subtitle}>Sign in to continue the party</Text>
-            </View>
-            
-            {/* Form */}
-            <View style={styles.form}>
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="your@email.com"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                />
-              </View>
-              
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Password</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your password"
-                  placeholderTextColor={theme.colors.textMuted}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                />
-              </View>
-              
-              <TouchableOpacity style={styles.forgotPassword}>
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-              </TouchableOpacity>
-              
-              <Button
-                title="Sign In"
-                onPress={handleLogin}
-                loading={loading}
-                fullWidth
-                size="lg"
+            <Text style={styles.logoText}>INVASION</Text>
+            <Text style={styles.logoSubtext}>LATINA</Text>
+            <View style={styles.logoUnderline} />
+          </View>
+          
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.subtitle}>Sign in to continue the party</Text>
+          </View>
+          
+          {/* Form */}
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="your@email.com"
+                placeholderTextColor={theme.colors.textMuted}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
               />
-              
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>OR</Text>
-                <View style={styles.dividerLine} />
-              </View>
-              
-              <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialButtonText}>🍎 Continue with Apple</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialButtonText}>🔍 Continue with Google</Text>
-              </TouchableOpacity>
             </View>
             
-            {/* Footer */}
-            <TouchableOpacity
-              style={styles.footer}
-              onPress={() => router.push('/auth/register')}
-            >
-              <Text style={styles.footerText}>
-                Don't have an account? <Text style={styles.footerLink}>Sign Up</Text>
-              </Text>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                placeholderTextColor={theme.colors.textMuted}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+            </View>
+            
+            <TouchableOpacity style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </LinearGradient>
+            
+            <Button
+              title="Sign In"
+              onPress={handleLogin}
+              loading={loading}
+              fullWidth
+              size="lg"
+            />
+          </View>
+          
+          {/* Footer */}
+          <TouchableOpacity
+            style={styles.footer}
+            onPress={() => router.push('/auth/register')}
+          >
+            <Text style={styles.footerText}>
+              Don't have an account? <Text style={styles.footerLink}>Sign Up</Text>
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -151,9 +125,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.black,
-  },
-  gradient: {
-    flex: 1,
   },
   keyboardView: {
     flex: 1,
@@ -165,7 +136,6 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xxl,
   },
   
-  // Logo Styles
   logoContainer: {
     alignItems: 'center',
     marginBottom: theme.spacing.xxl,
@@ -174,30 +144,22 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: theme.colors.black,
+    backgroundColor: theme.colors.cardBackground,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: theme.spacing.md,
     borderWidth: 3,
     borderColor: theme.colors.primary,
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 15,
-    elevation: 10,
   },
   logoText: {
     fontSize: 42,
-    fontWeight: theme.fontWeight.black,
+    fontWeight: '900' as any,
     color: theme.colors.primary,
     letterSpacing: 6,
-    textShadowColor: theme.colors.primary,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 15,
   },
   logoSubtext: {
     fontSize: 24,
-    fontWeight: theme.fontWeight.bold,
+    fontWeight: '700' as any,
     color: theme.colors.secondary,
     letterSpacing: 8,
     marginTop: theme.spacing.xs,
@@ -207,19 +169,14 @@ const styles = StyleSheet.create({
     height: 2,
     backgroundColor: theme.colors.primary,
     marginTop: theme.spacing.sm,
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
   },
   
-  // Header
   header: {
     marginBottom: theme.spacing.xxl,
   },
   title: {
     fontSize: theme.fontSize.xxxl,
-    fontWeight: theme.fontWeight.black,
+    fontWeight: '900' as any,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
   },
@@ -228,7 +185,6 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   
-  // Form
   form: {
     marginBottom: theme.spacing.xl,
   },
@@ -237,7 +193,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.semibold,
+    fontWeight: '600' as any,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
   },
@@ -257,43 +213,9 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     color: theme.colors.primary,
     fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.semibold,
+    fontWeight: '600' as any,
   },
   
-  // Divider
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: theme.spacing.xl,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: theme.colors.elevated,
-  },
-  dividerText: {
-    color: theme.colors.textMuted,
-    marginHorizontal: theme.spacing.md,
-    fontSize: theme.fontSize.sm,
-  },
-  
-  // Social
-  socialButton: {
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.elevated,
-  },
-  socialButtonText: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.semibold,
-  },
-  
-  // Footer
   footer: {
     alignItems: 'center',
     marginTop: theme.spacing.xl,
@@ -304,6 +226,6 @@ const styles = StyleSheet.create({
   },
   footerLink: {
     color: theme.colors.primary,
-    fontWeight: theme.fontWeight.bold,
+    fontWeight: '700' as any,
   },
 });
