@@ -319,10 +319,11 @@ const styles = StyleSheet.create({
   
   // Buy Button
   buyButton: {
+    backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.md,
     overflow: 'hidden',
   },
-  buyButtonGradient: {
+  buyButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
