@@ -9,10 +9,8 @@ import {
   RefreshControl,
   Alert,
   Switch,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Location from 'expo-location';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/config/api';
@@ -35,13 +33,9 @@ export default function DJRequestsScreen() {
   const [loading, setLoading] = useState(false);
   const [songTitle, setSongTitle] = useState('');
   const [artistName, setArtistName] = useState('');
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [accessGranted, setAccessGranted] = useState(false);
-  const [accessMessage, setAccessMessage] = useState('');
-  const [devMode, setDevMode] = useState(false);
+  const [devMode, setDevMode] = useState(true); // Activé par défaut pour les tests
 
   useEffect(() => {
-    checkLocationPermission();
     loadRequests();
     
     // Auto-refresh every 5 seconds
@@ -51,85 +45,6 @@ export default function DJRequestsScreen() {
     
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    if (location || devMode) {
-      checkAccess();
-    }
-  }, [location, devMode]);
-
-  const checkLocationPermission = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      
-      if (status !== 'granted') {
-        setAccessMessage('Permission de localisation refusée');
-        return;
-      }
-
-      const currentLocation = await Location.getCurrentPositionAsync({});
-      setLocation(currentLocation);
-    } catch (error) {
-      console.error('Location error:', error);
-      setAccessMessage('Erreur de localisation');
-    }
-  };
-
-  const checkAccess = () => {
-    if (devMode) {
-      setAccessGranted(true);
-      setAccessMessage('🔧 Mode Développement Activé');
-      return;
-    }
-
-    if (!location) {
-      setAccessGranted(false);
-      setAccessMessage('Localisation requise');
-      return;
-    }
-
-    // Venue coordinates: Mirano Continental
-    const venueLat = 50.8486;
-    const venueLng = 4.3722;
-    const maxDistance = 50; // 50 meters
-
-    const distance = calculateDistance(
-      location.coords.latitude,
-      location.coords.longitude,
-      venueLat,
-      venueLng
-    );
-
-    // Check event hours (23:00 - 06:00)
-    const currentHour = new Date().getHours();
-    const isEventHours = currentHour >= 23 || currentHour < 6;
-
-    if (distance > maxDistance) {
-      setAccessGranted(false);
-      setAccessMessage(`📍 Vous devez être au venue (${Math.round(distance)}m)`);
-    } else if (!isEventHours) {
-      setAccessGranted(false);
-      setAccessMessage('⏰ Requêtes actives de 23h à 6h');
-    } else {
-      setAccessGranted(true);
-      setAccessMessage(`✅ Accès autorisé (${Math.round(distance)}m du venue)`);
-    }
-  };
-
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371000; // Earth radius in meters
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
-  const toRad = (value: number): number => {
-    return (value * Math.PI) / 180;
-  };
 
   const loadRequests = async () => {
     try {
@@ -146,30 +61,26 @@ export default function DJRequestsScreen() {
       return;
     }
 
-    if (!accessGranted && !devMode) {
-      Alert.alert('Accès Refusé', accessMessage);
-      return;
-    }
-
     try {
       setLoading(true);
       
+      // Use mock coordinates (Mirano Continental)
       const requestData = {
         song_title: songTitle.trim(),
         artist_name: artistName.trim(),
-        latitude: devMode ? '50.8486' : location?.coords.latitude.toString(),
-        longitude: devMode ? '4.3722' : location?.coords.longitude.toString(),
+        latitude: '50.8486',
+        longitude: '4.3722',
       };
 
-      await api.post('/dj/request-song', requestData);
+      const response = await api.post('/dj/request-song', requestData);
       
-      Alert.alert('Succès', 'Chanson demandée! 🎵');
+      Alert.alert('Succès', response.data.message || 'Chanson demandée! 🎵');
       setSongTitle('');
       setArtistName('');
       loadRequests();
     } catch (error: any) {
       const message = error.response?.data?.detail || 'Erreur lors de la demande';
-      Alert.alert('Erreur', message);
+      Alert.alert('Info', message);
     } finally {
       setLoading(false);
     }
@@ -178,11 +89,11 @@ export default function DJRequestsScreen() {
   const handleVote = async (requestId: string) => {
     try {
       await api.post(`/dj/vote/${requestId}`);
-      Alert.alert('Vote enregistré! 👍');
+      Alert.alert('Succès', 'Vote enregistré! 👍');
       loadRequests();
     } catch (error: any) {
       const message = error.response?.data?.detail || 'Erreur lors du vote';
-      Alert.alert('Erreur', message);
+      Alert.alert('Info', message);
     }
   };
 
@@ -204,17 +115,9 @@ export default function DJRequestsScreen() {
             <Text style={styles.title}>🎵 DJ Requests</Text>
             <Text style={styles.subtitle}>Vote pour tes sons préférés</Text>
           </View>
-          {user?.role === 'admin' && (
-            <TouchableOpacity 
-              style={styles.adminButton}
-              onPress={() => Alert.alert('Dashboard DJ', 'Fonctionnalité en cours')}
-            >
-              <Ionicons name="settings" size={24} color={theme.colors.primary} />
-            </TouchableOpacity>
-          )}
         </View>
 
-        {/* Dev Mode Toggle (Admin only) */}
+        {/* Dev Mode (Always visible for now) */}
         {user?.role === 'admin' && (
           <View style={styles.devModeCard}>
             <View style={styles.devModeHeader}>
@@ -223,7 +126,7 @@ export default function DJRequestsScreen() {
             </View>
             <View style={styles.devModeToggle}>
               <Text style={styles.devModeText}>
-                Bypass geofencing & horaires
+                Bypass geofencing & horaires (activé)
               </Text>
               <Switch
                 value={devMode}
@@ -235,17 +138,12 @@ export default function DJRequestsScreen() {
           </View>
         )}
 
-        {/* Access Status */}
-        <View style={[
-          styles.statusCard,
-          accessGranted ? styles.statusGranted : styles.statusDenied
-        ]}>
-          <Ionicons
-            name={accessGranted ? 'checkmark-circle' : 'alert-circle'}
-            size={24}
-            color={accessGranted ? theme.colors.success : theme.colors.error}
-          />
-          <Text style={styles.statusText}>{accessMessage}</Text>
+        {/* Status */}
+        <View style={styles.statusCard}>
+          <Ionicons name="checkmark-circle" size={24} color={theme.colors.success} />
+          <Text style={styles.statusText}>
+            {devMode ? '🔧 Mode Test Activé' : '✅ Prêt à demander'}
+          </Text>
         </View>
 
         {/* Request Form */}
@@ -260,7 +158,6 @@ export default function DJRequestsScreen() {
               placeholderTextColor={theme.colors.textMuted}
               value={songTitle}
               onChangeText={setSongTitle}
-              editable={accessGranted || devMode}
             />
           </View>
 
@@ -272,17 +169,13 @@ export default function DJRequestsScreen() {
               placeholderTextColor={theme.colors.textMuted}
               value={artistName}
               onChangeText={setArtistName}
-              editable={accessGranted || devMode}
             />
           </View>
 
           <TouchableOpacity
-            style={[
-              styles.submitButton,
-              (!accessGranted && !devMode) && styles.submitButtonDisabled
-            ]}
+            style={styles.submitButton}
             onPress={handleRequestSong}
-            disabled={loading || (!accessGranted && !devMode)}
+            disabled={loading}
           >
             <Text style={styles.submitButtonText}>
               {loading ? 'Envoi...' : 'Demander 🎵'}
@@ -380,14 +273,6 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
   },
-  adminButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.cardBackground,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
 
   // Dev Mode
   devModeCard: {
@@ -429,14 +314,8 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
     borderWidth: 2,
-  },
-  statusGranted: {
     backgroundColor: theme.colors.success + '20',
     borderColor: theme.colors.success,
-  },
-  statusDenied: {
-    backgroundColor: theme.colors.error + '20',
-    borderColor: theme.colors.error,
   },
   statusText: {
     flex: 1,
@@ -482,10 +361,6 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     alignItems: 'center',
     marginTop: theme.spacing.sm,
-  },
-  submitButtonDisabled: {
-    backgroundColor: theme.colors.textMuted,
-    opacity: 0.5,
   },
   submitButtonText: {
     fontSize: theme.fontSize.md,
