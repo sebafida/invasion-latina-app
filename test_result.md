@@ -139,6 +139,18 @@ backend:
         agent: "user"
         comment: "Login works correctly with credentials admin@invasionlatina.be / admin123"
 
+  - task: "DJ Request System - Song requests with geofencing and voting"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py, /app/frontend/app/(tabs)/dj.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented complete DJ Request system with: location permission, geofencing (50m around Mirano), event hours check (23h-6h), song request form, real-time voting, auto-refresh every 5s. Added dev mode toggle for admin to bypass restrictions for testing. Needs backend and frontend testing."
+
 frontend:
   - task: "Home screen - Display event countdown and info"
     implemented: true
