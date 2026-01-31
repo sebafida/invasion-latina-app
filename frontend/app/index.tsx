@@ -1,28 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../src/config/theme';
-import { useAuth } from '../src/context/AuthContext';
 import { Button } from '../src/components/Button';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
-  
-  useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      router.replace('/(tabs)/home');
-    }
-  }, [isAuthenticated, isLoading]);
-  
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    );
-  }
   
   return (
     <View style={styles.container}>
