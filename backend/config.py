@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     # Venue Geofencing
     venue_latitude: float = 50.8486
     venue_longitude: float = 4.3722
-    venue_radius_meters: float = 100.0
+    venue_radius_meters: float = 50.0  # 50 meters around Mirano Continental
     
     # Event Timing
     event_start_hour: int = 23  # 11 PM
