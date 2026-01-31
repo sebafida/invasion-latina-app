@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     # MongoDB
     mongo_url: str = "mongodb://localhost:27017"
     mongo_db: str = "invasion_latina"
+    db_name: str = "invasion_latina"  # For backward compatibility
     
     # Stripe Payment
     # TODO: Replace with your PRODUCTION keys from https://dashboard.stripe.com/apikeys
