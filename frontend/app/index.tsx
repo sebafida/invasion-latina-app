@@ -94,9 +94,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.black,
   },
-  gradient: {
-    flex: 1,
-  },
   content: {
     flexGrow: 1,
     justifyContent: 'center',
