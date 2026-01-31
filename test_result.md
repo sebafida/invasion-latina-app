@@ -115,7 +115,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "user"
@@ -123,6 +123,9 @@ backend:
       - working: true
         agent: "main"
         comment: "Created missing /api/events/next endpoint. Returns next upcoming event or mock data if none exists. Tested with curl - returns valid JSON response with event data including name, date, venue, lineup, ticket categories."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING PASSED - P0 bug fix verified. Endpoint returns correct JSON structure with all required fields: id, name, description, event_date, venue_name, venue_address, lineup (array), ticket_categories (array), status. Response time: 0.066s. Event data: 'Invasion Latina - New Year Edition' on 2026-02-07T23:00:00 at Mirano Continental with 2 lineup artists and 3 ticket categories. No authentication required (public endpoint)."
 
   - task: "User Authentication - Login/Logout"
     implemented: true
