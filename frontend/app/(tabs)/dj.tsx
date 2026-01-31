@@ -23,8 +23,10 @@ interface SongRequest {
   artist_name: string;
   user_name: string;
   votes: number;
+  times_requested: number;
   requested_at: string;
   can_vote: boolean;
+  can_request: boolean;
 }
 
 export default function DJRequestsScreen() {
