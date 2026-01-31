@@ -19,7 +19,11 @@ import uuid
 # Import our modules
 from config import settings, is_using_mock_keys
 from database import connect_to_mongo, close_mongo_connection, get_database
-from models import *
+from models import (
+    UserCreate, UserLogin, UserBase, Event, Ticket, Booking, 
+    SongRequest, Product, Order, VIPBooking, Media
+)
+from pydantic import BaseModel
 from auth import (
     hash_password, verify_password, create_access_token,
     get_current_user, get_current_admin, verify_firebase_token
