@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.black,
   },
   
-  gradient: {
+  content: {
     flex: 1,
     paddingBottom: 40,
   },
