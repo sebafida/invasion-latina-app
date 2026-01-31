@@ -31,6 +31,59 @@ from utils import (
     generate_ticket_code, generate_qr_data
 )
 
+# ============ RESPONSE MODELS ============
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    name: str
+    role: str
+    loyalty_points: int = 0
+    badges: List[str] = []
+    friends: List[str] = []
+    language: str = "en"
+    access_token: Optional[str] = None
+
+class EventResponse(BaseModel):
+    id: str
+    name: str
+    description: str
+    event_date: datetime
+    venue_name: str
+    venue_address: str
+    lineup: List[Dict[str, str]] = []
+    ticket_categories: List[Dict[str, Any]] = []
+    status: str
+
+class TicketResponse(BaseModel):
+    id: str
+    event_id: str
+    user_id: str
+    ticket_category: str
+    price: float
+    ticket_code: str
+    qr_data: str
+    status: str
+    purchase_date: datetime
+
+class FirebaseTokenData(BaseModel):
+    firebase_token: str
+
+class TicketPurchase(BaseModel):
+    event_id: str
+    ticket_category: str
+    quantity: int = 1
+    payment_method_id: str
+
+class EventCreate(BaseModel):
+    name: str
+    description: str
+    event_date: datetime
+    venue_name: str = "Mirano Continental"
+    venue_address: str = "Chaussée de Louvain 38, 1210 Brussels"
+    lineup: List[Dict[str, str]] = []
+    ticket_categories: List[Dict[str, Any]] = []
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
