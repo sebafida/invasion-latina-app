@@ -33,8 +33,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      console.log('Login attempt - API URL:', api.defaults.baseURL);
       const response = await api.post('/auth/login', { email, password });
+      console.log('Login response received:', response.status);
+      console.log('Response data keys:', Object.keys(response.data));
+      
       const { access_token, id, email: userEmail, name, role, loyalty_points, badges } = response.data;
+      
+      if (!access_token || !id) {
+        throw new Error('Invalid response from server');
+      }
       
       await AsyncStorage.setItem('auth_token', access_token);
       
@@ -48,8 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         badges: badges || [] 
       });
       setIsAuthenticated(true);
+      console.log('Login successful!');
     } catch (error: any) {
       console.error('Login error:', error);
+      console.error('Error details:', error.message, error.code);
       throw new Error(error.response?.data?.detail || error.message || 'Login failed');
     } finally {
       setIsLoading(false);
