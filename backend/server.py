@@ -725,18 +725,37 @@ async def request_song(
     if not current_event:
         raise HTTPException(status_code=404, detail="No active event found")
     
-    # Check for duplicate requests
+    # Check for duplicate requests - if exists, increment times_requested and add vote
     existing = await db.song_requests.find_one({
         "event_id": str(current_event["_id"]),
         "song_title": song_data["song_title"],
         "artist_name": song_data["artist_name"],
-        "status": {"$in": ["pending", "played"]}
+        "status": "pending"
     })
     
-    if existing:
-        raise HTTPException(status_code=400, detail="This song has already been requested")
+    user_id = str(current_user["_id"])
     
-    # Create song request
+    if existing:
+        # Song already requested - check if user already requested it
+        if user_id in existing.get("requesters", []):
+            raise HTTPException(status_code=400, detail="Vous avez déjà demandé cette chanson")
+        
+        # Increment times_requested and add user as requester and voter
+        await db.song_requests.update_one(
+            {"_id": existing["_id"]},
+            {
+                "$inc": {"times_requested": 1, "votes": 1},
+                "$push": {"requesters": user_id, "voters": user_id}
+            }
+        )
+        
+        return {
+            "message": "Demande ajoutée! La chanson a maintenant " + str(existing.get("times_requested", 1) + 1) + " demandes",
+            "request_id": str(existing["_id"]),
+            "song": f"{song_data['song_title']} by {song_data['artist_name']}"
+        }
+    
+    # Create new song request
     request_dict = {
         "user_id": str(current_user["_id"]),
         "user_name": current_user["name"],
@@ -745,7 +764,9 @@ async def request_song(
         "artist_name": song_data["artist_name"],
         "requested_at": datetime.utcnow(),
         "votes": 1,  # User's own vote
-        "voters": [str(current_user["_id"])],
+        "voters": [user_id],
+        "requesters": [user_id],  # Track who requested
+        "times_requested": 1,  # Initial request count
         "status": "pending"
     }
     
