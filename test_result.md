@@ -199,8 +199,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "API endpoint /api/events/next - Get next upcoming event"
-    - "Home screen - Display event countdown and info"
+    - "DJ Request System - Song requests with geofencing and voting"
+    - "DJ Request Screen - Song requests, voting, geofencing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -222,6 +222,38 @@ agent_communication:
       - Vérifier que le frontend charge maintenant les données correctement
       
       Credentials de test: admin@invasionlatina.be / admin123
+      
+  - agent: "main"
+    message: |
+      Feature STAR implémentée: Système DJ Request complet 🎵
+      
+      Backend (déjà existant):
+      - Endpoints: POST /api/dj/request-song, GET /api/dj/requests, POST /api/dj/vote/{request_id}
+      - Geofencing: 50m autour du Mirano Continental (50.8486, 4.3722) - MODIFIÉ de 100m à 50m
+      - Event hours: 23h-6h (validation backend)
+      - Anti-duplicate: vérifie si chanson déjà demandée
+      - 1 vote par utilisateur par chanson
+      
+      Frontend (/app/frontend/app/(tabs)/dj.tsx):
+      - Interface complète créée from scratch
+      - Demande de permission de localisation (iOS + Android)
+      - Détection GPS automatique
+      - Badge de statut (accès autorisé/refusé avec distance et raison)
+      - Formulaire de requête (titre + artiste)
+      - Liste en temps réel des requêtes triées par votes
+      - Auto-refresh toutes les 5 secondes
+      - Système de vote (bouton désactivé si déjà voté)
+      - **MODE DEV**: Toggle pour admin pour bypass geofencing + horaires (pour tests)
+      
+      Configuration:
+      - Ajouté expo-location package
+      - Permissions iOS: NSLocationWhenInUseUsageDescription dans app.json
+      - Permissions Android: ACCESS_FINE_LOCATION + ACCESS_COARSE_LOCATION dans app.json
+      - Config backend: venue_radius_meters changé à 50.0 dans config.py
+      
+      Prochaine étape:
+      - Tester le backend DJ avec deep_testing_backend_v2
+      - User teste le frontend sur iPhone avec MODE DEV activé
   - agent: "testing"
     message: |
       ✅ BACKEND TESTING COMPLETED - P0 BUG FIX VERIFIED
