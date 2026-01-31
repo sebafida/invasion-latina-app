@@ -573,11 +573,25 @@ const styles = StyleSheet.create({
   requestArtist: {
     fontSize: theme.fontSize.sm,
     color: theme.colors.textSecondary,
-    marginBottom: 2,
+    marginBottom: 4,
+  },
+  requestMetadata: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   requestUser: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.textMuted,
+  },
+  metadataSeparator: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textMuted,
+    marginHorizontal: theme.spacing.xs,
+  },
+  requestTimesRequested: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.neonPink,
   },
   voteButton: {
     backgroundColor: theme.colors.primary,
