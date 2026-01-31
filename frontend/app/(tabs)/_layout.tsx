@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
@@ -39,6 +40,25 @@ export default function TabLayout() {
           title: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
+          ),
+          // ============================================
+          // CUSTOM HEADER WITH LOGO
+          // ============================================
+          // TODO: Replace with actual logo image
+          // Use: headerTitle: () => <Image source={require('../../assets/logo-header.png')} style={styles.headerLogo} resizeMode="contain" />
+          headerTitle: () => (
+            <View style={styles.headerLogoContainer}>
+              <Ionicons name="flame" size={28} color={theme.colors.primary} />
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.headerLogoText}>INVASION</Text>
+                <Text style={styles.headerLogoSubtext}>LATINA</Text>
+              </View>
+            </View>
+          ),
+          headerRight: () => (
+            <TouchableOpacity style={styles.notificationButton}>
+              <Ionicons name="notifications-outline" size={24} color={theme.colors.textPrimary} />
+            </TouchableOpacity>
           ),
         }}
       />
@@ -81,3 +101,28 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  headerLogoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerTextContainer: {
+    marginLeft: theme.spacing.sm,
+  },
+  headerLogoText: {
+    fontSize: 14,
+    fontWeight: '900' as any,
+    color: theme.colors.primary,
+    letterSpacing: 2,
+  },
+  headerLogoSubtext: {
+    fontSize: 9,
+    fontWeight: '700' as any,
+    color: theme.colors.secondary,
+    letterSpacing: 3,
+  },
+  notificationButton: {
+    marginRight: theme.spacing.md,
+  },
+});
