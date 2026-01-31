@@ -52,6 +52,23 @@ export default function LoginScreen() {
           style={styles.keyboardView}
         >
           <ScrollView contentContainerStyle={styles.scrollContent}>
+            {/* ============================================ */}
+            {/* LOGO SECTION - REPLACE WITH YOUR ACTUAL LOGO */}
+            {/* ============================================ */}
+            {/* TODO: Replace the Ionicons below with your actual "INVASION LATINA" logo */}
+            {/* Use: <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" /> */}
+            <View style={styles.logoContainer}>
+              <View style={styles.logoIconWrapper}>
+                <Ionicons name="flame" size={80} color={theme.colors.primary} />
+              </View>
+              <Text style={styles.logoText}>INVASION</Text>
+              <Text style={styles.logoSubtext}>LATINA</Text>
+              <View style={styles.logoUnderline} />
+            </View>
+            {/* ============================================ */}
+            {/* END LOGO SECTION */}
+            {/* ============================================ */}
+            
             {/* Header */}
             <View style={styles.header}>
               <Text style={styles.title}>Welcome Back</Text>
