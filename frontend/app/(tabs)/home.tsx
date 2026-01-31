@@ -71,10 +71,7 @@ export default function HomeScreen() {
         <RefreshControl refreshing={loading} onRefresh={loadNextEvent} tintColor={theme.colors.primary} />
       }
     >
-      <LinearGradient
-        colors={[theme.colors.black, theme.colors.primary + '33', theme.colors.black]}
-        style={styles.gradient}
-      >
+      <View style={styles.content}>
         {/* Hero Section */}
         <View style={styles.hero}>
           <Text style={styles.greeting}>Welcome back,</Text>
