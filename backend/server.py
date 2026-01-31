@@ -316,7 +316,7 @@ async def register(user_data: UserCreate):
     user_dict["_id"] = result.inserted_id
     
     # Create access token
-    access_token = create_access_token(data={"sub": user_data.email})
+    access_token = create_access_token(data={"sub": str(result.inserted_id)})
     
     return UserResponse(
         id=str(result.inserted_id),
