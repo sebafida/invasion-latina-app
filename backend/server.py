@@ -443,6 +443,64 @@ async def get_events(status: Optional[str] = Query(None)):
     
     return events
 
+@app.get("/api/events/next")
+async def get_next_event():
+    """Get the next upcoming event"""
+    db = get_database()
+    from datetime import datetime
+    
+    # Find the next event that hasn't happened yet
+    next_event = await db.events.find_one(
+        {
+            "event_date": {"$gte": datetime.now()},
+            "status": "published"
+        },
+        sort=[("event_date", 1)]
+    )
+    
+    if not next_event:
+        # If no upcoming event, return the most recent one
+        next_event = await db.events.find_one(
+            sort=[("event_date", -1)]
+        )
+    
+    if not next_event:
+        # If still no event found, return a mock event
+        return {
+            "event": {
+                "id": "mock-event-001",
+                "name": "Invasion Latina - Summer Edition",
+                "description": "The biggest reggaeton party in Belgium!",
+                "event_date": datetime(2025, 7, 15, 22, 0, 0).isoformat(),
+                "venue_name": "Spirito Brussels",
+                "venue_address": "Rue de Stassart 18, 1050 Bruxelles",
+                "lineup": [
+                    {"name": "DJ Reggaeton King", "role": "Main Stage"},
+                    {"name": "MC Latino", "role": "Host"},
+                    {"name": "DJ Perreo", "role": "VIP Lounge"}
+                ],
+                "ticket_categories": [
+                    {"name": "Standard", "price": 20.0, "available": True},
+                    {"name": "VIP", "price": 40.0, "available": True}
+                ],
+                "status": "published"
+            }
+        }
+    
+    return {
+        "event": {
+            "id": str(next_event["_id"]),
+            "name": next_event["name"],
+            "description": next_event["description"],
+            "event_date": next_event["event_date"].isoformat() if isinstance(next_event["event_date"], datetime) else next_event["event_date"],
+            "venue_name": next_event["venue_name"],
+            "venue_address": next_event["venue_address"],
+            "lineup": next_event.get("lineup", []),
+            "ticket_categories": next_event.get("ticket_categories", []),
+            "status": next_event["status"]
+        }
+    }
+
 @app.get("/api/events/{event_id}", response_model=EventResponse)
 async def get_event(event_id: str):
     """Get specific event by ID"""
