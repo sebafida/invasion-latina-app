@@ -32,11 +32,7 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient
-        colors={[theme.colors.black, theme.colors.primary + '33', theme.colors.black]}
-        style={styles.gradient}
-      >
-        <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
           {/* Logo */}
           <View style={styles.logoContainer}>
             <Text style={styles.logo}>INVASION</Text>
