@@ -1,0 +1,180 @@
+<analysis>
+<original_problem_statement>
+The user wants to build a premium native mobile application for Invasion Latina, a major nightlife event in Belgium. The app should be a full build, not phased, and include the following core features:
+- **Events &amp; Ticketing:** Countdown to events, event info, ticketing with Stripe/Bancontact/Apple/Google Pay, QR codes, and offline ticket access.
+- **Live DJ Request System:** A star feature for real-time song requests and upvoting, geofenced to the venue and active only during event hours. Includes a DJ/Admin dashboard.
+- **VIP Table Booking:** A form-based request and confirmation flow for booking tables and bottle service.
+- **Merchandising:** An e-commerce section for apparel with options for home delivery or in-person pickup.
+- **Social &amp; Media:** Photo galleries with a Tag Yourself feature, aftermovie video player, and social feeds.
+- **Technical Specs:** Must support 2,000 concurrent users, use a real-time backend (Firebase was suggested), and be multi-lingual (French, Spanish, Dutch).
+
+The user has specified to use MOCK data for Stripe and Firebase integrations for now, and provided coordinates for geofencing and mock admin credentials.
+</original_problem_statement>
+**User's preferred language**: French (fr). The user and agent are conversing in French. The next agent MUST respond in French.
+
+**what currently exists?**
+A functional Expo (SDK 54) mobile app skeleton connected to a FastAPI/MongoDB backend. The app has a basic structure with tab navigation. The user authentication flow (Login/Logout) is working using a simple React Context, and the user is successfully logged in. After login, the home screen loads but displays an error message at the bottom because an API call to fetch event data is failing with a 400 Bad Request. The backend has mock endpoints for most features, and the connection between the frontend and backend via the Expo tunnel is established and working for the login endpoint.
+
+**Last working item**:
+- Last item agent was working: The agent was debugging a 400 Bad Request error that appears on the Home screen immediately after a successful user login. This error prevents event data from being loaded and displayed. The agent had just confirmed the user's report and was about to investigate the backend logs.
+- Status: IN PROGRESS
+- Agent Testing Done: N
+- Which testing method agent to use? backend testing agent. The error is an API , so the backend is the primary point of failure. The agent should first inspect the backend logs and the relevant API endpoint in  and then potentially use  to replicate the error.
+- User Testing Done: Y
+
+**All Pending/In progress Issue list**:
+- Issue 1: Home screen data fails to load post-login (P0)
+
+Issues Detail:
+- Issue 1:
+- **Description**: After a user successfully logs in, they are redirected to the Home screen. However, the screen fails to display dynamic content (like the event countdown) and shows an error toast, which the user's screenshot indicates is due to a 400 Bad Request from the API.
+- **Attempted fixes**: No fixes have been attempted yet. The agent had just acknowledged the user's report.
+- **Next debug checklist**:
+    1. Inspect the backend service logs (==> Press Ctrl-C to exit <==
+TP/1.1" 200 OK
+INFO:     127.0.0.1:39686 - "GET /api/products HTTP/1.1" 200 OK
+⚠️  WARNING: Using MOCK API keys. Replace with production keys in .env file!
+INFO:     127.0.0.1:38370 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56414 - "POST /api/auth/login HTTP/1.1" 200 OK
+⚠️  WARNING: Using MOCK API keys. Replace with production keys in .env file!
+INFO:     10.64.131.204:33700 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.64.131.204:60736 - "HEAD /api/health HTTP/1.1" 405 Method Not Allowed
+INFO:     10.64.129.7:42648 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     10.64.129.7:49732 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.64.136.226:51522 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.64.131.206:37552 - "GET /api/auth/me HTTP/1.1" 500 Internal Server Error
+INFO:     10.64.131.202:45588 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.64.136.226:33924 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     10.64.129.7:59432 - "GET /api/events/next HTTP/1.1" 400 Bad Request
+⚠️  WARNING: Using MOCK API keys. Replace with production keys in .env file!) to find the exact stack trace for the  on the endpoint that serves event data (likely  or similar).
+    2. Examine the corresponding route handler in  to understand what logic could trigger a 400 error (e.g., invalid request format, missing parameters, database query issue).
+    3. Examine the frontend API call in  to verify if the request is being sent correctly.
+    4. Use  to manually send a request to the failing endpoint to replicate and debug the issue in isolation.
+- **Why fix this issue and what will be achieved with the fix?** The Home screen is the main entry point after login. Fixing this will make the app functional and display critical event information to the user.
+- **Status**: NOT STARTED
+- **Is recurring issue?** N
+- **Should Test frontend/backend/both after fix?** Both. First, test the backend API endpoint to ensure it returns a 200 status with valid data. Then, verify on the frontend that the data is correctly parsed and displayed, and the error is gone.
+- **Blocked on other issue**: None
+
+**In progress Task List**:
+There are no tasks in progress; the current focus is on fixing the P0 bug.
+
+**Upcoming and Future Tasks**
+Upcoming Tasks:
+- **P0: Implement Star Feature: Live DJ Request System**: Build the geofenced, real-time song request and voting system. This includes the user-facing interface and the DJ's admin dashboard. (, new backend routes)
+- **P1: Implement Ticketing Flow**: Integrate Stripe (mock for now) to handle ticket purchases, generate QR codes, and ensure tickets are accessible offline. (, new backend routes)
+- **P1: Implement VIP Table Booking**: Create the form and workflow for users to request VIP tables. ( or new screen, new backend routes)
+
+Future Tasks:
+- **P2: Implement Merchandising Shop**: Build the product catalog, shopping cart, and checkout flow. (, new backend routes)
+- **P2: Implement Media &amp; Social Features**: Create the photo galleries, Tag Yourself functionality, and video player for aftermovies. (New screens)
+- **P3: Replace Mock Integrations**: Swap out the mock Firebase and Stripe logic with real SDKs and API keys once provided by the user.
+- **P3: Multi-language Support**: Add the infrastructure to toggle between French, Spanish, and Dutch.
+
+**Completed work in this session**
+- **Project Scaffolding**: Set up a full-stack project with a FastAPI backend and an Expo (SDK 54) frontend.
+- **Backend Foundation**: Created a  with mock API endpoints for most features, including authentication.
+- **Frontend Structure**: Established a file-based routing structure using Expo Router with a main Tab Navigator.
+- **User Authentication**: Implemented a complete and working login/logout flow using React Context (). The app correctly handles user state.
+- **Dependency Hell Resolution**: Successfully navigated and resolved numerous critical dependency conflicts involving React versions (18 vs. 19), Expo SDKs (53 vs. 54), and various libraries to achieve a stable, working build on the user's iPhone.
+- **API Connectivity**: Fixed frontend API configuration to correctly connect to the backend service via the Expo tunnel.
+- **UI Placeholders**: Added placeholder screens for all main tabs and integrated a placeholder logo on the login screen.
+
+- Recently completed:
+  - User Login and Authentication Flow (DONE)
+  - Project upgrade to stable Expo SDK 54 (DONE)
+  - Fixed API connection issues from mobile (DONE)
+
+**Earlier issues found/mentioned but not fixed**
+- **Technical Debt from Debugging**: To achieve stability, several modern libraries were removed:
+    -  and : Replaced with a basic React Context. The original plan for more robust state management is on hold.
+    - : Removed entirely to fix a rendering error. UI components that used it (like on ) have been simplified and may need redesigning.
+- **Why to solve this issue and what will be achieved with this?**: Re-introducing these libraries (when compatible versions are certain) will improve state management, data caching performance, and UI quality, aligning with modern best practices.
+- **Should Test frontend/backend/both after fix**: Frontend.
+
+**Known issue recurrence from previous fork**
+- **Issue recurrence in previous fork**:
+    1.  **Stubborn Caching**: Metro (the Expo bundler) and the Expo Go app on the user's device have extremely persistent caches. This repeatedly caused old code to run, leading to  errors and features appearing broken even after a fix was implemented.
+    2.  ****: This error occurred twice because the  was not placed at the absolute root of the application tree initially.
+    3.  ** Error**: This error occurred after the package was removed, as its usage was not cleaned from all components.
+- **Recurrence count**: High (Caching issue was constant), Medium (AuthProvider and LinearGradient issues happened twice).
+- **Status**: RESOLVED (but the agent must be aware of the caching issue).
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Frontend**: Expo (SDK 54), React Native, React 19, Expo Router (File-based routing)
+-   **Backend**: FastAPI, Python
+-   **Database**: MongoDB
+-   **State Management**: Basic React Context (for authentication)
+-   **Architecture**: Monorepo-style structure with  and  directories.
+
+**key DB schema**
+- **users**: The  collection is implicitly used for authentication. The schema contains at least  and .
+
+**changes in tech stack**
+- The stack was stabilized to **Expo SDK 54** with **React 19.1.0** and **React Native 0.81.5**.
+- State management was simplified from a planned  +  stack to a basic **React Context** for authentication to resolve dependency issues.
+
+**All files of reference**
+-   : Defines the Expo SDK version (54) and exposes the backend URL to the app via . CRITICAL for API calls.
+-   : Defines all frontend dependencies. The versions here are stable and working.
+-   : **The root layout**. It wraps the entire application in the , which was a key fix for authentication context errors.
+-   : Contains the core logic for , , and storing the user session. It's where the API call for login is made.
+-   : Configures the global Axios instance and sets the  from .
+-   : The main FastAPI file containing all API routes, including .
+
+**Areas that need refactoring**
+-   **State Management**: The current  is minimal. A more robust solution like Zustand or React Query should be reintroduced for managing server state and global UI state once the application is more feature-complete.
+-   **UI Components**: Components like  had UI elements () hastily removed to fix build errors. They need to be revisited and redesigned for a polished look.
+
+**Critical Info for New Agent**
+-   **CACHING IS THE ENEMY**: The Metro bundler and Expo Go app have extremely persistent caches. If a change doesn't appear on the user's device, do not assume your code is wrong. The first step is to guide the user through a **full cache clear**:
+    1.  Stop and restart the expo server with : expo: ERROR (not running), then expo: started (the start script includes ).
+    2.  Instruct the user to **force-quit the Expo Go app** on their phone, then re-open it and re-scan the QR code.
+-   **The current stack is stable**: The project is on Expo SDK 54, React 19.1.0, and React Native 0.81.5. Avoid major dependency changes unless necessary.
+-   **Backend URL is configured correctly**: API calls use , which is set in . The login endpoint  is confirmed to be working via this setup.
+
+**documents created in this job**
+- 
+- 
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User (LATEST)**: Confirms the app works but sees an error message at the bottom (screenshot shows home screen loaded but with an error toast). **Status: In Progress**.
+2.  **User**: Confirms the app is still not working after an attempted fix for the  error. **Status: Resolved**.
+3.  **User**: Reports that login works, but now there's a  error on the home screen. **Status: Resolved**.
+4.  **User**: Provides the first page of logs as requested. **Status: Completed**.
+5.  **User**: Provides a screenshot of the Network Error logs. **Status: Completed**.
+6.  **User**: Reports the error has changed to network error with login failed. **Status: Resolved**.
+7.  **User**: Reports login failed continues. **Status: Resolved**.
+8.  **User**: Confirms the app loads but reports login failed. **Status: Resolved**.
+9.  **User**: Reports a render error on login via iPhone. **Status: Resolved**.
+10. **User**: Asks to stay on SDK 53 and points out a login error is still visible in the web preview. **Status: Resolved** (Agent persuaded user to upgrade to SDK 54 to match their Expo Go app).
+
+**Project Health Check:**
+- **Broken**: The home screen is partially broken as it cannot load event data due to a 400 Bad Request API error.
+- **Mocked**: All major external integrations (Stripe, Firebase) and most backend data are currently mocked as per the user's initial instructions.
+
+**3rd Party Integrations**
+- **Stripe**: Planned for payments. Currently MOCKED.
+- **Firebase**: Planned for real-time features (e.g., voting). Currently MOCKED.
+
+**Testing status**
+- Testing agent used after significant changes: NO
+- Troubleshoot agent used after agent stuck in loop: YES (Used to diagnose a React 19 compatibility issue).
+- Test files created: None.
+- Known regressions: The app went through several regressions due to dependency and cache issues, but the final state is the most stable one achieved.
+
+**Credentials to test flow:**
+- **Email**: 
+- **Password**: 
+
+**What agent forgot to execute**
+The agent has been focused on getting a stable, working application base. It has not forgotten any major features, but rather postponed them to solve critical build and runtime errors. The immediate next step (debugging the 400 error) was correctly identified before the session ended.
+
+</analysis>
+<SYS_PROMPT_SEPARATOR>
+<workspace_dir>
+/app
+</workspace_dir>
