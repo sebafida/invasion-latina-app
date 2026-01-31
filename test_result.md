@@ -101,3 +101,97 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  Application mobile premium pour Invasion Latina (événement nightlife majeur en Belgique).
+  Features: Events & Ticketing, Live DJ Request System, VIP Table Booking, Merchandising, Social & Media.
+  Support 2000 utilisateurs concurrents, multi-lingue (FR/ES/NL), backend real-time.
+  Note: Boutique merchandising en suspend pour l'instant.
+
+backend:
+  - task: "API endpoint /api/events/next - Get next upcoming event"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reported 400 Bad Request error on home screen after login"
+      - working: true
+        agent: "main"
+        comment: "Created missing /api/events/next endpoint. Returns next upcoming event or mock data if none exists. Tested with curl - returns valid JSON response with event data including name, date, venue, lineup, ticket categories."
+
+  - task: "User Authentication - Login/Logout"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "user"
+        comment: "Login works correctly with credentials admin@invasionlatina.be / admin123"
+
+frontend:
+  - task: "Home screen - Display event countdown and info"
+    implemented: true
+    working: false
+    file: "/app/frontend/app/(tabs)/home.tsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "Shows error toast due to 400 Bad Request when calling /api/events/next"
+      - working: true
+        agent: "main"
+        comment: "Backend endpoint fixed. Frontend should now successfully load event data. Needs frontend testing to confirm."
+
+  - task: "User Authentication Flow - Login screen"
+    implemented: true
+    working: true
+    file: "/app/frontend/app/auth/login.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "user"
+        comment: "Login flow working, user can authenticate successfully"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "API endpoint /api/events/next - Get next upcoming event"
+    - "Home screen - Display event countdown and info"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: |
+      Bug P0 résolu: L'endpoint /api/events/next manquait dans le backend.
+      
+      Changements effectués:
+      - Ajouté endpoint GET /api/events/next dans /app/backend/server.py
+      - Retourne le prochain événement upcoming (event_date >= now, status=published)
+      - Si aucun événement upcoming, retourne le plus récent
+      - Si aucun événement dans la DB, retourne des données mock pour "Invasion Latina - Summer Edition"
+      - Backend redémarré et testé avec curl: fonctionne correctement
+      
+      Prochaine étape:
+      - Tester le backend complet avec deep_testing_backend_v2
+      - Vérifier que le frontend charge maintenant les données correctement
+      
+      Credentials de test: admin@invasionlatina.be / admin123
