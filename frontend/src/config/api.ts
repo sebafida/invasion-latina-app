@@ -6,10 +6,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // For development, use the proxy URL that redirects to backend
 const BACKEND_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || '';
 
+console.log('API Config - Backend URL:', BACKEND_URL);
+
 // Create axios instance
 export const api = axios.create({
   baseURL: BACKEND_URL ? `${BACKEND_URL}/api` : '/api',
-  timeout: 10000,
+  timeout: 30000, // 30 secondes au lieu de 10
   headers: {
     'Content-Type': 'application/json',
   },
