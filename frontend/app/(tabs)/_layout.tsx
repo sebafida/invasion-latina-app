@@ -3,12 +3,10 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
-import { AuthProvider } from '../../src/context/AuthContext';
 
 export default function TabLayout() {
   return (
-    <AuthProvider>
-      <Tabs
+    <Tabs
       screenOptions={{
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textMuted,
