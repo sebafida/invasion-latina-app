@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { theme } from '../../src/config/theme';
-import { useAuthStore } from '../../src/store/authStore';
+import { useAuth } from '../../src/context/AuthContext';
 import { Button } from '../../src/components/Button';
 
 export default function ProfileScreen() {
