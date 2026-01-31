@@ -79,7 +79,6 @@ export default function WelcomeScreen() {
             <Text style={styles.venueSubtext}>16 Years of Latin Passion</Text>
           </View>
         </ScrollView>
-      </LinearGradient>
     </View>
   );
 }
