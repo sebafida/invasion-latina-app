@@ -154,11 +154,11 @@ backend:
 frontend:
   - task: "Home screen - Display event countdown and info"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/app/(tabs)/home.tsx"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "user"
@@ -166,6 +166,18 @@ frontend:
       - working: true
         agent: "main"
         comment: "Backend endpoint fixed. Frontend should now successfully load event data. Needs frontend testing to confirm."
+
+  - task: "DJ Request Screen - Song requests, voting, geofencing"
+    implemented: true
+    working: false
+    file: "/app/frontend/app/(tabs)/dj.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Complete UI created with: permission request, location detection, geofence check (50m), event hours validation, request form, live voting list with auto-refresh. Dev mode toggle for admin testing. Installed expo-location package and added iOS/Android permissions to app.json."
 
   - task: "User Authentication Flow - Login screen"
     implemented: true
