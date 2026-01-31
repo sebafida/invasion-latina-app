@@ -32,10 +32,13 @@ export default function LoginScreen() {
     
     try {
       setLoading(true);
+      console.log('Attempting login...');
       await login(email, password);
+      console.log('Login successful, navigating to home...');
       router.replace('/(tabs)/home');
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message);
+      console.error('Login error:', error);
+      Alert.alert('Login Failed', error.message || 'Unknown error');
     } finally {
       setLoading(false);
     }
