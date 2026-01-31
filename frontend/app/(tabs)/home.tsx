@@ -257,6 +257,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.black,
   },
+  
+  // Header Logo Styles
+  headerLogoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerTextContainer: {
+    marginLeft: theme.spacing.sm,
+  },
+  headerLogoText: {
+    fontSize: 16,
+    fontWeight: theme.fontWeight.black,
+    color: theme.colors.primary,
+    letterSpacing: 2,
+  },
+  headerLogoSubtext: {
+    fontSize: 10,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.secondary,
+    letterSpacing: 3,
+  },
+  notificationButton: {
+    marginRight: theme.spacing.md,
+  },
+  
   gradient: {
     flex: 1,
     paddingBottom: 40,
