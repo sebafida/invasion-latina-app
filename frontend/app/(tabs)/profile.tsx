@@ -8,7 +8,7 @@ import { Button } from '../../src/components/Button';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
