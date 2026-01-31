@@ -41,7 +41,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "EXPO_PUBLIC_BACKEND_URL": ""
+      "EXPO_PUBLIC_BACKEND_URL": "https://latinainvasion.preview.emergentagent.com"
     }
   }
 }
