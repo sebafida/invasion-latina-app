@@ -202,7 +202,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "DJ Request System - Song requests with geofencing and voting"
     - "DJ Request Screen - Song requests, voting, geofencing"
   stuck_tasks: []
   test_all: false
