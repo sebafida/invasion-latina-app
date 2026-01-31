@@ -315,7 +315,17 @@ export default function DJRequestsScreen() {
                 <View style={styles.requestInfo}>
                   <Text style={styles.requestSong}>{request.song_title}</Text>
                   <Text style={styles.requestArtist}>{request.artist_name}</Text>
-                  <Text style={styles.requestUser}>Par {request.user_name}</Text>
+                  <View style={styles.requestMetadata}>
+                    <Text style={styles.requestUser}>Par {request.user_name}</Text>
+                    {request.times_requested > 1 && (
+                      <>
+                        <Text style={styles.metadataSeparator}>•</Text>
+                        <Text style={styles.requestTimesRequested}>
+                          Demandée {request.times_requested}x
+                        </Text>
+                      </>
+                    )}
+                  </View>
                 </View>
 
                 <TouchableOpacity
