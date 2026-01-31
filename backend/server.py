@@ -634,4 +634,396 @@ async def validate_ticket(
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid ticket ID")
 
-# Note: Additional endpoints for DJ requests, merchandise, social features, etc. will be added next
+# ============ DJ REQUEST ENDPOINTS ============
+
+@app.post("/api/dj/request-song")
+async def request_song(
+    song_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Request a song (requires geofence and event hours)"""
+    db = get_database()
+    
+    # Check if user is within venue geofence
+    user_lat = song_data.get("latitude")
+    user_lng = song_data.get("longitude")
+    
+    if not user_lat or not user_lng:
+        raise HTTPException(status_code=400, detail="Location required for song requests")
+    
+    if not is_within_geofence(float(user_lat), float(user_lng)):
+        raise HTTPException(status_code=403, detail="You must be at the venue to request songs")
+    
+    # Check if it's during event hours
+    if not is_event_hours_active():
+        raise HTTPException(status_code=403, detail="Song requests only available during event hours")
+    
+    # Get current event
+    current_event = await db.events.find_one({"status": "live"})
+    if not current_event:
+        raise HTTPException(status_code=404, detail="No active event found")
+    
+    # Check for duplicate requests
+    existing = await db.song_requests.find_one({
+        "event_id": str(current_event["_id"]),
+        "song_title": song_data["song_title"],
+        "artist_name": song_data["artist_name"],
+        "status": {"$in": ["pending", "played"]}
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="This song has already been requested")
+    
+    # Create song request
+    request_dict = {
+        "user_id": str(current_user["_id"]),
+        "user_name": current_user["name"],
+        "event_id": str(current_event["_id"]),
+        "song_title": song_data["song_title"],
+        "artist_name": song_data["artist_name"],
+        "requested_at": datetime.utcnow(),
+        "votes": 1,  # User's own vote
+        "voters": [str(current_user["_id"])],
+        "status": "pending"
+    }
+    
+    result = await db.song_requests.insert_one(request_dict)
+    
+    return {
+        "message": "Song requested successfully",
+        "request_id": str(result.inserted_id),
+        "song": f"{song_data['song_title']} by {song_data['artist_name']}"
+    }
+
+@app.get("/api/dj/requests")
+async def get_song_requests(current_user: dict = Depends(get_current_user)):
+    """Get current song requests"""
+    db = get_database()
+    
+    # Get current event
+    current_event = await db.events.find_one({"status": "live"})
+    if not current_event:
+        return []
+    
+    requests = []
+    async for request in db.song_requests.find(
+        {"event_id": str(current_event["_id"]), "status": "pending"}
+    ).sort("votes", -1).limit(50):
+        requests.append({
+            "id": str(request["_id"]),
+            "song_title": request["song_title"],
+            "artist_name": request["artist_name"],
+            "user_name": request["user_name"],
+            "votes": request["votes"],
+            "requested_at": request["requested_at"],
+            "can_vote": str(current_user["_id"]) not in request.get("voters", [])
+        })
+    
+    return requests
+
+@app.post("/api/dj/vote/{request_id}")
+async def vote_for_song(
+    request_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Vote for a song request"""
+    db = get_database()
+    
+    try:
+        request = await db.song_requests.find_one({"_id": ObjectId(request_id)})
+        if not request:
+            raise HTTPException(status_code=404, detail="Song request not found")
+        
+        if request["status"] != "pending":
+            raise HTTPException(status_code=400, detail="Cannot vote on this request")
+        
+        user_id = str(current_user["_id"])
+        if user_id in request.get("voters", []):
+            raise HTTPException(status_code=400, detail="You have already voted for this song")
+        
+        # Add vote
+        await db.song_requests.update_one(
+            {"_id": ObjectId(request_id)},
+            {
+                "$inc": {"votes": 1},
+                "$push": {"voters": user_id}
+            }
+        )
+        
+        return {"message": "Vote added successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid request ID")
+
+@app.post("/api/dj/admin/update-request/{request_id}")
+async def update_song_request(
+    request_id: str,
+    update_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Update song request status (DJ/Admin only)"""
+    db = get_database()
+    
+    try:
+        status = update_data.get("status")
+        rejection_reason = update_data.get("rejection_reason")
+        
+        update_dict = {"status": status}
+        if status == "played":
+            update_dict["played_at"] = datetime.utcnow()
+        elif status == "rejected" and rejection_reason:
+            update_dict["rejection_reason"] = rejection_reason
+        
+        result = await db.song_requests.update_one(
+            {"_id": ObjectId(request_id)},
+            {"$set": update_dict}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Song request not found")
+        
+        return {"message": f"Request {status} successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid request ID")
+
+# ============ MERCHANDISE ENDPOINTS ============
+
+@app.get("/api/products")
+async def get_products(category: Optional[str] = Query(None)):
+    """Get all products, optionally filtered by category"""
+    db = get_database()
+    
+    query = {}
+    if category:
+        query["category"] = category
+    
+    products = []
+    async for product in db.products.find(query):
+        products.append({
+            "id": str(product["_id"]),
+            "name": product["name"],
+            "description": product["description"],
+            "category": product["category"],
+            "price": product["price"],
+            "sizes_available": product.get("sizes_available", []),
+            "images": product.get("images", []),
+            "stock_quantity": product["stock_quantity"]
+        })
+    
+    return products
+
+@app.post("/api/orders")
+async def create_order(
+    order_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create merchandise order"""
+    db = get_database()
+    
+    # Validate products and calculate total
+    total_price = 0
+    order_items = []
+    
+    for item in order_data["items"]:
+        product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
+        if not product:
+            raise HTTPException(status_code=404, detail=f"Product {item['product_id']} not found")
+        
+        if product["stock_quantity"] < item["quantity"]:
+            raise HTTPException(status_code=400, detail=f"Insufficient stock for {product['name']}")
+        
+        subtotal = product["price"] * item["quantity"]
+        total_price += subtotal
+        
+        order_items.append({
+            "product_id": item["product_id"],
+            "product_name": product["name"],
+            "quantity": item["quantity"],
+            "size": item.get("size"),
+            "price": product["price"],
+            "subtotal": subtotal
+        })
+    
+    # Process payment (MOCKED)
+    try:
+        payment_result = await stripe_service.process_payment(
+            amount=int(total_price * 100),
+            currency="eur",
+            payment_method_id=order_data["payment_method_id"],
+            customer_email=current_user["email"]
+        )
+        
+        if not payment_result["success"]:
+            raise HTTPException(status_code=400, detail="Payment failed")
+        
+    except Exception as e:
+        logger.error(f"Payment processing error: {str(e)}")
+        raise HTTPException(status_code=400, detail="Payment processing failed")
+    
+    # Create order
+    order_dict = {
+        "user_id": str(current_user["_id"]),
+        "items": order_items,
+        "total_price": total_price,
+        "delivery_method": order_data["delivery_method"],
+        "delivery_address": order_data.get("delivery_address"),
+        "status": "confirmed",
+        "stripe_payment_intent_id": payment_result.get("payment_id", "mock_payment_123"),
+        "customer_name": current_user["name"],
+        "customer_email": current_user["email"],
+        "created_at": datetime.utcnow(),
+        "confirmed_at": datetime.utcnow()
+    }
+    
+    result = await db.orders.insert_one(order_dict)
+    
+    # Update stock quantities
+    for item in order_data["items"]:
+        await db.products.update_one(
+            {"_id": ObjectId(item["product_id"])},
+            {"$inc": {"stock_quantity": -item["quantity"]}}
+        )
+    
+    return {
+        "order_id": str(result.inserted_id),
+        "total_price": total_price,
+        "status": "confirmed",
+        "message": "Order placed successfully"
+    }
+
+@app.get("/api/orders/my-orders")
+async def get_my_orders(current_user: dict = Depends(get_current_user)):
+    """Get current user's orders"""
+    db = get_database()
+    
+    orders = []
+    async for order in db.orders.find({"user_id": str(current_user["_id"])}).sort("created_at", -1):
+        orders.append({
+            "id": str(order["_id"]),
+            "items": order["items"],
+            "total_price": order["total_price"],
+            "delivery_method": order["delivery_method"],
+            "status": order["status"],
+            "created_at": order["created_at"],
+            "confirmed_at": order.get("confirmed_at"),
+            "shipped_at": order.get("shipped_at"),
+            "delivered_at": order.get("delivered_at")
+        })
+    
+    return orders
+
+# ============ SOCIAL FEATURES ============
+
+@app.post("/api/social/add-friend")
+async def add_friend(
+    friend_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Add a friend by email"""
+    db = get_database()
+    
+    friend_email = friend_data.get("email")
+    if not friend_email:
+        raise HTTPException(status_code=400, detail="Friend email required")
+    
+    if friend_email == current_user["email"]:
+        raise HTTPException(status_code=400, detail="Cannot add yourself as friend")
+    
+    # Find friend user
+    friend_user = await db.users.find_one({"email": friend_email})
+    if not friend_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    friend_id = str(friend_user["_id"])
+    current_user_id = str(current_user["_id"])
+    
+    # Check if already friends
+    if friend_id in current_user.get("friends", []):
+        raise HTTPException(status_code=400, detail="Already friends with this user")
+    
+    # Add to both users' friend lists
+    await db.users.update_one(
+        {"_id": ObjectId(current_user_id)},
+        {"$push": {"friends": friend_id}}
+    )
+    
+    await db.users.update_one(
+        {"_id": ObjectId(friend_id)},
+        {"$push": {"friends": current_user_id}}
+    )
+    
+    return {
+        "message": f"Added {friend_user['name']} as friend",
+        "friend_name": friend_user["name"]
+    }
+
+@app.get("/api/social/friends")
+async def get_friends(current_user: dict = Depends(get_current_user)):
+    """Get user's friends list"""
+    db = get_database()
+    
+    friend_ids = current_user.get("friends", [])
+    if not friend_ids:
+        return []
+    
+    friends = []
+    async for friend in db.users.find({"_id": {"$in": [ObjectId(fid) for fid in friend_ids]}}):
+        friends.append({
+            "id": str(friend["_id"]),
+            "name": friend["name"],
+            "email": friend["email"],
+            "loyalty_points": friend.get("loyalty_points", 0),
+            "badges": friend.get("badges", [])
+        })
+    
+    return friends
+
+@app.get("/api/social/leaderboard")
+async def get_leaderboard():
+    """Get loyalty points leaderboard"""
+    db = get_database()
+    
+    leaderboard = []
+    async for user in db.users.find({}).sort("loyalty_points", -1).limit(50):
+        leaderboard.append({
+            "name": user["name"],
+            "loyalty_points": user.get("loyalty_points", 0),
+            "badges": user.get("badges", [])
+        })
+    
+    return leaderboard
+
+# ============ ADMIN ENDPOINTS ============
+
+@app.get("/api/admin/dashboard")
+async def admin_dashboard(current_user: dict = Depends(get_current_admin)):
+    """Get admin dashboard data"""
+    db = get_database()
+    
+    # Get statistics
+    total_users = await db.users.count_documents({})
+    total_tickets = await db.tickets.count_documents({})
+    total_orders = await db.orders.count_documents({})
+    pending_requests = await db.song_requests.count_documents({"status": "pending"})
+    
+    # Get recent activity
+    recent_users = []
+    async for user in db.users.find({}).sort("created_at", -1).limit(10):
+        recent_users.append({
+            "name": user["name"],
+            "email": user["email"],
+            "created_at": user["created_at"]
+        })
+    
+    return {
+        "stats": {
+            "total_users": total_users,
+            "total_tickets": total_tickets,
+            "total_orders": total_orders,
+            "pending_requests": pending_requests
+        },
+        "recent_users": recent_users
+    }
+
+# Note: Additional endpoints for media upload, notifications, etc. can be added as needed
