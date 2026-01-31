@@ -118,15 +118,10 @@ export default function HomeScreen() {
               </View>
               
               <TouchableOpacity style={styles.buyButton}>
-                <LinearGradient
-                  colors={[theme.colors.primary, '#CC0000']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.buyButtonGradient}
-                >
+                <View style={styles.buyButtonContent}>
                   <Text style={styles.buyButtonText}>Buy Tickets</Text>
                   <Ionicons name="arrow-forward" size={20} color="white" />
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
