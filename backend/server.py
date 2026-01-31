@@ -231,5 +231,354 @@ async def health_check():
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Database error: {str(e)}")
 
-# Note: Remaining endpoints will be added in the following sections
-# This file continues with authentication, events, tickets, DJ requests, etc.
+# ============ AUTHENTICATION ENDPOINTS ============
+
+@app.post("/api/auth/register", response_model=UserResponse)
+async def register(user_data: UserCreate):
+    """Register a new user"""
+    db = get_database()
+    
+    # Check if user already exists
+    existing_user = await db.users.find_one({"email": user_data.email})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create new user
+    hashed_password = hash_password(user_data.password)
+    user_dict = user_data.dict()
+    del user_dict["password"]
+    user_dict["hashed_password"] = hashed_password
+    user_dict["role"] = "user"
+    user_dict["loyalty_points"] = 0
+    user_dict["badges"] = []
+    user_dict["friends"] = []
+    user_dict["created_at"] = datetime.utcnow()
+    user_dict["updated_at"] = datetime.utcnow()
+    
+    result = await db.users.insert_one(user_dict)
+    user_dict["_id"] = result.inserted_id
+    
+    # Create access token
+    access_token = create_access_token(data={"sub": user_data.email})
+    
+    return UserResponse(
+        id=str(result.inserted_id),
+        email=user_data.email,
+        name=user_data.name,
+        role="user",
+        loyalty_points=0,
+        badges=[],
+        friends=[],
+        language=user_data.language,
+        access_token=access_token
+    )
+
+@app.post("/api/auth/login", response_model=UserResponse)
+async def login(credentials: UserLogin):
+    """Login user"""
+    db = get_database()
+    
+    user = await db.users.find_one({"email": credentials.email})
+    if not user or not verify_password(credentials.password, user["hashed_password"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    access_token = create_access_token(data={"sub": credentials.email})
+    
+    return UserResponse(
+        id=str(user["_id"]),
+        email=user["email"],
+        name=user["name"],
+        role=user["role"],
+        loyalty_points=user.get("loyalty_points", 0),
+        badges=user.get("badges", []),
+        friends=user.get("friends", []),
+        language=user.get("language", "en"),
+        access_token=access_token
+    )
+
+@app.post("/api/auth/firebase-login", response_model=UserResponse)
+async def firebase_login(token_data: FirebaseTokenData):
+    """Login with Firebase token"""
+    try:
+        # Verify Firebase token (MOCKED in development)
+        user_info = await firebase_service.verify_token(token_data.firebase_token)
+        
+        db = get_database()
+        
+        # Find or create user
+        user = await db.users.find_one({"email": user_info["email"]})
+        
+        if not user:
+            # Create new user from Firebase data
+            user_dict = {
+                "email": user_info["email"],
+                "name": user_info.get("name", "Firebase User"),
+                "firebase_uid": user_info["uid"],
+                "role": "user",
+                "loyalty_points": 0,
+                "badges": [],
+                "friends": [],
+                "language": "en",
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            result = await db.users.insert_one(user_dict)
+            user_dict["_id"] = result.inserted_id
+            user = user_dict
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": user["email"]})
+        
+        return UserResponse(
+            id=str(user["_id"]),
+            email=user["email"],
+            name=user["name"],
+            role=user["role"],
+            loyalty_points=user.get("loyalty_points", 0),
+            badges=user.get("badges", []),
+            friends=user.get("friends", []),
+            language=user.get("language", "en"),
+            access_token=access_token
+        )
+        
+    except Exception as e:
+        logger.error(f"Firebase login error: {str(e)}")
+        raise HTTPException(status_code=401, detail="Invalid Firebase token")
+
+@app.get("/api/auth/me", response_model=UserResponse)
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """Get current user information"""
+    return UserResponse(
+        id=str(current_user["_id"]),
+        email=current_user["email"],
+        name=current_user["name"],
+        role=current_user["role"],
+        loyalty_points=current_user.get("loyalty_points", 0),
+        badges=current_user.get("badges", []),
+        friends=current_user.get("friends", []),
+        language=current_user.get("language", "en")
+    )
+
+# ============ EVENT ENDPOINTS ============
+
+@app.get("/api/events", response_model=List[EventResponse])
+async def get_events(status: Optional[str] = Query(None)):
+    """Get all events, optionally filtered by status"""
+    db = get_database()
+    
+    query = {}
+    if status:
+        query["status"] = status
+    
+    events = []
+    async for event in db.events.find(query).sort("event_date", 1):
+        events.append(EventResponse(
+            id=str(event["_id"]),
+            name=event["name"],
+            description=event["description"],
+            event_date=event["event_date"],
+            venue_name=event["venue_name"],
+            venue_address=event["venue_address"],
+            lineup=event.get("lineup", []),
+            ticket_categories=event.get("ticket_categories", []),
+            status=event["status"]
+        ))
+    
+    return events
+
+@app.get("/api/events/{event_id}", response_model=EventResponse)
+async def get_event(event_id: str):
+    """Get specific event by ID"""
+    db = get_database()
+    
+    try:
+        event = await db.events.find_one({"_id": ObjectId(event_id)})
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        return EventResponse(
+            id=str(event["_id"]),
+            name=event["name"],
+            description=event["description"],
+            event_date=event["event_date"],
+            venue_name=event["venue_name"],
+            venue_address=event["venue_address"],
+            lineup=event.get("lineup", []),
+            ticket_categories=event.get("ticket_categories", []),
+            status=event["status"]
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid event ID")
+
+@app.post("/api/events", response_model=EventResponse)
+async def create_event(
+    event_data: EventCreate,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Create new event (admin only)"""
+    db = get_database()
+    
+    event_dict = event_data.dict()
+    event_dict["status"] = "upcoming"
+    event_dict["created_at"] = datetime.utcnow()
+    
+    result = await db.events.insert_one(event_dict)
+    event_dict["_id"] = result.inserted_id
+    
+    return EventResponse(
+        id=str(result.inserted_id),
+        name=event_data.name,
+        description=event_data.description,
+        event_date=event_data.event_date,
+        venue_name=event_data.venue_name,
+        venue_address=event_data.venue_address,
+        lineup=event_data.lineup,
+        ticket_categories=event_data.ticket_categories,
+        status="upcoming"
+    )
+
+# ============ TICKET ENDPOINTS ============
+
+@app.post("/api/tickets/purchase", response_model=TicketResponse)
+async def purchase_ticket(
+    ticket_data: TicketPurchase,
+    current_user: dict = Depends(get_current_user)
+):
+    """Purchase a ticket"""
+    db = get_database()
+    
+    # Get event
+    try:
+        event = await db.events.find_one({"_id": ObjectId(ticket_data.event_id)})
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+    except:
+        raise HTTPException(status_code=400, detail="Invalid event ID")
+    
+    # Find ticket category
+    ticket_category = None
+    for cat in event.get("ticket_categories", []):
+        if cat["category"] == ticket_data.ticket_category:
+            ticket_category = cat
+            break
+    
+    if not ticket_category:
+        raise HTTPException(status_code=400, detail="Invalid ticket category")
+    
+    # Check availability
+    if ticket_category["available_seats"] < ticket_data.quantity:
+        raise HTTPException(status_code=400, detail="Not enough tickets available")
+    
+    # Calculate total price
+    total_price = ticket_category["price"] * ticket_data.quantity
+    
+    # Process payment with Stripe (MOCKED)
+    try:
+        payment_result = await stripe_service.process_payment(
+            amount=int(total_price * 100),  # Convert to cents
+            currency="eur",
+            payment_method_id=ticket_data.payment_method_id,
+            customer_email=current_user["email"]
+        )
+        
+        if not payment_result["success"]:
+            raise HTTPException(status_code=400, detail="Payment failed")
+        
+    except Exception as e:
+        logger.error(f"Payment processing error: {str(e)}")
+        raise HTTPException(status_code=400, detail="Payment processing failed")
+    
+    # Create tickets
+    tickets = []
+    for i in range(ticket_data.quantity):
+        ticket_dict = {
+            "event_id": ObjectId(ticket_data.event_id),
+            "user_id": ObjectId(current_user["_id"]),
+            "ticket_category": ticket_data.ticket_category,
+            "price": ticket_category["price"],
+            "ticket_code": generate_ticket_code(),
+            "qr_data": generate_qr_data(),
+            "status": "active",
+            "purchase_date": datetime.utcnow(),
+            "payment_id": payment_result.get("payment_id", "mock_payment_123")
+        }
+        
+        result = await db.tickets.insert_one(ticket_dict)
+        ticket_dict["_id"] = result.inserted_id
+        
+        tickets.append(TicketResponse(
+            id=str(result.inserted_id),
+            event_id=ticket_data.event_id,
+            user_id=str(current_user["_id"]),
+            ticket_category=ticket_data.ticket_category,
+            price=ticket_category["price"],
+            ticket_code=ticket_dict["ticket_code"],
+            qr_data=ticket_dict["qr_data"],
+            status="active",
+            purchase_date=ticket_dict["purchase_date"]
+        ))
+    
+    # Update available seats
+    await db.events.update_one(
+        {"_id": ObjectId(ticket_data.event_id), "ticket_categories.category": ticket_data.ticket_category},
+        {"$inc": {"ticket_categories.$.available_seats": -ticket_data.quantity}}
+    )
+    
+    # Award loyalty points
+    points_earned = int(total_price * 0.1)  # 10% of price as points
+    await db.users.update_one(
+        {"_id": ObjectId(current_user["_id"])},
+        {"$inc": {"loyalty_points": points_earned}}
+    )
+    
+    return tickets[0] if len(tickets) == 1 else tickets
+
+@app.get("/api/tickets/my-tickets", response_model=List[TicketResponse])
+async def get_my_tickets(current_user: dict = Depends(get_current_user)):
+    """Get current user's tickets"""
+    db = get_database()
+    
+    tickets = []
+    async for ticket in db.tickets.find({"user_id": ObjectId(current_user["_id"])}):
+        tickets.append(TicketResponse(
+            id=str(ticket["_id"]),
+            event_id=str(ticket["event_id"]),
+            user_id=str(ticket["user_id"]),
+            ticket_category=ticket["ticket_category"],
+            price=ticket["price"],
+            ticket_code=ticket["ticket_code"],
+            qr_data=ticket["qr_data"],
+            status=ticket["status"],
+            purchase_date=ticket["purchase_date"]
+        ))
+    
+    return tickets
+
+@app.post("/api/tickets/{ticket_id}/validate")
+async def validate_ticket(
+    ticket_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Validate a ticket (admin only)"""
+    db = get_database()
+    
+    try:
+        ticket = await db.tickets.find_one({"_id": ObjectId(ticket_id)})
+        if not ticket:
+            raise HTTPException(status_code=404, detail="Ticket not found")
+        
+        if ticket["status"] != "active":
+            raise HTTPException(status_code=400, detail="Ticket already used or invalid")
+        
+        # Mark ticket as used
+        await db.tickets.update_one(
+            {"_id": ObjectId(ticket_id)},
+            {"$set": {"status": "used", "validated_at": datetime.utcnow()}}
+        )
+        
+        return {"message": "Ticket validated successfully", "ticket_code": ticket["ticket_code"]}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid ticket ID")
+
+# Note: Additional endpoints for DJ requests, merchandise, social features, etc. will be added next
