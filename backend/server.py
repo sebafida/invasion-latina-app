@@ -1969,3 +1969,140 @@ async def upload_welcome_video(
     
     return {"message": "Vidéo mise à jour avec succès", "video_url": video_url}
 
+
+
+# ============ ADMIN MEDIA ENDPOINTS ============
+
+@app.post("/api/admin/media/photos")
+async def admin_add_photo(
+    photo_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Add a photo to a gallery"""
+    db = get_database()
+    
+    url = photo_data.get("url")
+    event_id = photo_data.get("event_id")
+    
+    if not url:
+        raise HTTPException(status_code=400, detail="URL de la photo requise")
+    
+    photo = {
+        "url": url,
+        "thumbnail_url": photo_data.get("thumbnail_url", url),
+        "event_id": event_id,
+        "tags": [],
+        "uploaded_at": datetime.utcnow(),
+        "uploaded_by": str(current_user["_id"])
+    }
+    
+    result = await db.photos.insert_one(photo)
+    
+    return {
+        "id": str(result.inserted_id),
+        "message": "Photo ajoutée avec succès"
+    }
+
+@app.delete("/api/admin/media/photos/{photo_id}")
+async def admin_delete_photo(
+    photo_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Delete a photo"""
+    db = get_database()
+    
+    try:
+        result = await db.photos.delete_one({"_id": ObjectId(photo_id)})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Photo non trouvée")
+        
+        return {"message": "Photo supprimée avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/admin/media/aftermovies")
+async def admin_add_aftermovie(
+    video_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Add an aftermovie"""
+    db = get_database()
+    
+    title = video_data.get("title")
+    video_url = video_data.get("video_url")
+    
+    if not title or not video_url:
+        raise HTTPException(status_code=400, detail="Titre et URL vidéo requis")
+    
+    aftermovie = {
+        "title": title,
+        "video_url": video_url,
+        "thumbnail_url": video_data.get("thumbnail_url", "https://via.placeholder.com/400x225"),
+        "event_date": video_data.get("event_date", datetime.utcnow()),
+        "duration": video_data.get("duration", "0:00"),
+        "views": 0,
+        "created_at": datetime.utcnow(),
+        "created_by": str(current_user["_id"])
+    }
+    
+    result = await db.aftermovies.insert_one(aftermovie)
+    
+    return {
+        "id": str(result.inserted_id),
+        "message": "Aftermovie ajouté avec succès"
+    }
+
+@app.delete("/api/admin/media/aftermovies/{video_id}")
+async def admin_delete_aftermovie(
+    video_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Delete an aftermovie"""
+    db = get_database()
+    
+    try:
+        result = await db.aftermovies.delete_one({"_id": ObjectId(video_id)})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Aftermovie non trouvé")
+        
+        return {"message": "Aftermovie supprimé avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.put("/api/admin/events/{event_id}/flyer")
+async def admin_update_event_flyer(
+    event_id: str,
+    flyer_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update event flyer/banner image"""
+    db = get_database()
+    
+    banner_image = flyer_data.get("banner_image")
+    
+    if not banner_image:
+        raise HTTPException(status_code=400, detail="URL du flyer requise")
+    
+    try:
+        result = await db.events.update_one(
+            {"_id": ObjectId(event_id)},
+            {
+                "$set": {
+                    "banner_image": banner_image,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Événement non trouvé")
+        
+        return {"message": "Flyer mis à jour avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
