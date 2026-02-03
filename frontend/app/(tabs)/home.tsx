@@ -53,6 +53,7 @@ export default function HomeScreen() {
   
   useEffect(() => {
     loadNextEvent();
+    loadLineup();
   }, []);
   
   useEffect(() => {
@@ -74,6 +75,24 @@ export default function HomeScreen() {
       console.error('Failed to load event:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadLineup = async () => {
+    try {
+      const response = await api.get('/djs');
+      if (response.data && response.data.length > 0) {
+        // Map API response to lineup format
+        const djsFromApi = response.data.map((dj: any) => ({
+          id: dj.id,
+          name: dj.name,
+          role: dj.type === 'mc' ? 'MC' : 'Resident DJ'
+        }));
+        setLineup(djsFromApi);
+      }
+    } catch (error) {
+      console.error('Failed to load DJs:', error);
+      // Keep default lineup
     }
   };
   
