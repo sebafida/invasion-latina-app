@@ -236,6 +236,18 @@ export default function ContentManagerScreen() {
     setShowEventForm(true);
   };
 
+  const handleToggleVisibility = async (eventId: string, field: 'gallery_visible' | 'aftermovie_visible', currentValue: boolean) => {
+    try {
+      await api.put(`/admin/events/${eventId}/visibility`, {
+        [field]: !currentValue
+      });
+      // Refresh events list
+      loadData();
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de modifier la visibilité');
+    }
+  };
+
   const handleUpdateFlyer = async () => {
     if (!flyerUrl.trim()) {
       Alert.alert('Erreur', 'Veuillez entrer une URL de flyer');
