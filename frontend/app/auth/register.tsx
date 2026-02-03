@@ -191,6 +191,30 @@ export default function RegisterScreen() {
             </View>
 
             <Text style={styles.requiredNote}>* Champs obligatoires</Text>
+
+            {/* Language Selector */}
+            <View style={styles.languageSection}>
+              <Text style={styles.languageTitle}>🌐 Langue de l'application</Text>
+              <View style={styles.languageOptions}>
+                {LANGUAGES.map((lang) => (
+                  <TouchableOpacity
+                    key={lang.code}
+                    style={[
+                      styles.languageOption,
+                      language === lang.code && styles.languageOptionSelected
+                    ]}
+                    onPress={() => setLanguage(lang.code)}
+                  >
+                    <Text style={[
+                      styles.languageOptionText,
+                      language === lang.code && styles.languageOptionTextSelected
+                    ]}>
+                      {lang.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
             
             <Button
               title="Créer mon compte"
