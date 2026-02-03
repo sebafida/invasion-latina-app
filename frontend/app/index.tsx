@@ -68,7 +68,7 @@ export default function WelcomeScreen() {
             resizeMode="cover"
           />
           <View style={styles.flyerBadge}>
-            <Text style={styles.flyerBadgeText}>🔥 Prochain Event</Text>
+            <Text style={styles.flyerBadgeText}>Prochain Event</Text>
           </View>
         </View>
         
