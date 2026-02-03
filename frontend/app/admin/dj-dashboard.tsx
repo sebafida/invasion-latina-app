@@ -331,41 +331,6 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xs,
   },
 
-  // Loyalty Scanner Button
-  loyaltyScannerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
-    backgroundColor: theme.colors.primary + '15',
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
-  },
-  loyaltyScannerIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: theme.colors.primary + '20',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.md,
-  },
-  loyaltyScannerText: {
-    flex: 1,
-  },
-  loyaltyScannerTitle: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textPrimary,
-  },
-  loyaltyScannerDesc: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-    marginTop: 2,
-  },
-
   // Info Card
   infoCard: {
     flexDirection: 'row',
