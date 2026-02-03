@@ -483,6 +483,7 @@ async def get_next_event():
                     {"name": "Standard", "price": 20.0, "available": True},
                     {"name": "VIP", "price": 40.0, "available": True}
                 ],
+                "xceed_ticket_url": "https://xceed.me/invasion-latina",  # Example XCEED link
                 "status": "published"
             }
         }
@@ -497,6 +498,7 @@ async def get_next_event():
             "venue_address": next_event["venue_address"],
             "lineup": next_event.get("lineup", []),
             "ticket_categories": next_event.get("ticket_categories", []),
+            "xceed_ticket_url": next_event.get("xceed_ticket_url"),
             "status": next_event["status"]
         }
     }
