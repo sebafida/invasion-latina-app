@@ -217,14 +217,36 @@ export default function ProfileScreen() {
 
         {/* Admin DJ Dashboard Button */}
         {user?.role === 'admin' && (
-          <TouchableOpacity
-            style={styles.djDashboardButton}
-            onPress={() => router.push('/admin/dj-dashboard')}
-          >
-            <Ionicons name="headset" size={24} color="white" />
-            <Text style={styles.djDashboardText}>🎧 DJ Dashboard</Text>
-            <Ionicons name="arrow-forward" size={20} color="white" />
-          </TouchableOpacity>
+          <View style={styles.adminSection}>
+            <Text style={styles.adminSectionTitle}>🔐 Administration</Text>
+            
+            <TouchableOpacity
+              style={styles.adminButton}
+              onPress={() => router.push('/admin/content-manager')}
+            >
+              <Ionicons name="images" size={24} color="white" />
+              <Text style={styles.adminButtonText}>📸 Gestion du Contenu</Text>
+              <Ionicons name="arrow-forward" size={20} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.djDashboardButton}
+              onPress={() => router.push('/admin/dj-dashboard')}
+            >
+              <Ionicons name="headset" size={24} color="white" />
+              <Text style={styles.djDashboardText}>🎧 DJ Dashboard</Text>
+              <Ionicons name="arrow-forward" size={20} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.scannerButton}
+              onPress={() => router.push('/admin/loyalty-scanner')}
+            >
+              <Ionicons name="qr-code" size={24} color="white" />
+              <Text style={styles.scannerButtonText}>📱 Scanner QR Fidélité</Text>
+              <Ionicons name="arrow-forward" size={20} color="white" />
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* Language Selector */}
