@@ -65,9 +65,18 @@ export default function TabLayout() {
       <Tabs.Screen
         name="dj"
         options={{
-          title: 'DJ Requests',
+          title: 'Requests',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="musical-notes" size={size} color={color} />
+            <Ionicons name="musical-note" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="djs"
+        options={{
+          title: 'DJs',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="headset" size={size} color={color} />
           ),
         }}
       />
