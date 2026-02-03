@@ -2106,3 +2106,88 @@ async def admin_update_event_flyer(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
+@app.post("/api/admin/events")
+async def admin_create_event(
+    event_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Create a new event"""
+    db = get_database()
+    
+    name = event_data.get("name")
+    event_date = event_data.get("event_date")
+    
+    if not name or not event_date:
+        raise HTTPException(status_code=400, detail="Nom et date de l'événement requis")
+    
+    event = {
+        "name": name,
+        "description": event_data.get("description", ""),
+        "event_date": datetime.fromisoformat(event_date.replace('Z', '+00:00')) if isinstance(event_date, str) else event_date,
+        "venue_name": event_data.get("venue_name", "Mirano Continental"),
+        "venue_address": event_data.get("venue_address", "Chaussée de Louvain 38, 1210 Brussels"),
+        "banner_image": event_data.get("banner_image", ""),
+        "xceed_ticket_url": event_data.get("xceed_ticket_url", ""),
+        "ticket_categories": event_data.get("ticket_categories", [
+            {"name": "Standard", "price": 15.0, "available": True}
+        ]),
+        "lineup": [],
+        "status": "published",
+        "created_at": datetime.utcnow(),
+        "created_by": str(current_user["_id"])
+    }
+    
+    result = await db.events.insert_one(event)
+    
+    return {
+        "id": str(result.inserted_id),
+        "message": "Événement créé avec succès"
+    }
+
+
+@app.put("/api/admin/events/{event_id}")
+async def admin_update_event(
+    event_id: str,
+    event_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update an event"""
+    db = get_database()
+    
+    update_fields = {}
+    
+    if "name" in event_data:
+        update_fields["name"] = event_data["name"]
+    if "description" in event_data:
+        update_fields["description"] = event_data["description"]
+    if "event_date" in event_data:
+        event_date = event_data["event_date"]
+        update_fields["event_date"] = datetime.fromisoformat(event_date.replace('Z', '+00:00')) if isinstance(event_date, str) else event_date
+    if "venue_name" in event_data:
+        update_fields["venue_name"] = event_data["venue_name"]
+    if "venue_address" in event_data:
+        update_fields["venue_address"] = event_data["venue_address"]
+    if "banner_image" in event_data:
+        update_fields["banner_image"] = event_data["banner_image"]
+    if "xceed_ticket_url" in event_data:
+        update_fields["xceed_ticket_url"] = event_data["xceed_ticket_url"]
+    if "ticket_categories" in event_data:
+        update_fields["ticket_categories"] = event_data["ticket_categories"]
+    
+    update_fields["updated_at"] = datetime.utcnow()
+    
+    try:
+        result = await db.events.update_one(
+            {"_id": ObjectId(event_id)},
+            {"$set": update_fields}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Événement non trouvé ou aucune modification")
+        
+        return {"message": "Événement mis à jour avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
