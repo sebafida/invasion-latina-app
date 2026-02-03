@@ -75,6 +75,15 @@ export default function HomeScreen() {
       }
     >
       <View style={styles.content}>
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <Image 
+            source={require('../../assets/images/invasion-logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+        </View>
+        
         {/* Hero Section */}
         <View style={styles.hero}>
           <Text style={styles.greeting}>Welcome back,</Text>
