@@ -1058,4 +1058,36 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
     color: 'white',
   },
+
+  // Visibility Toggles
+  visibilitySection: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
+    paddingTop: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.elevated,
+  },
+  visibilityToggle: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.elevated,
+  },
+  visibilityToggleActive: {
+    backgroundColor: theme.colors.success + '20',
+  },
+  visibilityToggleText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textMuted,
+  },
+  visibilityToggleTextActive: {
+    color: theme.colors.success,
+    fontWeight: theme.fontWeight.bold,
+  },
 });
