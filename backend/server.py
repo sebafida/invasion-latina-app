@@ -1117,3 +1117,198 @@ async def admin_dashboard(current_user: dict = Depends(get_current_admin)):
     }
 
 # Note: Additional endpoints for media upload, notifications, etc. can be added as needed
+
+
+# ============ LOYALTY PROGRAM ENDPOINTS ============
+
+@app.get("/api/loyalty/my-points")
+async def get_my_loyalty_points(current_user: dict = Depends(get_current_user)):
+    """Get current user's loyalty points and stats"""
+    db = get_database()
+    
+    user = await db.users.find_one({"_id": ObjectId(current_user["_id"])})
+    
+    # Get check-in history
+    check_ins = []
+    async for check_in in db.loyalty_checkins.find(
+        {"user_id": str(current_user["_id"])}
+    ).sort("checked_in_at", -1).limit(10):
+        event = await db.events.find_one({"_id": ObjectId(check_in["event_id"])})
+        check_ins.append({
+            "event_name": event["name"] if event else "Unknown Event",
+            "points": check_in["points_earned"],
+            "date": check_in["checked_in_at"]
+        })
+    
+    # Calculate progress to next reward
+    points = user.get("loyalty_points", 0)
+    points_to_reward = 50
+    progress_percentage = min((points / points_to_reward) * 100, 100)
+    rewards_earned = points // points_to_reward
+    
+    return {
+        "points": points,
+        "check_ins_count": await db.loyalty_checkins.count_documents({"user_id": str(current_user["_id"])}),
+        "progress_to_next_reward": progress_percentage,
+        "points_needed": max(0, points_to_reward - (points % points_to_reward)),
+        "rewards_earned": rewards_earned,
+        "recent_check_ins": check_ins
+    }
+
+@app.get("/api/loyalty/rewards")
+async def get_my_rewards(current_user: dict = Depends(get_current_user)):
+    """Get user's available and redeemed rewards"""
+    db = get_database()
+    
+    rewards = []
+    async for reward in db.loyalty_rewards.find(
+        {"user_id": str(current_user["_id"])}
+    ).sort("created_at", -1):
+        rewards.append({
+            "id": str(reward["_id"]),
+            "reward_type": reward["reward_type"],
+            "points_spent": reward["points_spent"],
+            "code": reward["code"],
+            "status": reward["status"],
+            "created_at": reward["created_at"],
+            "redeemed_at": reward.get("redeemed_at"),
+            "expires_at": reward.get("expires_at")
+        })
+    
+    return rewards
+
+@app.post("/api/loyalty/claim-reward")
+async def claim_reward(current_user: dict = Depends(get_current_user)):
+    """Claim a free entry reward (50 points)"""
+    db = get_database()
+    
+    user = await db.users.find_one({"_id": ObjectId(current_user["_id"])})
+    points = user.get("loyalty_points", 0)
+    
+    if points < 50:
+        raise HTTPException(status_code=400, detail=f"Not enough points. You have {points}, need 50.")
+    
+    # Generate unique reward code
+    import random
+    import string
+    code = 'IL-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    
+    # Create reward
+    reward = {
+        "user_id": str(current_user["_id"]),
+        "reward_type": "free_entry",
+        "points_required": 50,
+        "points_spent": 50,
+        "status": "pending",
+        "code": code,
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(days=90)  # 90 days to use
+    }
+    
+    result = await db.loyalty_rewards.insert_one(reward)
+    
+    # Deduct points
+    await db.users.update_one(
+        {"_id": ObjectId(current_user["_id"])},
+        {"$inc": {"loyalty_points": -50}}
+    )
+    
+    # Log transaction
+    await db.loyalty_transactions.insert_one({
+        "user_id": str(current_user["_id"]),
+        "transaction_type": "spent",
+        "points": -50,
+        "description": "Claimed free entry reward",
+        "related_reward_id": str(result.inserted_id),
+        "created_at": datetime.utcnow()
+    })
+    
+    return {
+        "message": "Reward claimed successfully!",
+        "code": code,
+        "points_remaining": points - 50
+    }
+
+@app.get("/api/loyalty/user-qr/{user_id}")
+async def get_user_qr_code(user_id: str):
+    """Get QR code data for a user (for check-in)"""
+    import json
+    
+    qr_data = {
+        "type": "loyalty_checkin",
+        "user_id": user_id,
+        "timestamp": datetime.utcnow().isoformat(),
+        "app": "InvasionLatina"
+    }
+    
+    return {"qr_code_data": json.dumps(qr_data)}
+
+@app.post("/api/loyalty/admin/check-in")
+async def admin_check_in_user(
+    qr_code_data: str,
+    event_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Admin/Staff: Check in a user and award points"""
+    import json
+    
+    # Verify admin
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    db = get_database()
+    
+    # Parse QR code
+    try:
+        qr_info = json.loads(qr_code_data)
+        user_id = qr_info["user_id"]
+    except:
+        raise HTTPException(status_code=400, detail="Invalid QR code")
+    
+    # Check if already checked in for this event
+    existing = await db.loyalty_checkins.find_one({
+        "user_id": user_id,
+        "event_id": event_id
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="User already checked in for this event")
+    
+    # Create check-in
+    check_in = {
+        "user_id": user_id,
+        "event_id": event_id,
+        "points_earned": 5,
+        "checked_in_at": datetime.utcnow(),
+        "checked_in_by": str(current_user["_id"]),
+        "qr_code_scanned": qr_code_data
+    }
+    
+    await db.loyalty_checkins.insert_one(check_in)
+    
+    # Award points
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$inc": {"loyalty_points": 5}}
+    )
+    
+    # Log transaction
+    await db.loyalty_transactions.insert_one({
+        "user_id": user_id,
+        "transaction_type": "earned",
+        "points": 5,
+        "description": f"Check-in at event",
+        "related_event_id": event_id,
+        "created_at": datetime.utcnow()
+    })
+    
+    # Get updated points
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    
+    return {
+        "message": "Check-in successful! +5 points",
+        "points_earned": 5,
+        "total_points": user.get("loyalty_points", 5),
+        "user_name": user["name"]
+    }
+
