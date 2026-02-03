@@ -231,7 +231,7 @@ export default function HomeScreen() {
           <Text style={styles.sectionTitle}>Tonight's Lineup 🎧</Text>
           
           <View style={styles.lineupGrid}>
-            {(nextEvent?.lineup || DEFAULT_LINEUP).map((dj: any, index: number) => (
+            {lineup.map((dj: any, index: number) => (
               <TouchableOpacity 
                 key={dj.id || index} 
                 style={styles.djCard}
