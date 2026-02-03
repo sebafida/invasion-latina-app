@@ -1312,3 +1312,76 @@ async def admin_check_in_user(
         "user_name": user["name"]
     }
 
+
+
+# ============ VIP BOOKING ENDPOINTS ============
+
+@app.post("/api/vip/book")
+async def create_vip_booking(
+    event_id: str,
+    zone: str,
+    package: str,
+    guest_count: int,
+    bottle_preferences: Optional[str] = None,
+    special_requests: Optional[str] = None,
+    total_price: float = 0,
+    customer_name: str = "",
+    customer_email: str = "",
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a VIP table booking request"""
+    db = get_database()
+    
+    # Verify event exists
+    event = await db.events.find_one({"_id": ObjectId(event_id)})
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    # Create booking
+    booking = {
+        "user_id": str(current_user["_id"]),
+        "event_id": event_id,
+        "zone": zone,
+        "package": package,
+        "guest_count": guest_count,
+        "bottle_preferences": bottle_preferences,
+        "special_requests": special_requests,
+        "total_price": total_price,
+        "status": "pending",
+        "customer_name": customer_name,
+        "customer_email": customer_email,
+        "submitted_at": datetime.utcnow()
+    }
+    
+    result = await db.vip_bookings.insert_one(booking)
+    
+    return {
+        "message": "VIP booking request submitted successfully",
+        "booking_id": str(result.inserted_id),
+        "status": "pending"
+    }
+
+@app.get("/api/vip/my-bookings")
+async def get_my_vip_bookings(current_user: dict = Depends(get_current_user)):
+    """Get current user's VIP bookings"""
+    db = get_database()
+    
+    bookings = []
+    async for booking in db.vip_bookings.find(
+        {"user_id": str(current_user["_id"])}
+    ).sort("submitted_at", -1):
+        event = await db.events.find_one({"_id": ObjectId(booking["event_id"])})
+        bookings.append({
+            "id": str(booking["_id"]),
+            "event_name": event["name"] if event else "Unknown Event",
+            "event_date": event["event_date"] if event else None,
+            "zone": booking["zone"],
+            "package": booking["package"],
+            "guest_count": booking["guest_count"],
+            "total_price": booking["total_price"],
+            "status": booking["status"],
+            "submitted_at": booking["submitted_at"]
+        })
+    
+    return bookings
+
