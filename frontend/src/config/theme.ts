@@ -1,14 +1,14 @@
-// Invasion Latina Theme - Dark Mode Puerto Rico/Miami Aesthetic
+// Invasion Latina Theme - Turquoise/Cyan Brand Colors
 
 export const theme = {
   colors: {
-    // Primary Colors
-    primary: '#FF0000',      // Invasion Red
+    // Primary Colors - Invasion Turquoise Brand
+    primary: '#00E5CC',      // Invasion Turquoise (from logo)
     secondary: '#FFD700',     // Gold Accent
     black: '#000000',         // Deep Black
     
     // Neon Accents
-    neonPink: '#FF10F0',
+    neonPink: '#00E5CC',     // Brand Turquoise (replaces pink)
     neonBlue: '#00D4FF',
     neonGreen: '#39FF14',
     
@@ -26,7 +26,7 @@ export const theme = {
     success: '#00FF88',
     warning: '#FFB800',
     error: '#FF3B30',
-    info: '#00D4FF',
+    info: '#00E5CC',        // Brand Turquoise for info
     
     // Transparent
     overlay: 'rgba(0, 0, 0, 0.85)',
@@ -85,13 +85,13 @@ export const theme = {
     },
     lg: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 8 },
+      shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.44,
       shadowRadius: 10.32,
       elevation: 8,
     },
     neon: {
-      shadowColor: '#FF0000',
+      shadowColor: '#00E5CC',  // Turquoise glow
       shadowOffset: { width: 0, height: 0 },
       shadowOpacity: 0.8,
       shadowRadius: 10,
