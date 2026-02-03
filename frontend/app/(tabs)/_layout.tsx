@@ -63,11 +63,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="dj"
+        name="tickets"
         options={{
-          title: 'Requests',
+          title: 'Tickets',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="musical-note" size={size} color={color} />
+            <Ionicons name="ticket" size={size} color={color} />
           ),
         }}
       />
@@ -81,27 +81,27 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="tickets"
+        name="dj"
         options={{
-          title: 'Tickets',
+          title: 'Requests',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="ticket" size={size} color={color} />
+            <Ionicons name="musical-note" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="shop"
         options={{
-          title: 'Shop',
+          title: 'VIP',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cart" size={size} color={color} />
+            <Ionicons name="diamond" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: 'Profil',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
