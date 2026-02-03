@@ -145,16 +145,16 @@ const styles = StyleSheet.create({
   },
   flyerBadge: {
     position: 'absolute',
-    top: theme.spacing.sm,
-    left: theme.spacing.sm,
+    top: theme.spacing.xs,
+    left: theme.spacing.xs,
     backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
     borderRadius: theme.borderRadius.full,
   },
   flyerBadgeText: {
     color: 'white',
-    fontSize: theme.fontSize.sm,
+    fontSize: theme.fontSize.xs,
     fontWeight: theme.fontWeight.bold,
   },
   
