@@ -340,6 +340,13 @@ export default function ContentManagerScreen() {
       <View style={styles.infoBox}>
         <Ionicons name="information-circle" size={20} color={theme.colors.primary} />
         <Text style={styles.infoText}>
+          💡 Le flyer de l'événement sera utilisé comme couverture d'album dans les sections Photos et Aftermovies.
+        </Text>
+      </View>
+
+      <View style={styles.infoBox}>
+        <Ionicons name="information-circle" size={20} color={theme.colors.primary} />
+        <Text style={styles.infoText}>
           💡 Astuce: Uploadez votre image sur un service comme Imgur, Google Drive (lien public), ou Cloudinary, puis collez l'URL ici.
         </Text>
       </View>
