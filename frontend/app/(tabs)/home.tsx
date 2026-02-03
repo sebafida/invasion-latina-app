@@ -156,10 +156,8 @@ export default function HomeScreen() {
           </View>
         )}
         
-        {/* Quick Actions */}
+        {/* Quick Actions - No Title */}
         <View style={styles.quickActions}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          
           <View style={styles.actionsGrid}>
             <ActionCard
               icon="musical-notes"
@@ -169,11 +167,18 @@ export default function HomeScreen() {
               onPress={() => router.push('/(tabs)/dj')}
             />
             <ActionCard
-              icon="ticket"
-              title="Buy Tickets"
-              subtitle="Get your spot"
+              icon="camera"
+              title="Photos"
+              subtitle="Event galleries"
+              color={theme.colors.secondary}
+              onPress={() => router.push('/galleries')}
+            />
+            <ActionCard
+              icon="play-circle"
+              title="Aftermovies"
+              subtitle="Watch recap"
               color={theme.colors.neonBlue}
-              onPress={() => router.push('/(tabs)/tickets')}
+              onPress={() => router.push('/aftermovies')}
             />
             <ActionCard
               icon="wine"
@@ -181,13 +186,6 @@ export default function HomeScreen() {
               subtitle="Book now"
               color={theme.colors.primary}
               onPress={() => router.push('/(tabs)/shop')}
-            />
-            <ActionCard
-              icon="camera"
-              title="Photos"
-              subtitle="Event galleries"
-              color={theme.colors.secondary}
-              onPress={() => router.push('/galleries')}
             />
           </View>
         </View>
@@ -208,15 +206,11 @@ export default function HomeScreen() {
           <Ionicons name="open-outline" size={24} color="#1DB954" />
         </TouchableOpacity>
         
-        {/* Tonight's Lineup - DJs with Photos */}
+        {/* Tonight's Lineup - DJs Grid */}
         <View style={styles.lineupSection}>
           <Text style={styles.sectionTitle}>Tonight's Lineup 🎧</Text>
           
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.lineupScroll}
-          >
+          <View style={styles.lineupGrid}>
             {(nextEvent?.lineup || DEFAULT_LINEUP).map((dj: any, index: number) => (
               <TouchableOpacity 
                 key={dj.id || index} 
@@ -234,7 +228,7 @@ export default function HomeScreen() {
                   <View style={styles.djPhotoPlaceholder}>
                     <Ionicons 
                       name={dj.role === 'MC' ? 'mic' : 'headset'} 
-                      size={32} 
+                      size={28} 
                       color={theme.colors.primary} 
                     />
                   </View>
@@ -243,7 +237,7 @@ export default function HomeScreen() {
                 <Text style={styles.djCardRole}>{dj.role}</Text>
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </View>
         </View>
       </View>
     </ScrollView>
