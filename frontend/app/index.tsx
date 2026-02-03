@@ -13,12 +13,11 @@ export default function WelcomeScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Logo */}
         <View style={styles.logoContainer}>
-          <View style={styles.logoIconWrapper}>
-            <Ionicons name="flame" size={80} color={theme.colors.primary} />
-          </View>
-          <Text style={styles.logo}>INVASION</Text>
-          <Text style={styles.logoSubtitle}>LATINA</Text>
-          <View style={styles.neonLine} />
+          <Image 
+            source={require('../assets/images/invasion-logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
         
         {/* Tagline */}

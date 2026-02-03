@@ -53,12 +53,11 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <View style={styles.logoIconWrapper}>
-              <Ionicons name="flame" size={80} color={theme.colors.primary} />
-            </View>
-            <Text style={styles.logoText}>INVASION</Text>
-            <Text style={styles.logoSubtext}>LATINA</Text>
-            <View style={styles.logoUnderline} />
+            <Image 
+              source={require('../../assets/images/invasion-logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
           
           {/* Header */}
