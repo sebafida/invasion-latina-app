@@ -1385,3 +1385,243 @@ async def get_my_vip_bookings(current_user: dict = Depends(get_current_user)):
     
     return bookings
 
+
+
+
+# ============ MEDIA GALLERY ENDPOINTS ============
+
+@app.get("/api/media/galleries")
+async def get_galleries():
+    """Get all photo galleries (grouped by event)"""
+    db = get_database()
+    
+    galleries = []
+    
+    # Get events that have photos
+    async for event in db.events.find().sort("event_date", -1):
+        photo_count = await db.photos.count_documents({"event_id": str(event["_id"])})
+        
+        # Get cover image (first photo or event banner)
+        cover_photo = await db.photos.find_one({"event_id": str(event["_id"])})
+        cover_image = cover_photo["url"] if cover_photo else event.get("banner_image")
+        
+        galleries.append({
+            "id": str(event["_id"]),
+            "name": event["name"],
+            "event_date": event["event_date"].isoformat() if hasattr(event["event_date"], 'isoformat') else event["event_date"],
+            "photo_count": photo_count,
+            "cover_image": cover_image
+        })
+    
+    return galleries
+
+@app.get("/api/media/gallery/{event_id}")
+async def get_gallery(event_id: str):
+    """Get photos for a specific event"""
+    db = get_database()
+    
+    try:
+        event = await db.events.find_one({"_id": ObjectId(event_id)})
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        photos = []
+        async for photo in db.photos.find({"event_id": event_id}).sort("uploaded_at", -1):
+            photos.append({
+                "id": str(photo["_id"]),
+                "url": photo["url"],
+                "thumbnail_url": photo.get("thumbnail_url", photo["url"]),
+                "tags": photo.get("tags", []),
+                "uploaded_at": photo["uploaded_at"]
+            })
+        
+        return {
+            "event_name": event["name"],
+            "event_date": event["event_date"],
+            "photos": photos
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid event ID")
+
+@app.post("/api/media/photos/{photo_id}/tag")
+async def tag_photo(
+    photo_id: str,
+    tag_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Tag yourself in a photo"""
+    db = get_database()
+    
+    user_id = tag_data.get("user_id") or str(current_user["_id"])
+    
+    try:
+        photo = await db.photos.find_one({"_id": ObjectId(photo_id)})
+        if not photo:
+            raise HTTPException(status_code=404, detail="Photo not found")
+        
+        # Check if already tagged
+        if user_id in photo.get("tags", []):
+            raise HTTPException(status_code=400, detail="Déjà tagué sur cette photo")
+        
+        # Add tag
+        await db.photos.update_one(
+            {"_id": ObjectId(photo_id)},
+            {"$push": {"tags": user_id}}
+        )
+        
+        return {"message": "Tag ajouté avec succès!"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid photo ID")
+
+@app.get("/api/media/my-tagged-photos")
+async def get_my_tagged_photos(current_user: dict = Depends(get_current_user)):
+    """Get all photos where user is tagged"""
+    db = get_database()
+    
+    user_id = str(current_user["_id"])
+    photos = []
+    
+    async for photo in db.photos.find({"tags": user_id}).sort("uploaded_at", -1):
+        event = await db.events.find_one({"_id": ObjectId(photo["event_id"])})
+        photos.append({
+            "id": str(photo["_id"]),
+            "url": photo["url"],
+            "thumbnail_url": photo.get("thumbnail_url", photo["url"]),
+            "event_name": event["name"] if event else "Unknown Event",
+            "event_date": event["event_date"] if event else None,
+            "uploaded_at": photo["uploaded_at"]
+        })
+    
+    return photos
+
+
+# ============ AFTERMOVIES ENDPOINTS ============
+
+@app.get("/api/media/aftermovies")
+async def get_aftermovies():
+    """Get all aftermovies"""
+    db = get_database()
+    
+    videos = []
+    async for video in db.aftermovies.find().sort("event_date", -1):
+        videos.append({
+            "id": str(video["_id"]),
+            "title": video["title"],
+            "event_date": video["event_date"].isoformat() if hasattr(video["event_date"], 'isoformat') else video["event_date"],
+            "thumbnail_url": video["thumbnail_url"],
+            "video_url": video["video_url"],
+            "duration": video.get("duration", "0:00"),
+            "views": video.get("views", 0)
+        })
+    
+    return videos
+
+
+# ============ LOYALTY SCANNER ENDPOINT (FOR ADMIN APP) ============
+
+@app.post("/api/loyalty/admin/scan-checkin")
+async def admin_scan_checkin(
+    scan_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Admin/Staff: Scan QR code to check-in user and award points"""
+    import json
+    
+    # Verify admin/staff role
+    if current_user.get("role") not in ["admin", "staff"]:
+        raise HTTPException(status_code=403, detail="Accès staff/admin requis")
+    
+    db = get_database()
+    
+    qr_code_data = scan_data.get("qr_code_data")
+    event_id = scan_data.get("event_id")
+    
+    if not qr_code_data:
+        raise HTTPException(status_code=400, detail="QR code manquant")
+    
+    # Parse QR code
+    try:
+        qr_info = json.loads(qr_code_data)
+        if qr_info.get("type") != "loyalty_checkin":
+            raise HTTPException(status_code=400, detail="QR code invalide")
+        user_id = qr_info["user_id"]
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Format QR code invalide")
+    except KeyError:
+        raise HTTPException(status_code=400, detail="QR code incomplet")
+    
+    # Get current/latest event if not specified
+    if event_id == "current" or not event_id:
+        current_event = await db.events.find_one(
+            {"status": {"$in": ["live", "published", "upcoming"]}},
+            sort=[("event_date", -1)]
+        )
+        if not current_event:
+            raise HTTPException(status_code=404, detail="Aucun événement actif")
+        event_id = str(current_event["_id"])
+    
+    # Check if user exists
+    try:
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    except:
+        raise HTTPException(status_code=400, detail="ID utilisateur invalide")
+    
+    # Check if already checked in for this event
+    existing = await db.loyalty_checkins.find_one({
+        "user_id": user_id,
+        "event_id": event_id
+    })
+    
+    if existing:
+        return {
+            "success": False,
+            "message": f"{user['name']} est déjà enregistré pour cet événement",
+            "user_name": user["name"],
+            "already_checked_in": True
+        }
+    
+    # Create check-in
+    points_earned = 5
+    check_in = {
+        "user_id": user_id,
+        "event_id": event_id,
+        "points_earned": points_earned,
+        "checked_in_at": datetime.utcnow(),
+        "checked_in_by": str(current_user["_id"]),
+        "qr_code_scanned": qr_code_data
+    }
+    
+    await db.loyalty_checkins.insert_one(check_in)
+    
+    # Award points
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$inc": {"loyalty_points": points_earned}}
+    )
+    
+    # Log transaction
+    await db.loyalty_transactions.insert_one({
+        "user_id": user_id,
+        "transaction_type": "earned",
+        "points": points_earned,
+        "description": "Check-in événement",
+        "related_event_id": event_id,
+        "created_at": datetime.utcnow()
+    })
+    
+    # Get updated points
+    updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
+    
+    return {
+        "success": True,
+        "message": f"Check-in réussi! +{points_earned} points pour {user['name']}",
+        "user_name": user["name"],
+        "points_earned": points_earned,
+        "total_points": updated_user.get("loyalty_points", points_earned)
+    }
