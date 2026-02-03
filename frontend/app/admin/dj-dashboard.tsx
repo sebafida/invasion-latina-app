@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { theme } from '../src/config/theme';
-import { useAuth } from '../src/context/AuthContext';
-import api from '../src/config/api';
+import { theme } from '../../src/config/theme';
+import { useAuth } from '../../src/context/AuthContext';
+import api from '../../src/config/api';
 
 interface DJRequest {
   id: string;
