@@ -30,6 +30,9 @@ interface Event {
   status: string;
 }
 
+// Default event flyer image
+const DEFAULT_EVENT_FLYER = require('../../assets/images/event-flyer.jpg');
+
 export default function TicketsScreen() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
