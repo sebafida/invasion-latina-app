@@ -341,6 +341,43 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 
+  // Language Selector
+  languageSection: {
+    marginBottom: theme.spacing.lg,
+  },
+  languageTitle: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: '600' as any,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.sm,
+  },
+  languageOptions: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  languageOption: {
+    flex: 1,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm,
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.md,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  languageOptionSelected: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary + '20',
+  },
+  languageOptionText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+  },
+  languageOptionTextSelected: {
+    color: theme.colors.primary,
+    fontWeight: '600' as any,
+  },
+
   // Footer
   footer: {
     alignItems: 'center',
