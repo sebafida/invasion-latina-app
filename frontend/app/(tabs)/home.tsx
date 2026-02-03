@@ -18,6 +18,7 @@ const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const router = useRouter();
   const [nextEvent, setNextEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
