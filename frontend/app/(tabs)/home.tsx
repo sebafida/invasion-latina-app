@@ -166,7 +166,16 @@ export default function HomeScreen() {
                 <CountdownBox value={countdown.seconds} label="Secs" />
               </View>
               
-              <TouchableOpacity style={styles.buyButton}>
+              <TouchableOpacity 
+                style={styles.buyButton}
+                onPress={() => {
+                  if (nextEvent?.xceed_ticket_url) {
+                    Linking.openURL(nextEvent.xceed_ticket_url);
+                  } else {
+                    router.push('/(tabs)/tickets');
+                  }
+                }}
+              >
                 <View style={styles.buyButtonContent}>
                   <Text style={styles.buyButtonText}>Buy Tickets</Text>
                   <Ionicons name="arrow-forward" size={20} color="white" />
