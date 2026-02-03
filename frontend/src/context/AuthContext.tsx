@@ -66,13 +66,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string, phone?: string, acceptMarketing?: boolean) => {
     try {
       setIsLoading(true);
       const response = await api.post('/auth/register', {
         name,
         email,
         password,
+        phone: phone || '',
+        accept_marketing: acceptMarketing || false,
         role: 'user',
       });
       
