@@ -20,6 +20,7 @@ import { Button } from '../../src/components/Button';
 
 const LANGUAGES = [
   { code: 'fr', label: '🇫🇷 Français' },
+  { code: 'en', label: '🇬🇧 English' },
   { code: 'es', label: '🇪🇸 Español' },
   { code: 'nl', label: '🇳🇱 Nederlands' },
 ];
