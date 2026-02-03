@@ -2134,6 +2134,8 @@ async def admin_create_event(
         ]),
         "lineup": [],
         "status": "published",
+        "gallery_visible": False,  # Hidden by default - show after event
+        "aftermovie_visible": False,  # Hidden by default - show when video ready
         "created_at": datetime.utcnow(),
         "created_by": str(current_user["_id"])
     }
