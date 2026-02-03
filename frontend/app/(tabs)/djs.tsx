@@ -107,12 +107,16 @@ export default function DJsScreen() {
 
   const openInstagram = async (url: string) => {
     try {
-      const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) {
-        await Linking.openURL(url);
-      }
+      // Open URL directly without checking canOpenURL (more reliable)
+      await Linking.openURL(url);
     } catch (error) {
       console.error('Failed to open Instagram:', error);
+      // Fallback: try opening in browser
+      try {
+        await Linking.openURL(url.replace('instagram.com', 'www.instagram.com'));
+      } catch (e) {
+        console.error('Fallback also failed:', e);
+      }
     }
   };
 
