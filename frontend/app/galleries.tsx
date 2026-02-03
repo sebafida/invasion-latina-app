@@ -34,34 +34,38 @@ export default function GalleriesScreen() {
   const loadGalleries = async () => {
     try {
       setLoading(true);
+      // First try to get galleries from API
       const response = await api.get('/media/galleries');
-      setGalleries(response.data || []);
+      if (response.data && response.data.length > 0) {
+        setGalleries(response.data);
+      } else {
+        // If no galleries, get events and show them as potential galleries
+        const eventsResponse = await api.get('/events');
+        const eventGalleries = eventsResponse.data.map((event: any) => ({
+          id: event.id,
+          name: event.name,
+          event_date: event.event_date,
+          photo_count: 0,
+          cover_image: event.banner_image || null
+        }));
+        setGalleries(eventGalleries);
+      }
     } catch (error) {
       console.error('Failed to load galleries:', error);
-      // Mock data for demo
-      setGalleries([
-        {
-          id: 'demo-1',
-          name: 'Invasion Latina - Summer Edition 2024',
-          event_date: '2024-07-15T22:00:00',
-          photo_count: 156,
-          cover_image: 'https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=800'
-        },
-        {
-          id: 'demo-2',
-          name: 'Invasion Latina - Halloween Special',
-          event_date: '2024-10-31T22:00:00',
-          photo_count: 203,
-          cover_image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800'
-        },
-        {
-          id: 'demo-3',
-          name: 'Invasion Latina - New Year 2025',
-          event_date: '2024-12-31T22:00:00',
-          photo_count: 312,
-          cover_image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'
-        }
-      ]);
+      // Try to get events as fallback
+      try {
+        const eventsResponse = await api.get('/events');
+        const eventGalleries = eventsResponse.data.map((event: any) => ({
+          id: event.id,
+          name: event.name,
+          event_date: event.event_date,
+          photo_count: 0,
+          cover_image: event.banner_image || null
+        }));
+        setGalleries(eventGalleries);
+      } catch {
+        setGalleries([]);
+      }
     } finally {
       setLoading(false);
     }
