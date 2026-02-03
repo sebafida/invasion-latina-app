@@ -42,14 +42,18 @@ export default function TabLayout() {
             <Ionicons name="home" size={size} color={color} />
           ),
           // ============================================
-          // CUSTOM HEADER WITH LOGO
+          // CUSTOM HEADER WITH CENTERED LOGO
           // ============================================
+          headerTitleAlign: 'center',
           headerTitle: () => (
             <Image 
               source={require('../../assets/images/invasion-logo.png')}
               style={styles.headerLogo}
               resizeMode="contain"
             />
+          ),
+          headerLeft: () => (
+            <View style={styles.headerSpacer} />
           ),
           headerRight: () => (
             <TouchableOpacity style={styles.notificationButton}>
