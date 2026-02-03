@@ -91,24 +91,6 @@ const styles = StyleSheet.create({
     height: 140,
     marginBottom: theme.spacing.md,
   },
-  logo: {
-    fontSize: 56,
-    fontWeight: '900' as any,
-    color: theme.colors.primary,
-    letterSpacing: 4,
-  },
-  logoSubtitle: {
-    fontSize: 32,
-    fontWeight: '700' as any,
-    color: theme.colors.secondary,
-    letterSpacing: 8,
-  },
-  neonLine: {
-    width: 200,
-    height: 3,
-    backgroundColor: theme.colors.primary,
-    marginTop: theme.spacing.md,
-  },
   
   tagline: {
     fontSize: theme.fontSize.lg,
