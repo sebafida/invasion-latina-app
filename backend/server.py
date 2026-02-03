@@ -1625,3 +1625,247 @@ async def admin_scan_checkin(
         "points_earned": points_earned,
         "total_points": updated_user.get("loyalty_points", points_earned)
     }
+
+
+# ============ DJS MANAGEMENT ENDPOINTS ============
+
+# Default DJs data
+DEFAULT_DJS = [
+    {
+        "id": "1",
+        "name": "DJ GIZMO",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/gizmodj/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 1
+    },
+    {
+        "id": "2",
+        "name": "DJ DNK",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/deejaydnk/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 2
+    },
+    {
+        "id": "3",
+        "name": "DJ CRUZ",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/djaycruz/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 3
+    },
+    {
+        "id": "4",
+        "name": "DJ DANIEL MURILLO",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/danielmurillodj/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 4
+    },
+    {
+        "id": "5",
+        "name": "DJ SUNCEE",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/deejaysuncee/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 5
+    },
+    {
+        "id": "6",
+        "name": "DJ SAMO",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/djsamobe/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 6
+    },
+    {
+        "id": "7",
+        "name": "DJ MABOY",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/dj.maboy/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 7
+    },
+    {
+        "id": "8",
+        "name": "MC VELASQUEZ",
+        "type": "mc",
+        "instagram_url": "https://www.instagram.com/santiagovelaskz/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 8
+    }
+]
+
+@app.get("/api/djs")
+async def get_all_djs():
+    """Get all DJs and MCs"""
+    db = get_database()
+    
+    djs_list = []
+    async for dj in db.djs.find().sort("order", 1):
+        djs_list.append({
+            "id": str(dj["_id"]),
+            "name": dj["name"],
+            "type": dj.get("type", "dj"),
+            "instagram_url": dj.get("instagram_url"),
+            "photo_url": dj.get("photo_url"),
+            "is_resident": dj.get("is_resident", True),
+            "order": dj.get("order", 0)
+        })
+    
+    # Return default DJs if none in database
+    if not djs_list:
+        return DEFAULT_DJS
+    
+    return djs_list
+
+@app.get("/api/djs/event/{event_id}")
+async def get_event_djs(event_id: str):
+    """Get DJs assigned to a specific event"""
+    db = get_database()
+    
+    try:
+        event = await db.events.find_one({"_id": ObjectId(event_id)})
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        dj_ids = event.get("dj_ids", [])
+        
+        if not dj_ids:
+            # Return all resident DJs if no specific DJs assigned
+            return DEFAULT_DJS
+        
+        djs_list = []
+        for dj_id in dj_ids:
+            dj = await db.djs.find_one({"_id": ObjectId(dj_id)})
+            if dj:
+                djs_list.append({
+                    "id": str(dj["_id"]),
+                    "name": dj["name"],
+                    "type": dj.get("type", "dj"),
+                    "instagram_url": dj.get("instagram_url"),
+                    "photo_url": dj.get("photo_url"),
+                    "is_resident": dj.get("is_resident", True)
+                })
+        
+        return djs_list
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid event ID")
+
+@app.post("/api/admin/djs")
+async def create_dj(
+    dj_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Create a new DJ"""
+    db = get_database()
+    
+    new_dj = {
+        "name": dj_data["name"],
+        "type": dj_data.get("type", "dj"),
+        "instagram_url": dj_data.get("instagram_url"),
+        "photo_url": dj_data.get("photo_url"),
+        "is_resident": dj_data.get("is_resident", True),
+        "order": dj_data.get("order", 0),
+        "created_at": datetime.utcnow()
+    }
+    
+    result = await db.djs.insert_one(new_dj)
+    
+    return {
+        "id": str(result.inserted_id),
+        "message": "DJ créé avec succès"
+    }
+
+@app.put("/api/admin/djs/{dj_id}")
+async def update_dj(
+    dj_id: str,
+    dj_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update a DJ"""
+    db = get_database()
+    
+    try:
+        update_fields = {}
+        for field in ["name", "type", "instagram_url", "photo_url", "is_resident", "order"]:
+            if field in dj_data:
+                update_fields[field] = dj_data[field]
+        
+        update_fields["updated_at"] = datetime.utcnow()
+        
+        result = await db.djs.update_one(
+            {"_id": ObjectId(dj_id)},
+            {"$set": update_fields}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="DJ not found")
+        
+        return {"message": "DJ mis à jour avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/admin/events/{event_id}/assign-djs")
+async def assign_djs_to_event(
+    event_id: str,
+    data: Dict[str, List[str]] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Assign DJs to an event"""
+    db = get_database()
+    
+    dj_ids = data.get("dj_ids", [])
+    
+    try:
+        result = await db.events.update_one(
+            {"_id": ObjectId(event_id)},
+            {"$set": {"dj_ids": dj_ids, "updated_at": datetime.utcnow()}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        return {"message": f"{len(dj_ids)} DJs assignés à l'événement"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/admin/djs/init")
+async def initialize_default_djs(
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Initialize default DJs in database"""
+    db = get_database()
+    
+    # Check if DJs already exist
+    count = await db.djs.count_documents({})
+    if count > 0:
+        return {"message": f"{count} DJs already exist", "initialized": False}
+    
+    # Insert default DJs
+    for dj in DEFAULT_DJS:
+        dj_doc = {
+            "name": dj["name"],
+            "type": dj["type"],
+            "instagram_url": dj["instagram_url"],
+            "photo_url": dj["photo_url"],
+            "is_resident": dj["is_resident"],
+            "order": dj["order"],
+            "created_at": datetime.utcnow()
+        }
+        await db.djs.insert_one(dj_doc)
+    
+    return {"message": f"{len(DEFAULT_DJS)} DJs initialized", "initialized": True}
+
