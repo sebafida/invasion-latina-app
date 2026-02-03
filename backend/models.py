@@ -273,3 +273,46 @@ class NotificationPreferences(BaseModel):
     quiet_hours_enabled: bool = False
     quiet_hours_start: int = 23  # 11 PM
     quiet_hours_end: int = 9     # 9 AM
+
+
+# ============ LOYALTY PROGRAM MODELS ============
+
+class LoyaltyCheckIn(BaseModel):
+    id: Optional[str] = Field(None, alias="_id")
+    user_id: str
+    event_id: str
+    points_earned: int = 5
+    checked_in_at: datetime = Field(default_factory=datetime.utcnow)
+    checked_in_by: str  # Staff/Admin user ID
+    qr_code_scanned: str  # QR code that was scanned
+    
+    class Config:
+        populate_by_name = True
+
+class LoyaltyReward(BaseModel):
+    id: Optional[str] = Field(None, alias="_id")
+    user_id: str
+    reward_type: str  # "free_entry", "vip_upgrade", "drink_voucher"
+    points_required: int
+    points_spent: int
+    status: str = "pending"  # pending, redeemed, expired
+    code: str  # Unique redemption code
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    redeemed_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+    
+    class Config:
+        populate_by_name = True
+
+class LoyaltyTransaction(BaseModel):
+    id: Optional[str] = Field(None, alias="_id")
+    user_id: str
+    transaction_type: str  # "earned", "spent", "expired"
+    points: int
+    description: str
+    related_event_id: Optional[str] = None
+    related_reward_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    class Config:
+        populate_by_name = True
