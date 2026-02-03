@@ -74,6 +74,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     firebase_uid: Optional[str] = None
+    accept_marketing: bool = False
 
 class UserLogin(BaseModel):
     email: EmailStr
