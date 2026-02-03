@@ -190,7 +190,7 @@ export default function HomeScreen() {
               icon="camera"
               title="Photos"
               subtitle="Event galleries"
-              color={theme.colors.secondary}
+              color={theme.colors.neonBlue}
               onPress={() => router.push('/galleries')}
             />
             <ActionCard
@@ -202,8 +202,8 @@ export default function HomeScreen() {
             />
             <ActionCard
               icon="wine"
-              title="VIP Tables"
-              subtitle="Book now"
+              title="Booking"
+              subtitle="Tables"
               color={theme.colors.primary}
               onPress={() => router.push('/(tabs)/shop')}
             />
