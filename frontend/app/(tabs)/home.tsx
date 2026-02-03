@@ -187,10 +187,10 @@ export default function HomeScreen() {
               onPress={() => router.push('/(tabs)/dj')}
             />
             <ActionCard
-              icon="camera"
+              icon="images"
               title="Photos"
               subtitle="Event galleries"
-              color={theme.colors.neonBlue}
+              color={theme.colors.primary}
               onPress={() => router.push('/galleries')}
             />
             <ActionCard
@@ -228,7 +228,10 @@ export default function HomeScreen() {
         
         {/* Lineup - DJs Grid */}
         <View style={styles.lineupSection}>
-          <Text style={styles.sectionTitle}>LineUp 🎧</Text>
+          <View style={styles.lineupHeader}>
+            <Ionicons name="disc" size={24} color={theme.colors.primary} />
+            <Text style={styles.sectionTitle}>LineUp</Text>
+          </View>
           
           <View style={styles.lineupGrid}>
             {lineup.map((dj: any, index: number) => (
@@ -465,6 +468,11 @@ const styles = StyleSheet.create({
   lineupSection: {
     paddingHorizontal: theme.spacing.xl,
     marginBottom: theme.spacing.xl,
+  },
+  lineupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   lineupGrid: {
     flexDirection: 'row',

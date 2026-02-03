@@ -96,9 +96,8 @@ export default function TicketsScreen() {
     if (!categories || categories.length === 0) return 'Prix à venir';
     const prices = categories.map(c => c.price);
     const min = Math.min(...prices);
-    const max = Math.max(...prices);
-    if (min === max) return `${min}€`;
-    return `${min}€ - ${max}€`;
+    // Show only minimum price
+    return `${min}€`;
   };
 
   return (
