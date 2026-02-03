@@ -217,7 +217,11 @@ export default function HomeScreen() {
           activeOpacity={0.8}
         >
           <View style={styles.spotifyIcon}>
-            <Ionicons name="logo-spotify" size={28} color="#1DB954" />
+            <Image 
+              source={require('../../assets/images/spotify-logo.png')}
+              style={styles.spotifyLogoImage}
+              resizeMode="contain"
+            />
           </View>
           <View style={styles.spotifyInfo}>
             <Text style={styles.spotifyTitle}>Playlist Spotify</Text>
@@ -537,6 +541,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: theme.spacing.md,
+  },
+  spotifyLogoImage: {
+    width: 32,
+    height: 32,
   },
   spotifyInfo: {
     flex: 1,
