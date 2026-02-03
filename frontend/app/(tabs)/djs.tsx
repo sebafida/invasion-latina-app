@@ -107,14 +107,14 @@ export default function DJsScreen() {
     }
   };
 
-  const openInstagram = (url: string) => {
-    // Use window.open for web, Linking for native
-    if (Platform.OS === 'web') {
-      window.open(url, '_blank');
-    } else {
-      Linking.openURL(url).catch((error) => {
-        console.error('Failed to open Instagram:', error);
-      });
+  const openInstagram = async (url: string) => {
+    try {
+      // Use expo-web-browser for reliable cross-platform link opening
+      await WebBrowser.openBrowserAsync(url);
+    } catch (error) {
+      console.error('Failed to open Instagram:', error);
+      // Fallback to Linking
+      Linking.openURL(url).catch(e => console.error('Fallback failed:', e));
     }
   };
 
