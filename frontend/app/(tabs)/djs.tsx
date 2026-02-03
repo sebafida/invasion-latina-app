@@ -8,10 +8,8 @@ import {
   Image,
   Linking,
   RefreshControl,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as WebBrowser from 'expo-web-browser';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
 
