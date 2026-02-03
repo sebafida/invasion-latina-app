@@ -502,11 +502,131 @@ export default function ContentManagerScreen() {
     <View style={styles.tabContent}>
       <Text style={styles.sectionTitle}>📅 Événements</Text>
       <Text style={styles.helpText}>
-        Liste des événements existants
+        Créez et modifiez vos événements
       </Text>
 
+      {/* Add/Edit Event Form */}
+      {showEventForm ? (
+        <View style={styles.eventForm}>
+          <Text style={styles.formTitle}>
+            {editingEvent ? '✏️ Modifier l\'événement' : '➕ Nouvel événement'}
+          </Text>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Nom de l'événement *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Invasion Latina - Edition XXX"
+              placeholderTextColor={theme.colors.textMuted}
+              value={eventName}
+              onChangeText={setEventName}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Date de l'événement * (AAAA-MM-JJ)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="2025-03-15"
+              placeholderTextColor={theme.colors.textMuted}
+              value={eventDate}
+              onChangeText={setEventDate}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Description</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="La plus grande soirée latino..."
+              placeholderTextColor={theme.colors.textMuted}
+              value={eventDescription}
+              onChangeText={setEventDescription}
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Lieu</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Mirano Continental"
+              placeholderTextColor={theme.colors.textMuted}
+              value={eventVenue}
+              onChangeText={setEventVenue}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Lien XCEED (billetterie)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="https://xceed.me/..."
+              placeholderTextColor={theme.colors.textMuted}
+              value={eventXceedUrl}
+              onChangeText={setEventXceedUrl}
+              autoCapitalize="none"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>URL du Flyer</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="https://..."
+              placeholderTextColor={theme.colors.textMuted}
+              value={eventBannerUrl}
+              onChangeText={setEventBannerUrl}
+              autoCapitalize="none"
+            />
+          </View>
+
+          <View style={styles.formButtons}>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={() => {
+                resetEventForm();
+                setEditingEvent(null);
+                setShowEventForm(false);
+              }}
+            >
+              <Text style={styles.secondaryButtonText}>Annuler</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={editingEvent ? handleUpdateEvent : handleCreateEvent}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.primaryButtonText}>
+                  {editingEvent ? 'Mettre à jour' : 'Créer'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : (
+        <TouchableOpacity
+          style={styles.addEventButton}
+          onPress={() => setShowEventForm(true)}
+        >
+          <Ionicons name="add-circle" size={24} color="white" />
+          <Text style={styles.addEventButtonText}>Créer un nouvel événement</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Existing Events */}
+      <Text style={styles.existingSectionTitle}>Événements existants</Text>
       {events.map((event) => (
-        <View key={event.id} style={styles.eventCard}>
+        <TouchableOpacity 
+          key={event.id} 
+          style={styles.eventCard}
+          onPress={() => startEditEvent(event)}
+        >
           <View style={styles.eventCardHeader}>
             <Ionicons name="calendar" size={24} color={theme.colors.primary} />
             <View style={styles.eventCardInfo}>
@@ -520,21 +640,15 @@ export default function ContentManagerScreen() {
                 })}
               </Text>
             </View>
-            <View style={[
-              styles.statusBadge,
-              event.status === 'upcoming' && styles.statusUpcoming,
-              event.status === 'live' && styles.statusLive,
-            ]}>
-              <Text style={styles.statusText}>{event.status}</Text>
-            </View>
+            <Ionicons name="create-outline" size={20} color={theme.colors.textSecondary} />
           </View>
-        </View>
+        </TouchableOpacity>
       ))}
 
       <View style={styles.infoBox}>
         <Ionicons name="information-circle" size={20} color={theme.colors.primary} />
         <Text style={styles.infoText}>
-          Pour créer un nouvel événement ou modifier les détails, contactez le support technique.
+          Appuyez sur un événement pour le modifier. La date doit être au format AAAA-MM-JJ (ex: 2025-03-15).
         </Text>
       </View>
     </View>
