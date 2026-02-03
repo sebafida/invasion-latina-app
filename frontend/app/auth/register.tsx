@@ -8,8 +8,11 @@ import {
   Platform,
   ScrollView,
   Alert,
+  TouchableOpacity,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { Button } from '../../src/components/Button';
@@ -20,32 +23,40 @@ export default function RegisterScreen() {
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptMarketing, setAcceptMarketing] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   
   const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+    if (!name || !email || !phone || !password || !confirmPassword) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
       return;
     }
     
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert('Erreur', 'Les mots de passe ne correspondent pas');
       return;
     }
     
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+
+    if (!acceptTerms) {
+      Alert.alert('Erreur', 'Vous devez accepter les conditions générales');
       return;
     }
     
     try {
       setLoading(true);
-      await register(name, email, password);
+      await register(name, email, password, phone, acceptMarketing);
       router.replace('/(tabs)/home');
     } catch (error: any) {
-      Alert.alert('Registration Failed', error.message);
+      Alert.alert('Inscription échouée', error.message);
     } finally {
       setLoading(false);
     }
@@ -58,19 +69,28 @@ export default function RegisterScreen() {
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <Image 
+              source={require('../../assets/images/invasion-logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Join Invasion Latina</Text>
-            <Text style={styles.subtitle}>Create your account and get ready to party</Text>
+            <Text style={styles.title}>Rejoins Invasion Latina</Text>
+            <Text style={styles.subtitle}>Crée ton compte et prépare-toi à faire la fête</Text>
           </View>
           
           {/* Form */}
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Full Name</Text>
+              <Text style={styles.label}>Nom complet *</Text>
               <TextInput
                 style={styles.input}
-                placeholder="John Doe"
+                placeholder="Jean Dupont"
                 placeholderTextColor={theme.colors.textMuted}
                 value={name}
                 onChangeText={setName}
@@ -79,10 +99,10 @@ export default function RegisterScreen() {
             </View>
             
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>Email *</Text>
               <TextInput
                 style={styles.input}
-                placeholder="your@email.com"
+                placeholder="ton@email.com"
                 placeholderTextColor={theme.colors.textMuted}
                 value={email}
                 onChangeText={setEmail}
@@ -90,12 +110,24 @@ export default function RegisterScreen() {
                 autoCapitalize="none"
               />
             </View>
-            
+
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>Numéro de téléphone *</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Min. 6 characters"
+                placeholder="+32 470 12 34 56"
+                placeholderTextColor={theme.colors.textMuted}
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Mot de passe *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Min. 6 caractères"
                 placeholderTextColor={theme.colors.textMuted}
                 value={password}
                 onChangeText={setPassword}
@@ -105,10 +137,10 @@ export default function RegisterScreen() {
             </View>
             
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Confirm Password</Text>
+              <Text style={styles.label}>Confirmer le mot de passe *</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Re-enter password"
+                placeholder="Répète ton mot de passe"
                 placeholderTextColor={theme.colors.textMuted}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -116,15 +148,60 @@ export default function RegisterScreen() {
                 autoCapitalize="none"
               />
             </View>
+
+            {/* Consent Checkboxes */}
+            <View style={styles.consentSection}>
+              {/* Terms and Conditions - Required */}
+              <TouchableOpacity
+                style={styles.checkboxRow}
+                onPress={() => setAcceptTerms(!acceptTerms)}
+              >
+                <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
+                  {acceptTerms && <Ionicons name="checkmark" size={16} color="white" />}
+                </View>
+                <Text style={styles.checkboxLabel}>
+                  J'accepte les{' '}
+                  <Text style={styles.linkText}>conditions générales d'utilisation</Text>
+                  {' '}et la{' '}
+                  <Text style={styles.linkText}>politique de confidentialité</Text>
+                  {' '}*
+                </Text>
+              </TouchableOpacity>
+
+              {/* Marketing Consent - Optional */}
+              <TouchableOpacity
+                style={styles.checkboxRow}
+                onPress={() => setAcceptMarketing(!acceptMarketing)}
+              >
+                <View style={[styles.checkbox, acceptMarketing && styles.checkboxChecked]}>
+                  {acceptMarketing && <Ionicons name="checkmark" size={16} color="white" />}
+                </View>
+                <Text style={styles.checkboxLabel}>
+                  J'accepte de recevoir des informations sur les événements, promotions et actualités d'Invasion Latina par email et/ou SMS
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.requiredNote}>* Champs obligatoires</Text>
             
             <Button
-              title="Create Account"
+              title="Créer mon compte"
               onPress={handleRegister}
               loading={loading}
               fullWidth
               size="lg"
             />
           </View>
+
+          {/* Footer - Back to Login */}
+          <TouchableOpacity
+            style={styles.footer}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.footerText}>
+              Déjà un compte ? <Text style={styles.footerLink}>Se connecter</Text>
+            </Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -141,15 +218,25 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
     paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.xxl,
+    paddingVertical: theme.spacing.xl,
   },
+
+  // Logo
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.lg,
+  },
+  logoImage: {
+    width: 200,
+    height: 100,
+  },
+
   header: {
-    marginBottom: theme.spacing.xxl,
+    marginBottom: theme.spacing.xl,
   },
   title: {
-    fontSize: theme.fontSize.xxxl,
+    fontSize: theme.fontSize.xxl,
     fontWeight: '900' as any,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
@@ -159,10 +246,10 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   form: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.lg,
   },
   inputContainer: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
   label: {
     fontSize: theme.fontSize.sm,
@@ -178,5 +265,61 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
     borderWidth: 1,
     borderColor: theme.colors.elevated,
+  },
+
+  // Consent Section
+  consentSection: {
+    marginBottom: theme.spacing.lg,
+    marginTop: theme.spacing.sm,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.md,
+    gap: theme.spacing.sm,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: theme.colors.textMuted,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  checkboxChecked: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+    lineHeight: 20,
+  },
+  linkText: {
+    color: theme.colors.primary,
+    textDecorationLine: 'underline',
+  },
+  requiredNote: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textMuted,
+    marginBottom: theme.spacing.md,
+    fontStyle: 'italic',
+  },
+
+  // Footer
+  footer: {
+    alignItems: 'center',
+    marginTop: theme.spacing.md,
+  },
+  footerText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.fontSize.sm,
+  },
+  footerLink: {
+    color: theme.colors.primary,
+    fontWeight: '600' as any,
   },
 });
