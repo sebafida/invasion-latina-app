@@ -139,24 +139,42 @@ export default function HomeScreen() {
               title="DJ Requests"
               subtitle="Vote for songs"
               color={theme.colors.neonPink}
+              onPress={() => router.push('/(tabs)/dj')}
             />
             <ActionCard
               icon="ticket"
-              title="My Tickets"
-              subtitle="View QR codes"
+              title="Buy Tickets"
+              subtitle="Get your spot"
               color={theme.colors.neonBlue}
-            />
-            <ActionCard
-              icon="cart"
-              title="Merch Store"
-              subtitle="Shop official gear"
-              color={theme.colors.secondary}
+              onPress={() => router.push('/(tabs)/tickets')}
             />
             <ActionCard
               icon="wine"
               title="VIP Tables"
               subtitle="Book now"
               color={theme.colors.primary}
+              onPress={() => router.push('/(tabs)/shop')}
+            />
+            <ActionCard
+              icon="camera"
+              title="Photos"
+              subtitle="Event galleries"
+              color={theme.colors.secondary}
+              onPress={() => router.push('/galleries')}
+            />
+            <ActionCard
+              icon="play-circle"
+              title="Aftermovies"
+              subtitle="Watch recap"
+              color={theme.colors.neonPink}
+              onPress={() => router.push('/aftermovies')}
+            />
+            <ActionCard
+              icon="globe"
+              title="Language"
+              subtitle="FR / ES / NL"
+              color={theme.colors.neonBlue}
+              onPress={() => router.push('/(tabs)/profile')}
             />
           </View>
         </View>
