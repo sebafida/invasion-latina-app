@@ -2176,6 +2176,10 @@ async def admin_update_event(
         update_fields["xceed_ticket_url"] = event_data["xceed_ticket_url"]
     if "ticket_categories" in event_data:
         update_fields["ticket_categories"] = event_data["ticket_categories"]
+    if "gallery_visible" in event_data:
+        update_fields["gallery_visible"] = event_data["gallery_visible"]
+    if "aftermovie_visible" in event_data:
+        update_fields["aftermovie_visible"] = event_data["aftermovie_visible"]
     
     update_fields["updated_at"] = datetime.utcnow()
     
@@ -2189,6 +2193,42 @@ async def admin_update_event(
             raise HTTPException(status_code=404, detail="Événement non trouvé ou aucune modification")
         
         return {"message": "Événement mis à jour avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.put("/api/admin/events/{event_id}/visibility")
+async def admin_toggle_event_visibility(
+    event_id: str,
+    visibility_data: Dict[str, bool] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Toggle gallery/aftermovie visibility for an event"""
+    db = get_database()
+    
+    update_fields = {}
+    
+    if "gallery_visible" in visibility_data:
+        update_fields["gallery_visible"] = visibility_data["gallery_visible"]
+    if "aftermovie_visible" in visibility_data:
+        update_fields["aftermovie_visible"] = visibility_data["aftermovie_visible"]
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="Aucun champ de visibilité fourni")
+    
+    update_fields["updated_at"] = datetime.utcnow()
+    
+    try:
+        result = await db.events.update_one(
+            {"_id": ObjectId(event_id)},
+            {"$set": update_fields}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Événement non trouvé")
+        
+        return {"message": "Visibilité mise à jour avec succès"}
         
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
