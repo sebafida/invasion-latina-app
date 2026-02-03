@@ -1869,3 +1869,103 @@ async def initialize_default_djs(
     
     return {"message": f"{len(DEFAULT_DJS)} DJs initialized", "initialized": True}
 
+
+
+# ============ WELCOME PAGE CONTENT ENDPOINTS ============
+
+# Default welcome content
+DEFAULT_WELCOME_CONTENT = {
+    "flyer_url": None,  # Will use local image
+    "video_url": None,  # Will use default
+    "tagline": "The Biggest Latino-Reggaeton Party in Belgium",
+    "venue_name": "Mirano Continental, Brussels"
+}
+
+@app.get("/api/welcome-content")
+async def get_welcome_content():
+    """Get welcome page content (flyer, video, tagline)"""
+    db = get_database()
+    
+    content = await db.app_settings.find_one({"type": "welcome_content"})
+    
+    if not content:
+        return DEFAULT_WELCOME_CONTENT
+    
+    return {
+        "flyer_url": content.get("flyer_url"),
+        "video_url": content.get("video_url"),
+        "tagline": content.get("tagline", DEFAULT_WELCOME_CONTENT["tagline"]),
+        "venue_name": content.get("venue_name", DEFAULT_WELCOME_CONTENT["venue_name"])
+    }
+
+@app.put("/api/admin/welcome-content")
+async def update_welcome_content(
+    content_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update welcome page content (flyer, video, tagline)"""
+    db = get_database()
+    
+    update_fields = {
+        "type": "welcome_content",
+        "updated_at": datetime.utcnow(),
+        "updated_by": str(current_user["_id"])
+    }
+    
+    # Update only provided fields
+    for field in ["flyer_url", "video_url", "tagline", "venue_name"]:
+        if field in content_data:
+            update_fields[field] = content_data[field]
+    
+    await db.app_settings.update_one(
+        {"type": "welcome_content"},
+        {"$set": update_fields},
+        upsert=True
+    )
+    
+    return {"message": "Contenu de la page d'accueil mis à jour avec succès"}
+
+@app.post("/api/admin/welcome-content/upload-flyer")
+async def upload_welcome_flyer(
+    flyer_url: str = Body(..., embed=True),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update the welcome page flyer URL"""
+    db = get_database()
+    
+    await db.app_settings.update_one(
+        {"type": "welcome_content"},
+        {
+            "$set": {
+                "flyer_url": flyer_url,
+                "updated_at": datetime.utcnow(),
+                "updated_by": str(current_user["_id"])
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "Flyer mis à jour avec succès", "flyer_url": flyer_url}
+
+@app.post("/api/admin/welcome-content/upload-video")
+async def upload_welcome_video(
+    video_url: str = Body(..., embed=True),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update the welcome page aftermovie video URL"""
+    db = get_database()
+    
+    await db.app_settings.update_one(
+        {"type": "welcome_content"},
+        {
+            "$set": {
+                "video_url": video_url,
+                "updated_at": datetime.utcnow(),
+                "updated_by": str(current_user["_id"])
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "Vidéo mise à jour avec succès", "video_url": video_url}
+
