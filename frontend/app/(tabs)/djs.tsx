@@ -106,18 +106,14 @@ export default function DJsScreen() {
     }
   };
 
-  const openInstagram = async (url: string) => {
-    try {
-      // Open URL directly without checking canOpenURL (more reliable)
-      await Linking.openURL(url);
-    } catch (error) {
-      console.error('Failed to open Instagram:', error);
-      // Fallback: try opening in browser
-      try {
-        await Linking.openURL(url.replace('instagram.com', 'www.instagram.com'));
-      } catch (e) {
-        console.error('Fallback also failed:', e);
-      }
+  const openInstagram = (url: string) => {
+    // Use window.open for web, Linking for native
+    if (Platform.OS === 'web') {
+      window.open(url, '_blank');
+    } else {
+      Linking.openURL(url).catch((error) => {
+        console.error('Failed to open Instagram:', error);
+      });
     }
   };
 
