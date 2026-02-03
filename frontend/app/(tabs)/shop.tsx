@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
@@ -14,55 +15,129 @@ import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/config/api';
 
+const { width } = Dimensions.get('window');
+
 interface Event {
   id: string;
   name: string;
   event_date: string;
 }
 
-const VIP_ZONES = [
-  { value: 'main_floor', label: 'Main Floor VIP', icon: 'star' },
-  { value: 'vip_area', label: 'VIP Area Premium', icon: 'diamond' },
-  { value: 'terrace', label: 'Terrasse Exclusive', icon: 'snow' },
-];
+// Room types with their packages
+const ROOMS = {
+  main_room: {
+    name: 'Main Room',
+    icon: 'musical-notes',
+    color: theme.colors.primary,
+    description: 'Au cœur de l\'action, ambiance garantie!',
+    packages: [
+      {
+        value: 'table_haute',
+        label: 'Table Haute',
+        price: 300,
+        capacity: '4-6 personnes',
+        features: ['Table debout', '1 bouteille incluse', 'Vue sur la piste'],
+      },
+      {
+        value: 'table_assise',
+        label: 'Table Assise',
+        price: 500,
+        capacity: '6-8 personnes',
+        features: ['Table avec banquette', '2 bouteilles incluses', 'Service dédié'],
+      },
+      {
+        value: 'table_premium',
+        label: 'Table Premium',
+        price: 750,
+        capacity: '8-10 personnes',
+        features: ['Meilleur emplacement', '3 bouteilles premium', 'Service VIP', 'Champagne offert'],
+      },
+    ],
+  },
+  classy_room: {
+    name: 'Classy Room',
+    icon: 'wine',
+    color: '#FFD700',
+    description: 'L\'élégance dans une ambiance plus intimiste',
+    packages: [
+      {
+        value: 'table_haute',
+        label: 'Table Haute',
+        price: 300,
+        capacity: '4-6 personnes',
+        features: ['Table debout', '1 bouteille incluse', 'Ambiance lounge'],
+      },
+      {
+        value: 'table_assise',
+        label: 'Table Assise',
+        price: 500,
+        capacity: '6-8 personnes',
+        features: ['Table avec banquette', '2 bouteilles incluses', 'Service personnalisé'],
+      },
+      {
+        value: 'table_premium',
+        label: 'Table Premium',
+        price: 750,
+        capacity: '8-10 personnes',
+        features: ['Espace privatif', '3 bouteilles premium', 'Service VIP exclusif'],
+      },
+    ],
+  },
+  vip: {
+    name: 'VIP',
+    icon: 'diamond',
+    color: '#E91E63',
+    description: 'Le summum du luxe et de l\'exclusivité',
+    packages: [
+      {
+        value: 'table_haute',
+        label: 'Table Haute VIP',
+        price: 500,
+        capacity: '4-6 personnes',
+        features: ['Table premium', '2 bouteilles incluses', 'Accès VIP lounge'],
+      },
+      {
+        value: 'table_assise',
+        label: 'Table Assise VIP',
+        price: 1000,
+        capacity: '8-10 personnes',
+        features: ['Table luxe avec banquette', '4 bouteilles premium', 'Service VIP dédié', 'Champagne offert'],
+      },
+      {
+        value: 'table_presidentiel',
+        label: 'Table Présidentielle',
+        price: 1500,
+        capacity: '10-15 personnes',
+        features: ['Espace privé exclusif', '6 bouteilles au choix', 'Service butler', 'Champagne Moët', 'Entrée prioritaire groupe'],
+      },
+    ],
+  },
+};
 
-const VIP_PACKAGES = [
-  {
-    value: 'bronze',
-    label: 'Bronze',
-    price: 200,
-    features: ['Table pour 4-6 personnes', '1 bouteille incluse', 'Service standard'],
-  },
-  {
-    value: 'silver',
-    label: 'Silver',
-    price: 350,
-    features: ['Table pour 6-8 personnes', '2 bouteilles incluses', 'Service prioritaire', 'Mixers premium'],
-  },
-  {
-    value: 'gold',
-    label: 'Gold',
-    price: 500,
-    features: ['Table pour 8-10 personnes', '3 bouteilles premium', 'Service VIP dédié', 'Champagne offert', 'Entrée prioritaire'],
-  },
-];
+type RoomKey = keyof typeof ROOMS;
 
 export default function VIPBookingScreen() {
   const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState('');
-  const [selectedZone, setSelectedZone] = useState('main_floor');
-  const [selectedPackage, setSelectedPackage] = useState('bronze');
+  const [selectedRoom, setSelectedRoom] = useState<RoomKey>('main_room');
+  const [selectedPackage, setSelectedPackage] = useState('table_haute');
   const [guestCount, setGuestCount] = useState('6');
   const [bottlePreferences, setBottlePreferences] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
   const [customerName, setCustomerName] = useState(user?.name || '');
   const [customerEmail, setCustomerEmail] = useState(user?.email || '');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadEvents();
   }, []);
+
+  useEffect(() => {
+    // Reset package when room changes
+    setSelectedPackage('table_haute');
+  }, [selectedRoom]);
 
   const loadEvents = async () => {
     try {
@@ -79,8 +154,10 @@ export default function VIPBookingScreen() {
     }
   };
 
+  const getCurrentRoom = () => ROOMS[selectedRoom];
+  
   const getSelectedPackageDetails = () => {
-    return VIP_PACKAGES.find(p => p.value === selectedPackage);
+    return getCurrentRoom().packages.find(p => p.value === selectedPackage);
   };
 
   const handleSubmitBooking = async () => {
@@ -89,8 +166,8 @@ export default function VIPBookingScreen() {
       return;
     }
 
-    if (!customerName.trim() || !customerEmail.trim()) {
-      Alert.alert('Erreur', 'Veuillez remplir votre nom et email');
+    if (!customerName.trim() || !customerEmail.trim() || !customerPhone.trim()) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs de contact');
       return;
     }
 
@@ -102,7 +179,7 @@ export default function VIPBookingScreen() {
 
       const bookingData = {
         event_id: selectedEvent,
-        zone: selectedZone,
+        zone: selectedRoom,
         package: selectedPackage,
         guest_count: parseInt(guestCount),
         bottle_preferences: bottlePreferences.trim(),
@@ -110,9 +187,10 @@ export default function VIPBookingScreen() {
         total_price: packageDetails.price,
         customer_name: customerName.trim(),
         customer_email: customerEmail.trim(),
+        customer_phone: customerPhone.trim(),
       };
 
-      const response = await api.post('/vip/book', bookingData);
+      await api.post('/vip/book', bookingData);
 
       Alert.alert(
         'Demande envoyée! 🍾',
@@ -121,7 +199,6 @@ export default function VIPBookingScreen() {
           {
             text: 'OK',
             onPress: () => {
-              // Reset form
               setBottlePreferences('');
               setSpecialRequests('');
               setGuestCount('6');
@@ -137,6 +214,7 @@ export default function VIPBookingScreen() {
     }
   };
 
+  const currentRoom = getCurrentRoom();
   const packageDetails = getSelectedPackageDetails();
 
   return (
@@ -150,7 +228,7 @@ export default function VIPBookingScreen() {
 
         {/* Event Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Événement</Text>
+          <Text style={styles.sectionTitle}>📅 Événement</Text>
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={selectedEvent}
@@ -168,55 +246,67 @@ export default function VIPBookingScreen() {
           </View>
         </View>
 
-        {/* Zone Selection */}
+        {/* Room Tabs */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Zone VIP</Text>
-          <View style={styles.optionsGrid}>
-            {VIP_ZONES.map(zone => (
-              <TouchableOpacity
-                key={zone.value}
-                style={[
-                  styles.optionCard,
-                  selectedZone === zone.value && styles.optionCardSelected
-                ]}
-                onPress={() => setSelectedZone(zone.value)}
-              >
-                <Ionicons
-                  name={zone.icon as any}
-                  size={32}
-                  color={selectedZone === zone.value ? theme.colors.primary : theme.colors.textMuted}
-                />
-                <Text style={[
-                  styles.optionLabel,
-                  selectedZone === zone.value && styles.optionLabelSelected
-                ]}>
-                  {zone.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <Text style={styles.sectionTitle}>🏠 Choisis ta salle</Text>
+          <View style={styles.tabsContainer}>
+            {(Object.keys(ROOMS) as RoomKey[]).map((roomKey) => {
+              const room = ROOMS[roomKey];
+              const isSelected = selectedRoom === roomKey;
+              return (
+                <TouchableOpacity
+                  key={roomKey}
+                  style={[
+                    styles.tab,
+                    isSelected && { borderColor: room.color, backgroundColor: room.color + '20' }
+                  ]}
+                  onPress={() => setSelectedRoom(roomKey)}
+                >
+                  <Ionicons
+                    name={room.icon as any}
+                    size={24}
+                    color={isSelected ? room.color : theme.colors.textMuted}
+                  />
+                  <Text style={[
+                    styles.tabText,
+                    isSelected && { color: room.color }
+                  ]}>
+                    {room.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          
+          {/* Room Description */}
+          <View style={[styles.roomDescription, { borderLeftColor: currentRoom.color }]}>
+            <Text style={styles.roomDescriptionText}>{currentRoom.description}</Text>
           </View>
         </View>
 
         {/* Package Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Package VIP</Text>
-          {VIP_PACKAGES.map(pkg => (
+          <Text style={styles.sectionTitle}>📦 Formule</Text>
+          {currentRoom.packages.map(pkg => (
             <TouchableOpacity
               key={pkg.value}
               style={[
                 styles.packageCard,
-                selectedPackage === pkg.value && styles.packageCardSelected
+                selectedPackage === pkg.value && { borderColor: currentRoom.color, backgroundColor: currentRoom.color + '10' }
               ]}
               onPress={() => setSelectedPackage(pkg.value)}
             >
               <View style={styles.packageHeader}>
-                <Text style={[
-                  styles.packageName,
-                  selectedPackage === pkg.value && styles.packageNameSelected
-                ]}>
-                  {pkg.label}
-                </Text>
-                <Text style={styles.packagePrice}>{pkg.price}€</Text>
+                <View>
+                  <Text style={[
+                    styles.packageName,
+                    selectedPackage === pkg.value && { color: currentRoom.color }
+                  ]}>
+                    {pkg.label}
+                  </Text>
+                  <Text style={styles.packageCapacity}>{pkg.capacity}</Text>
+                </View>
+                <Text style={[styles.packagePrice, { color: currentRoom.color }]}>{pkg.price}€</Text>
               </View>
               <View style={styles.packageFeatures}>
                 {pkg.features.map((feature, index) => (
@@ -232,7 +322,7 @@ export default function VIPBookingScreen() {
 
         {/* Guest Count */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Nombre de personnes</Text>
+          <Text style={styles.sectionTitle}>👥 Nombre de personnes</Text>
           <View style={styles.inputContainer}>
             <Ionicons name="people" size={20} color={theme.colors.textMuted} />
             <TextInput
@@ -248,7 +338,7 @@ export default function VIPBookingScreen() {
 
         {/* Bottle Preferences */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Préférences bouteilles (optionnel)</Text>
+          <Text style={styles.sectionTitle}>🍸 Préférences bouteilles (optionnel)</Text>
           <View style={styles.textAreaContainer}>
             <TextInput
               style={styles.textArea}
@@ -264,7 +354,7 @@ export default function VIPBookingScreen() {
 
         {/* Special Requests */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Demandes spéciales (optionnel)</Text>
+          <Text style={styles.sectionTitle}>✨ Demandes spéciales (optionnel)</Text>
           <View style={styles.textAreaContainer}>
             <TextInput
               style={styles.textArea}
@@ -280,7 +370,7 @@ export default function VIPBookingScreen() {
 
         {/* Contact Info */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Informations de contact</Text>
+          <Text style={styles.sectionTitle}>📞 Informations de contact</Text>
           <View style={styles.inputContainer}>
             <Ionicons name="person" size={20} color={theme.colors.textMuted} />
             <TextInput
@@ -303,19 +393,38 @@ export default function VIPBookingScreen() {
               autoCapitalize="none"
             />
           </View>
+          <View style={styles.inputContainer}>
+            <Ionicons name="call" size={20} color={theme.colors.textMuted} />
+            <TextInput
+              style={styles.input}
+              placeholder="Téléphone"
+              placeholderTextColor={theme.colors.textMuted}
+              value={customerPhone}
+              onChangeText={setCustomerPhone}
+              keyboardType="phone-pad"
+            />
+          </View>
         </View>
 
         {/* Summary */}
         {packageDetails && (
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryTitle}>Résumé de votre réservation</Text>
+          <View style={[styles.summaryCard, { borderLeftColor: currentRoom.color }]}>
+            <Text style={styles.summaryTitle}>📋 Résumé de votre réservation</Text>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Package:</Text>
+              <Text style={styles.summaryLabel}>Salle:</Text>
+              <Text style={[styles.summaryValue, { color: currentRoom.color }]}>{currentRoom.name}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Formule:</Text>
               <Text style={styles.summaryValue}>{packageDetails.label}</Text>
             </View>
             <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Capacité:</Text>
+              <Text style={styles.summaryValue}>{packageDetails.capacity}</Text>
+            </View>
+            <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Prix:</Text>
-              <Text style={styles.summaryPrice}>{packageDetails.price}€</Text>
+              <Text style={[styles.summaryPrice, { color: currentRoom.color }]}>{packageDetails.price}€</Text>
             </View>
             <Text style={styles.summaryNote}>
               💡 La confirmation et le paiement se feront après validation de votre demande
@@ -325,13 +434,13 @@ export default function VIPBookingScreen() {
 
         {/* Submit Button */}
         <TouchableOpacity
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+          style={[styles.submitButton, { backgroundColor: currentRoom.color }, loading && styles.submitButtonDisabled]}
           onPress={handleSubmitBooking}
           disabled={loading}
         >
           <Ionicons name="send" size={20} color="white" />
           <Text style={styles.submitButtonText}>
-            {loading ? 'Envoi...' : 'Envoyer la demande'}
+            {loading ? 'Envoi en cours...' : 'Envoyer la demande'}
           </Text>
         </TouchableOpacity>
 
@@ -394,12 +503,13 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
   },
 
-  // Options Grid
-  optionsGrid: {
+  // Tabs
+  tabsContainer: {
     flexDirection: 'row',
     gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
   },
-  optionCard: {
+  tab: {
     flex: 1,
     backgroundColor: theme.colors.cardBackground,
     borderRadius: theme.borderRadius.md,
@@ -408,19 +518,24 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'transparent',
   },
-  optionCardSelected: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '20',
-  },
-  optionLabel: {
+  tabText: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
-    textAlign: 'center',
-  },
-  optionLabelSelected: {
-    color: theme.colors.primary,
     fontWeight: theme.fontWeight.bold,
+  },
+
+  // Room Description
+  roomDescription: {
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    borderLeftWidth: 4,
+  },
+  roomDescriptionText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+    fontStyle: 'italic',
   },
 
   // Package Card
@@ -432,14 +547,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'transparent',
   },
-  packageCardSelected: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '10',
-  },
   packageHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: theme.spacing.sm,
   },
   packageName: {
@@ -447,13 +558,14 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textPrimary,
   },
-  packageNameSelected: {
-    color: theme.colors.primary,
+  packageCapacity: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textMuted,
+    marginTop: 2,
   },
   packagePrice: {
-    fontSize: theme.fontSize.xl,
+    fontSize: theme.fontSize.xxl,
     fontWeight: theme.fontWeight.black,
-    color: theme.colors.neonPink,
   },
   packageFeatures: {
     gap: theme.spacing.xs,
@@ -504,7 +616,6 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.xl,
     borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
   },
   summaryTitle: {
     fontSize: theme.fontSize.md,
@@ -527,9 +638,8 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
   },
   summaryPrice: {
-    fontSize: theme.fontSize.lg,
+    fontSize: theme.fontSize.xl,
     fontWeight: theme.fontWeight.black,
-    color: theme.colors.neonPink,
   },
   summaryNote: {
     fontSize: theme.fontSize.xs,
@@ -543,7 +653,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.md,
     paddingVertical: theme.spacing.md,
     marginHorizontal: theme.spacing.xl,
