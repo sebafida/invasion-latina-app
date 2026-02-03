@@ -92,9 +92,13 @@ export default function TabLayout() {
       <Tabs.Screen
         name="shop"
         options={{
-          title: 'VIP',
+          title: 'Booking',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="diamond" size={size} color={color} />
+            <Image 
+              source={require('../../assets/images/champagne-icon.png')}
+              style={{ width: size, height: size, tintColor: color }}
+              resizeMode="contain"
+            />
           ),
         }}
       />
