@@ -32,6 +32,7 @@ interface LoyaltyData {
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+  const router = useRouter();
   const [loyaltyData, setLoyaltyData] = useState<LoyaltyData | null>(null);
   const [loading, setLoading] = useState(false);
   const [showQR, setShowQR] = useState(false);
