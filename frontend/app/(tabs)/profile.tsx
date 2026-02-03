@@ -523,6 +523,26 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
   },
 
+  // DJ Dashboard Button
+  djDashboardButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    gap: theme.spacing.sm,
+  },
+  djDashboardText: {
+    flex: 1,
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: 'white',
+  },
+
   // Info Section
   infoSection: {
     marginHorizontal: theme.spacing.xl,
