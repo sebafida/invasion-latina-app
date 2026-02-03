@@ -8,6 +8,7 @@ import {
   Image,
   Linking,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
