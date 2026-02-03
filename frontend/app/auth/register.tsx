@@ -15,11 +15,19 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
+import { useLanguage } from '../../src/context/LanguageContext';
 import { Button } from '../../src/components/Button';
+
+const LANGUAGES = [
+  { code: 'fr', label: '🇫🇷 Français' },
+  { code: 'es', label: '🇪🇸 Español' },
+  { code: 'nl', label: '🇳🇱 Nederlands' },
+];
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { register } = useAuth();
+  const { language, setLanguage } = useLanguage();
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
