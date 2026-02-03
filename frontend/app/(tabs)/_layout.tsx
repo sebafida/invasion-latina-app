@@ -44,16 +44,12 @@ export default function TabLayout() {
           // ============================================
           // CUSTOM HEADER WITH LOGO
           // ============================================
-          // TODO: Replace with actual logo image
-          // Use: headerTitle: () => <Image source={require('../../assets/logo-header.png')} style={styles.headerLogo} resizeMode="contain" />
           headerTitle: () => (
-            <View style={styles.headerLogoContainer}>
-              <Ionicons name="flame" size={28} color={theme.colors.primary} />
-              <View style={styles.headerTextContainer}>
-                <Text style={styles.headerLogoText}>INVASION</Text>
-                <Text style={styles.headerLogoSubtext}>LATINA</Text>
-              </View>
-            </View>
+            <Image 
+              source={require('../../assets/images/invasion-logo.png')}
+              style={styles.headerLogo}
+              resizeMode="contain"
+            />
           ),
           headerRight: () => (
             <TouchableOpacity style={styles.notificationButton}>
