@@ -236,7 +236,13 @@ export default function DJsScreen() {
                 >
                   {/* Photo */}
                   <View style={styles.mcPhotoContainer}>
-                    {mc.photo_url ? (
+                    {DJ_PHOTOS[mc.name] ? (
+                      <Image
+                        source={DJ_PHOTOS[mc.name]}
+                        style={styles.mcPhoto}
+                        resizeMode="cover"
+                      />
+                    ) : mc.photo_url ? (
                       <Image
                         source={{ uri: mc.photo_url }}
                         style={styles.mcPhoto}
