@@ -213,6 +213,57 @@ export default function ProfileScreen() {
           )}
         </View>
 
+        {/* Language Selector */}
+        <View style={styles.languageSection}>
+          <Text style={styles.languageSectionTitle}>🌐 Langue / Language / Taal</Text>
+          <View style={styles.languageButtons}>
+            <TouchableOpacity
+              style={[
+                styles.languageButton,
+                language === 'fr' && styles.languageButtonActive
+              ]}
+              onPress={() => setLanguage('fr')}
+            >
+              <Text style={[
+                styles.languageButtonText,
+                language === 'fr' && styles.languageButtonTextActive
+              ]}>
+                🇫🇷 Français
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.languageButton,
+                language === 'es' && styles.languageButtonActive
+              ]}
+              onPress={() => setLanguage('es')}
+            >
+              <Text style={[
+                styles.languageButtonText,
+                language === 'es' && styles.languageButtonTextActive
+              ]}>
+                🇪🇸 Español
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.languageButton,
+                language === 'nl' && styles.languageButtonActive
+              ]}
+              onPress={() => setLanguage('nl')}
+            >
+              <Text style={[
+                styles.languageButtonText,
+                language === 'nl' && styles.languageButtonTextActive
+              ]}>
+                🇳🇱 Nederlands
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Info Section */}
         <View style={styles.infoSection}>
           <Text style={styles.infoTitle}>💡 Comment ça marche?</Text>
