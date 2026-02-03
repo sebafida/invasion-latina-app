@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -8,11 +8,8 @@ import {
   StatusBar, 
   Image,
   Dimensions,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Video, ResizeMode } from 'expo-av';
-import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../src/config/theme';
 import { Button } from '../src/components/Button';
 import api from '../src/config/api';
@@ -21,21 +18,16 @@ const { width } = Dimensions.get('window');
 
 // Default content (fallback)
 const DEFAULT_FLYER = require('../assets/images/event-flyer.jpg');
-const DEFAULT_VIDEO_URL = 'https://customer-assets.emergentagent.com/job_nightlife-hub-19/aftermovie.mp4';
 
 interface WelcomeContent {
   flyer_url?: string;
-  video_url?: string;
   tagline?: string;
   venue_name?: string;
 }
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const videoRef = useRef<Video>(null);
   const [content, setContent] = useState<WelcomeContent>({});
-  const [showVideo, setShowVideo] = useState(false);
-  const [videoLoading, setVideoLoading] = useState(false);
 
   useEffect(() => {
     loadWelcomeContent();
@@ -48,11 +40,6 @@ export default function WelcomeScreen() {
     } catch (error) {
       console.log('Using default welcome content');
     }
-  };
-
-  const handlePlayVideo = () => {
-    setShowVideo(true);
-    setVideoLoading(true);
   };
 
   return (
@@ -83,62 +70,6 @@ export default function WelcomeScreen() {
           <View style={styles.flyerBadge}>
             <Text style={styles.flyerBadgeText}>🔥 Prochain Event</Text>
           </View>
-        </View>
-
-        {/* Video Section */}
-        <View style={styles.videoSection}>
-          <Text style={styles.videoTitle}>🎬 Aftermovie</Text>
-          
-          {!showVideo ? (
-            <TouchableOpacity 
-              style={styles.videoThumbnail}
-              onPress={handlePlayVideo}
-              activeOpacity={0.9}
-            >
-              <Image
-                source={content.flyer_url ? { uri: content.flyer_url } : DEFAULT_FLYER}
-                style={styles.videoThumbnailImage}
-                resizeMode="cover"
-              />
-              <View style={styles.playButtonOverlay}>
-                <View style={styles.playButton}>
-                  <Ionicons name="play" size={32} color="white" />
-                </View>
-                <Text style={styles.playText}>Voir l'aftermovie</Text>
-              </View>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.videoWrapper}>
-              {videoLoading && (
-                <View style={styles.videoLoading}>
-                  <ActivityIndicator size="large" color={theme.colors.primary} />
-                  <Text style={styles.loadingText}>Chargement...</Text>
-                </View>
-              )}
-              <Video
-                ref={videoRef}
-                source={{ uri: content.video_url || DEFAULT_VIDEO_URL }}
-                style={styles.video}
-                useNativeControls
-                resizeMode={ResizeMode.CONTAIN}
-                shouldPlay
-                onLoad={() => setVideoLoading(false)}
-                onError={(error) => {
-                  console.log('Video error:', error);
-                  setVideoLoading(false);
-                }}
-              />
-              <TouchableOpacity 
-                style={styles.closeVideoButton}
-                onPress={() => {
-                  setShowVideo(false);
-                  videoRef.current?.pauseAsync();
-                }}
-              >
-                <Ionicons name="close-circle" size={32} color="white" />
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
         
         {/* CTA Buttons */}
@@ -202,14 +133,14 @@ const styles = StyleSheet.create({
 
   // Flyer
   flyerContainer: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.xl,
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     position: 'relative',
   },
   flyerImage: {
     width: '100%',
-    height: 280,
+    height: 320,
     borderRadius: theme.borderRadius.lg,
   },
   flyerBadge: {
@@ -225,74 +156,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: theme.fontSize.sm,
     fontWeight: theme.fontWeight.bold,
-  },
-
-  // Video Section
-  videoSection: {
-    marginBottom: theme.spacing.xl,
-  },
-  videoTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.sm,
-  },
-  videoThumbnail: {
-    borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  videoThumbnailImage: {
-    width: '100%',
-    height: 180,
-  },
-  playButtonOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingLeft: 4,
-    marginBottom: theme.spacing.sm,
-  },
-  playText: {
-    color: 'white',
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold,
-  },
-  videoWrapper: {
-    borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
-    backgroundColor: theme.colors.cardBackground,
-    position: 'relative',
-  },
-  video: {
-    width: '100%',
-    height: 200,
-  },
-  videoLoading: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.cardBackground,
-    zIndex: 1,
-  },
-  loadingText: {
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.sm,
-  },
-  closeVideoButton: {
-    position: 'absolute',
-    top: theme.spacing.sm,
-    right: theme.spacing.sm,
-    zIndex: 10,
   },
   
   // Buttons
