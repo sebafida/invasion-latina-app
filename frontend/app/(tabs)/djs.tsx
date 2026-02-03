@@ -29,10 +29,9 @@ const DJ_PHOTOS: { [key: string]: any } = {
   'DJ CRUZ': require('../../assets/images/dj-cruz.png'),
   'DJ DANIEL MURILLO': require('../../assets/images/dj-daniel-murillo.png'),
   'DJ SUNCEE': require('../../assets/images/dj-suncee.png'),
-  // Photos à ajouter :
-  // 'DJ SAMO': require('../../assets/images/dj-samo.png'),
-  // 'DJ MABOY': require('../../assets/images/dj-maboy.png'),
-  // 'MC VELASQUEZ': require('../../assets/images/mc-velasquez.png'),
+  'DJ SAMO': require('../../assets/images/dj-samo.png'),
+  'DJ MABOY': require('../../assets/images/dj-maboy.png'),
+  'MC VELASQUEZ': require('../../assets/images/mc-velasquez.png'),
 };
 
 // Default DJs data (will be replaced by API data when available)
