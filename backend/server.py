@@ -1392,13 +1392,13 @@ async def get_my_vip_bookings(current_user: dict = Depends(get_current_user)):
 
 @app.get("/api/media/galleries")
 async def get_galleries():
-    """Get all photo galleries (grouped by event)"""
+    """Get all photo galleries (grouped by event) - only visible ones"""
     db = get_database()
     
     galleries = []
     
-    # Get events that have photos
-    async for event in db.events.find().sort("event_date", -1):
+    # Get events that have gallery_visible = true
+    async for event in db.events.find({"gallery_visible": True}).sort("event_date", -1):
         photo_count = await db.photos.count_documents({"event_id": str(event["_id"])})
         
         # Get cover image (first photo or event banner)
