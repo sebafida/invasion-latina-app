@@ -443,6 +443,9 @@ async def get_events(status: Optional[str] = Query(None)):
             lineup=event.get("lineup", []),
             ticket_categories=event.get("ticket_categories", []),
             xceed_ticket_url=event.get("xceed_ticket_url"),
+            banner_image=event.get("banner_image"),
+            gallery_visible=event.get("gallery_visible", False),
+            aftermovie_visible=event.get("aftermovie_visible", False),
             status=event["status"]
         ))
     
