@@ -99,24 +99,9 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  headerLogoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerTextContainer: {
-    marginLeft: theme.spacing.sm,
-  },
-  headerLogoText: {
-    fontSize: 14,
-    fontWeight: '900' as any,
-    color: theme.colors.primary,
-    letterSpacing: 2,
-  },
-  headerLogoSubtext: {
-    fontSize: 9,
-    fontWeight: '700' as any,
-    color: theme.colors.secondary,
-    letterSpacing: 3,
+  headerLogo: {
+    width: 140,
+    height: 45,
   },
   notificationButton: {
     marginRight: theme.spacing.md,
