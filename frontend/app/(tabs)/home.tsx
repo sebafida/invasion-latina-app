@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   RefreshControl,
   Dimensions,
+  Image,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -15,6 +17,33 @@ import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/config/api';
 
 const { width } = Dimensions.get('window');
+
+// Spotify Playlist URL
+const SPOTIFY_PLAYLIST_URL = 'https://open.spotify.com/playlist/5Pzn91AFtN8tBYYF8Wuci5?si=akXNRmENTPCpS-XWtD1AfQ';
+
+// DJ Photos
+const DJ_PHOTOS: { [key: string]: any } = {
+  'DJ GIZMO': require('../../assets/images/dj-gizmo.png'),
+  'DJ DNK': require('../../assets/images/dj-dnk.png'),
+  'DJ CRUZ': require('../../assets/images/dj-cruz.png'),
+  'DJ DANIEL MURILLO': require('../../assets/images/dj-daniel-murillo.png'),
+  'DJ SUNCEE': require('../../assets/images/dj-suncee.png'),
+  'DJ SAMO': require('../../assets/images/dj-samo.png'),
+  'DJ MABOY': require('../../assets/images/dj-maboy.png'),
+  'MC VELASQUEZ': require('../../assets/images/mc-velasquez.png'),
+};
+
+// Default DJs (will be replaced by event-specific lineup from API)
+const DEFAULT_LINEUP = [
+  { id: '1', name: 'DJ GIZMO', role: 'Resident DJ' },
+  { id: '2', name: 'DJ DNK', role: 'Resident DJ' },
+  { id: '3', name: 'DJ CRUZ', role: 'Resident DJ' },
+  { id: '4', name: 'DJ DANIEL MURILLO', role: 'Resident DJ' },
+  { id: '5', name: 'DJ SUNCEE', role: 'Resident DJ' },
+  { id: '6', name: 'DJ SAMO', role: 'Resident DJ' },
+  { id: '7', name: 'DJ MABOY', role: 'Resident DJ' },
+  { id: '8', name: 'MC VELASQUEZ', role: 'MC' },
+];
 
 export default function HomeScreen() {
   const { user } = useAuth();
