@@ -439,6 +439,7 @@ async def get_events(status: Optional[str] = Query(None)):
             venue_address=event["venue_address"],
             lineup=event.get("lineup", []),
             ticket_categories=event.get("ticket_categories", []),
+            xceed_ticket_url=event.get("xceed_ticket_url"),
             status=event["status"]
         ))
     
