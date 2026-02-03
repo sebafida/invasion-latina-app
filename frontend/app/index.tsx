@@ -14,7 +14,7 @@ export default function WelcomeScreen() {
         {/* Logo */}
         <View style={styles.logoContainer}>
           <Image 
-            source={require('../assets/images/invasion-logo-dark.jpg')}
+            source={require('../assets/images/invasion-logo.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />
