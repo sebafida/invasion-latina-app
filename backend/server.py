@@ -57,6 +57,7 @@ class EventResponse(BaseModel):
     venue_address: str
     lineup: List[Dict[str, str]] = []
     ticket_categories: List[Dict[str, Any]] = []
+    xceed_ticket_url: Optional[str] = None
     status: str
 
 class TicketResponse(BaseModel):
