@@ -215,6 +215,18 @@ export default function ProfileScreen() {
           )}
         </View>
 
+        {/* Admin DJ Dashboard Button */}
+        {user?.role === 'admin' && (
+          <TouchableOpacity
+            style={styles.djDashboardButton}
+            onPress={() => router.push('/admin/dj-dashboard')}
+          >
+            <Ionicons name="headset" size={24} color="white" />
+            <Text style={styles.djDashboardText}>🎧 DJ Dashboard</Text>
+            <Ionicons name="arrow-forward" size={20} color="white" />
+          </TouchableOpacity>
+        )}
+
         {/* Language Selector */}
         <View style={styles.languageSection}>
           <Text style={styles.languageSectionTitle}>🌐 Langue / Language / Taal</Text>
