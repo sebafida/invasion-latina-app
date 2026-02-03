@@ -9,9 +9,11 @@ import {
   Alert,
   Image,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
