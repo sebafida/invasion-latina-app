@@ -452,34 +452,80 @@ const styles = StyleSheet.create({
   // Lineup
   lineupSection: {
     paddingHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,
   },
-  lineupCard: {
-    flexDirection: 'row',
+  lineupScroll: {
+    paddingTop: theme.spacing.md,
+    gap: theme.spacing.md,
+  },
+  djCard: {
+    width: 100,
     alignItems: 'center',
     backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginTop: theme.spacing.md,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.sm,
   },
-  djAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  djPhoto: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    marginBottom: theme.spacing.xs,
+  },
+  djPhotoPlaceholder: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: theme.colors.elevated,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: theme.spacing.xs,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+  },
+  djCardName: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+    textAlign: 'center',
+  },
+  djCardRole: {
+    fontSize: 10,
+    color: theme.colors.textMuted,
+    textAlign: 'center',
+  },
+
+  // Spotify
+  spotifyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
+    borderLeftWidth: 4,
+    borderLeftColor: '#1DB954',
+  },
+  spotifyIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#1DB95420',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: theme.spacing.md,
   },
-  djInfo: {
+  spotifyInfo: {
     flex: 1,
   },
-  djName: {
+  spotifyTitle: {
     fontSize: theme.fontSize.md,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textPrimary,
   },
-  djRole: {
+  spotifySubtitle: {
     fontSize: theme.fontSize.sm,
     color: theme.colors.textSecondary,
+    marginTop: 2,
   },
 });
