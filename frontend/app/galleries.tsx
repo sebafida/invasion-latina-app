@@ -7,42 +7,68 @@ import {
   Image,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { theme } from '../src/config/theme';
 import api from '../src/config/api';
 
-interface Event {
+interface EventGallery {
   id: string;
   name: string;
   event_date: string;
-  banner_image?: string;
+  photo_count: number;
+  cover_image?: string;
 }
 
 export default function GalleriesScreen() {
   const router = useRouter();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [galleries, setGalleries] = useState<EventGallery[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadEvents();
+    loadGalleries();
   }, []);
 
-  const loadEvents = async () => {
+  const loadGalleries = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/events');
-      // Filter past events that have photos
-      const pastEvents = response.data.filter((e: Event) => 
-        new Date(e.event_date) < new Date()
-      );
-      setEvents(pastEvents);
+      const response = await api.get('/media/galleries');
+      setGalleries(response.data || []);
     } catch (error) {
-      console.error('Failed to load events:', error);
+      console.error('Failed to load galleries:', error);
+      // Mock data for demo
+      setGalleries([
+        {
+          id: 'demo-1',
+          name: 'Invasion Latina - Summer Edition 2024',
+          event_date: '2024-07-15T22:00:00',
+          photo_count: 156,
+          cover_image: 'https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=800'
+        },
+        {
+          id: 'demo-2',
+          name: 'Invasion Latina - Halloween Special',
+          event_date: '2024-10-31T22:00:00',
+          photo_count: 203,
+          cover_image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800'
+        },
+        {
+          id: 'demo-3',
+          name: 'Invasion Latina - New Year 2025',
+          event_date: '2024-12-31T22:00:00',
+          photo_count: 312,
+          cover_image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'
+        }
+      ]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const openGallery = (gallery: EventGallery) => {
+    router.push(`/gallery/${gallery.id}`);
   };
 
   return (
@@ -51,7 +77,7 @@ export default function GalleriesScreen() {
       refreshControl={
         <RefreshControl
           refreshing={loading}
-          onRefresh={loadEvents}
+          onRefresh={loadGalleries}
           tintColor={theme.colors.primary}
         />
       }
@@ -59,10 +85,7 @@ export default function GalleriesScreen() {
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerText}>
@@ -71,16 +94,26 @@ export default function GalleriesScreen() {
           </View>
         </View>
 
-        {/* Info Banner */}
-        <View style={styles.infoBanner}>
-          <Ionicons name="information-circle" size={24} color={theme.colors.primary} />
-          <Text style={styles.infoText}>
-            Les photos des événements seront ajoutées après chaque soirée!
-          </Text>
+        {/* Tag Yourself Banner */}
+        <View style={styles.tagBanner}>
+          <View style={styles.tagIconContainer}>
+            <Ionicons name="person-add" size={24} color={theme.colors.primary} />
+          </View>
+          <View style={styles.tagTextContainer}>
+            <Text style={styles.tagTitle}>Tag Yourself! 🏷️</Text>
+            <Text style={styles.tagDescription}>
+              Retrouve-toi dans les photos et tague-toi pour les retrouver facilement
+            </Text>
+          </View>
         </View>
 
-        {/* Events List */}
-        {events.length === 0 ? (
+        {/* Galleries List */}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.loadingText}>Chargement des galeries...</Text>
+          </View>
+        ) : galleries.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="images-outline" size={64} color={theme.colors.textMuted} />
             <Text style={styles.emptyText}>Aucune galerie disponible</Text>
@@ -89,61 +122,84 @@ export default function GalleriesScreen() {
             </Text>
           </View>
         ) : (
-          events.map((event) => (
+          galleries.map((gallery) => (
             <TouchableOpacity
-              key={event.id}
-              style={styles.eventCard}
-              onPress={() => {
-                // Future: Navigate to event gallery
-                console.log('Open gallery for event:', event.id);
-              }}
+              key={gallery.id}
+              style={styles.galleryCard}
+              onPress={() => openGallery(gallery)}
+              activeOpacity={0.8}
             >
-              {event.banner_image ? (
+              {gallery.cover_image ? (
                 <Image
-                  source={{ uri: event.banner_image }}
-                  style={styles.eventImage}
+                  source={{ uri: gallery.cover_image }}
+                  style={styles.galleryImage}
                   resizeMode="cover"
                 />
               ) : (
-                <View style={[styles.eventImage, styles.placeholderImage]}>
+                <View style={[styles.galleryImage, styles.placeholderImage]}>
                   <Ionicons name="camera" size={48} color={theme.colors.textMuted} />
                 </View>
               )}
               
-              <View style={styles.eventOverlay}>
-                <Text style={styles.eventName}>{event.name}</Text>
-                <Text style={styles.eventDate}>
-                  {new Date(event.event_date).toLocaleDateString('fr-FR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                  })}
-                </Text>
+              <View style={styles.galleryOverlay}>
+                <Text style={styles.galleryName}>{gallery.name}</Text>
+                <View style={styles.galleryMeta}>
+                  <Text style={styles.galleryDate}>
+                    {new Date(gallery.event_date).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric'
+                    })}
+                  </Text>
+                  <View style={styles.photoCountBadge}>
+                    <Ionicons name="images" size={14} color="white" />
+                    <Text style={styles.photoCountText}>{gallery.photo_count}</Text>
+                  </View>
+                </View>
               </View>
               
               <View style={styles.viewButton}>
-                <Ionicons name="images" size={20} color="white" />
-                <Text style={styles.viewButtonText}>Voir photos</Text>
+                <Text style={styles.viewButtonText}>Voir les photos</Text>
+                <Ionicons name="arrow-forward" size={20} color="white" />
               </View>
             </TouchableOpacity>
           ))
         )}
 
-        {/* Coming Soon Features */}
+        {/* Features Coming Soon */}
         <View style={styles.featuresSection}>
-          <Text style={styles.featuresTitle}>🎉 Bientôt disponible</Text>
+          <Text style={styles.featuresTitle}>✨ Fonctionnalités</Text>
+          
           <View style={styles.featureCard}>
-            <Ionicons name="search" size={24} color={theme.colors.neonPink} />
+            <Ionicons name="search" size={24} color={theme.colors.primary} />
             <View style={styles.featureText}>
               <Text style={styles.featureTitle}>Tag Yourself</Text>
-              <Text style={styles.featureDesc}>Retrouve-toi dans les photos</Text>
+              <Text style={styles.featureDesc}>Retrouve-toi dans les photos et tague-toi</Text>
+            </View>
+            <View style={styles.availableBadge}>
+              <Text style={styles.availableText}>Disponible</Text>
             </View>
           </View>
+          
           <View style={styles.featureCard}>
             <Ionicons name="download" size={24} color={theme.colors.neonBlue} />
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Téléchargement</Text>
-              <Text style={styles.featureDesc}>Télécharge tes photos préférées</Text>
+              <Text style={styles.featureTitle}>Téléchargement HD</Text>
+              <Text style={styles.featureDesc}>Télécharge tes photos en haute qualité</Text>
+            </View>
+            <View style={styles.availableBadge}>
+              <Text style={styles.availableText}>Disponible</Text>
+            </View>
+          </View>
+          
+          <View style={styles.featureCard}>
+            <Ionicons name="share-social" size={24} color={theme.colors.secondary} />
+            <View style={styles.featureText}>
+              <Text style={styles.featureTitle}>Partage Social</Text>
+              <Text style={styles.featureDesc}>Partage directement sur Instagram, etc.</Text>
+            </View>
+            <View style={styles.availableBadge}>
+              <Text style={styles.availableText}>Disponible</Text>
             </View>
           </View>
         </View>
@@ -157,7 +213,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.black,
   },
-
   content: {
     paddingBottom: 40,
   },
@@ -167,6 +222,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: theme.spacing.xl,
+    paddingTop: 60,
   },
   backButton: {
     width: 40,
@@ -191,21 +247,49 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xs,
   },
 
-  // Info Banner
-  infoBanner: {
+  // Tag Banner
+  tagBanner: {
     flexDirection: 'row',
     marginHorizontal: theme.spacing.xl,
     marginBottom: theme.spacing.xl,
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.primary + '15',
+    borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.md,
-    gap: theme.spacing.sm,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.primary,
   },
-  infoText: {
+  tagIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.primary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
+  },
+  tagTextContainer: {
     flex: 1,
+  },
+  tagTitle: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+    marginBottom: 4,
+  },
+  tagDescription: {
     fontSize: theme.fontSize.sm,
     color: theme.colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: 18,
+  },
+
+  // Loading
+  loadingContainer: {
+    paddingVertical: theme.spacing.xxl * 2,
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.md,
   },
 
   // Empty State
@@ -228,15 +312,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Event Card
-  eventCard: {
+  // Gallery Card
+  galleryCard: {
     marginHorizontal: theme.spacing.xl,
     marginBottom: theme.spacing.xl,
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     backgroundColor: theme.colors.cardBackground,
   },
-  eventImage: {
+  galleryImage: {
     width: '100%',
     height: 200,
   },
@@ -245,23 +329,44 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  eventOverlay: {
+  galleryOverlay: {
     position: 'absolute',
-    bottom: 60,
+    top: 0,
     left: 0,
     right: 0,
+    bottom: 50,
+    justifyContent: 'flex-end',
     padding: theme.spacing.md,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
-  eventName: {
+  galleryName: {
     fontSize: theme.fontSize.lg,
     fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textPrimary,
+    color: 'white',
+    marginBottom: theme.spacing.xs,
   },
-  eventDate: {
+  galleryMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  galleryDate: {
     fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.xs,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  photoCountBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.full,
+    gap: 4,
+  },
+  photoCountText: {
+    color: 'white',
+    fontSize: theme.fontSize.sm,
+    fontWeight: theme.fontWeight.bold,
   },
   viewButton: {
     flexDirection: 'row',
@@ -309,5 +414,16 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     color: theme.colors.textSecondary,
     marginTop: 2,
+  },
+  availableBadge: {
+    backgroundColor: theme.colors.success + '20',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.full,
+  },
+  availableText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.success,
+    fontWeight: theme.fontWeight.bold,
   },
 });
