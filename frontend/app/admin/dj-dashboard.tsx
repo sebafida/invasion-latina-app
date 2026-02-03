@@ -40,22 +40,28 @@ export default function DJDashboardScreen() {
   const [stats, setStats] = useState({ total: 0, pending: 0, played: 0, rejected: 0 });
 
   useEffect(() => {
-    // Check if admin
-    if (user?.role !== 'admin') {
-      Alert.alert('Accès refusé', 'Cette page est réservée aux admins');
-      router.back();
-      return;
-    }
-    
-    loadRequests();
-    
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(() => {
+    // Delay check to allow navigation to mount
+    const timer = setTimeout(() => {
+      // Check if admin
+      if (user?.role !== 'admin') {
+        Alert.alert('Accès refusé', 'Cette page est réservée aux admins', [
+          { text: 'OK', onPress: () => router.back() }
+        ]);
+        return;
+      }
+      
       loadRequests();
-    }, 10000);
+      
+      // Auto-refresh every 10 seconds
+      const interval = setInterval(() => {
+        loadRequests();
+      }, 10000);
+      
+      return () => clearInterval(interval);
+    }, 100);
     
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearTimeout(timer);
+  }, [user]);
 
   const loadRequests = async () => {
     try {
