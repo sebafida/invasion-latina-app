@@ -58,15 +58,17 @@ export default function ContentManagerScreen() {
 
   // Check admin access
   useEffect(() => {
-    if (user?.role !== 'admin') {
+    if (user && user.role !== 'admin') {
       Alert.alert('Accès refusé', 'Cette page est réservée aux administrateurs');
-      router.back();
+      router.replace('/(tabs)/home');
     }
   }, [user]);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (user?.role === 'admin') {
+      loadData();
+    }
+  }, [user]);
 
   const loadData = async () => {
     try {
