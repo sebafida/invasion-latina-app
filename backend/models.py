@@ -104,6 +104,7 @@ class Event(BaseModel):
     lineup: List[Dict[str, str]] = []  # [{"name": "DJ Name", "photo": "base64"}]
     banner_image: Optional[str] = None  # base64
     ticket_categories: List[Dict[str, Any]] = []
+    xceed_ticket_url: Optional[str] = None  # URL to XCEED ticketing page
     status: str = "upcoming"  # upcoming, live, past
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
