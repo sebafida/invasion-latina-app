@@ -12,7 +12,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Activer requêtes DJ au venue",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Activer requêtes DJ au venue"
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Activer requêtes DJ au venue",
+        "NSCameraUsageDescription": "Scanner QR codes fidélité clients"
       }
     },
     "android": {
@@ -23,7 +24,8 @@
       "edgeToEdgeEnabled": true,
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA"
       ]
     },
     "web": {
