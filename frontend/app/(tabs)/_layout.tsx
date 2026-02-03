@@ -107,6 +107,10 @@ const styles = StyleSheet.create({
     width: 140,
     height: 45,
   },
+  headerSpacer: {
+    width: 40,
+    marginLeft: theme.spacing.md,
+  },
   notificationButton: {
     marginRight: theme.spacing.md,
   },
