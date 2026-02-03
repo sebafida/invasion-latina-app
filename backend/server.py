@@ -58,6 +58,9 @@ class EventResponse(BaseModel):
     lineup: List[Dict[str, str]] = []
     ticket_categories: List[Dict[str, Any]] = []
     xceed_ticket_url: Optional[str] = None
+    banner_image: Optional[str] = None
+    gallery_visible: bool = False
+    aftermovie_visible: bool = False
     status: str
 
 class TicketResponse(BaseModel):
