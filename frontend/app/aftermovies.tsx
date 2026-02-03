@@ -37,40 +37,27 @@ export default function AftermoviesScreen() {
   const loadVideos = async () => {
     try {
       setLoading(true);
+      // First try to get aftermovies from API
       const response = await api.get('/media/aftermovies');
-      setVideos(response.data || []);
+      if (response.data && response.data.length > 0) {
+        setVideos(response.data);
+      } else {
+        // If no aftermovies, get events and show them as potential video placeholders
+        const eventsResponse = await api.get('/events');
+        const eventVideos = eventsResponse.data.map((event: any) => ({
+          id: event.id,
+          title: event.name,
+          event_date: event.event_date,
+          thumbnail_url: event.banner_image || 'https://via.placeholder.com/800x450',
+          video_url: '',
+          duration: '--:--',
+          views: 0
+        })).filter((v: any) => v.video_url); // Only show events with videos
+        setVideos(eventVideos);
+      }
     } catch (error) {
       console.error('Failed to load aftermovies:', error);
-      // Mock data for demo
-      setVideos([
-        {
-          id: 'video-1',
-          title: 'Invasion Latina - Summer Edition 2024',
-          event_date: '2024-07-15T22:00:00',
-          thumbnail_url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800',
-          video_url: 'https://www.youtube.com/watch?v=example1',
-          duration: '4:32',
-          views: 15420
-        },
-        {
-          id: 'video-2',
-          title: 'Invasion Latina - Halloween Special',
-          event_date: '2024-10-31T22:00:00',
-          thumbnail_url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800',
-          video_url: 'https://www.youtube.com/watch?v=example2',
-          duration: '5:15',
-          views: 23150
-        },
-        {
-          id: 'video-3',
-          title: 'Invasion Latina - New Year 2025 🎆',
-          event_date: '2024-12-31T22:00:00',
-          thumbnail_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800',
-          video_url: 'https://www.youtube.com/watch?v=example3',
-          duration: '6:48',
-          views: 45890
-        }
-      ]);
+      setVideos([]);
     } finally {
       setLoading(false);
     }
