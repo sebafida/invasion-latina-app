@@ -173,21 +173,6 @@ export default function DJDashboardScreen() {
           </View>
         </View>
 
-        {/* Quick Actions */}
-        <TouchableOpacity 
-          style={styles.loyaltyScannerButton}
-          onPress={() => router.push('/admin/loyalty-scanner')}
-        >
-          <View style={styles.loyaltyScannerIcon}>
-            <Ionicons name="qr-code" size={28} color={theme.colors.primary} />
-          </View>
-          <View style={styles.loyaltyScannerText}>
-            <Text style={styles.loyaltyScannerTitle}>🎫 Scanner Fidélité</Text>
-            <Text style={styles.loyaltyScannerDesc}>Scanner les QR codes des clients</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color={theme.colors.textMuted} />
-        </TouchableOpacity>
-
         {/* Info */}
         <View style={styles.infoCard}>
           <Ionicons name="information-circle" size={20} color={theme.colors.primary} />
