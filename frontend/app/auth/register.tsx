@@ -19,10 +19,10 @@ import { useLanguage } from '../../src/context/LanguageContext';
 import { Button } from '../../src/components/Button';
 
 const LANGUAGES = [
-  { code: 'fr', label: '🇫🇷 Français' },
-  { code: 'en', label: '🇬🇧 English' },
-  { code: 'es', label: '🇪🇸 Español' },
-  { code: 'nl', label: '🇳🇱 Nederlands' },
+  { code: 'fr', flag: '🇫🇷', label: 'Français' },
+  { code: 'en', flag: '🇬🇧', label: 'English' },
+  { code: 'es', flag: '🇪🇸', label: 'Español' },
+  { code: 'nl', flag: '🇳🇱', label: 'Nederlands' },
 ];
 
 export default function RegisterScreen() {
@@ -206,6 +206,7 @@ export default function RegisterScreen() {
                     ]}
                     onPress={() => setLanguage(lang.code)}
                   >
+                    <Text style={styles.languageFlag}>{lang.flag}</Text>
                     <Text style={[
                       styles.languageOptionText,
                       language === lang.code && styles.languageOptionTextSelected
@@ -354,25 +355,33 @@ const styles = StyleSheet.create({
   },
   languageOptions: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    justifyContent: 'space-between',
+    gap: theme.spacing.xs,
   },
   languageOption: {
     flex: 1,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xs,
     backgroundColor: theme.colors.cardBackground,
     borderRadius: theme.borderRadius.md,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
+    minHeight: 75,
   },
   languageOptionSelected: {
     borderColor: theme.colors.primary,
     backgroundColor: theme.colors.primary + '20',
   },
+  languageFlag: {
+    fontSize: 24,
+    marginBottom: theme.spacing.xs,
+  },
   languageOptionText: {
-    fontSize: theme.fontSize.sm,
+    fontSize: theme.fontSize.xs,
     color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
   languageOptionTextSelected: {
     color: theme.colors.primary,

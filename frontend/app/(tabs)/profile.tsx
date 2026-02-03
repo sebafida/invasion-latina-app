@@ -238,11 +238,28 @@ export default function ProfileScreen() {
               ]}
               onPress={() => setLanguage('fr')}
             >
+              <Text style={styles.languageFlag}>🇫🇷</Text>
               <Text style={[
                 styles.languageButtonText,
                 language === 'fr' && styles.languageButtonTextActive
               ]}>
-                🇫🇷 Français
+                Français
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.languageButton,
+                language === 'en' && styles.languageButtonActive
+              ]}
+              onPress={() => setLanguage('en')}
+            >
+              <Text style={styles.languageFlag}>🇬🇧</Text>
+              <Text style={[
+                styles.languageButtonText,
+                language === 'en' && styles.languageButtonTextActive
+              ]}>
+                English
               </Text>
             </TouchableOpacity>
             
@@ -253,11 +270,12 @@ export default function ProfileScreen() {
               ]}
               onPress={() => setLanguage('es')}
             >
+              <Text style={styles.languageFlag}>🇪🇸</Text>
               <Text style={[
                 styles.languageButtonText,
                 language === 'es' && styles.languageButtonTextActive
               ]}>
-                🇪🇸 Español
+                Español
               </Text>
             </TouchableOpacity>
             
@@ -268,11 +286,12 @@ export default function ProfileScreen() {
               ]}
               onPress={() => setLanguage('nl')}
             >
+              <Text style={styles.languageFlag}>🇳🇱</Text>
               <Text style={[
                 styles.languageButtonText,
                 language === 'nl' && styles.languageButtonTextActive
               ]}>
-                🇳🇱 Nederlands
+                Nederlands
               </Text>
             </TouchableOpacity>
           </View>
@@ -499,13 +518,16 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   languageButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: theme.spacing.sm,
   },
   languageButton: {
+    width: '48%',
     backgroundColor: theme.colors.cardBackground,
     borderRadius: theme.borderRadius.md,
     paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
@@ -514,8 +536,12 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary,
     backgroundColor: theme.colors.primary + '20',
   },
+  languageFlag: {
+    fontSize: 28,
+    marginBottom: theme.spacing.xs,
+  },
   languageButtonText: {
-    fontSize: theme.fontSize.md,
+    fontSize: theme.fontSize.sm,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textSecondary,
   },

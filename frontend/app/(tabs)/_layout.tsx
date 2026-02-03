@@ -14,13 +14,17 @@ export default function TabLayout() {
           backgroundColor: theme.colors.black,
           borderTopColor: theme.colors.elevated,
           borderTopWidth: 1,
-          height: 65,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 60,
+          paddingBottom: 6,
+          paddingTop: 6,
+          paddingHorizontal: 10,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: '600',
+        },
+        tabBarItemStyle: {
+          paddingHorizontal: 0,
         },
         headerStyle: {
           backgroundColor: theme.colors.black,
