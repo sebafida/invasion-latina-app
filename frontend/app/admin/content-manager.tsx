@@ -159,6 +159,81 @@ export default function ContentManagerScreen() {
     }
   };
 
+  const handleCreateEvent = async () => {
+    if (!eventName.trim() || !eventDate.trim()) {
+      Alert.alert('Erreur', 'Veuillez remplir le nom et la date de l\'événement');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await api.post('/admin/events', {
+        name: eventName,
+        event_date: new Date(eventDate).toISOString(),
+        description: eventDescription,
+        venue_name: eventVenue,
+        xceed_ticket_url: eventXceedUrl,
+        banner_image: eventBannerUrl,
+      });
+      Alert.alert('Succès', 'Événement créé avec succès!');
+      resetEventForm();
+      setShowEventForm(false);
+      loadData();
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de créer l\'événement');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateEvent = async () => {
+    if (!editingEvent || !eventName.trim() || !eventDate.trim()) {
+      Alert.alert('Erreur', 'Veuillez remplir le nom et la date de l\'événement');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await api.put(`/admin/events/${editingEvent.id}`, {
+        name: eventName,
+        event_date: new Date(eventDate).toISOString(),
+        description: eventDescription,
+        venue_name: eventVenue,
+        xceed_ticket_url: eventXceedUrl,
+        banner_image: eventBannerUrl,
+      });
+      Alert.alert('Succès', 'Événement mis à jour avec succès!');
+      resetEventForm();
+      setEditingEvent(null);
+      setShowEventForm(false);
+      loadData();
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de mettre à jour l\'événement');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetEventForm = () => {
+    setEventName('');
+    setEventDate('');
+    setEventDescription('');
+    setEventVenue('Mirano Continental');
+    setEventXceedUrl('');
+    setEventBannerUrl('');
+  };
+
+  const startEditEvent = (event: Event) => {
+    setEditingEvent(event);
+    setEventName(event.name);
+    setEventDate(event.event_date.split('T')[0]); // Format YYYY-MM-DD
+    setEventDescription(event.description || '');
+    setEventVenue(event.venue_name || 'Mirano Continental');
+    setEventXceedUrl(event.xceed_ticket_url || '');
+    setEventBannerUrl(event.banner_image || '');
+    setShowEventForm(true);
+  };
+
   const handleUpdateFlyer = async () => {
     if (!flyerUrl.trim()) {
       Alert.alert('Erreur', 'Veuillez entrer une URL de flyer');
