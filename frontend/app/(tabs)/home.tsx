@@ -257,6 +257,17 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   
+  // Logo
+  logoContainer: {
+    alignItems: 'center',
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.sm,
+  },
+  logoImage: {
+    width: 200,
+    height: 80,
+  },
+  
   // Hero
   hero: {
     padding: theme.spacing.xl,
