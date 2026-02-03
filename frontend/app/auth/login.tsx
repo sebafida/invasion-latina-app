@@ -142,35 +142,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: theme.spacing.xxl,
   },
-  logoIconWrapper: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: theme.colors.cardBackground,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: theme.spacing.md,
-    borderWidth: 3,
-    borderColor: theme.colors.primary,
-  },
-  logoText: {
-    fontSize: 42,
-    fontWeight: '900' as any,
-    color: theme.colors.primary,
-    letterSpacing: 6,
-  },
-  logoSubtext: {
-    fontSize: 24,
-    fontWeight: '700' as any,
-    color: theme.colors.secondary,
-    letterSpacing: 8,
-    marginTop: theme.spacing.xs,
-  },
-  logoUnderline: {
-    width: 120,
-    height: 2,
-    backgroundColor: theme.colors.primary,
-    marginTop: theme.spacing.sm,
+  logoImage: {
+    width: 260,
+    height: 130,
   },
   
   header: {

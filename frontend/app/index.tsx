@@ -86,16 +86,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: theme.spacing.xl,
   },
-  logoIconWrapper: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: theme.colors.cardBackground,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoImage: {
+    width: 280,
+    height: 140,
     marginBottom: theme.spacing.md,
-    borderWidth: 3,
-    borderColor: theme.colors.primary,
   },
   logo: {
     fontSize: 56,
