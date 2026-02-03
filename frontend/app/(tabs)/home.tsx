@@ -217,18 +217,18 @@ export default function HomeScreen() {
           activeOpacity={0.8}
         >
           <View style={styles.spotifyIcon}>
-            <Ionicons name="musical-note" size={28} color="#1DB954" />
+            <Ionicons name="logo-spotify" size={28} color="#1DB954" />
           </View>
           <View style={styles.spotifyInfo}>
-            <Text style={styles.spotifyTitle}>🎵 Playlist Spotify</Text>
-            <Text style={styles.spotifySubtitle}>Écoute nos hits avant la soirée!</Text>
+            <Text style={styles.spotifyTitle}>Playlist Spotify</Text>
+            <Text style={styles.spotifySubtitle}>Que viva la musica latina 🎶</Text>
           </View>
           <Ionicons name="open-outline" size={24} color="#1DB954" />
         </TouchableOpacity>
         
-        {/* Tonight's Lineup - DJs Grid */}
+        {/* Lineup - DJs Grid */}
         <View style={styles.lineupSection}>
-          <Text style={styles.sectionTitle}>Tonight's Lineup 🎧</Text>
+          <Text style={styles.sectionTitle}>LineUp 🎧</Text>
           
           <View style={styles.lineupGrid}>
             {lineup.map((dj: any, index: number) => (
