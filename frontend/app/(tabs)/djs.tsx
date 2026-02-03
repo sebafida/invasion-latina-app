@@ -109,11 +109,24 @@ export default function DJsScreen() {
 
   const openInstagram = async (url: string) => {
     try {
-      // Use expo-web-browser for reliable cross-platform link opening
-      await WebBrowser.openBrowserAsync(url);
+      // Extract username from URL (e.g., https://www.instagram.com/gizmodj/ -> gizmodj)
+      const username = url.split('/').filter(Boolean).pop();
+      
+      // Try to open Instagram app directly with deep link
+      const instagramAppUrl = `instagram://user?username=${username}`;
+      
+      const canOpenApp = await Linking.canOpenURL(instagramAppUrl);
+      
+      if (canOpenApp) {
+        // Open directly in Instagram app
+        await Linking.openURL(instagramAppUrl);
+      } else {
+        // Fallback to web browser if Instagram app not installed
+        await Linking.openURL(url);
+      }
     } catch (error) {
       console.error('Failed to open Instagram:', error);
-      // Fallback to Linking
+      // Final fallback
       Linking.openURL(url).catch(e => console.error('Fallback failed:', e));
     }
   };
