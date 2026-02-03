@@ -51,6 +51,12 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Activer requêtes DJ au venue"
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Scanner QR codes fidélité clients"
+        }
       ]
     ],
     "experiments": {
