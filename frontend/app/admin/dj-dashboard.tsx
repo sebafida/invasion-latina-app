@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: 'row',
     marginHorizontal: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.md,
     gap: theme.spacing.sm,
   },
   statCard: {
