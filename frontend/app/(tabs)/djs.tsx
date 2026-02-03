@@ -180,7 +180,13 @@ export default function DJsScreen() {
             >
               {/* Photo */}
               <View style={styles.photoContainer}>
-                {dj.photo_url ? (
+                {DJ_PHOTOS[dj.name] ? (
+                  <Image
+                    source={DJ_PHOTOS[dj.name]}
+                    style={styles.djPhoto}
+                    resizeMode="cover"
+                  />
+                ) : dj.photo_url ? (
                   <Image
                     source={{ uri: dj.photo_url }}
                     style={styles.djPhoto}
