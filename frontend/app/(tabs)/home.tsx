@@ -215,13 +215,19 @@ const ActionCard = ({
   title,
   subtitle,
   color,
+  onPress,
 }: {
   icon: any;
   title: string;
   subtitle: string;
   color: string;
+  onPress?: () => void;
 }) => (
-  <TouchableOpacity style={styles.actionCard}>
+  <TouchableOpacity 
+    style={styles.actionCard}
+    onPress={onPress}
+    activeOpacity={0.7}
+  >
     <View style={[styles.actionIconContainer, { backgroundColor: color + '20' }]}>
       <Ionicons name={icon} size={28} color={color} />
     </View>
