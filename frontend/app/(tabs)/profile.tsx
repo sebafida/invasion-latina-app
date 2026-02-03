@@ -473,6 +473,42 @@ const styles = StyleSheet.create({
     color: theme.colors.success,
   },
 
+  // Language Section
+  languageSection: {
+    marginHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,
+  },
+  languageSectionTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.md,
+  },
+  languageButtons: {
+    gap: theme.spacing.sm,
+  },
+  languageButton: {
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  languageButtonActive: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary + '20',
+  },
+  languageButtonText: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textSecondary,
+  },
+  languageButtonTextActive: {
+    color: theme.colors.primary,
+  },
+
   // Info Section
   infoSection: {
     marginHorizontal: theme.spacing.xl,
