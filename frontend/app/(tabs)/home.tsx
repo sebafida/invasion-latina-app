@@ -191,42 +191,62 @@ export default function HomeScreen() {
               color={theme.colors.secondary}
               onPress={() => router.push('/galleries')}
             />
-            <ActionCard
-              icon="play-circle"
-              title="Aftermovies"
-              subtitle="Watch recap"
-              color={theme.colors.neonPink}
-              onPress={() => router.push('/aftermovies')}
-            />
-            <ActionCard
-              icon="globe"
-              title="Language"
-              subtitle="FR / ES / NL"
-              color={theme.colors.neonBlue}
-              onPress={() => router.push('/(tabs)/profile')}
-            />
           </View>
         </View>
-        
-        {/* Lineup */}
-        {nextEvent?.lineup && nextEvent.lineup.length > 0 && (
-          <View style={styles.lineupSection}>
-            <Text style={styles.sectionTitle}>Tonight's Lineup</Text>
-            
-            {nextEvent.lineup.map((dj: any, index: number) => (
-              <View key={index} style={styles.lineupCard}>
-                <View style={styles.djAvatar}>
-                  <Ionicons name="person" size={32} color={theme.colors.primary} />
-                </View>
-                <View style={styles.djInfo}>
-                  <Text style={styles.djName}>{dj.name}</Text>
-                  <Text style={styles.djRole}>{dj.role}</Text>
-                </View>
-                <Ionicons name="star" size={20} color={theme.colors.secondary} />
-              </View>
-            ))}
+
+        {/* Spotify Playlist */}
+        <TouchableOpacity 
+          style={styles.spotifyCard}
+          onPress={() => Linking.openURL(SPOTIFY_PLAYLIST_URL)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.spotifyIcon}>
+            <Ionicons name="musical-note" size={28} color="#1DB954" />
           </View>
-        )}
+          <View style={styles.spotifyInfo}>
+            <Text style={styles.spotifyTitle}>🎵 Playlist Spotify</Text>
+            <Text style={styles.spotifySubtitle}>Écoute nos hits avant la soirée!</Text>
+          </View>
+          <Ionicons name="open-outline" size={24} color="#1DB954" />
+        </TouchableOpacity>
+        
+        {/* Tonight's Lineup - DJs with Photos */}
+        <View style={styles.lineupSection}>
+          <Text style={styles.sectionTitle}>Tonight's Lineup 🎧</Text>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.lineupScroll}
+          >
+            {(nextEvent?.lineup || DEFAULT_LINEUP).map((dj: any, index: number) => (
+              <TouchableOpacity 
+                key={dj.id || index} 
+                style={styles.djCard}
+                onPress={() => router.push('/(tabs)/djs')}
+                activeOpacity={0.8}
+              >
+                {DJ_PHOTOS[dj.name] ? (
+                  <Image
+                    source={DJ_PHOTOS[dj.name]}
+                    style={styles.djPhoto}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={styles.djPhotoPlaceholder}>
+                    <Ionicons 
+                      name={dj.role === 'MC' ? 'mic' : 'headset'} 
+                      size={32} 
+                      color={theme.colors.primary} 
+                    />
+                  </View>
+                )}
+                <Text style={styles.djCardName} numberOfLines={1}>{dj.name}</Text>
+                <Text style={styles.djCardRole}>{dj.role}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
       </View>
     </ScrollView>
   );
