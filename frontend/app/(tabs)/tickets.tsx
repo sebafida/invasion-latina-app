@@ -139,9 +139,11 @@ export default function TicketsScreen() {
                   resizeMode="cover"
                 />
               ) : (
-                <View style={[styles.eventBanner, styles.placeholderBanner]}>
-                  <Ionicons name="musical-notes" size={48} color={theme.colors.textMuted} />
-                </View>
+                <Image
+                  source={DEFAULT_EVENT_FLYER}
+                  style={styles.eventBanner}
+                  resizeMode="cover"
+                />
               )}
 
               {/* Event Info */}
