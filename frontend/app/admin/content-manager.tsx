@@ -643,12 +643,11 @@ export default function ContentManagerScreen() {
       {/* Existing Events */}
       <Text style={styles.existingSectionTitle}>Événements existants</Text>
       {events.map((event) => (
-        <TouchableOpacity 
-          key={event.id} 
-          style={styles.eventCard}
-          onPress={() => startEditEvent(event)}
-        >
-          <View style={styles.eventCardHeader}>
+        <View key={event.id} style={styles.eventCard}>
+          <TouchableOpacity 
+            style={styles.eventCardHeader}
+            onPress={() => startEditEvent(event)}
+          >
             <Ionicons name="calendar" size={24} color={theme.colors.primary} />
             <View style={styles.eventCardInfo}>
               <Text style={styles.eventCardName}>{event.name}</Text>
@@ -662,8 +661,51 @@ export default function ContentManagerScreen() {
               </Text>
             </View>
             <Ionicons name="create-outline" size={20} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+          
+          {/* Visibility Toggles */}
+          <View style={styles.visibilitySection}>
+            <TouchableOpacity 
+              style={[
+                styles.visibilityToggle,
+                event.gallery_visible && styles.visibilityToggleActive
+              ]}
+              onPress={() => handleToggleVisibility(event.id, 'gallery_visible', event.gallery_visible || false)}
+            >
+              <Ionicons 
+                name={event.gallery_visible ? "eye" : "eye-off"} 
+                size={16} 
+                color={event.gallery_visible ? theme.colors.success : theme.colors.textMuted} 
+              />
+              <Text style={[
+                styles.visibilityToggleText,
+                event.gallery_visible && styles.visibilityToggleTextActive
+              ]}>
+                📸 Photos {event.gallery_visible ? 'visibles' : 'masquées'}
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[
+                styles.visibilityToggle,
+                event.aftermovie_visible && styles.visibilityToggleActive
+              ]}
+              onPress={() => handleToggleVisibility(event.id, 'aftermovie_visible', event.aftermovie_visible || false)}
+            >
+              <Ionicons 
+                name={event.aftermovie_visible ? "eye" : "eye-off"} 
+                size={16} 
+                color={event.aftermovie_visible ? theme.colors.success : theme.colors.textMuted} 
+              />
+              <Text style={[
+                styles.visibilityToggleText,
+                event.aftermovie_visible && styles.visibilityToggleTextActive
+              ]}>
+                🎬 Aftermovie {event.aftermovie_visible ? 'visible' : 'masqué'}
+              </Text>
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
       ))}
 
       <View style={styles.infoBox}>
