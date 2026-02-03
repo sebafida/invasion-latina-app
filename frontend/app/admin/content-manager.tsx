@@ -28,6 +28,8 @@ interface Event {
   xceed_ticket_url?: string;
   banner_image?: string;
   status: string;
+  gallery_visible?: boolean;
+  aftermovie_visible?: boolean;
 }
 
 interface Photo {
