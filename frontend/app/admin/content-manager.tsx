@@ -23,6 +23,10 @@ interface Event {
   id: string;
   name: string;
   event_date: string;
+  description?: string;
+  venue_name?: string;
+  xceed_ticket_url?: string;
+  banner_image?: string;
   status: string;
 }
 
@@ -42,11 +46,13 @@ interface Aftermovie {
 export default function ContentManagerScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>('flyer');
+  const [activeTab, setActiveTab] = useState<TabType>('events');
   const [loading, setLoading] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [aftermovies, setAftermovies] = useState<Aftermovie[]>([]);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [showEventForm, setShowEventForm] = useState(false);
   
   // Form states
   const [flyerUrl, setFlyerUrl] = useState('');
@@ -55,6 +61,14 @@ export default function ContentManagerScreen() {
   const [newAftermovieName, setNewAftermovieName] = useState('');
   const [newAftermovieUrl, setNewAftermovieUrl] = useState('');
   const [newAftermovieThumb, setNewAftermovieThumb] = useState('');
+  
+  // Event form states
+  const [eventName, setEventName] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventDescription, setEventDescription] = useState('');
+  const [eventVenue, setEventVenue] = useState('Mirano Continental');
+  const [eventXceedUrl, setEventXceedUrl] = useState('');
+  const [eventBannerUrl, setEventBannerUrl] = useState('');
 
   // Check admin access
   useEffect(() => {
