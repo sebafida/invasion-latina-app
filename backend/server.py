@@ -1438,6 +1438,59 @@ async def get_my_vip_bookings(current_user: dict = Depends(get_current_user)):
     return bookings
 
 
+@app.get("/api/admin/vip-bookings")
+async def admin_get_all_bookings(current_user: dict = Depends(get_current_admin)):
+    """Admin: Get all VIP bookings"""
+    db = get_database()
+    
+    bookings = []
+    async for booking in db.vip_bookings.find().sort("submitted_at", -1):
+        event = await db.events.find_one({"_id": ObjectId(booking["event_id"])})
+        bookings.append({
+            "id": str(booking["_id"]),
+            "customer_name": booking.get("customer_name", ""),
+            "customer_email": booking.get("customer_email", ""),
+            "customer_phone": booking.get("customer_phone", ""),
+            "event_name": event["name"] if event else "Unknown Event",
+            "event_date": event["event_date"].isoformat() if event and hasattr(event.get("event_date"), 'isoformat') else str(event.get("event_date")) if event else None,
+            "zone": booking["zone"],
+            "package": booking["package"],
+            "guest_count": booking["guest_count"],
+            "total_price": booking["total_price"],
+            "special_requests": booking.get("special_requests", ""),
+            "status": booking["status"],
+            "submitted_at": booking["submitted_at"].isoformat() if hasattr(booking["submitted_at"], 'isoformat') else str(booking["submitted_at"])
+        })
+    
+    return bookings
+
+
+@app.put("/api/admin/vip-bookings/{booking_id}")
+async def admin_update_booking(
+    booking_id: str,
+    update_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update a VIP booking status"""
+    db = get_database()
+    
+    try:
+        result = await db.vip_bookings.update_one(
+            {"_id": ObjectId(booking_id)},
+            {"$set": {
+                "status": update_data.get("status", "pending"),
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Réservation non trouvée")
+        
+        return {"message": "Réservation mise à jour avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 
 # ============ MEDIA GALLERY ENDPOINTS ============
