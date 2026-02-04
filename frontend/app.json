@@ -1,25 +1,30 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "Invasion Latina",
+    "slug": "invasion-latina",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
-    "userInterfaceStyle": "automatic",
+    "icon": "./assets/images/invasion-logo.png",
+    "scheme": "invasionlatina",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
+      "bundleIdentifier": "com.invasionlatina.app",
+      "buildNumber": "1",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Activer requêtes DJ au venue",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Activer requêtes DJ au venue",
-        "NSCameraUsageDescription": "Scanner QR codes fidélité clients"
+        "NSLocationWhenInUseUsageDescription": "Pour activer les requêtes DJ quand tu es à la soirée",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Pour activer les requêtes DJ quand tu es à la soirée",
+        "NSCameraUsageDescription": "Pour scanner ton QR code fidélité à l'entrée",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
+      "package": "com.invasionlatina.app",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000"
+        "foregroundImage": "./assets/images/invasion-logo.png",
+        "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
@@ -31,17 +36,17 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/invasion-logo.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/invasion-logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000"
+          "backgroundColor": "#000000"
         }
       ],
       "expo-font",
@@ -49,13 +54,13 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Activer requêtes DJ au venue"
+          "locationAlwaysAndWhenInUsePermission": "Pour activer les requêtes DJ quand tu es à la soirée"
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Scanner QR codes fidélité clients"
+          "cameraPermission": "Pour scanner ton QR code fidélité à l'entrée"
         }
       ]
     ],
@@ -63,7 +68,10 @@
       "typedRoutes": true
     },
     "extra": {
-      "EXPO_PUBLIC_BACKEND_URL": "https://invasion-app.preview.emergentagent.com"
+      "EXPO_PUBLIC_BACKEND_URL": "https://invasion-app.preview.emergentagent.com",
+      "eas": {
+        "projectId": "invasion-latina"
+      }
     }
   }
 }
