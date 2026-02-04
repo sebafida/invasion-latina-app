@@ -1322,6 +1322,31 @@ async def admin_check_in_user(
 
 # ============ VIP BOOKING ENDPOINTS ============
 
+# WhatsApp notification config
+WHATSAPP_ADMIN_NUMBER = "+32478814497"
+
+async def send_whatsapp_notification(message: str):
+    """Send WhatsApp notification to admin"""
+    import urllib.parse
+    import httpx
+    
+    try:
+        # Using CallMeBot API (free WhatsApp notifications)
+        # First time: send "I allow callmebot to send me messages" to +34 644 71 81 99
+        encoded_message = urllib.parse.quote(message)
+        url = f"https://api.callmebot.com/whatsapp.php?phone={WHATSAPP_ADMIN_NUMBER}&text={encoded_message}&apikey=YOUR_API_KEY"
+        
+        # For now, we'll log the message - you need to activate CallMeBot first
+        print(f"📱 WhatsApp notification would be sent to {WHATSAPP_ADMIN_NUMBER}:")
+        print(f"   {message}")
+        
+        # Uncomment this when you have the API key:
+        # async with httpx.AsyncClient() as client:
+        #     await client.get(url, timeout=10)
+        
+    except Exception as e:
+        print(f"WhatsApp notification error: {e}")
+
 @app.post("/api/vip/book")
 async def create_vip_booking(
     event_id: str,
@@ -1333,6 +1358,7 @@ async def create_vip_booking(
     total_price: float = 0,
     customer_name: str = "",
     customer_email: str = "",
+    customer_phone: str = "",
     current_user: dict = Depends(get_current_user)
 ):
     """Create a VIP table booking request"""
@@ -1356,10 +1382,30 @@ async def create_vip_booking(
         "status": "pending",
         "customer_name": customer_name,
         "customer_email": customer_email,
+        "customer_phone": customer_phone,
         "submitted_at": datetime.utcnow()
     }
     
     result = await db.vip_bookings.insert_one(booking)
+    
+    # Send WhatsApp notification to admin
+    notification_message = f"""🍾 NOUVELLE RÉSERVATION TABLE!
+
+📍 Salle: {zone}
+📦 Table: {package}
+👥 Personnes: {guest_count}
+💰 Prix: {total_price}€
+
+👤 Client: {customer_name}
+📧 Email: {customer_email}
+📱 Tél: {customer_phone}
+
+🎉 Événement: {event['name']}
+📅 Date: {event['event_date'].strftime('%d/%m/%Y') if hasattr(event['event_date'], 'strftime') else event['event_date']}
+
+💬 Demandes spéciales: {special_requests or 'Aucune'}"""
+    
+    await send_whatsapp_notification(notification_message)
     
     return {
         "message": "VIP booking request submitted successfully",
