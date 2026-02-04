@@ -132,28 +132,17 @@ export default function DJDashboardScreen() {
   };
 
   const handleMarkAsPlayed = async (requestId: string, songTitle: string) => {
-    Alert.alert(
-      'Marquer comme joué',
-      `${songTitle} a été joué?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Oui, joué',
-          onPress: async () => {
-            try {
-              await api.post(`/dj/admin/update-request/${requestId}`, {
-                status: 'played'
-              });
-              Alert.alert('Succès', 'Chanson marquée comme jouée! ✅');
-              loadRequests();
-            } catch (error: any) {
-              const message = error.response?.data?.detail || 'Erreur';
-              Alert.alert('Erreur', message);
-            }
-          }
-        }
-      ]
-    );
+    try {
+      await api.post(`/dj/admin/update-request/${requestId}`, {
+        status: 'played'
+      });
+      // Reload requests to update the UI
+      loadRequests();
+      loadEvents();
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Erreur lors de la mise à jour';
+      Alert.alert('Erreur', message);
+    }
   };
 
   const handleReject = (request: DJRequest) => {
