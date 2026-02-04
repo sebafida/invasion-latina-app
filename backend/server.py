@@ -1470,6 +1470,50 @@ async def admin_get_all_bookings(current_user: dict = Depends(get_current_admin)
     return bookings
 
 
+@app.delete("/api/vip/bookings/{booking_id}")
+async def cancel_vip_booking(
+    booking_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Cancel a user's own VIP booking"""
+    db = get_database()
+    
+    try:
+        # Find the booking and verify it belongs to this user
+        booking = await db.vip_bookings.find_one({"_id": ObjectId(booking_id)})
+        
+        if not booking:
+            raise HTTPException(status_code=404, detail="Réservation non trouvée")
+        
+        # Verify ownership - check by email
+        if booking.get("customer_email") != current_user.get("email"):
+            raise HTTPException(status_code=403, detail="Vous ne pouvez annuler que vos propres réservations")
+        
+        # Check if already cancelled
+        if booking.get("status") == "cancelled":
+            raise HTTPException(status_code=400, detail="Cette réservation est déjà annulée")
+        
+        # Update status to cancelled
+        result = await db.vip_bookings.update_one(
+            {"_id": ObjectId(booking_id)},
+            {"$set": {
+                "status": "cancelled",
+                "cancelled_at": datetime.utcnow()
+            }}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=500, detail="Erreur lors de l'annulation")
+        
+        return {"message": "Réservation annulée avec succès"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error cancelling booking: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @app.put("/api/admin/vip-bookings/{booking_id}")
 async def admin_update_booking(
     booking_id: str,
