@@ -735,4 +735,56 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     lineHeight: 20,
   },
+
+  // Success Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  modalContent: {
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.xl,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+  },
+  successIconContainer: {
+    marginBottom: theme.spacing.md,
+  },
+  modalTitle: {
+    fontSize: theme.fontSize.xl,
+    fontWeight: theme.fontWeight.black,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.sm,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: theme.spacing.sm,
+  },
+  modalSubMessage: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: theme.spacing.xl,
+  },
+  modalButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xxl,
+    borderRadius: theme.borderRadius.md,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: 'white',
+  },
 });
