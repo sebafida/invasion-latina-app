@@ -478,6 +478,17 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xs,
   },
 
+  // Event Flyer
+  flyerSection: {
+    paddingHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.lg,
+  },
+  flyerImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: theme.borderRadius.lg,
+  },
+
   // Section
   section: {
     marginBottom: theme.spacing.xl,
