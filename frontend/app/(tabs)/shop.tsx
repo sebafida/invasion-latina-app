@@ -262,11 +262,6 @@ export default function VIPBookingScreen() {
                   ]}
                   onPress={() => setSelectedRoom(roomKey)}
                 >
-                  <Ionicons
-                    name={room.icon as any}
-                    size={24}
-                    color={isSelected ? room.color : theme.colors.textMuted}
-                  />
                   <Text style={[
                     styles.tabText,
                     isSelected && { color: room.color }
