@@ -876,12 +876,16 @@ async def update_song_request(
     try:
         status = update_data.get("status")
         rejection_reason = update_data.get("rejection_reason")
+        rejection_label = update_data.get("rejection_label")
         
         update_dict = {"status": status}
         if status == "played":
             update_dict["played_at"] = datetime.utcnow()
-        elif status == "rejected" and rejection_reason:
-            update_dict["rejection_reason"] = rejection_reason
+        elif status == "rejected":
+            if rejection_reason:
+                update_dict["rejection_reason"] = rejection_reason
+            if rejection_label:
+                update_dict["rejection_label"] = rejection_label
         
         result = await db.song_requests.update_one(
             {"_id": ObjectId(request_id)},
