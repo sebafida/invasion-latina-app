@@ -286,20 +286,6 @@ export default function DJsScreen() {
           </View>
         </View>
 
-        {/* Social CTA */}
-        <View style={styles.socialCta}>
-          <Text style={styles.socialTitle}>📱 Suis-nous!</Text>
-          <Text style={styles.socialText}>
-            Reste connecté avec nos DJs et ne rate aucune nouveauté
-          </Text>
-          <TouchableOpacity 
-            style={styles.instagramButton}
-            onPress={() => openInstagram('https://www.instagram.com/invasionlatina/')}
-          >
-            <Ionicons name="logo-instagram" size={24} color="white" />
-            <Text style={styles.instagramButtonText}>@invasionlatina</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </ScrollView>
   );
