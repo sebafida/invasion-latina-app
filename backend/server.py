@@ -713,37 +713,30 @@ async def request_song(
     song_data: Dict[str, str] = Body(...),
     current_user: dict = Depends(get_current_user)
 ):
-    """Request a song (requires geofence and event hours)"""
+    """Request a song"""
     db = get_database()
     
-    # Check if user is within venue geofence
-    user_lat = song_data.get("latitude")
-    user_lng = song_data.get("longitude")
+    # Validate required fields
+    if not song_data.get("song_title") or not song_data.get("artist_name"):
+        raise HTTPException(status_code=400, detail="Song title and artist name are required")
     
-    if not user_lat or not user_lng:
-        raise HTTPException(status_code=400, detail="Location required for song requests")
+    # Get current or upcoming event (for testing, we don't require a "live" event)
+    current_event = await db.events.find_one(
+        {"status": {"$in": ["live", "upcoming"]}},
+        sort=[("date", -1)]
+    )
     
-    if not is_within_geofence(float(user_lat), float(user_lng)):
-        raise HTTPException(status_code=403, detail="You must be at the venue to request songs")
+    # If no event found, create a default event context
+    event_id = str(current_event["_id"]) if current_event else "default_event"
     
-    # Check if it's during event hours
-    if not is_event_hours_active():
-        raise HTTPException(status_code=403, detail="Song requests only available during event hours")
+    # Check for duplicate requests
+    user_id = str(current_user["_id"])
     
-    # Get current event
-    current_event = await db.events.find_one({"status": "live"})
-    if not current_event:
-        raise HTTPException(status_code=404, detail="No active event found")
-    
-    # Check for duplicate requests - if exists, increment times_requested and add vote
     existing = await db.song_requests.find_one({
-        "event_id": str(current_event["_id"]),
         "song_title": song_data["song_title"],
         "artist_name": song_data["artist_name"],
         "status": "pending"
     })
-    
-    user_id = str(current_user["_id"])
     
     if existing:
         # Song already requested - check if user already requested it
@@ -768,22 +761,22 @@ async def request_song(
     # Create new song request
     request_dict = {
         "user_id": str(current_user["_id"]),
-        "user_name": current_user["name"],
-        "event_id": str(current_event["_id"]),
+        "user_name": song_data.get("user_name", current_user.get("name", "Anonyme")),
+        "event_id": event_id,
         "song_title": song_data["song_title"],
         "artist_name": song_data["artist_name"],
         "requested_at": datetime.utcnow(),
-        "votes": 1,  # User's own vote
+        "votes": 1,
         "voters": [user_id],
-        "requesters": [user_id],  # Track who requested
-        "times_requested": 1,  # Initial request count
+        "requesters": [user_id],
+        "times_requested": 1,
         "status": "pending"
     }
     
     result = await db.song_requests.insert_one(request_dict)
     
     return {
-        "message": "Song requested successfully",
+        "message": "Demande envoyée!",
         "request_id": str(result.inserted_id),
         "song": f"{song_data['song_title']} by {song_data['artist_name']}"
     }
