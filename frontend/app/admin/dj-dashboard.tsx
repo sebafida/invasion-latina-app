@@ -23,6 +23,18 @@ interface DJRequest {
   votes: number;
   times_requested: number;
   requested_at: string;
+  status: string;
+  rejection_label?: string;
+}
+
+interface EventStats {
+  id: string;
+  name: string;
+  date: string | null;
+  pending: number;
+  played: number;
+  rejected: number;
+  total: number;
 }
 
 const REJECT_REASONS = [
