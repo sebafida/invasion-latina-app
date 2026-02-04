@@ -372,9 +372,8 @@ export default function VIPBookingScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informations de contact</Text>
           <View style={styles.inputContainer}>
-            <Ionicons name="person" size={20} color={theme.colors.textMuted} />
             <TextInput
-              style={styles.input}
+              style={styles.inputNoIcon}
               placeholder="Nom complet"
               placeholderTextColor={theme.colors.textMuted}
               value={customerName}
@@ -382,9 +381,8 @@ export default function VIPBookingScreen() {
             />
           </View>
           <View style={styles.inputContainer}>
-            <Ionicons name="mail" size={20} color={theme.colors.textMuted} />
             <TextInput
-              style={styles.input}
+              style={styles.inputNoIcon}
               placeholder="Email"
               placeholderTextColor={theme.colors.textMuted}
               value={customerEmail}
@@ -394,9 +392,8 @@ export default function VIPBookingScreen() {
             />
           </View>
           <View style={styles.inputContainer}>
-            <Ionicons name="call" size={20} color={theme.colors.textMuted} />
             <TextInput
-              style={styles.input}
+              style={styles.inputNoIcon}
               placeholder="Téléphone"
               placeholderTextColor={theme.colors.textMuted}
               value={customerPhone}
