@@ -806,6 +806,30 @@ async def get_song_requests(current_user: dict = Depends(get_current_user)):
     
     return requests
 
+
+@app.get("/api/dj/my-requests")
+async def get_my_song_requests(current_user: dict = Depends(get_current_user)):
+    """Get current user's song requests with their status"""
+    db = get_database()
+    user_id = str(current_user["_id"])
+    
+    requests = []
+    async for request in db.song_requests.find(
+        {"requesters": user_id}
+    ).sort("requested_at", -1).limit(20):
+        requests.append({
+            "id": str(request["_id"]),
+            "song_title": request["song_title"],
+            "artist_name": request["artist_name"],
+            "status": request["status"],
+            "rejection_reason": request.get("rejection_label", request.get("rejection_reason")),
+            "requested_at": request["requested_at"],
+            "votes": request["votes"],
+        })
+    
+    return requests
+
+
 @app.post("/api/dj/vote/{request_id}")
 async def vote_for_song(
     request_id: str,
