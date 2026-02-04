@@ -123,13 +123,12 @@ export default function HomeScreen() {
       <View style={styles.content}>
         {/* Hero Section */}
         <View style={styles.hero}>
-          <Text style={styles.greeting}>Welcome back,</Text>
-          <Text style={styles.userName}>{user?.name || 'Party Lover'}! 🔥</Text>
+          <Text style={styles.greeting}>Bienvenido a tu fiesta,</Text>
+          <Text style={styles.userName}>{user?.name || 'Party Lover'}!</Text>
           
           <View style={styles.pointsCard}>
-            <Ionicons name="trophy" size={24} color={theme.colors.secondary} />
             <Text style={styles.pointsText}>
-              {user?.loyalty_points || 0} Points
+              {user?.loyalty_points || 0} Invasion Coins
             </Text>
           </View>
         </View>
