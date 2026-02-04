@@ -729,12 +729,18 @@ async def request_song(
     # If no event found, create a default event context
     event_id = str(current_event["_id"]) if current_event else "default_event"
     
-    # Check for duplicate requests
+    # Normalize song title and artist for comparison (case-insensitive)
+    song_title_normalized = song_data["song_title"].strip().lower()
+    artist_name_normalized = song_data["artist_name"].strip().lower()
+    
+    # Check for duplicate requests in the same event
     user_id = str(current_user["_id"])
     
+    # Find existing request with same song (case-insensitive) in pending status for this event
     existing = await db.song_requests.find_one({
-        "song_title": song_data["song_title"],
-        "artist_name": song_data["artist_name"],
+        "song_title_normalized": song_title_normalized,
+        "artist_name_normalized": artist_name_normalized,
+        "event_id": event_id,
         "status": "pending"
     })
     
@@ -744,6 +750,7 @@ async def request_song(
             raise HTTPException(status_code=400, detail="Vous avez déjà demandé cette chanson")
         
         # Increment times_requested and add user as requester and voter
+        new_count = existing.get("times_requested", 1) + 1
         await db.song_requests.update_one(
             {"_id": existing["_id"]},
             {
@@ -753,9 +760,10 @@ async def request_song(
         )
         
         return {
-            "message": "Demande ajoutée! La chanson a maintenant " + str(existing.get("times_requested", 1) + 1) + " demandes",
+            "message": f"Demande ajoutée! '{existing['song_title']}' a maintenant {new_count} demandes! 🔥",
             "request_id": str(existing["_id"]),
-            "song": f"{song_data['song_title']} by {song_data['artist_name']}"
+            "song": f"{existing['song_title']} by {existing['artist_name']}",
+            "times_requested": new_count
         }
     
     # Create new song request
@@ -763,8 +771,10 @@ async def request_song(
         "user_id": str(current_user["_id"]),
         "user_name": song_data.get("user_name", current_user.get("name", "Anonyme")),
         "event_id": event_id,
-        "song_title": song_data["song_title"],
-        "artist_name": song_data["artist_name"],
+        "song_title": song_data["song_title"].strip(),
+        "artist_name": song_data["artist_name"].strip(),
+        "song_title_normalized": song_title_normalized,
+        "artist_name_normalized": artist_name_normalized,
         "requested_at": datetime.utcnow(),
         "votes": 1,
         "voters": [user_id],
@@ -778,7 +788,8 @@ async def request_song(
     return {
         "message": "Demande envoyée!",
         "request_id": str(result.inserted_id),
-        "song": f"{song_data['song_title']} by {song_data['artist_name']}"
+        "song": f"{song_data['song_title']} by {song_data['artist_name']}",
+        "times_requested": 1
     }
 
 @app.get("/api/dj/requests")
