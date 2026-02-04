@@ -54,8 +54,8 @@ export default function ProfileScreen() {
   };
 
   const handleClaimReward = async () => {
-    if (!loyaltyData || loyaltyData.points < 50) {
-      Alert.alert('Pas encore', `Il te faut ${loyaltyData?.points_needed || 50} points de plus!`);
+    if (!loyaltyData || loyaltyData.points < 25) {
+      Alert.alert('Pas encore', `Il te faut ${loyaltyData?.points_needed || 25} Invasion Coins de plus!`);
       return;
     }
 
