@@ -460,6 +460,35 @@ export default function VIPBookingScreen() {
           </Text>
         </View>
       </View>
+
+      {/* Success Modal */}
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.successIconContainer}>
+              <Ionicons name="checkmark-circle" size={80} color={theme.colors.success} />
+            </View>
+            <Text style={styles.modalTitle}>Demande envoyée! 🍾</Text>
+            <Text style={styles.modalMessage}>
+              Votre demande de réservation a été reçue avec succès!
+            </Text>
+            <Text style={styles.modalSubMessage}>
+              Notre équipe vous contactera sous 24h pour confirmer votre réservation.
+            </Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setShowSuccessModal(false)}
+            >
+              <Text style={styles.modalButtonText}>Super!</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
