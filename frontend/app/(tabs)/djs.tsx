@@ -100,8 +100,16 @@ const DEFAULT_DJS: DJ[] = [
 ];
 
 export default function DJsScreen() {
+  const { user } = useAuth();
   const [djs, setDjs] = useState<DJ[]>(DEFAULT_DJS);
   const [loading, setLoading] = useState(false);
+  
+  // Song request states
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [songTitle, setSongTitle] = useState('');
+  const [artistName, setArtistName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     loadDJs();
