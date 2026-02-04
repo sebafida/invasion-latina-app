@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Invasion Latina",
-    "slug": "invasion-latina",
+    "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/invasion-logo.png",
@@ -68,10 +68,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "EXPO_PUBLIC_BACKEND_URL": "https://invasion-app.preview.emergentagent.com",
-      "eas": {
-        "projectId": "invasion-latina"
-      }
+      "EXPO_PUBLIC_BACKEND_URL": "https://invasion-app.preview.emergentagent.com"
     }
   }
 }
