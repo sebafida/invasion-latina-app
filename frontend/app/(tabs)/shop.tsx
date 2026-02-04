@@ -217,35 +217,37 @@ export default function VIPBookingScreen() {
 
   const currentRoom = getCurrentRoom();
   const packageDetails = getSelectedPackageDetails();
+  
+  // Get the current event's flyer
+  const currentEvent = events.find(e => e.id === selectedEvent);
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>🍾 Tables VIP</Text>
+          <Text style={styles.title}>Table Booking</Text>
           <Text style={styles.subtitle}>Réserve ta table pour une soirée inoubliable</Text>
         </View>
 
-        {/* Event Selection */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📅 Événement</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={selectedEvent}
-              onValueChange={setSelectedEvent}
-              style={styles.picker}
-            >
-              {events.map(event => (
-                <Picker.Item
-                  key={event.id}
-                  label={`${event.name} - ${new Date(event.event_date).toLocaleDateString('fr-FR')}`}
-                  value={event.id}
-                />
-              ))}
-            </Picker>
+        {/* Event Flyer */}
+        {currentEvent?.banner_image ? (
+          <View style={styles.flyerSection}>
+            <Image
+              source={{ uri: currentEvent.banner_image }}
+              style={styles.flyerImage}
+              resizeMode="cover"
+            />
           </View>
-        </View>
+        ) : (
+          <View style={styles.flyerSection}>
+            <Image
+              source={require('../../assets/images/event-flyer.jpg')}
+              style={styles.flyerImage}
+              resizeMode="cover"
+            />
+          </View>
+        )}
 
         {/* Room Tabs */}
         <View style={styles.section}>
