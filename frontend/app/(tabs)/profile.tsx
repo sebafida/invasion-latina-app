@@ -225,7 +225,7 @@ export default function ProfileScreen() {
               onPress={() => router.push('/admin/content-manager')}
             >
               <Ionicons name="images" size={24} color="white" />
-              <Text style={styles.adminButtonText}>📸 Gestion du Contenu</Text>
+              <Text style={styles.adminButtonText}>Gestion du Contenu</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
 
@@ -234,7 +234,7 @@ export default function ProfileScreen() {
               onPress={() => router.push('/admin/dj-dashboard')}
             >
               <Ionicons name="headset" size={24} color="white" />
-              <Text style={styles.djDashboardText}>🎧 DJ Dashboard</Text>
+              <Text style={styles.djDashboardText}>DJ Dashboard</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
 
@@ -243,7 +243,7 @@ export default function ProfileScreen() {
               onPress={() => router.push('/admin/bookings')}
             >
               <Ionicons name="restaurant" size={24} color="white" />
-              <Text style={styles.bookingsButtonText}>🍾 Réservations Tables</Text>
+              <Text style={styles.bookingsButtonText}>Réservations Tables</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
 
@@ -252,7 +252,7 @@ export default function ProfileScreen() {
               onPress={() => router.push('/admin/loyalty-scanner')}
             >
               <Ionicons name="qr-code" size={24} color="white" />
-              <Text style={styles.scannerButtonText}>📱 Scanner QR Fidélité</Text>
+              <Text style={styles.scannerButtonText}>Scanner QR Fidélité</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
           </View>
