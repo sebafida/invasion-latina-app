@@ -761,6 +761,69 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
+  // My Requests Section
+  myRequestsSection: {
+    paddingHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,
+  },
+  myRequestsTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.md,
+  },
+  myRequestCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+  },
+  myRequestInfo: {
+    flex: 1,
+  },
+  myRequestSong: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+  },
+  myRequestArtist: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+  },
+  myRequestStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statusPending: {},
+  statusPlayed: {},
+  statusRejected: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+  },
+  statusText: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: theme.fontWeight.bold,
+  },
+  rejectedContainer: {
+    alignItems: 'flex-end',
+  },
+  rejectedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  rejectionReason: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textMuted,
+    marginTop: 2,
+    maxWidth: 150,
+    textAlign: 'right',
+  },
+
   // Modal Styles
   modalOverlay: {
     flex: 1,
