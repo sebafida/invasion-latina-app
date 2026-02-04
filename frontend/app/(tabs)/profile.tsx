@@ -160,7 +160,7 @@ export default function ProfileScreen() {
                   />
                 </View>
                 <Text style={styles.progressText}>
-                  {loyaltyData.points_needed} points pour un guest gratuit
+                  {loyaltyData.points_needed} Invasion Coins pour un guest gratuit
                 </Text>
               </View>
 
@@ -182,14 +182,14 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 style={[
                   styles.claimButton,
-                  loyaltyData.points < 50 && styles.claimButtonDisabled
+                  loyaltyData.points < 25 && styles.claimButtonDisabled
                 ]}
                 onPress={handleClaimReward}
-                disabled={loyaltyData.points < 50}
+                disabled={loyaltyData.points < 25}
               >
                 <Ionicons name="ticket" size={20} color="white" />
                 <Text style={styles.claimButtonText}>
-                  {loyaltyData.points >= 50 ? 'Réclamer Guest Gratuit (50pts)' : 'Pas encore assez de points'}
+                  {loyaltyData.points >= 25 ? 'Réclamer Guest Gratuit (25 Coins)' : 'Pas encore assez de Coins'}
                 </Text>
               </TouchableOpacity>
 
