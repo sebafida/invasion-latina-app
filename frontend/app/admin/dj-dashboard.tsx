@@ -206,18 +206,51 @@ export default function DJDashboardScreen() {
           </View>
         </View>
 
+        {/* Event Selector */}
+        {events.length > 1 && (
+          <TouchableOpacity
+            style={styles.eventSelector}
+            onPress={() => setShowEventPicker(true)}
+          >
+            <Ionicons name="calendar" size={20} color={theme.colors.primary} />
+            <Text style={styles.eventSelectorText}>
+              {events.find(e => e.id === selectedEvent)?.name || 'Événement actuel'}
+            </Text>
+            <Ionicons name="chevron-down" size={20} color={theme.colors.textMuted} />
+          </TouchableOpacity>
+        )}
+
         {/* Stats */}
         <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
+          <TouchableOpacity 
+            style={[styles.statCard, statusFilter === 'all' && styles.statCardActive]}
+            onPress={() => setStatusFilter('all')}
+          >
             <Text style={styles.statNumber}>{stats.total}</Text>
+            <Text style={styles.statLabel}>Total</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.statCard, statusFilter === 'pending' && styles.statCardActive]}
+            onPress={() => setStatusFilter('pending')}
+          >
+            <Text style={[styles.statNumber, { color: theme.colors.warning }]}>{stats.pending}</Text>
             <Text style={styles.statLabel}>En attente</Text>
-          </View>
-          <View style={styles.statCard}>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.statCard, statusFilter === 'played' && styles.statCardActive]}
+            onPress={() => setStatusFilter('played')}
+          >
             <Text style={[styles.statNumber, { color: theme.colors.success }]}>{stats.played}</Text>
             <Text style={styles.statLabel}>Joués</Text>
-          </View>
-          <View style={styles.statCard}>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.statCard, statusFilter === 'rejected' && styles.statCardActive]}
+            onPress={() => setStatusFilter('rejected')}
+          >
             <Text style={[styles.statNumber, { color: theme.colors.error }]}>{stats.rejected}</Text>
+            <Text style={styles.statLabel}>Rejetés</Text>
+          </TouchableOpacity>
+        </View>
             <Text style={styles.statLabel}>Rejetés</Text>
           </View>
         </View>
