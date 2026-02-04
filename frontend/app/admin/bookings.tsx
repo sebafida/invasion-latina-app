@@ -248,11 +248,39 @@ Merci et à bientôt! 🔥`;
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.cancelButton}
-                      onPress={() => updateBookingStatus(booking.id, 'cancelled')}
+                      onPress={() => {
+                        Alert.alert(
+                          'Annuler la réservation',
+                          `Êtes-vous sûr de vouloir annuler la réservation de ${booking.customer_name}?`,
+                          [
+                            { text: 'Non', style: 'cancel' },
+                            { text: 'Oui, annuler', style: 'destructive', onPress: () => updateBookingStatus(booking.id, 'cancelled') }
+                          ]
+                        );
+                      }}
                     >
                       <Ionicons name="close" size={20} color="white" />
                     </TouchableOpacity>
                   </>
+                )}
+
+                {/* Cancel button for confirmed bookings */}
+                {booking.status === 'confirmed' && (
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => {
+                      Alert.alert(
+                        'Annuler la réservation',
+                        `Êtes-vous sûr de vouloir annuler la réservation CONFIRMÉE de ${booking.customer_name}?\n\nCette action est irréversible.`,
+                        [
+                          { text: 'Non', style: 'cancel' },
+                          { text: 'Oui, annuler', style: 'destructive', onPress: () => updateBookingStatus(booking.id, 'cancelled') }
+                        ]
+                      );
+                    }}
+                  >
+                    <Ionicons name="close" size={20} color="white" />
+                  </TouchableOpacity>
                 )}
               </View>
             </View>
