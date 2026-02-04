@@ -271,13 +271,21 @@ export default function DJDashboardScreen() {
           {requests.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="musical-notes-outline" size={64} color={theme.colors.textMuted} />
-              <Text style={styles.emptyText}>Aucune requête pour le moment</Text>
+              <Text style={styles.emptyText}>Aucune requête {statusFilter !== 'all' ? 'dans cette catégorie' : ''}</Text>
             </View>
           ) : (
             requests.map((request, index) => (
-              <View key={request.id} style={styles.requestCard}>
+              <View key={request.id} style={[
+                styles.requestCard,
+                request.status === 'rejected' && styles.requestCardRejected,
+                request.status === 'played' && styles.requestCardPlayed,
+              ]}>
                 {/* Rank */}
-                <View style={styles.rankBadge}>
+                <View style={[
+                  styles.rankBadge,
+                  request.status === 'rejected' && { backgroundColor: theme.colors.error + '30' },
+                  request.status === 'played' && { backgroundColor: theme.colors.success + '30' },
+                ]}>
                   <Text style={styles.rankNumber}>#{index + 1}</Text>
                 </View>
 
@@ -306,24 +314,40 @@ export default function DJDashboardScreen() {
                       </View>
                     )}
                   </View>
+
+                  {/* Status badge for rejected/played */}
+                  {request.status === 'rejected' && request.rejection_label && (
+                    <View style={styles.rejectionBadge}>
+                      <Ionicons name="close-circle" size={14} color={theme.colors.error} />
+                      <Text style={styles.rejectionText}>{request.rejection_label}</Text>
+                    </View>
+                  )}
+                  {request.status === 'played' && (
+                    <View style={styles.playedBadge}>
+                      <Ionicons name="checkmark-circle" size={14} color={theme.colors.success} />
+                      <Text style={styles.playedText}>Joué!</Text>
+                    </View>
+                  )}
                 </View>
 
-                {/* Actions */}
-                <View style={styles.actions}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.playedButton]}
-                    onPress={() => handleMarkAsPlayed(request.id, request.song_title)}
-                  >
-                    <Ionicons name="checkmark" size={20} color="white" />
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.rejectButton]}
-                    onPress={() => handleReject(request)}
-                  >
-                    <Ionicons name="close" size={20} color="white" />
-                  </TouchableOpacity>
-                </View>
+                {/* Actions - only for pending requests */}
+                {request.status === 'pending' && (
+                  <View style={styles.actions}>
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.playedButton]}
+                      onPress={() => handleMarkAsPlayed(request.id, request.song_title)}
+                    >
+                      <Ionicons name="checkmark" size={20} color="white" />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.rejectButton]}
+                      onPress={() => handleReject(request)}
+                    >
+                      <Ionicons name="close" size={20} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             ))
           )}
