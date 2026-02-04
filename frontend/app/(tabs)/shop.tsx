@@ -206,24 +206,17 @@ export default function VIPBookingScreen() {
       const response = await api.post('/vip/book', bookingData);
       console.log('Booking response:', response.data);
 
-      Alert.alert(
-        '✅ Demande envoyée!',
-        'Votre demande de réservation a été reçue avec succès! 🍾\n\nNotre équipe vous contactera sous 24h pour confirmer votre réservation.',
-        [
-          {
-            text: 'Super!',
-            onPress: () => {
-              // Reset form
-              setCustomerName('');
-              setCustomerEmail('');
-              setCustomerPhone('');
-              setBottlePreferences('');
-              setSpecialRequests('');
-              setGuestCount('6');
-            }
-          }
-        ]
-      );
+      // Show success modal
+      setShowSuccessModal(true);
+      
+      // Reset form
+      setCustomerName('');
+      setCustomerEmail('');
+      setCustomerPhone('');
+      setBottlePreferences('');
+      setSpecialRequests('');
+      setGuestCount('6');
+      
     } catch (error: any) {
       console.error('Booking error:', error);
       const message = error.response?.data?.detail || 'Erreur lors de la réservation. Veuillez réessayer.';
