@@ -358,6 +358,51 @@ export default function DJsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* My Requests Section */}
+        {user && myRequests.length > 0 && (
+          <View style={styles.myRequestsSection}>
+            <Text style={styles.myRequestsTitle}>Mes demandes</Text>
+            {myRequests.map((request) => (
+              <View key={request.id} style={styles.myRequestCard}>
+                <View style={styles.myRequestInfo}>
+                  <Text style={styles.myRequestSong}>{request.song_title}</Text>
+                  <Text style={styles.myRequestArtist}>{request.artist_name}</Text>
+                </View>
+                <View style={[
+                  styles.myRequestStatus,
+                  request.status === 'pending' && styles.statusPending,
+                  request.status === 'played' && styles.statusPlayed,
+                  request.status === 'rejected' && styles.statusRejected,
+                ]}>
+                  {request.status === 'pending' && (
+                    <>
+                      <Ionicons name="time" size={16} color={theme.colors.warning} />
+                      <Text style={[styles.statusText, { color: theme.colors.warning }]}>En attente</Text>
+                    </>
+                  )}
+                  {request.status === 'played' && (
+                    <>
+                      <Ionicons name="checkmark-circle" size={16} color={theme.colors.success} />
+                      <Text style={[styles.statusText, { color: theme.colors.success }]}>Joué!</Text>
+                    </>
+                  )}
+                  {request.status === 'rejected' && (
+                    <View style={styles.rejectedContainer}>
+                      <View style={styles.rejectedBadge}>
+                        <Ionicons name="close-circle" size={16} color={theme.colors.error} />
+                        <Text style={[styles.statusText, { color: theme.colors.error }]}>Refusé</Text>
+                      </View>
+                      {request.rejection_reason && (
+                        <Text style={styles.rejectionReason}>{request.rejection_reason}</Text>
+                      )}
+                    </View>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
       </View>
 
       {/* Song Request Modal */}
