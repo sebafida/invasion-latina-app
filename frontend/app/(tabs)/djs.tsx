@@ -8,10 +8,15 @@ import {
   Image,
   Linking,
   RefreshControl,
+  TextInput,
+  Alert,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
+import { useAuth } from '../../src/context/AuthContext';
 
 interface DJ {
   id: string;
