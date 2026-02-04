@@ -251,9 +251,6 @@ export default function DJDashboardScreen() {
             <Text style={styles.statLabel}>Rejetés</Text>
           </TouchableOpacity>
         </View>
-            <Text style={styles.statLabel}>Rejetés</Text>
-          </View>
-        </View>
 
         {/* Info */}
         <View style={styles.infoCard}>
@@ -265,7 +262,11 @@ export default function DJDashboardScreen() {
 
         {/* Requests List */}
         <View style={styles.requestsList}>
-          <Text style={styles.listTitle}>Requêtes en cours</Text>
+          <Text style={styles.listTitle}>
+            {statusFilter === 'all' ? 'Toutes les requêtes' : 
+             statusFilter === 'pending' ? 'Requêtes en attente' :
+             statusFilter === 'played' ? 'Chansons jouées' : 'Requêtes rejetées'}
+          </Text>
 
           {requests.length === 0 ? (
             <View style={styles.emptyState}>
