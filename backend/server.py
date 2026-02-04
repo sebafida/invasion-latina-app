@@ -782,15 +782,23 @@ async def request_song(
     }
 
 @app.get("/api/dj/requests")
-async def get_song_requests(current_user: dict = Depends(get_current_user)):
-    """Get current song requests"""
+async def get_song_requests(
+    status: Optional[str] = Query(None),
+    event_id: Optional[str] = Query(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get song requests with optional filters"""
     db = get_database()
     
-    # Get all pending requests (without event filtering for easier testing)
+    # Build query
+    query = {}
+    if status:
+        query["status"] = status
+    if event_id:
+        query["event_id"] = event_id
+    
     requests = []
-    async for request in db.song_requests.find(
-        {"status": "pending"}
-    ).sort("votes", -1).limit(50):
+    async for request in db.song_requests.find(query).sort("requested_at", -1).limit(100):
         user_id = str(current_user["_id"])
         requests.append({
             "id": str(request["_id"]),
@@ -800,11 +808,61 @@ async def get_song_requests(current_user: dict = Depends(get_current_user)):
             "votes": request["votes"],
             "times_requested": request.get("times_requested", 1),
             "requested_at": request["requested_at"],
+            "status": request["status"],
+            "rejection_reason": request.get("rejection_reason"),
+            "rejection_label": request.get("rejection_label"),
+            "event_id": request.get("event_id"),
             "can_vote": user_id not in request.get("voters", []),
             "can_request": user_id not in request.get("requesters", [])
         })
     
     return requests
+
+
+@app.get("/api/dj/admin/all-requests")
+async def get_all_song_requests_admin(
+    current_user: dict = Depends(get_current_admin)
+):
+    """Get all song requests with stats grouped by event (Admin only)"""
+    db = get_database()
+    
+    # Get all events
+    events = []
+    async for event in db.events.find().sort("date", -1):
+        event_id = str(event["_id"])
+        
+        # Count requests for this event
+        pending_count = await db.song_requests.count_documents({"event_id": event_id, "status": "pending"})
+        played_count = await db.song_requests.count_documents({"event_id": event_id, "status": "played"})
+        rejected_count = await db.song_requests.count_documents({"event_id": event_id, "status": "rejected"})
+        
+        events.append({
+            "id": event_id,
+            "name": event.get("name", "Événement"),
+            "date": event.get("date"),
+            "pending": pending_count,
+            "played": played_count,
+            "rejected": rejected_count,
+            "total": pending_count + played_count + rejected_count
+        })
+    
+    # Also count requests without event (default_event)
+    default_pending = await db.song_requests.count_documents({"event_id": "default_event", "status": "pending"})
+    default_played = await db.song_requests.count_documents({"event_id": "default_event", "status": "played"})
+    default_rejected = await db.song_requests.count_documents({"event_id": "default_event", "status": "rejected"})
+    
+    if default_pending + default_played + default_rejected > 0:
+        events.insert(0, {
+            "id": "default_event",
+            "name": "Événement actuel",
+            "date": None,
+            "pending": default_pending,
+            "played": default_played,
+            "rejected": default_rejected,
+            "total": default_pending + default_played + default_rejected
+        })
+    
+    return events
 
 
 @app.get("/api/dj/my-requests")
