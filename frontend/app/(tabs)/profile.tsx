@@ -118,7 +118,7 @@ export default function ProfileScreen() {
         {/* Loyalty Card */}
         <View style={styles.loyaltyCard}>
           <View style={styles.loyaltyHeader}>
-            <Text style={styles.loyaltyTitle}>🎁 Invasion Rewards</Text>
+            <Text style={styles.loyaltyTitle}>Invasion Rewards</Text>
             <TouchableOpacity onPress={() => setShowQR(!showQR)}>
               <Ionicons name="qr-code" size={28} color={theme.colors.neonPink} />
             </TouchableOpacity>
@@ -260,7 +260,7 @@ export default function ProfileScreen() {
 
         {/* Language Selector */}
         <View style={styles.languageSection}>
-          <Text style={styles.languageSectionTitle}>🌐 Langue / Language / Taal</Text>
+          <Text style={styles.languageSectionTitle}>Langue / Language / Taal</Text>
           <View style={styles.languageButtons}>
             <TouchableOpacity
               style={[
@@ -330,7 +330,7 @@ export default function ProfileScreen() {
 
         {/* Info Section */}
         <View style={styles.infoSection}>
-          <Text style={styles.infoTitle}>💡 Comment ça marche?</Text>
+          <Text style={styles.infoTitle}>Comment ça marche?</Text>
           <View style={styles.infoBox}>
             <Text style={styles.infoText}>• Montre ton QR code à l'entrée = +5 Invasion Coins</Text>
             <Text style={styles.infoText}>• 25 Invasion Coins = 1 guest gratuit</Text>

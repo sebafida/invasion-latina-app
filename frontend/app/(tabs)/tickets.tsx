@@ -198,7 +198,7 @@ export default function TicketsScreen() {
 
         {/* Info Section */}
         <View style={styles.infoSection}>
-          <Text style={styles.infoSectionTitle}>💡 Informations</Text>
+          <Text style={styles.infoSectionTitle}>Informations</Text>
           <View style={styles.infoBox}>
             <Text style={styles.infoBoxText}>
               • Billets vendus via XCEED (plateforme sécurisée)

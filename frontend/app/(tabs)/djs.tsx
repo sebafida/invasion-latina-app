@@ -158,14 +158,7 @@ export default function DJsScreen() {
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>🎧 Nos DJs</Text>
-          <Text style={styles.subtitle}>L'équipe qui fait vibrer Invasion Latina</Text>
-        </View>
-
-        {/* Resident Badge */}
-        <View style={styles.residentBadge}>
-          <Ionicons name="star" size={20} color={theme.colors.primary} />
-          <Text style={styles.residentText}>DJs Résidents</Text>
+          <Text style={styles.title}>Nos DJs</Text>
         </View>
 
         {/* DJs Grid */}
@@ -221,7 +214,7 @@ export default function DJsScreen() {
           <>
             <View style={styles.sectionDivider}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>🎤 MC</Text>
+              <Text style={styles.dividerText}>MC</Text>
               <View style={styles.dividerLine} />
             </View>
 
