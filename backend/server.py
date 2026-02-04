@@ -1349,20 +1349,25 @@ async def send_whatsapp_notification(message: str):
 
 @app.post("/api/vip/book")
 async def create_vip_booking(
-    event_id: str,
-    zone: str,
-    package: str,
-    guest_count: int,
-    bottle_preferences: Optional[str] = None,
-    special_requests: Optional[str] = None,
-    total_price: float = 0,
-    customer_name: str = "",
-    customer_email: str = "",
-    customer_phone: str = "",
+    booking_data: Dict[str, Any] = Body(...),
     current_user: dict = Depends(get_current_user)
 ):
     """Create a VIP table booking request"""
     db = get_database()
+    
+    event_id = booking_data.get("event_id")
+    zone = booking_data.get("zone")
+    package = booking_data.get("package")
+    guest_count = booking_data.get("guest_count", 6)
+    bottle_preferences = booking_data.get("bottle_preferences", "")
+    special_requests = booking_data.get("special_requests", "")
+    total_price = booking_data.get("total_price", 0)
+    customer_name = booking_data.get("customer_name", "")
+    customer_email = booking_data.get("customer_email", "")
+    customer_phone = booking_data.get("customer_phone", "")
+    
+    if not event_id or not zone or not package:
+        raise HTTPException(status_code=400, detail="Missing required fields")
     
     # Verify event exists
     event = await db.events.find_one({"_id": ObjectId(event_id)})
