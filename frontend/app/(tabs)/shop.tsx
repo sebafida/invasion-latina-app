@@ -412,7 +412,7 @@ export default function VIPBookingScreen() {
               <Text style={[styles.summaryValue, { color: currentRoom.color }]}>{currentRoom.name}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Formule:</Text>
+              <Text style={styles.summaryLabel}>Table:</Text>
               <Text style={styles.summaryValue}>{packageDetails.label}</Text>
             </View>
             <View style={styles.summaryRow}>
