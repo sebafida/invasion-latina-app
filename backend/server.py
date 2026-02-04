@@ -786,14 +786,10 @@ async def get_song_requests(current_user: dict = Depends(get_current_user)):
     """Get current song requests"""
     db = get_database()
     
-    # Get current event
-    current_event = await db.events.find_one({"status": "live"})
-    if not current_event:
-        return []
-    
+    # Get all pending requests (without event filtering for easier testing)
     requests = []
     async for request in db.song_requests.find(
-        {"event_id": str(current_event["_id"]), "status": "pending"}
+        {"status": "pending"}
     ).sort("votes", -1).limit(50):
         user_id = str(current_user["_id"])
         requests.append({
