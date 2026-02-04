@@ -578,6 +578,48 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
   },
 
+  // Request card status variants
+  requestCardRejected: {
+    borderLeftWidth: 3,
+    borderLeftColor: theme.colors.error,
+    opacity: 0.8,
+  },
+  requestCardPlayed: {
+    borderLeftWidth: 3,
+    borderLeftColor: theme.colors.success,
+    opacity: 0.8,
+  },
+  rejectionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+    backgroundColor: theme.colors.error + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  rejectionText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.error,
+  },
+  playedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+    backgroundColor: theme.colors.success + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  playedText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.success,
+  },
+
   // Actions
   actions: {
     flexDirection: 'row',
