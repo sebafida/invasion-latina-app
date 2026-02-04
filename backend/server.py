@@ -1185,14 +1185,14 @@ async def get_my_rewards(current_user: dict = Depends(get_current_user)):
 
 @app.post("/api/loyalty/claim-reward")
 async def claim_reward(current_user: dict = Depends(get_current_user)):
-    """Claim a free entry reward (50 points)"""
+    """Claim a free entry reward (25 Invasion Coins)"""
     db = get_database()
     
     user = await db.users.find_one({"_id": ObjectId(current_user["_id"])})
     points = user.get("loyalty_points", 0)
     
-    if points < 50:
-        raise HTTPException(status_code=400, detail=f"Not enough points. You have {points}, need 50.")
+    if points < 25:
+        raise HTTPException(status_code=400, detail=f"Not enough Invasion Coins. You have {points}, need 25.")
     
     # Generate unique reward code
     import random
@@ -1203,8 +1203,8 @@ async def claim_reward(current_user: dict = Depends(get_current_user)):
     reward = {
         "user_id": str(current_user["_id"]),
         "reward_type": "free_entry",
-        "points_required": 50,
-        "points_spent": 50,
+        "points_required": 25,
+        "points_spent": 25,
         "status": "pending",
         "code": code,
         "created_at": datetime.utcnow(),
@@ -1216,14 +1216,14 @@ async def claim_reward(current_user: dict = Depends(get_current_user)):
     # Deduct points
     await db.users.update_one(
         {"_id": ObjectId(current_user["_id"])},
-        {"$inc": {"loyalty_points": -50}}
+        {"$inc": {"loyalty_points": -25}}
     )
     
     # Log transaction
     await db.loyalty_transactions.insert_one({
         "user_id": str(current_user["_id"]),
         "transaction_type": "spent",
-        "points": -50,
+        "points": -25,
         "description": "Claimed free entry reward",
         "related_reward_id": str(result.inserted_id),
         "created_at": datetime.utcnow()
@@ -1232,7 +1232,7 @@ async def claim_reward(current_user: dict = Depends(get_current_user)):
     return {
         "message": "Reward claimed successfully!",
         "code": code,
-        "points_remaining": points - 50
+        "points_remaining": points - 25
     }
 
 @app.get("/api/loyalty/user-qr/{user_id}")
