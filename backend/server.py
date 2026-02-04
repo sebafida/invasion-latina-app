@@ -1146,9 +1146,9 @@ async def get_my_loyalty_points(current_user: dict = Depends(get_current_user)):
             "date": check_in["checked_in_at"]
         })
     
-    # Calculate progress to next reward
+    # Calculate progress to next reward (25 Invasion Coins for a free guest)
     points = user.get("loyalty_points", 0)
-    points_to_reward = 50
+    points_to_reward = 25
     progress_percentage = min((points / points_to_reward) * 100, 100)
     rewards_earned = points // points_to_reward
     
