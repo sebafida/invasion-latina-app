@@ -239,6 +239,15 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
+              style={styles.bookingsButton}
+              onPress={() => router.push('/admin/bookings')}
+            >
+              <Ionicons name="restaurant" size={24} color="white" />
+              <Text style={styles.bookingsButtonText}>🍾 Réservations Tables</Text>
+              <Ionicons name="arrow-forward" size={20} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={styles.scannerButton}
               onPress={() => router.push('/admin/loyalty-scanner')}
             >
