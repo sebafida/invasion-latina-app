@@ -9,6 +9,7 @@ import {
   Alert,
   Dimensions,
   Image,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
