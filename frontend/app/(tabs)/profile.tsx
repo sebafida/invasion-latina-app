@@ -218,7 +218,7 @@ export default function ProfileScreen() {
         {/* Admin DJ Dashboard Button */}
         {user?.role === 'admin' && (
           <View style={styles.adminSection}>
-            <Text style={styles.adminSectionTitle}>🔐 Administration</Text>
+            <Text style={styles.adminSectionTitle}>Administration</Text>
             
             <TouchableOpacity
               style={styles.adminButton}
