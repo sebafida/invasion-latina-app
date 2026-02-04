@@ -323,8 +323,8 @@ export default function ProfileScreen() {
         <View style={styles.infoSection}>
           <Text style={styles.infoTitle}>💡 Comment ça marche?</Text>
           <View style={styles.infoBox}>
-            <Text style={styles.infoText}>• Montre ton QR code à l'entrée = +5 points</Text>
-            <Text style={styles.infoText}>• 50 points = 1 guest gratuit</Text>
+            <Text style={styles.infoText}>• Montre ton QR code à l'entrée = +5 Invasion Coins</Text>
+            <Text style={styles.infoText}>• 25 Invasion Coins = 1 guest gratuit</Text>
             <Text style={styles.infoText}>• 1 scan par événement maximum</Text>
             <Text style={styles.infoText}>• Récompense valable 90 jours</Text>
           </View>
