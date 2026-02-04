@@ -537,6 +537,25 @@ const styles = StyleSheet.create({
     color: theme.colors.success,
   },
 
+  // Bookings Button
+  bookingsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E91E63',
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  bookingsButtonText: {
+    flex: 1,
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: 'white',
+  },
+
   // Language Section
   languageSection: {
     marginHorizontal: theme.spacing.xl,
