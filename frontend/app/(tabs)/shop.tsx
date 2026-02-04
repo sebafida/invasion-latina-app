@@ -637,6 +637,12 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.md,
     color: theme.colors.textPrimary,
   },
+  inputNoIcon: {
+    flex: 1,
+    paddingVertical: theme.spacing.md,
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textPrimary,
+  },
   textAreaContainer: {
     backgroundColor: theme.colors.cardBackground,
     borderRadius: theme.borderRadius.md,
