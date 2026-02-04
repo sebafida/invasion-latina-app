@@ -144,7 +144,7 @@ export default function LoyaltyScannerScreen() {
         </View>
         <View style={styles.instructionItem}>
           <Ionicons name="checkmark-circle" size={24} color={theme.colors.success} />
-          <Text style={styles.instructionText}>+5 points automatiquement crédités</Text>
+          <Text style={styles.instructionText}>+5 Invasion Coins automatiquement crédités</Text>
         </View>
       </View>
 
@@ -160,10 +160,10 @@ export default function LoyaltyScannerScreen() {
                 <Text style={styles.modalTitle}>Check-in Réussi! 🎉</Text>
                 <Text style={styles.modalUserName}>{lastResult.user_name}</Text>
                 <View style={styles.pointsEarned}>
-                  <Text style={styles.pointsText}>+{lastResult.points_earned} points</Text>
+                  <Text style={styles.pointsText}>+{lastResult.points_earned} Coins</Text>
                 </View>
                 <Text style={styles.totalPoints}>
-                  Total: {lastResult.total_points} points
+                  Total: {lastResult.total_points} Invasion Coins
                 </Text>
               </>
             ) : (
