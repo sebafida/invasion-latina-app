@@ -110,10 +110,16 @@ export default function DJsScreen() {
   const [artistName, setArtistName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
+  // My requests
+  const [myRequests, setMyRequests] = useState<any[]>([]);
 
   useEffect(() => {
     loadDJs();
-  }, []);
+    if (user) {
+      loadMyRequests();
+    }
+  }, [user]);
 
   const loadDJs = async () => {
     try {
@@ -127,6 +133,15 @@ export default function DJsScreen() {
       // Keep default data if API fails
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMyRequests = async () => {
+    try {
+      const response = await api.get('/dj/my-requests');
+      setMyRequests(response.data);
+    } catch (error) {
+      console.log('Failed to load my requests');
     }
   };
 
