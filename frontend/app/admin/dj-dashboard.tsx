@@ -113,30 +113,28 @@ export default function DJDashboardScreen() {
     );
   };
 
-  const handleReject = async (requestId: string, songTitle: string) => {
-    Alert.alert(
-      'Rejeter la demande',
-      `Pourquoi rejeter "${songTitle}"?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        ...REJECT_REASONS.map(reason => ({
-          text: reason.label,
-          onPress: async () => {
-            try {
-              await api.post(`/dj/admin/update-request/${requestId}`, {
-                status: 'rejected',
-                rejection_reason: reason.value
-              });
-              Alert.alert('Rejeté', `"${songTitle}" a été rejeté`);
-              loadRequests();
-            } catch (error: any) {
-              const message = error.response?.data?.detail || 'Erreur';
-              Alert.alert('Erreur', message);
-            }
-          }
-        }))
-      ]
-    );
+  const handleReject = (request: DJRequest) => {
+    setSelectedRequest(request);
+    setShowRejectModal(true);
+  };
+
+  const confirmReject = async (reason: { value: string; label: string }) => {
+    if (!selectedRequest) return;
+    
+    try {
+      await api.post(`/dj/admin/update-request/${selectedRequest.id}`, {
+        status: 'rejected',
+        rejection_reason: reason.value,
+        rejection_label: reason.label
+      });
+      Alert.alert('Rejeté', `"${selectedRequest.song_title}" a été rejeté`);
+      setShowRejectModal(false);
+      setSelectedRequest(null);
+      loadRequests();
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Erreur';
+      Alert.alert('Erreur', message);
+    }
   };
 
   return (
