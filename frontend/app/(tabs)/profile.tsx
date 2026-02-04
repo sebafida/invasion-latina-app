@@ -206,7 +206,7 @@ export default function ProfileScreen() {
                           {new Date(checkin.date).toLocaleDateString('fr-FR')}
                         </Text>
                       </View>
-                      <Text style={styles.historyPoints}>+{checkin.points}pts</Text>
+                      <Text style={styles.historyPoints}>+{checkin.points} Coins</Text>
                     </View>
                   ))}
                 </View>
