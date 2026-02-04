@@ -143,12 +143,13 @@ export default function VIPBookingScreen() {
   const loadEvents = async () => {
     try {
       const response = await api.get('/events');
-      const upcomingEvents = response.data.filter((e: Event) => 
-        new Date(e.event_date) > new Date()
-      );
-      setEvents(upcomingEvents);
-      if (upcomingEvents.length > 0) {
-        setSelectedEvent(upcomingEvents[0].id);
+      console.log('Events loaded:', response.data);
+      // Take all events, not just upcoming ones
+      const allEvents = response.data;
+      setEvents(allEvents);
+      if (allEvents.length > 0) {
+        setSelectedEvent(allEvents[0].id);
+        console.log('Selected event:', allEvents[0].id);
       }
     } catch (error) {
       console.error('Failed to load events:', error);
@@ -162,8 +163,12 @@ export default function VIPBookingScreen() {
   };
 
   const handleSubmitBooking = async () => {
+    console.log('handleSubmitBooking called');
+    console.log('selectedEvent:', selectedEvent);
+    console.log('customerName:', customerName);
+    
     if (!selectedEvent) {
-      Alert.alert('Erreur', 'Veuillez sélectionner un événement');
+      Alert.alert('Erreur', 'Aucun événement disponible. Veuillez réessayer.');
       return;
     }
 
@@ -173,10 +178,14 @@ export default function VIPBookingScreen() {
     }
 
     const packageDetails = getSelectedPackageDetails();
-    if (!packageDetails) return;
+    if (!packageDetails) {
+      Alert.alert('Erreur', 'Veuillez sélectionner une table');
+      return;
+    }
 
     try {
       setLoading(true);
+      console.log('Sending booking request...');
 
       const bookingData = {
         event_id: selectedEvent,
@@ -191,15 +200,21 @@ export default function VIPBookingScreen() {
         customer_phone: customerPhone.trim(),
       };
 
-      await api.post('/vip/book', bookingData);
+      console.log('Booking data:', bookingData);
+      const response = await api.post('/vip/book', bookingData);
+      console.log('Booking response:', response.data);
 
       Alert.alert(
-        'Demande envoyée! 🍾',
-        'Votre demande de réservation VIP a été reçue. Nous vous contacterons sous 24h pour confirmer.',
+        '✅ Demande envoyée!',
+        'Votre demande de réservation a été reçue avec succès! 🍾\n\nNotre équipe vous contactera sous 24h pour confirmer votre réservation.',
         [
           {
-            text: 'OK',
+            text: 'Super!',
             onPress: () => {
+              // Reset form
+              setCustomerName('');
+              setCustomerEmail('');
+              setCustomerPhone('');
               setBottlePreferences('');
               setSpecialRequests('');
               setGuestCount('6');
@@ -208,7 +223,8 @@ export default function VIPBookingScreen() {
         ]
       );
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erreur lors de la réservation';
+      console.error('Booking error:', error);
+      const message = error.response?.data?.detail || 'Erreur lors de la réservation. Veuillez réessayer.';
       Alert.alert('Erreur', message);
     } finally {
       setLoading(false);
