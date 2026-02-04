@@ -74,6 +74,7 @@ export default function DJDashboardScreen() {
         return;
       }
       
+      loadEvents();
       loadRequests();
       
       // Auto-refresh every 10 seconds
@@ -87,20 +88,46 @@ export default function DJDashboardScreen() {
     return () => clearTimeout(timer);
   }, [user]);
 
+  useEffect(() => {
+    loadRequests();
+  }, [statusFilter, selectedEvent]);
+
+  const loadEvents = async () => {
+    try {
+      const response = await api.get('/dj/admin/all-requests');
+      setEvents(response.data);
+    } catch (error) {
+      console.error('Failed to load events:', error);
+    }
+  };
+
   const loadRequests = async () => {
     try {
-      const response = await api.get('/dj/requests');
+      setLoading(true);
+      let url = '/dj/requests?';
+      if (statusFilter !== 'all') {
+        url += `status=${statusFilter}&`;
+      }
+      if (selectedEvent) {
+        url += `event_id=${selectedEvent}`;
+      }
+      
+      const response = await api.get(url);
       setRequests(response.data);
       
-      // Calculate stats
+      // Calculate stats from all requests for this event
+      const allResponse = await api.get(`/dj/requests?event_id=${selectedEvent}`);
+      const allData = allResponse.data;
       setStats({
-        total: response.data.length,
-        pending: response.data.length,
-        played: 0, // Will be updated when we track played songs
-        rejected: 0,
+        total: allData.length,
+        pending: allData.filter((r: any) => r.status === 'pending').length,
+        played: allData.filter((r: any) => r.status === 'played').length,
+        rejected: allData.filter((r: any) => r.status === 'rejected').length,
       });
     } catch (error) {
       console.error('Failed to load requests:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
