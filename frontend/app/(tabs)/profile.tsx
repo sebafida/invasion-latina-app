@@ -146,7 +146,7 @@ export default function ProfileScreen() {
             <>
               <View style={styles.pointsDisplay}>
                 <Text style={styles.pointsNumber}>{loyaltyData.points}</Text>
-                <Text style={styles.pointsLabel}>Points</Text>
+                <Text style={styles.pointsLabel}>Invasion Coins</Text>
               </View>
 
               {/* Progress Bar */}
