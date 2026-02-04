@@ -476,6 +476,10 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     alignItems: 'center',
   },
+  statCardActive: {
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+  },
   statNumber: {
     fontSize: theme.fontSize.xxl,
     fontWeight: theme.fontWeight.black,
@@ -485,6 +489,23 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.xs,
     color: theme.colors.textMuted,
     marginTop: theme.spacing.xs,
+  },
+
+  // Event Selector
+  eventSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.cardBackground,
+    marginHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.md,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    gap: theme.spacing.sm,
+  },
+  eventSelectorText: {
+    flex: 1,
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textPrimary,
   },
 
   // Info Card
