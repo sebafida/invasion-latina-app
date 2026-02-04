@@ -8,9 +8,9 @@ import {
   TextInput,
   Alert,
   Dimensions,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/config/api';
@@ -21,6 +21,7 @@ interface Event {
   id: string;
   name: string;
   event_date: string;
+  banner_image?: string;
 }
 
 // Room types with their packages
