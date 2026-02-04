@@ -325,7 +325,108 @@ export default function DJsScreen() {
           </View>
         </View>
 
+        {/* Song Request Section */}
+        <View style={styles.requestSection}>
+          <TouchableOpacity
+            style={styles.requestButton}
+            onPress={() => setShowRequestModal(true)}
+          >
+            <Ionicons name="musical-note" size={24} color="white" />
+            <View style={styles.requestButtonContent}>
+              <Text style={styles.requestButtonTitle}>Demander une chanson</Text>
+              <Text style={styles.requestButtonSubtitle}>Fais jouer ton son préféré!</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
+
       </View>
+
+      {/* Song Request Modal */}
+      <Modal
+        visible={showRequestModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowRequestModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Demander une chanson</Text>
+              <TouchableOpacity onPress={() => setShowRequestModal(false)}>
+                <Ionicons name="close" size={28} color={theme.colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSubtitle}>
+              Dis-nous quelle chanson tu veux que le DJ joue!
+            </Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Titre de la chanson</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Ex: Pepas"
+                placeholderTextColor={theme.colors.textMuted}
+                value={songTitle}
+                onChangeText={setSongTitle}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Artiste</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Ex: Farruko"
+                placeholderTextColor={theme.colors.textMuted}
+                value={artistName}
+                onChangeText={setArtistName}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
+              onPress={handleSubmitSongRequest}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Ionicons name="send" size={20} color="white" />
+                  <Text style={styles.submitButtonText}>Envoyer la demande</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Success Modal */}
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.successModalContent}>
+            <View style={styles.successIconContainer}>
+              <Ionicons name="checkmark-circle" size={80} color={theme.colors.success} />
+            </View>
+            <Text style={styles.successTitle}>Demande envoyée!</Text>
+            <Text style={styles.successMessage}>
+              Ta chanson a été ajoutée à la liste des demandes. Le DJ la jouera si possible!
+            </Text>
+            <TouchableOpacity
+              style={styles.successButton}
+              onPress={() => setShowSuccessModal(false)}
+            >
+              <Text style={styles.successButtonText}>Super!</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
