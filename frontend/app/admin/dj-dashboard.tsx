@@ -42,6 +42,10 @@ export default function DJDashboardScreen() {
   const [requests, setRequests] = useState<DJRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ total: 0, pending: 0, played: 0, rejected: 0 });
+  
+  // Reject modal states
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<DJRequest | null>(null);
 
   useEffect(() => {
     // Delay check to allow navigation to mount
