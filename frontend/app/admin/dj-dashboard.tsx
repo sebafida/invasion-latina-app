@@ -152,7 +152,7 @@ export default function DJDashboardScreen() {
             <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <Text style={styles.title}>🎧 DJ Dashboard</Text>
+            <Text style={styles.title}>DJ Dashboard</Text>
             <Text style={styles.subtitle}>Gérez les demandes en temps réel</Text>
           </View>
         </View>
