@@ -242,7 +242,7 @@ export default function DJDashboardScreen() {
                   
                   <TouchableOpacity
                     style={[styles.actionButton, styles.rejectButton]}
-                    onPress={() => handleReject(request.id, request.song_title)}
+                    onPress={() => handleReject(request)}
                   >
                     <Ionicons name="close" size={20} color="white" />
                   </TouchableOpacity>
@@ -269,6 +269,55 @@ export default function DJDashboardScreen() {
           </View>
         </View>
       </View>
+
+      {/* Reject Reason Modal */}
+      <Modal
+        visible={showRejectModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowRejectModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Pourquoi rejeter?</Text>
+              <TouchableOpacity onPress={() => setShowRejectModal(false)}>
+                <Ionicons name="close" size={28} color={theme.colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            {selectedRequest && (
+              <View style={styles.selectedSongInfo}>
+                <Text style={styles.selectedSongTitle}>{selectedRequest.song_title}</Text>
+                <Text style={styles.selectedSongArtist}>{selectedRequest.artist_name}</Text>
+              </View>
+            )}
+
+            <ScrollView style={styles.reasonsList}>
+              {REJECT_REASONS.map((reason) => (
+                <TouchableOpacity
+                  key={reason.value}
+                  style={styles.reasonOption}
+                  onPress={() => confirmReject(reason)}
+                >
+                  <View style={styles.reasonIconContainer}>
+                    <Ionicons name={reason.icon as any} size={24} color={theme.colors.error} />
+                  </View>
+                  <Text style={styles.reasonText}>{reason.label}</Text>
+                  <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowRejectModal(false)}
+            >
+              <Text style={styles.cancelButtonText}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
