@@ -284,7 +284,6 @@ export default function VIPBookingScreen() {
 
         {/* Package Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📦 Formule</Text>
           {currentRoom.packages.map(pkg => (
             <TouchableOpacity
               key={pkg.value}
