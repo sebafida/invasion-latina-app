@@ -235,12 +235,6 @@ export default function VIPBookingScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Table Booking</Text>
-          <Text style={styles.subtitle}>Réserve ta table pour une soirée inoubliable</Text>
-        </View>
-
         {/* Event Flyer */}
         {currentEvent?.banner_image ? (
           <View style={styles.flyerSection}>
@@ -262,7 +256,6 @@ export default function VIPBookingScreen() {
 
         {/* Room Tabs */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🏠 Choisis ta salle</Text>
           <View style={styles.tabsContainer}>
             {(Object.keys(ROOMS) as RoomKey[]).map((roomKey) => {
               const room = ROOMS[roomKey];
@@ -330,9 +323,8 @@ export default function VIPBookingScreen() {
 
         {/* Guest Count */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>👥 Nombre de personnes</Text>
+          <Text style={styles.sectionTitle}>Nombre de personnes</Text>
           <View style={styles.inputContainer}>
-            <Ionicons name="people" size={20} color={theme.colors.textMuted} />
             <TextInput
               style={styles.input}
               placeholder="Ex: 6"
@@ -346,7 +338,7 @@ export default function VIPBookingScreen() {
 
         {/* Bottle Preferences */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🍸 Préférences bouteilles (optionnel)</Text>
+          <Text style={styles.sectionTitle}>Préférences bouteilles (optionnel)</Text>
           <View style={styles.textAreaContainer}>
             <TextInput
               style={styles.textArea}
@@ -362,7 +354,7 @@ export default function VIPBookingScreen() {
 
         {/* Special Requests */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>✨ Demandes spéciales (optionnel)</Text>
+          <Text style={styles.sectionTitle}>Demandes spéciales (optionnel)</Text>
           <View style={styles.textAreaContainer}>
             <TextInput
               style={styles.textArea}
@@ -378,7 +370,7 @@ export default function VIPBookingScreen() {
 
         {/* Contact Info */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📞 Informations de contact</Text>
+          <Text style={styles.sectionTitle}>Informations de contact</Text>
           <View style={styles.inputContainer}>
             <Ionicons name="person" size={20} color={theme.colors.textMuted} />
             <TextInput
