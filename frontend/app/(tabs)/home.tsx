@@ -274,6 +274,49 @@ export default function HomeScreen() {
             ))}
           </View>
         </View>
+
+        {/* Social Media Section */}
+        <View style={styles.socialSection}>
+          <View style={styles.lineupHeader}>
+            <Ionicons name="share-social" size={24} color={theme.colors.primary} />
+            <Text style={styles.sectionTitle}>Réseaux Sociaux</Text>
+          </View>
+          
+          <View style={styles.socialGrid}>
+            <TouchableOpacity 
+              style={styles.socialCard}
+              onPress={() => Linking.openURL('https://www.instagram.com/invasionlatina/')}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.socialIconContainer, { backgroundColor: '#E4405F20' }]}>
+                <Ionicons name="logo-instagram" size={28} color="#E4405F" />
+              </View>
+              <Text style={styles.socialName}>Instagram</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.socialCard}
+              onPress={() => Linking.openURL('https://www.facebook.com/invasionlatina/?locale=fr_FR')}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.socialIconContainer, { backgroundColor: '#1877F220' }]}>
+                <Ionicons name="logo-facebook" size={28} color="#1877F2" />
+              </View>
+              <Text style={styles.socialName}>Facebook</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.socialCard}
+              onPress={() => Linking.openURL('https://www.tiktok.com/@invasionlatina')}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.socialIconContainer, { backgroundColor: '#00000020' }]}>
+                <Ionicons name="logo-tiktok" size={28} color="#000000" />
+              </View>
+              <Text style={styles.socialName}>TikTok</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
