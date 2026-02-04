@@ -130,6 +130,39 @@ export default function DJsScreen() {
     }
   };
 
+  const handleSubmitSongRequest = async () => {
+    if (!songTitle.trim()) {
+      Alert.alert('Erreur', 'Veuillez entrer le titre de la chanson');
+      return;
+    }
+    if (!artistName.trim()) {
+      Alert.alert('Erreur', 'Veuillez entrer le nom de l\'artiste');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await api.post('/dj/request-song', {
+        song_title: songTitle.trim(),
+        artist_name: artistName.trim(),
+        user_name: user?.name || 'Anonyme'
+      });
+      
+      // Reset form and close modal
+      setSongTitle('');
+      setArtistName('');
+      setShowRequestModal(false);
+      
+      // Show success modal
+      setShowSuccessModal(true);
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Erreur lors de l\'envoi';
+      Alert.alert('Erreur', message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const openInstagram = async (url: string) => {
     try {
       // Extract username from URL (e.g., https://www.instagram.com/gizmodj/ -> gizmodj)
