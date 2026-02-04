@@ -112,12 +112,6 @@ export default function TicketsScreen() {
       }
     >
       <View style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>🎫 Billetterie</Text>
-          <Text style={styles.subtitle}>Réserve ta place maintenant!</Text>
-        </View>
-
         {/* Events List */}
         {events.length === 0 ? (
           <View style={styles.emptyState}>
