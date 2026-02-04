@@ -60,9 +60,7 @@ export default function TabLayout() {
             <View style={styles.headerSpacer} />
           ),
           headerRight: () => (
-            <TouchableOpacity style={styles.notificationButton}>
-              <Ionicons name="notifications-outline" size={24} color={theme.colors.textPrimary} />
-            </TouchableOpacity>
+            <View style={styles.headerSpacer} />
           ),
         }}
       />
