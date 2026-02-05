@@ -68,7 +68,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "EXPO_PUBLIC_BACKEND_URL": "https://latinanights.preview.emergentagent.com"
+      "EXPO_PUBLIC_BACKEND_URL": "https://latinvibes.preview.emergentagent.com"
     }
   }
 }
