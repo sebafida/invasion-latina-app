@@ -128,7 +128,7 @@ export default function GalleriesScreen() {
                 />
               ) : (
                 <View style={[styles.galleryImage, styles.placeholderImage]}>
-                  <Ionicons name="camera" size={48} color={theme.colors.textMuted} />
+                  <Ionicons name="images" size={48} color={theme.colors.textMuted} />
                 </View>
               )}
               
