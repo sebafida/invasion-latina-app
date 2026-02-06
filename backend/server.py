@@ -584,6 +584,7 @@ async def get_next_event():
             "lineup": next_event.get("lineup", []),
             "ticket_categories": next_event.get("ticket_categories", []),
             "xceed_ticket_url": next_event.get("xceed_ticket_url"),
+            "selected_djs": next_event.get("selected_djs", []),
             "status": next_event["status"]
         }
     }
