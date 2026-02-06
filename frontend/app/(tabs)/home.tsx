@@ -53,7 +53,6 @@ export default function HomeScreen() {
   
   useEffect(() => {
     loadNextEvent();
-    loadLineup();
   }, []);
   
   useEffect(() => {
