@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
@@ -14,7 +15,6 @@ import { useRouter } from 'expo-router';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
-import { FreeEntryCard } from '../../src/components/FreeEntryCard';
 import api from '../../src/config/api';
 
 interface LoyaltyData {
@@ -28,6 +28,12 @@ interface LoyaltyData {
     points: number;
     date: string;
   }>;
+}
+
+interface FreeEntryVoucher {
+  id: string;
+  code: string;
+  used: boolean;
 }
 
 export default function ProfileScreen() {
