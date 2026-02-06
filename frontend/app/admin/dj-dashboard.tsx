@@ -437,6 +437,12 @@ export default function DJDashboardScreen() {
             </View>
             <Text style={styles.legendText}>Rejeter la demande</Text>
           </View>
+          <View style={styles.legendRow}>
+            <View style={[styles.legendIcon, { backgroundColor: '#666' }]}>
+              <Ionicons name="trash" size={16} color="white" />
+            </View>
+            <Text style={styles.legendText}>Supprimer définitivement</Text>
+          </View>
         </View>
       </View>
 
