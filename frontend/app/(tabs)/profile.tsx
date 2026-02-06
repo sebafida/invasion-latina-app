@@ -43,9 +43,12 @@ export default function ProfileScreen() {
   const [loyaltyData, setLoyaltyData] = useState<LoyaltyData | null>(null);
   const [loading, setLoading] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [showFreeEntryQR, setShowFreeEntryQR] = useState(false);
+  const [freeEntryVoucher, setFreeEntryVoucher] = useState<FreeEntryVoucher | null>(null);
 
   useEffect(() => {
     loadLoyaltyData();
+    checkFreeEntryVoucher();
   }, []);
 
   const loadLoyaltyData = async () => {
@@ -60,7 +63,18 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleClaimReward = async () => {
+  const checkFreeEntryVoucher = async () => {
+    try {
+      const response = await api.get('/loyalty/free-entry/check');
+      if (response.data.voucher && !response.data.voucher.used) {
+        setFreeEntryVoucher(response.data.voucher);
+      }
+    } catch (error) {
+      // No voucher exists
+    }
+  };
+
+  const handleClaimFreeEntry = async () => {
     if (!loyaltyData || loyaltyData.points < 25) {
       Alert.alert('Pas encore', `Il te faut ${loyaltyData?.points_needed || 25} Invasion Coins de plus!`);
       return;
@@ -68,13 +82,13 @@ export default function ProfileScreen() {
 
     try {
       const response = await api.post('/loyalty/claim-reward');
-      Alert.alert(
-        'Récompense réclamée! 🎉',
-        `Code: ${response.data.code}\n\nMontre ce code à l'entrée pour ton guest gratuit!`,
-        [
-          { text: 'OK', onPress: () => loadLoyaltyData() }
-        ]
-      );
+      setFreeEntryVoucher({
+        id: response.data.id || response.data.code,
+        code: response.data.code,
+        used: false
+      });
+      loadLoyaltyData();
+      setShowFreeEntryQR(true);
     } catch (error: any) {
       const message = error.response?.data?.detail || 'Erreur lors de la réclamation';
       Alert.alert('Erreur', message);
