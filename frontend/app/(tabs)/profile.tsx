@@ -206,20 +206,30 @@ export default function ProfileScreen() {
                 </View>
               </View>
 
-              {/* Claim Button */}
-              <TouchableOpacity
-                style={[
-                  styles.claimButton,
-                  loyaltyData.points < 25 && styles.claimButtonDisabled
-                ]}
-                onPress={handleClaimReward}
-                disabled={loyaltyData.points < 25}
-              >
-                <Ionicons name="ticket" size={20} color="white" />
-                <Text style={styles.claimButtonText}>
-                  {loyaltyData.points >= 25 ? 'Réclamer Guest Gratuit (25 Coins)' : 'Pas encore assez de Coins'}
-                </Text>
-              </TouchableOpacity>
+              {/* Claim Button or Show QR */}
+              {freeEntryVoucher ? (
+                <TouchableOpacity
+                  style={[styles.claimButton, styles.claimButtonActive]}
+                  onPress={() => setShowFreeEntryQR(true)}
+                >
+                  <Ionicons name="qr-code" size={20} color="white" />
+                  <Text style={styles.claimButtonText}>🎫 Voir mon QR Code Guest Gratuite</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[
+                    styles.claimButton,
+                    loyaltyData.points < 25 && styles.claimButtonDisabled
+                  ]}
+                  onPress={handleClaimFreeEntry}
+                  disabled={loyaltyData.points < 25}
+                >
+                  <Ionicons name="ticket" size={20} color="white" />
+                  <Text style={styles.claimButtonText}>
+                    {loyaltyData.points >= 25 ? 'Réclamer Guest Gratuite (25 Coins)' : 'Pas encore assez de Coins'}
+                  </Text>
+                </TouchableOpacity>
+              )}
 
               {/* Recent Check-ins */}
               {loyaltyData.recent_check_ins.length > 0 && (
