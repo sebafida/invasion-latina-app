@@ -261,7 +261,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.spotifyInfo}>
             <Text style={styles.spotifyTitle}>Playlist Spotify</Text>
-            <Text style={styles.spotifySubtitle}>Que viva la musica latina 🎶</Text>
+            <Text style={styles.spotifySubtitle}>Que viva la musica latina</Text>
           </View>
           <Ionicons name="open-outline" size={24} color="#1DB954" />
         </TouchableOpacity>
