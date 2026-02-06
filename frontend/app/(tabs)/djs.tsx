@@ -110,16 +110,10 @@ export default function DJsScreen() {
   const [artistName, setArtistName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  
-  // My requests
-  const [myRequests, setMyRequests] = useState<any[]>([]);
 
   useEffect(() => {
     loadDJs();
-    if (user) {
-      loadMyRequests();
-    }
-  }, [user]);
+  }, []);
 
   const loadDJs = async () => {
     try {
