@@ -130,15 +130,6 @@ export default function DJsScreen() {
     }
   };
 
-  const loadMyRequests = async () => {
-    try {
-      const response = await api.get('/dj/my-requests');
-      setMyRequests(response.data);
-    } catch (error) {
-      console.log('Failed to load my requests');
-    }
-  };
-
   const handleSubmitSongRequest = async () => {
     if (!songTitle.trim()) {
       Alert.alert('Erreur', 'Veuillez entrer le titre de la chanson');
