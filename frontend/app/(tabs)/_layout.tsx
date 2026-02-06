@@ -84,6 +84,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="ticket" size={size} color={color} />
           ),
+          headerLeft: () => <BackToHomeButton />,
         }}
       />
       <Tabs.Screen
@@ -93,6 +94,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="headset" size={size} color={color} />
           ),
+          headerLeft: () => <BackToHomeButton />,
         }}
       />
       <Tabs.Screen
@@ -102,6 +104,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="musical-note" size={size} color={color} />
           ),
+          headerLeft: () => <BackToHomeButton />,
         }}
       />
       <Tabs.Screen
@@ -115,6 +118,7 @@ export default function TabLayout() {
               resizeMode="contain"
             />
           ),
+          headerLeft: () => <BackToHomeButton />,
         }}
       />
       <Tabs.Screen
@@ -124,6 +128,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
+          headerLeft: () => <BackToHomeButton />,
         }}
       />
     </Tabs>
