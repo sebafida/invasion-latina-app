@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend Testing for Invasion Latina DJ Request System
-Testing the DJ endpoints as specified in the review request
+Testing the song request deletion API endpoints as specified in the review request
 """
 
 import requests
@@ -13,9 +13,9 @@ from datetime import datetime
 BACKEND_URL = "https://invasion-latina.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
-# Test credentials
-ADMIN_EMAIL = "admin@invasionlatina.be"
-ADMIN_PASSWORD = "admin123"
+# Test credentials from review request
+ADMIN_EMAIL = "info@invasionlatina.be"
+ADMIN_PASSWORD = "Invasion2009-"
 
 class DJEndpointTester:
     def __init__(self):
