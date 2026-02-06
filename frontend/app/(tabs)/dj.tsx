@@ -266,32 +266,21 @@ export default function DJRequestsScreen() {
                   </View>
                 </View>
 
-                <View style={styles.requestActions}>
-                  <TouchableOpacity
-                    style={[
-                      styles.voteButton,
-                      !request.can_vote && styles.voteButtonDisabled
-                    ]}
-                    onPress={() => handleVote(request.id)}
-                    disabled={!request.can_vote}
-                  >
-                    <Ionicons
-                      name={request.can_vote ? 'arrow-up' : 'checkmark'}
-                      size={20}
-                      color="white"
-                    />
-                    <Text style={styles.voteCount}>{request.votes}</Text>
-                  </TouchableOpacity>
-                  
-                  {user?.role === 'admin' && (
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => handleDeleteRequest(request.id)}
-                    >
-                      <Ionicons name="trash" size={18} color={theme.colors.error} />
-                    </TouchableOpacity>
-                  )}
-                </View>
+                <TouchableOpacity
+                  style={[
+                    styles.voteButton,
+                    !request.can_vote && styles.voteButtonDisabled
+                  ]}
+                  onPress={() => handleVote(request.id)}
+                  disabled={!request.can_vote}
+                >
+                  <Ionicons
+                    name={request.can_vote ? 'arrow-up' : 'checkmark'}
+                    size={20}
+                    color="white"
+                  />
+                  <Text style={styles.voteCount}>{request.votes}</Text>
+                </TouchableOpacity>
               </View>
             ))
           )}
