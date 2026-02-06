@@ -70,11 +70,43 @@ export default function HomeScreen() {
     try {
       setLoading(true);
       const response = await api.get('/events/next');
-      setNextEvent(response.data.event);
+      const event = response.data.event;
+      setNextEvent(event);
+      
+      // Load lineup based on selected DJs for this event
+      if (event?.selected_djs && event.selected_djs.length > 0) {
+        loadSelectedDJs(event.selected_djs);
+      } else {
+        // If no DJs selected, load all DJs
+        loadLineup();
+      }
     } catch (error) {
       console.error('Failed to load event:', error);
+      loadLineup();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSelectedDJs = async (selectedDjIds: string[]) => {
+    try {
+      const response = await api.get('/djs');
+      if (response.data && response.data.length > 0) {
+        // Filter only selected DJs
+        const selectedDjs = response.data
+          .filter((dj: any) => selectedDjIds.includes(dj.id))
+          .map((dj: any) => ({
+            id: dj.id,
+            name: dj.name,
+            role: dj.type === 'mc' ? 'MC' : 'Resident DJ'
+          }));
+        
+        if (selectedDjs.length > 0) {
+          setLineup(selectedDjs);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load selected DJs:', error);
     }
   };
 
