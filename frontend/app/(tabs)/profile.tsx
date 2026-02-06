@@ -401,6 +401,52 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>Déconnexion</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Free Entry QR Code Modal */}
+      <Modal visible={showFreeEntryQR} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.qrModal}>
+            <TouchableOpacity
+              style={styles.closeModalButton}
+              onPress={() => setShowFreeEntryQR(false)}
+            >
+              <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+            </TouchableOpacity>
+
+            <Text style={styles.qrModalTitle}>🎫 Guest Gratuite</Text>
+            <Text style={styles.qrModalSubtitle}>
+              Présente ce QR code à l'entrée
+            </Text>
+
+            {freeEntryVoucher && (
+              <View style={styles.qrCodeContainer}>
+                <QRCode
+                  value={JSON.stringify({
+                    type: 'free_entry',
+                    voucher_id: freeEntryVoucher.id,
+                    code: freeEntryVoucher.code,
+                    user_id: user?.id,
+                  })}
+                  size={200}
+                  backgroundColor="white"
+                  color="black"
+                />
+              </View>
+            )}
+
+            <Text style={styles.qrCodeText}>
+              Code: {freeEntryVoucher?.code?.toUpperCase()}
+            </Text>
+
+            <View style={styles.warningBox}>
+              <Ionicons name="warning" size={20} color={theme.colors.warning} />
+              <Text style={styles.warningText}>
+                Ce code ne peut être utilisé qu'une seule fois
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
