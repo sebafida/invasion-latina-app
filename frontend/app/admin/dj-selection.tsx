@@ -85,6 +85,8 @@ export default function DJSelectionScreen() {
     setRefreshing(false);
   };
 
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
   const toggleDjSelection = (djId: string) => {
     setSelectedDjIds(prev => 
       prev.includes(djId) 
@@ -104,7 +106,16 @@ export default function DJSelectionScreen() {
       await api.put(`/admin/events/${nextEvent.id}/djs`, {
         selected_djs: selectedDjIds
       });
-      Alert.alert('Succès', 'La sélection des DJs a été enregistrée!');
+      
+      // Show success message
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
+      
+      Alert.alert(
+        '✅ Succès !',
+        `${selectedDjIds.length} DJ(s) sélectionné(s) pour ${nextEvent.name}.\n\nLe LineUp de la page d'accueil a été mis à jour.`,
+        [{ text: 'Super !', style: 'default' }]
+      );
     } catch (error: any) {
       console.error('Error saving selection:', error);
       Alert.alert('Erreur', error.response?.data?.detail || 'Erreur lors de la sauvegarde');
