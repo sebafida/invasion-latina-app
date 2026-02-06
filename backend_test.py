@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend Testing for Invasion Latina DJ Request System
-Testing the song request deletion API endpoints as specified in the review request
+Backend Testing for Invasion Latina - Deletion APIs
+Testing both song request and VIP booking deletion API endpoints as specified in the review request
 """
 
 import requests
@@ -17,7 +17,7 @@ API_BASE = f"{BACKEND_URL}/api"
 ADMIN_EMAIL = "info@invasionlatina.be"
 ADMIN_PASSWORD = "Invasion2009-"
 
-class SongRequestDeletionTester:
+class DeletionAPITester:
     def __init__(self):
         self.session = requests.Session()
         self.auth_token = None
