@@ -86,6 +86,54 @@ export default function DJRequestsScreen() {
     }
   };
 
+  const handleDeleteRequest = async (requestId: string) => {
+    Alert.alert(
+      'Supprimer',
+      'Voulez-vous vraiment supprimer cette demande?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { 
+          text: 'Supprimer', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.delete(`/dj/requests/${requestId}`);
+              Alert.alert('Succès', 'Demande supprimée!');
+              loadRequests();
+            } catch (error: any) {
+              const message = error.response?.data?.detail || 'Erreur lors de la suppression';
+              Alert.alert('Erreur', message);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleClearAllRequests = async () => {
+    Alert.alert(
+      'Effacer toutes les demandes',
+      'Voulez-vous vraiment supprimer TOUTES les demandes de chansons?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { 
+          text: 'Tout effacer', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.delete('/dj/requests/clear-all');
+              Alert.alert('Succès', 'Toutes les demandes ont été effacées!');
+              loadRequests();
+            } catch (error: any) {
+              const message = error.response?.data?.detail || 'Erreur lors de la suppression';
+              Alert.alert('Erreur', message);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleVote = async (requestId: string) => {
     try {
       await api.post(`/dj/vote/${requestId}`);
