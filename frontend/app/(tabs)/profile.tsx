@@ -262,6 +262,15 @@ export default function ProfileScreen() {
               <Text style={styles.scannerButtonText}>Scanner QR Fidélité</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.djSelectionButton}
+              onPress={() => router.push('/admin/dj-selection')}
+            >
+              <Ionicons name="people" size={24} color="white" />
+              <Text style={styles.djSelectionButtonText}>Sélection DJs Event</Text>
+              <Ionicons name="arrow-forward" size={20} color="white" />
+            </TouchableOpacity>
           </View>
         )}
 
