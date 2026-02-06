@@ -299,6 +299,19 @@ export default function DJDashboardScreen() {
           </Text>
         </View>
 
+        {/* Clear All Button */}
+        {stats.total > 0 && (
+          <View style={styles.clearAllSection}>
+            <TouchableOpacity
+              style={styles.clearAllButton}
+              onPress={handleClearAllRequests}
+            >
+              <Ionicons name="trash" size={20} color="white" />
+              <Text style={styles.clearAllButtonText}>Effacer toutes les demandes</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Requests List */}
         <View style={styles.requestsList}>
           <Text style={styles.listTitle}>
