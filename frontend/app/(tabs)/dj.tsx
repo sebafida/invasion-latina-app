@@ -193,19 +193,6 @@ export default function DJRequestsScreen() {
           </Text>
         </View>
 
-        {/* Admin Clear All Button */}
-        {user?.role === 'admin' && requests.length > 0 && (
-          <View style={styles.clearAllSection}>
-            <TouchableOpacity
-              style={styles.clearAllButton}
-              onPress={handleClearAllRequests}
-            >
-              <Ionicons name="trash" size={20} color="white" />
-              <Text style={styles.clearAllButtonText}>Effacer toutes les demandes</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
         {/* Request Form */}
         <View style={styles.requestForm}>
           <Text style={styles.formTitle}>Demander une chanson</Text>
