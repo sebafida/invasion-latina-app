@@ -673,4 +673,64 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
     color: 'white',
   },
+
+  // Delete Modal Styles
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  deleteModalContent: {
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.xl,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 320,
+  },
+  deleteModalTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.xs,
+    textAlign: 'center',
+  },
+  deleteModalSubtitle: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xl,
+    textAlign: 'center',
+  },
+  deleteModalButtons: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    width: '100%',
+  },
+  deleteModalCancelBtn: {
+    flex: 1,
+    backgroundColor: theme.colors.elevated,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+  },
+  deleteModalCancelText: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textSecondary,
+  },
+  deleteModalConfirmBtn: {
+    flex: 1,
+    backgroundColor: theme.colors.error,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+  },
+  deleteModalConfirmText: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: 'white',
+  },
 });
