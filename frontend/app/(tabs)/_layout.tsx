@@ -1,8 +1,21 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
+
+// Back button component for non-home tabs
+const BackToHomeButton = () => {
+  const router = useRouter();
+  return (
+    <TouchableOpacity 
+      style={styles.backButton}
+      onPress={() => router.push('/(tabs)/home')}
+    >
+      <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
+    </TouchableOpacity>
+  );
+};
 
 export default function TabLayout() {
   return (
