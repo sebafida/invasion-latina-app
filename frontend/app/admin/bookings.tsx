@@ -74,7 +74,18 @@ export default function BookingsAdminScreen() {
     }
   };
 
-  const handleDeleteBooking = async (bookingId: string, customerName: string) => {
+  const deleteBooking = async (bookingId: string) => {
+    try {
+      await api.delete(`/admin/vip-bookings/${bookingId}`);
+      Alert.alert('Succès', 'Réservation supprimée!');
+      loadBookings();
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Erreur lors de la suppression';
+      Alert.alert('Erreur', message);
+    }
+  };
+
+  const handleDeleteBooking = (bookingId: string, customerName: string) => {
     Alert.alert(
       'Supprimer',
       `Voulez-vous vraiment supprimer la réservation de "${customerName}"?`,
@@ -83,22 +94,24 @@ export default function BookingsAdminScreen() {
         { 
           text: 'Supprimer', 
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete(`/admin/vip-bookings/${bookingId}`);
-              Alert.alert('Succès', 'Réservation supprimée!');
-              loadBookings();
-            } catch (error: any) {
-              const message = error.response?.data?.detail || 'Erreur lors de la suppression';
-              Alert.alert('Erreur', message);
-            }
-          }
+          onPress: () => deleteBooking(bookingId)
         }
       ]
     );
   };
 
-  const handleClearAllBookings = async () => {
+  const clearAllBookings = async () => {
+    try {
+      await api.delete('/admin/vip-bookings/clear-all');
+      Alert.alert('Succès', 'Toutes les réservations ont été effacées!');
+      loadBookings();
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Erreur lors de la suppression';
+      Alert.alert('Erreur', message);
+    }
+  };
+
+  const handleClearAllBookings = () => {
     Alert.alert(
       'Effacer toutes les réservations',
       'Voulez-vous vraiment supprimer TOUTES les réservations? Cette action est irréversible.',
@@ -107,17 +120,11 @@ export default function BookingsAdminScreen() {
         { 
           text: 'Tout effacer', 
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete('/admin/vip-bookings/clear-all');
-              Alert.alert('Succès', 'Toutes les réservations ont été effacées!');
-              loadBookings();
-            } catch (error: any) {
-              const message = error.response?.data?.detail || 'Erreur lors de la suppression';
-              Alert.alert('Erreur', message);
-            }
-          }
+          onPress: () => clearAllBookings()
         }
+      ]
+    );
+  };
       ]
     );
   };
