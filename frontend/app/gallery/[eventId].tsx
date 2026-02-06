@@ -11,9 +11,13 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  Share,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
 import { useAuth } from '../../src/context/AuthContext';
@@ -38,7 +42,7 @@ export default function EventGalleryScreen() {
   const [loading, setLoading] = useState(true);
   const [eventName, setEventName] = useState('');
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
-  const [showTagModal, setShowTagModal] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     loadGallery();
@@ -59,16 +63,48 @@ export default function EventGalleryScreen() {
     }
   };
 
-  const handleTagYourself = async (photoId: string) => {
+  const handleDownloadPhoto = async (photoUrl: string) => {
     try {
-      await api.post(`/media/photos/${photoId}/tag`, {
-        user_id: user?.id
+      setDownloading(true);
+      
+      // Request permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission requise', 'Autorisez l\'accès aux photos pour télécharger.');
+        return;
+      }
+      
+      // Download the file
+      const filename = `invasion_latina_${Date.now()}.jpg`;
+      const fileUri = FileSystem.documentDirectory + filename;
+      
+      const downloadResult = await FileSystem.downloadAsync(photoUrl, fileUri);
+      
+      if (downloadResult.status === 200) {
+        // Save to media library
+        const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+        await MediaLibrary.createAlbumAsync('Invasion Latina', asset, false);
+        
+        Alert.alert('Téléchargement réussi !', 'La photo a été enregistrée dans ta galerie.');
+      } else {
+        Alert.alert('Erreur', 'Impossible de télécharger la photo.');
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      Alert.alert('Erreur', 'Impossible de télécharger la photo.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleSharePhoto = async (photoUrl: string) => {
+    try {
+      await Share.share({
+        message: `Regarde cette photo d'Invasion Latina! 🔥🇨🇴\n${photoUrl}`,
+        url: Platform.OS === 'ios' ? photoUrl : undefined,
       });
-      Alert.alert('Succès', 'Tu as été tagué sur cette photo!');
-      setShowTagModal(false);
-      loadGallery(); // Refresh
-    } catch (error: any) {
-      Alert.alert('Erreur', error.response?.data?.detail || 'Impossible de se taguer');
+    } catch (error) {
+      console.error('Share error:', error);
     }
   };
 
@@ -82,11 +118,6 @@ export default function EventGalleryScreen() {
         style={styles.photoImage}
         resizeMode="cover"
       />
-      {item.tags.includes(user?.id || '') && (
-        <View style={styles.taggedBadge}>
-          <Ionicons name="person" size={12} color="white" />
-        </View>
-      )}
     </TouchableOpacity>
   );
 
@@ -144,20 +175,25 @@ export default function EventGalleryScreen() {
               />
 
               <View style={styles.photoActions}>
-                <TouchableOpacity
+                <TouchableOpacity 
                   style={styles.actionButton}
-                  onPress={() => handleTagYourself(selectedPhoto.id)}
+                  onPress={() => handleDownloadPhoto(selectedPhoto.url)}
+                  disabled={downloading}
                 >
-                  <Ionicons name="person-add" size={24} color="white" />
-                  <Text style={styles.actionText}>Tag Yourself</Text>
+                  {downloading ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Ionicons name="download" size={24} color="white" />
+                  )}
+                  <Text style={styles.actionText}>
+                    {downloading ? 'Téléchargement...' : 'Télécharger HD'}
+                  </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionButton}>
-                  <Ionicons name="download" size={24} color="white" />
-                  <Text style={styles.actionText}>Télécharger</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                  onPress={() => handleSharePhoto(selectedPhoto.url)}
+                >
                   <Ionicons name="share-social" size={24} color="white" />
                   <Text style={styles.actionText}>Partager</Text>
                 </TouchableOpacity>
