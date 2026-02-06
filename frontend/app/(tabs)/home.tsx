@@ -169,9 +169,6 @@ export default function HomeScreen() {
           <View style={styles.eventSection}>
             <View style={styles.eventHeader}>
               <Text style={styles.sectionTitle}>Next Event</Text>
-              <TouchableOpacity>
-                <Ionicons name="calendar" size={24} color={theme.colors.primary} />
-              </TouchableOpacity>
             </View>
             
             <View style={styles.eventCard}>
