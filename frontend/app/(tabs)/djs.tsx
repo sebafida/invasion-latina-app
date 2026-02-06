@@ -153,9 +153,6 @@ export default function DJsScreen() {
       setArtistName('');
       setShowRequestModal(false);
       
-      // Reload my requests
-      loadMyRequests();
-      
       // Show success modal
       setShowSuccessModal(true);
     } catch (error: any) {
