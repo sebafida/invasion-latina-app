@@ -275,6 +275,15 @@ export default function ProfileScreen() {
               <Text style={styles.djSelectionButtonText}>Sélection DJs Event</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.freeEntryScannerButton}
+              onPress={() => router.push('/admin/free-entry-scanner')}
+            >
+              <Ionicons name="ticket" size={24} color="white" />
+              <Text style={styles.freeEntryScannerButtonText}>Scanner Entrée Gratuite</Text>
+              <Ionicons name="arrow-forward" size={20} color="white" />
+            </TouchableOpacity>
           </View>
         )}
 
