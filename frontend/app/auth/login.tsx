@@ -217,24 +217,6 @@ export default function LoginScreen() {
               </View>
             </>
           )}
-              ) : (
-                <>
-                  <Image 
-                    source={{ uri: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg' }}
-                    style={styles.googleIcon}
-                  />
-                  <Text style={styles.googleButtonText}>Continuer avec Google</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          {/* Divider */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>ou</Text>
-            <View style={styles.dividerLine} />
-          </View>
           
           {/* Form */}
           <View style={styles.form}>
