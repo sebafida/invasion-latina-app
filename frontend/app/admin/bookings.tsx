@@ -41,6 +41,13 @@ export default function BookingsAdminScreen() {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('pending');
 
+  // Delete confirmation modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [showClearAllModal, setShowClearAllModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<{ id: string; name: string } | null>(null);
+
   useEffect(() => {
     if (user?.role !== 'admin') {
       Alert.alert('Accès refusé', 'Cette page est réservée aux administrateurs');
