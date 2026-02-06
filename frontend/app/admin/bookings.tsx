@@ -216,6 +216,19 @@ Merci et à bientôt! 🔥`;
         ))}
       </View>
 
+      {/* Clear All Button */}
+      {bookings.length > 0 && (
+        <View style={styles.clearAllSection}>
+          <TouchableOpacity
+            style={styles.clearAllButton}
+            onPress={handleClearAllBookings}
+          >
+            <Ionicons name="trash" size={20} color="white" />
+            <Text style={styles.clearAllButtonText}>Effacer toutes les réservations</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Bookings List */}
       <ScrollView
         style={styles.content}
