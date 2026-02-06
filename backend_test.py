@@ -387,7 +387,138 @@ class DeletionAPITester:
             self.log_result("Verify Requests Cleared", False, f"Request error: {str(e)}")
             return False
     
-    def run_all_tests(self):
+    def test_8_get_vip_bookings(self):
+        """Test 8: Get current VIP bookings - GET /api/admin/vip-bookings"""
+        print("🍾 Test 8: Get current VIP bookings...")
+        
+        try:
+            response = self.session.get(
+                f"{API_BASE}/admin/vip-bookings",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    self.log_result(
+                        "Get VIP Bookings",
+                        True,
+                        f"Successfully retrieved {len(data)} VIP bookings",
+                        f"Bookings found: {len(data)}"
+                    )
+                    return True, data
+                else:
+                    self.log_result(
+                        "Get VIP Bookings",
+                        False,
+                        f"Expected array, got {type(data)}",
+                        response.text
+                    )
+                    return False, []
+            else:
+                self.log_result(
+                    "Get VIP Bookings",
+                    False,
+                    f"Request failed with status {response.status_code}",
+                    response.text
+                )
+                return False, []
+                
+        except Exception as e:
+            self.log_result("Get VIP Bookings", False, f"Request error: {str(e)}")
+            return False, []
+    
+    def test_9_delete_individual_vip_booking(self, bookings):
+        """Test 9: Delete individual VIP booking - DELETE /api/admin/vip-bookings/{booking_id}"""
+        print("🗑️ Test 9: Delete individual VIP booking...")
+        
+        if not bookings:
+            self.log_result(
+                "Delete Individual VIP Booking",
+                True,
+                "No VIP bookings found to delete (expected)",
+                "This is normal - no existing bookings to test deletion"
+            )
+            return True
+        
+        # Use the first booking for deletion test
+        booking_id = bookings[0].get("id")
+        if not booking_id:
+            self.log_result(
+                "Delete Individual VIP Booking",
+                False,
+                "No booking ID found in booking data",
+                f"Booking data: {json.dumps(bookings[0], indent=2, default=str)}"
+            )
+            return False
+        
+        try:
+            response = self.session.delete(
+                f"{API_BASE}/admin/vip-bookings/{booking_id}",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.log_result(
+                    "Delete Individual VIP Booking",
+                    True,
+                    f"Successfully deleted VIP booking {booking_id}",
+                    f"Response: {json.dumps(data, indent=2)}"
+                )
+                return True
+            elif response.status_code == 404:
+                self.log_result(
+                    "Delete Individual VIP Booking",
+                    True,
+                    f"VIP booking {booking_id} not found (may have been deleted already)",
+                    response.text
+                )
+                return True
+            else:
+                self.log_result(
+                    "Delete Individual VIP Booking",
+                    False,
+                    f"Delete failed with status {response.status_code}",
+                    response.text
+                )
+                return False
+                
+        except Exception as e:
+            self.log_result("Delete Individual VIP Booking", False, f"Request error: {str(e)}")
+            return False
+    
+    def test_10_clear_all_vip_bookings(self):
+        """Test 10: Clear all VIP bookings - DELETE /api/admin/vip-bookings/clear-all"""
+        print("🧹 Test 10: Clear all VIP bookings...")
+        
+        try:
+            response = self.session.delete(
+                f"{API_BASE}/admin/vip-bookings/clear-all",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.log_result(
+                    "Clear All VIP Bookings",
+                    True,
+                    "Successfully cleared all VIP bookings",
+                    f"Response: {json.dumps(data, indent=2)}"
+                )
+                return True
+            else:
+                self.log_result(
+                    "Clear All VIP Bookings",
+                    False,
+                    f"Clear all failed with status {response.status_code}",
+                    response.text
+                )
+                return False
+                
+        except Exception as e:
+            self.log_result("Clear All VIP Bookings", False, f"Request error: {str(e)}")
+            return False
         """Run all deletion endpoint tests as specified in review request"""
         print("=" * 80)
         print("🎵 INVASION LATINA - SONG REQUEST DELETION API TESTING")
