@@ -172,32 +172,51 @@ export default function LoginScreen() {
             <Text style={styles.subtitle}>Connecte-toi pour continuer la fiesta</Text>
           </View>
 
-          {/* Social Login Buttons */}
-          <View style={styles.socialButtons}>
-            {Platform.OS === 'ios' && (
-              <TouchableOpacity
-                style={styles.appleButton}
-                onPress={handleAppleSignIn}
-                disabled={socialLoading !== null}
-              >
-                {socialLoading === 'apple' ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <>
-                    <Ionicons name="logo-apple" size={22} color="white" />
-                    <Text style={styles.appleButtonText}>Continuer avec Apple</Text>
-                  </>
+          {/* Social Login Buttons - Only on native platforms */}
+          {isNativePlatform && (
+            <>
+              <View style={styles.socialButtons}>
+                {Platform.OS === 'ios' && (
+                  <TouchableOpacity
+                    style={styles.appleButton}
+                    onPress={handleAppleSignIn}
+                    disabled={socialLoading !== null}
+                  >
+                    {socialLoading === 'apple' ? (
+                      <ActivityIndicator color="white" />
+                    ) : (
+                      <>
+                        <Ionicons name="logo-apple" size={22} color="white" />
+                        <Text style={styles.appleButtonText}>Continuer avec Apple</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
                 )}
-              </TouchableOpacity>
-            )}
-            
-            <TouchableOpacity
-              style={styles.googleButton}
-              onPress={() => promptAsync()}
-              disabled={!request || socialLoading !== null}
-            >
-              {socialLoading === 'google' ? (
-                <ActivityIndicator color="#333" />
+                
+                <TouchableOpacity
+                  style={styles.googleButton}
+                  onPress={() => promptAsync()}
+                  disabled={!request || socialLoading !== null}
+                >
+                  {socialLoading === 'google' ? (
+                    <ActivityIndicator color="#333" />
+                  ) : (
+                    <>
+                      <Ionicons name="logo-google" size={20} color="#4285F4" />
+                      <Text style={styles.googleButtonText}>Continuer avec Google</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              {/* Divider */}
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>ou</Text>
+                <View style={styles.dividerLine} />
+              </View>
+            </>
+          )}
               ) : (
                 <>
                   <Image 
