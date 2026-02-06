@@ -337,6 +337,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.black,
   },
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.success,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    gap: theme.spacing.sm,
+  },
+  successBannerText: {
+    color: 'white',
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
