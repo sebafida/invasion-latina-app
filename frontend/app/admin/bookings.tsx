@@ -320,14 +320,16 @@ Merci et à bientôt! 🔥`;
                     <TouchableOpacity
                       style={styles.cancelButton}
                       onPress={() => {
-                        Alert.alert(
-                          'Annuler la réservation',
-                          `Êtes-vous sûr de vouloir annuler la réservation de ${booking.customer_name}?`,
-                          [
-                            { text: 'Non', style: 'cancel' },
-                            { text: 'Oui, annuler', style: 'destructive', onPress: () => updateBookingStatus(booking.id, 'cancelled') }
-                          ]
-                        );
+                        setTimeout(() => {
+                          Alert.alert(
+                            'Annuler la réservation',
+                            `Êtes-vous sûr de vouloir annuler la réservation de ${booking.customer_name}?`,
+                            [
+                              { text: 'Non', style: 'cancel' },
+                              { text: 'Oui, annuler', style: 'destructive', onPress: () => updateBookingStatus(booking.id, 'cancelled') }
+                            ]
+                          );
+                        }, 100);
                       }}
                     >
                       <Ionicons name="close" size={20} color="white" />
@@ -340,14 +342,16 @@ Merci et à bientôt! 🔥`;
                   <TouchableOpacity
                     style={styles.cancelButton}
                     onPress={() => {
-                      Alert.alert(
-                        'Annuler la réservation',
-                        `Êtes-vous sûr de vouloir annuler la réservation CONFIRMÉE de ${booking.customer_name}?\n\nCette action est irréversible.`,
-                        [
-                          { text: 'Non', style: 'cancel' },
-                          { text: 'Oui, annuler', style: 'destructive', onPress: () => updateBookingStatus(booking.id, 'cancelled') }
-                        ]
-                      );
+                      setTimeout(() => {
+                        Alert.alert(
+                          'Annuler la réservation',
+                          `Êtes-vous sûr de vouloir annuler la réservation CONFIRMÉE de ${booking.customer_name}?\n\nCette action est irréversible.`,
+                          [
+                            { text: 'Non', style: 'cancel' },
+                            { text: 'Oui, annuler', style: 'destructive', onPress: () => updateBookingStatus(booking.id, 'cancelled') }
+                          ]
+                        );
+                      }, 100);
                     }}
                   >
                     <Ionicons name="close" size={20} color="white" />
