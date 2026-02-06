@@ -140,6 +140,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         loadUser,
+        setUser: (newUser: User | null) => {
+          setUser(newUser);
+          setIsAuthenticated(!!newUser);
+        },
+        setToken: async (newToken: string | null) => {
+          setToken(newToken);
+          if (newToken) {
+            await AsyncStorage.setItem('auth_token', newToken);
+          } else {
+            await AsyncStorage.removeItem('auth_token');
+          }
+        },
       }}
     >
       {children}
