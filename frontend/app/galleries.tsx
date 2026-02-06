@@ -93,21 +93,8 @@ export default function GalleriesScreen() {
             <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <Text style={styles.title}>📸 Galeries Photos</Text>
+            <Text style={styles.title}>Galeries Photos</Text>
             <Text style={styles.subtitle}>Revivez les meilleurs moments</Text>
-          </View>
-        </View>
-
-        {/* Tag Yourself Banner */}
-        <View style={styles.tagBanner}>
-          <View style={styles.tagIconContainer}>
-            <Ionicons name="person-add" size={24} color={theme.colors.primary} />
-          </View>
-          <View style={styles.tagTextContainer}>
-            <Text style={styles.tagTitle}>Tag Yourself! 🏷️</Text>
-            <Text style={styles.tagDescription}>
-              Retrouve-toi dans les photos et tague-toi pour les retrouver facilement
-            </Text>
           </View>
         </View>
 
