@@ -154,6 +154,30 @@ backend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE DJ BACKEND TESTING PASSED - All 3 DJ endpoints working correctly. Fixed critical authentication bug (JWT tokens using email instead of user ID). GET /api/dj/requests returns empty array (correct - no active event). POST /api/dj/request-song returns 403 for event hours restriction (correct - not 23h-6h). POST /api/dj/vote returns 400 for invalid request ID (correct behavior). Authentication working with admin@invasionlatina.be. Backend health confirmed. All endpoints responding as expected."
 
+  - task: "Song Request Deletion APIs - DELETE endpoints"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING PASSED - All song request deletion endpoints working correctly. DELETE /api/dj/requests/{request_id} successfully deletes individual requests (returns 200 with success message). DELETE /api/dj/requests/clear-all successfully clears all requests (deleted 1 request). Verified data is actually removed from database. Authentication working with admin credentials info@invasionlatina.be."
+
+  - task: "VIP Booking Deletion APIs - DELETE endpoints"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING PASSED - All VIP booking deletion endpoints working correctly. GET /api/admin/vip-bookings successfully retrieves bookings (found 8 existing bookings). DELETE /api/admin/vip-bookings/{booking_id} successfully deletes individual bookings (returns 200 with success message). DELETE /api/admin/vip-bookings/clear-all successfully clears all bookings (deleted 7 remaining bookings). All endpoints require admin authentication and work correctly."
+
 frontend:
   - task: "Home screen - Display event countdown and info"
     implemented: true
