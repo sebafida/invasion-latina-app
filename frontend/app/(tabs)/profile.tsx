@@ -123,9 +123,6 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Free Entry Card */}
-        <FreeEntryCard />
-
         {/* Loyalty Card */}
         <View style={styles.loyaltyCard}>
           <View style={styles.loyaltyHeader}>
