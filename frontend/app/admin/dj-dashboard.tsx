@@ -177,61 +177,33 @@ export default function DJDashboardScreen() {
   const deleteRequest = async (requestId: string) => {
     try {
       await api.delete(`/dj/requests/${requestId}`);
-      Alert.alert('Succès', 'Demande supprimée!');
+      setShowDeleteModal(false);
+      setDeleteTarget(null);
       loadRequests();
       loadEvents();
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erreur lors de la suppression';
-      Alert.alert('Erreur', message);
+      console.error('Delete error:', error);
     }
   };
 
   const handleDeleteRequest = (requestId: string, songTitle: string) => {
-    // Use setTimeout to work around Expo Go Alert.alert issue
-    setTimeout(() => {
-      Alert.alert(
-        'Supprimer',
-        `Voulez-vous vraiment supprimer "${songTitle}"?`,
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { 
-            text: 'Supprimer', 
-            style: 'destructive',
-            onPress: () => deleteRequest(requestId)
-          }
-        ]
-      );
-    }, 100);
+    setDeleteTarget({ id: requestId, title: songTitle });
+    setShowDeleteModal(true);
   };
 
   const clearAllRequests = async () => {
     try {
       await api.delete('/dj/requests/clear-all');
-      Alert.alert('Succès', 'Toutes les demandes ont été effacées!');
+      setShowClearAllModal(false);
       loadRequests();
       loadEvents();
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erreur lors de la suppression';
-      Alert.alert('Erreur', message);
+      console.error('Clear all error:', error);
     }
   };
 
   const handleClearAllRequests = () => {
-    // Use setTimeout to work around Expo Go Alert.alert issue
-    setTimeout(() => {
-      Alert.alert(
-        'Effacer toutes les demandes',
-        'Voulez-vous vraiment supprimer TOUTES les demandes de chansons? Cette action est irréversible.',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { 
-            text: 'Tout effacer', 
-            style: 'destructive',
-            onPress: () => clearAllRequests()
-          }
-        ]
-      );
-    }, 100);
+    setShowClearAllModal(true);
   };
 
   return (
