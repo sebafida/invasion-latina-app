@@ -812,6 +812,151 @@ async def validate_ticket(
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid ticket ID")
 
+# ============ FREE ENTRY (LOYALTY REWARDS) ENDPOINTS ============
+
+@app.get("/api/loyalty/free-entry/check")
+async def check_free_entry_voucher(current_user: dict = Depends(get_current_user)):
+    """Check if user has an active free entry voucher"""
+    db = get_database()
+    user_id = str(current_user["_id"])
+    
+    # Find active voucher (not used, not expired)
+    voucher = await db.free_entry_vouchers.find_one({
+        "user_id": user_id,
+        "used": False,
+        "expires_at": {"$gt": datetime.utcnow()}
+    })
+    
+    if voucher:
+        return {
+            "has_voucher": True,
+            "voucher": {
+                "id": str(voucher["_id"]),
+                "user_id": voucher["user_id"],
+                "created_at": voucher["created_at"].isoformat(),
+                "expires_at": voucher["expires_at"].isoformat(),
+                "used": voucher["used"]
+            }
+        }
+    
+    return {"has_voucher": False, "voucher": None}
+
+@app.post("/api/loyalty/free-entry/claim")
+async def claim_free_entry(current_user: dict = Depends(get_current_user)):
+    """Claim a free entry voucher (costs 25 loyalty points)"""
+    db = get_database()
+    user_id = str(current_user["_id"])
+    
+    # Check if user has enough points
+    user = await db.users.find_one({"_id": current_user["_id"]})
+    if not user or user.get("loyalty_points", 0) < 25:
+        raise HTTPException(status_code=400, detail="Tu as besoin de 25 points de fidélité")
+    
+    # Check if user already has an active voucher
+    existing = await db.free_entry_vouchers.find_one({
+        "user_id": user_id,
+        "used": False,
+        "expires_at": {"$gt": datetime.utcnow()}
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Tu as déjà une entrée gratuite active")
+    
+    # Deduct points
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$inc": {"loyalty_points": -25}}
+    )
+    
+    # Create voucher (valid for 90 days)
+    voucher_dict = {
+        "user_id": user_id,
+        "user_name": user.get("name", "Unknown"),
+        "user_email": user.get("email"),
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(days=90),
+        "used": False,
+        "used_at": None,
+        "validated_by": None,
+        "event_id": None
+    }
+    
+    result = await db.free_entry_vouchers.insert_one(voucher_dict)
+    voucher_dict["_id"] = result.inserted_id
+    
+    logger.info(f"✅ Free entry voucher created for user {user_id}")
+    
+    return {
+        "message": "Entrée gratuite obtenue!",
+        "voucher": {
+            "id": str(voucher_dict["_id"]),
+            "user_id": voucher_dict["user_id"],
+            "created_at": voucher_dict["created_at"].isoformat(),
+            "expires_at": voucher_dict["expires_at"].isoformat(),
+            "used": voucher_dict["used"]
+        }
+    }
+
+@app.post("/api/admin/free-entry/validate")
+async def validate_free_entry(
+    voucher_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Validate a free entry voucher (Admin only - scan QR code)"""
+    db = get_database()
+    
+    voucher_id = voucher_data.get("voucher_id")
+    if not voucher_id:
+        raise HTTPException(status_code=400, detail="voucher_id is required")
+    
+    try:
+        voucher = await db.free_entry_vouchers.find_one({"_id": ObjectId(voucher_id)})
+        
+        if not voucher:
+            raise HTTPException(status_code=404, detail="Voucher non trouvé")
+        
+        if voucher["used"]:
+            raise HTTPException(status_code=400, detail=f"Ce voucher a déjà été utilisé le {voucher.get('used_at', 'date inconnue')}")
+        
+        if voucher["expires_at"] < datetime.utcnow():
+            raise HTTPException(status_code=400, detail="Ce voucher a expiré")
+        
+        # Get current event
+        current_event = await db.events.find_one(
+            {"status": {"$in": ["live", "upcoming"]}},
+            sort=[("date", -1)]
+        )
+        event_id = str(current_event["_id"]) if current_event else None
+        
+        # Mark voucher as used
+        await db.free_entry_vouchers.update_one(
+            {"_id": ObjectId(voucher_id)},
+            {
+                "$set": {
+                    "used": True,
+                    "used_at": datetime.utcnow(),
+                    "validated_by": str(current_user["_id"]),
+                    "event_id": event_id
+                }
+            }
+        )
+        
+        logger.info(f"✅ Free entry voucher {voucher_id} validated by admin {current_user.get('email')}")
+        
+        return {
+            "success": True,
+            "message": "Entrée gratuite validée!",
+            "user_name": voucher.get("user_name", "Client"),
+            "user_email": voucher.get("user_email"),
+            "voucher_id": voucher_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error validating voucher: {str(e)}")
+        raise HTTPException(status_code=400, detail="ID de voucher invalide")
+
 # ============ DJ REQUEST ENDPOINTS ============
 
 @app.post("/api/dj/request-song")
