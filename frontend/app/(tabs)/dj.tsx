@@ -74,10 +74,12 @@ export default function DJRequestsScreen() {
 
       const response = await api.post('/dj/request-song', requestData);
       
-      Alert.alert('Succès', response.data.message || 'Chanson demandée! 🎵');
+      // Clear form FIRST before showing alert
       setSongTitle('');
       setArtistName('');
+      
       loadRequests();
+      Alert.alert('Succès', response.data.message || 'Chanson demandée! 🎵');
     } catch (error: any) {
       const message = error.response?.data?.detail || 'Erreur lors de la demande';
       Alert.alert('Info', message);
