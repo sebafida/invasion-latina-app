@@ -842,4 +842,69 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.error,
   },
+
+  // QR Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  qrModal: {
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.xl,
+    width: '100%',
+    maxWidth: 350,
+    alignItems: 'center',
+  },
+  closeModalButton: {
+    position: 'absolute',
+    top: theme.spacing.md,
+    right: theme.spacing.md,
+    padding: theme.spacing.xs,
+    zIndex: 10,
+  },
+  qrModalTitle: {
+    fontSize: theme.fontSize.xl,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs,
+    marginTop: theme.spacing.md,
+  },
+  qrModalSubtitle: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.lg,
+  },
+  qrCodeContainer: {
+    backgroundColor: 'white',
+    padding: theme.spacing.lg,
+    borderRadius: theme.borderRadius.lg,
+    marginBottom: theme.spacing.md,
+  },
+  qrCodeText: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.primary,
+    letterSpacing: 2,
+    marginBottom: theme.spacing.md,
+  },
+  warningBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.warning + '20',
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.sm,
+    gap: theme.spacing.xs,
+  },
+  warningText: {
+    flex: 1,
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.warning,
+  },
+  claimButtonActive: {
+    backgroundColor: theme.colors.success,
+  },
 });
