@@ -550,9 +550,38 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     paddingVertical: theme.spacing.sm,
   },
+  deleteButton: {
+    width: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#666',
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.sm,
+  },
   actionButtonText: {
     color: 'white',
     fontWeight: theme.fontWeight.bold,
     fontSize: theme.fontSize.sm,
+  },
+  
+  // Clear All Section
+  clearAllSection: {
+    paddingHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  clearAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.error,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    gap: theme.spacing.sm,
+  },
+  clearAllButtonText: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: 'white',
   },
 });
