@@ -125,9 +125,6 @@ export default function BookingsAdminScreen() {
       ]
     );
   };
-      ]
-    );
-  };
 
   const openWhatsApp = (booking: Booking) => {
     const message = `Bonjour ${booking.customer_name}! 🎉
