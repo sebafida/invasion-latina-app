@@ -423,6 +423,12 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.md,
     color: theme.colors.textPrimary,
   },
+  inputFull: {
+    flex: 1,
+    paddingVertical: theme.spacing.md,
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textPrimary,
+  },
   submitButton: {
     backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.md,
