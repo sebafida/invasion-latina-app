@@ -728,6 +728,30 @@ const styles = StyleSheet.create({
   rejectButton: {
     backgroundColor: theme.colors.error,
   },
+  deleteButton: {
+    backgroundColor: '#666',
+  },
+
+  // Clear All Section
+  clearAllSection: {
+    paddingHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.md,
+  },
+  clearAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.error,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    gap: theme.spacing.sm,
+  },
+  clearAllButtonText: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: 'white',
+  },
 
   // Legend
   legendCard: {
