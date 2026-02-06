@@ -314,18 +314,7 @@ Merci et à bientôt! 🔥`;
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.cancelButton}
-                      onPress={() => {
-                        setTimeout(() => {
-                          Alert.alert(
-                            'Annuler la réservation',
-                            `Êtes-vous sûr de vouloir annuler la réservation de ${booking.customer_name}?`,
-                            [
-                              { text: 'Non', style: 'cancel' },
-                              { text: 'Oui, annuler', style: 'destructive', onPress: () => updateBookingStatus(booking.id, 'cancelled') }
-                            ]
-                          );
-                        }, 100);
-                      }}
+                      onPress={() => handleCancelBooking(booking.id, booking.customer_name)}
                     >
                       <Ionicons name="close" size={20} color="white" />
                     </TouchableOpacity>
@@ -336,18 +325,7 @@ Merci et à bientôt! 🔥`;
                 {booking.status === 'confirmed' && (
                   <TouchableOpacity
                     style={styles.cancelButton}
-                    onPress={() => {
-                      setTimeout(() => {
-                        Alert.alert(
-                          'Annuler la réservation',
-                          `Êtes-vous sûr de vouloir annuler la réservation CONFIRMÉE de ${booking.customer_name}?\n\nCette action est irréversible.`,
-                          [
-                            { text: 'Non', style: 'cancel' },
-                            { text: 'Oui, annuler', style: 'destructive', onPress: () => updateBookingStatus(booking.id, 'cancelled') }
-                          ]
-                        );
-                      }, 100);
-                    }}
+                    onPress={() => handleCancelBooking(booking.id, booking.customer_name)}
                   >
                     <Ionicons name="close" size={20} color="white" />
                   </TouchableOpacity>
@@ -365,6 +343,108 @@ Merci et à bientôt! 🔥`;
           ))
         )}
       </ScrollView>
+
+      {/* Delete Single Booking Modal */}
+      <Modal
+        visible={showDeleteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <Ionicons name="trash" size={48} color={theme.colors.error} />
+            <Text style={styles.deleteModalTitle}>Supprimer cette réservation?</Text>
+            <Text style={styles.deleteModalSubtitle}>Réservation de "{deleteTarget?.name}"</Text>
+            
+            <View style={styles.deleteModalButtons}>
+              <TouchableOpacity
+                style={styles.deleteModalCancelBtn}
+                onPress={() => {
+                  setShowDeleteModal(false);
+                  setDeleteTarget(null);
+                }}
+              >
+                <Text style={styles.deleteModalCancelText}>Annuler</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.deleteModalConfirmBtn}
+                onPress={() => deleteTarget && deleteBooking(deleteTarget.id)}
+              >
+                <Text style={styles.deleteModalConfirmText}>Supprimer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Clear All Bookings Modal */}
+      <Modal
+        visible={showClearAllModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowClearAllModal(false)}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <Ionicons name="warning" size={48} color={theme.colors.error} />
+            <Text style={styles.deleteModalTitle}>Effacer TOUTES les réservations?</Text>
+            <Text style={styles.deleteModalSubtitle}>Cette action est irréversible!</Text>
+            
+            <View style={styles.deleteModalButtons}>
+              <TouchableOpacity
+                style={styles.deleteModalCancelBtn}
+                onPress={() => setShowClearAllModal(false)}
+              >
+                <Text style={styles.deleteModalCancelText}>Annuler</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.deleteModalConfirmBtn}
+                onPress={() => clearAllBookings()}
+              >
+                <Text style={styles.deleteModalConfirmText}>Tout effacer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Cancel Booking Modal */}
+      <Modal
+        visible={showCancelModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCancelModal(false)}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <Ionicons name="close-circle" size={48} color={theme.colors.error} />
+            <Text style={styles.deleteModalTitle}>Annuler cette réservation?</Text>
+            <Text style={styles.deleteModalSubtitle}>Réservation de "{cancelTarget?.name}"</Text>
+            
+            <View style={styles.deleteModalButtons}>
+              <TouchableOpacity
+                style={styles.deleteModalCancelBtn}
+                onPress={() => {
+                  setShowCancelModal(false);
+                  setCancelTarget(null);
+                }}
+              >
+                <Text style={styles.deleteModalCancelText}>Non</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.deleteModalConfirmBtn}
+                onPress={() => cancelTarget && cancelBooking(cancelTarget.id)}
+              >
+                <Text style={styles.deleteModalConfirmText}>Oui, annuler</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
