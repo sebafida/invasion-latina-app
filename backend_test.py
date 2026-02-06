@@ -519,18 +519,32 @@ class DeletionAPITester:
         except Exception as e:
             self.log_result("Clear All VIP Bookings", False, f"Request error: {str(e)}")
             return False
+    
+    def run_all_tests(self):
         """Run all deletion endpoint tests as specified in review request"""
         print("=" * 80)
-        print("🎵 INVASION LATINA - SONG REQUEST DELETION API TESTING")
+        print("🎵🍾 INVASION LATINA - DELETION APIs TESTING")
         print("=" * 80)
         print(f"Backend URL: {BACKEND_URL}")
         print(f"Testing with admin credentials: {ADMIN_EMAIL}")
+        print("Testing both Song Request and VIP Booking deletion endpoints")
         print("=" * 80)
         print()
         
         # Run tests in sequence as specified in review request
-        tests = [
-            self.test_1_login_as_admin,
+        all_passed = True
+        
+        # Test 1: Admin Login
+        if not self.test_1_login_as_admin():
+            print("❌ Cannot proceed without admin authentication")
+            return False
+        
+        # Song Request Deletion Tests
+        print("\n" + "="*50)
+        print("🎵 SONG REQUEST DELETION TESTS")
+        print("="*50)
+        
+        song_tests = [
             self.test_2_create_test_song_request,
             self.test_3_get_current_requests,
             self.test_4_delete_individual_request,
@@ -539,19 +553,40 @@ class DeletionAPITester:
             self.test_7_verify_requests_cleared
         ]
         
-        all_passed = True
-        for test in tests:
+        for test in song_tests:
             try:
                 result = test()
                 if not result:
                     all_passed = False
-                    # Continue with other tests even if one fails
             except Exception as e:
                 print(f"❌ Test {test.__name__} crashed: {str(e)}")
                 all_passed = False
         
+        # VIP Booking Deletion Tests
+        print("\n" + "="*50)
+        print("🍾 VIP BOOKING DELETION TESTS")
+        print("="*50)
+        
+        try:
+            # Get VIP bookings first
+            vip_success, vip_bookings = self.test_8_get_vip_bookings()
+            if not vip_success:
+                all_passed = False
+            
+            # Test individual deletion
+            if not self.test_9_delete_individual_vip_booking(vip_bookings):
+                all_passed = False
+            
+            # Test clear all
+            if not self.test_10_clear_all_vip_bookings():
+                all_passed = False
+                
+        except Exception as e:
+            print(f"❌ VIP booking tests crashed: {str(e)}")
+            all_passed = False
+        
         # Summary
-        print("=" * 80)
+        print("\n" + "=" * 80)
         print("📊 TEST SUMMARY")
         print("=" * 80)
         
@@ -571,8 +606,10 @@ class DeletionAPITester:
         
         if all_passed and passed == total:
             print("🎉 ALL DELETION ENDPOINTS WORKING CORRECTLY!")
-            print("✅ Both delete endpoints return success")
-            print("✅ Requests are actually removed from the database")
+            print("✅ Song request deletion endpoints working")
+            print("✅ VIP booking deletion endpoints working")
+            print("✅ All endpoints return success (200)")
+            print("✅ Data is actually removed from database")
         else:
             print("⚠️ SOME TESTS FAILED - CHECK RESULTS ABOVE")
         
