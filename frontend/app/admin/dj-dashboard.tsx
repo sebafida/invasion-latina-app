@@ -182,18 +182,21 @@ export default function DJDashboardScreen() {
   };
 
   const handleDeleteRequest = (requestId: string, songTitle: string) => {
-    Alert.alert(
-      'Supprimer',
-      `Voulez-vous vraiment supprimer "${songTitle}"?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Supprimer', 
-          style: 'destructive',
-          onPress: () => deleteRequest(requestId)
-        }
-      ]
-    );
+    // Use setTimeout to work around Expo Go Alert.alert issue
+    setTimeout(() => {
+      Alert.alert(
+        'Supprimer',
+        `Voulez-vous vraiment supprimer "${songTitle}"?`,
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { 
+            text: 'Supprimer', 
+            style: 'destructive',
+            onPress: () => deleteRequest(requestId)
+          }
+        ]
+      );
+    }, 100);
   };
 
   const clearAllRequests = async () => {
@@ -209,18 +212,21 @@ export default function DJDashboardScreen() {
   };
 
   const handleClearAllRequests = () => {
-    Alert.alert(
-      'Effacer toutes les demandes',
-      'Voulez-vous vraiment supprimer TOUTES les demandes de chansons? Cette action est irréversible.',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Tout effacer', 
-          style: 'destructive',
-          onPress: () => clearAllRequests()
-        }
-      ]
-    );
+    // Use setTimeout to work around Expo Go Alert.alert issue
+    setTimeout(() => {
+      Alert.alert(
+        'Effacer toutes les demandes',
+        'Voulez-vous vraiment supprimer TOUTES les demandes de chansons? Cette action est irréversible.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { 
+            text: 'Tout effacer', 
+            style: 'destructive',
+            onPress: () => clearAllRequests()
+          }
+        ]
+      );
+    }, 100);
   };
 
   return (
