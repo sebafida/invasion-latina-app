@@ -63,6 +63,11 @@ export default function DJDashboardScreen() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<DJRequest | null>(null);
 
+  // Delete confirmation modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [showClearAllModal, setShowClearAllModal] = useState(false);
+
   useEffect(() => {
     // Delay check to allow navigation to mount
     const timer = setTimeout(() => {
