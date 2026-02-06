@@ -159,18 +159,7 @@ export default function GalleriesScreen() {
 
         {/* Features Coming Soon */}
         <View style={styles.featuresSection}>
-          <Text style={styles.featuresTitle}>✨ Fonctionnalités</Text>
-          
-          <View style={styles.featureCard}>
-            <Ionicons name="search" size={24} color={theme.colors.primary} />
-            <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Tag Yourself</Text>
-              <Text style={styles.featureDesc}>Retrouve-toi dans les photos et tague-toi</Text>
-            </View>
-            <View style={styles.availableBadge}>
-              <Text style={styles.availableText}>Disponible</Text>
-            </View>
-          </View>
+          <Text style={styles.featuresTitle}>Fonctionnalités</Text>
           
           <View style={styles.featureCard}>
             <Ionicons name="download" size={24} color={theme.colors.neonBlue} />
