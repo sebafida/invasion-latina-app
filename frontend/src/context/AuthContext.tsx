@@ -20,6 +20,8 @@ interface AuthContextType {
   register: (name: string, email: string, password: string, phone?: string, acceptMarketing?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
+  setUser: (user: User | null) => void;
+  setToken: (token: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
