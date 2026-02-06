@@ -580,11 +580,13 @@ class DeletionAPITester:
 
 def main():
     """Main test execution"""
-    tester = SongRequestDeletionTester()
+    tester = DeletionAPITester()
     success = tester.run_all_tests()
     
     if success:
-        print("\n🎉 All song request deletion tests completed successfully!")
+        print("\n🎉 All deletion API tests completed successfully!")
+        print("✅ Song request deletion endpoints working")
+        print("✅ VIP booking deletion endpoints working")
         sys.exit(0)
     else:
         print("\n⚠️ Some tests failed. Check the results above.")
