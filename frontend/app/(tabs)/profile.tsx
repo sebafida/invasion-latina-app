@@ -80,7 +80,14 @@ export default function ProfileScreen() {
       'Veux-tu vraiment te déconnecter?',
       [
         { text: 'Annuler', style: 'cancel' },
-        { text: 'Oui', onPress: () => logout(), style: 'destructive' }
+        { 
+          text: 'Oui', 
+          onPress: async () => {
+            await logout();
+            router.replace('/auth/login');
+          }, 
+          style: 'destructive' 
+        }
       ]
     );
   };
