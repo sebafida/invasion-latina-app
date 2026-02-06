@@ -84,59 +84,47 @@ export default function BookingsAdminScreen() {
   const deleteBooking = async (bookingId: string) => {
     try {
       await api.delete(`/admin/vip-bookings/${bookingId}`);
-      Alert.alert('Succès', 'Réservation supprimée!');
+      setShowDeleteModal(false);
+      setDeleteTarget(null);
       loadBookings();
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erreur lors de la suppression';
-      Alert.alert('Erreur', message);
+      console.error('Delete error:', error);
     }
   };
 
   const handleDeleteBooking = (bookingId: string, customerName: string) => {
-    // Use setTimeout to work around Expo Go Alert.alert issue
-    setTimeout(() => {
-      Alert.alert(
-        'Supprimer',
-        `Voulez-vous vraiment supprimer la réservation de "${customerName}"?`,
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { 
-            text: 'Supprimer', 
-            style: 'destructive',
-            onPress: () => deleteBooking(bookingId)
-          }
-        ]
-      );
-    }, 100);
+    setDeleteTarget({ id: bookingId, name: customerName });
+    setShowDeleteModal(true);
   };
 
   const clearAllBookings = async () => {
     try {
       await api.delete('/admin/vip-bookings/clear-all');
-      Alert.alert('Succès', 'Toutes les réservations ont été effacées!');
+      setShowClearAllModal(false);
       loadBookings();
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erreur lors de la suppression';
-      Alert.alert('Erreur', message);
+      console.error('Clear all error:', error);
     }
   };
 
   const handleClearAllBookings = () => {
-    // Use setTimeout to work around Expo Go Alert.alert issue
-    setTimeout(() => {
-      Alert.alert(
-        'Effacer toutes les réservations',
-        'Voulez-vous vraiment supprimer TOUTES les réservations? Cette action est irréversible.',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { 
-            text: 'Tout effacer', 
-            style: 'destructive',
-            onPress: () => clearAllBookings()
-          }
-        ]
-      );
-    }, 100);
+    setShowClearAllModal(true);
+  };
+
+  const cancelBooking = async (bookingId: string) => {
+    try {
+      await api.put(`/admin/vip-bookings/${bookingId}`, { status: 'cancelled' });
+      setShowCancelModal(false);
+      setCancelTarget(null);
+      loadBookings();
+    } catch (error: any) {
+      console.error('Cancel error:', error);
+    }
+  };
+
+  const handleCancelBooking = (bookingId: string, customerName: string) => {
+    setCancelTarget({ id: bookingId, name: customerName });
+    setShowCancelModal(true);
   };
 
   const openWhatsApp = (booking: Booking) => {
