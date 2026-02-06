@@ -398,7 +398,24 @@ export default function DJDashboardScreen() {
                     >
                       <Ionicons name="close" size={20} color="white" />
                     </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.deleteButton]}
+                      onPress={() => handleDeleteRequest(request.id, request.song_title)}
+                    >
+                      <Ionicons name="trash" size={18} color="white" />
+                    </TouchableOpacity>
                   </View>
+                )}
+
+                {/* Delete button for non-pending requests */}
+                {request.status !== 'pending' && (
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.deleteButton]}
+                    onPress={() => handleDeleteRequest(request.id, request.song_title)}
+                  >
+                    <Ionicons name="trash" size={18} color="white" />
+                  </TouchableOpacity>
                 )}
               </View>
             ))
