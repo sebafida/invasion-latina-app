@@ -640,6 +640,34 @@ async def create_event(
         status="upcoming"
     )
 
+class DJSelectionUpdate(BaseModel):
+    selected_djs: List[str]
+
+@app.put("/api/admin/events/{event_id}/djs")
+async def update_event_djs(
+    event_id: str,
+    dj_data: DJSelectionUpdate,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Update selected DJs for an event (admin only)"""
+    db = get_database()
+    
+    try:
+        result = await db.events.update_one(
+            {"_id": ObjectId(event_id)},
+            {"$set": {"selected_djs": dj_data.selected_djs, "updated_at": datetime.utcnow()}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        logger.info(f"✅ Updated DJs for event {event_id}: {dj_data.selected_djs}")
+        return {"message": "DJs selection updated successfully", "selected_djs": dj_data.selected_djs}
+        
+    except Exception as e:
+        logger.error(f"Error updating DJs: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to update DJs: {str(e)}")
+
 # ============ TICKET ENDPOINTS ============
 
 @app.post("/api/tickets/purchase", response_model=TicketResponse)
