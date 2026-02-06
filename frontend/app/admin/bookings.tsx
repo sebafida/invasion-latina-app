@@ -343,6 +343,14 @@ Merci et à bientôt! 🔥`;
                     <Ionicons name="close" size={20} color="white" />
                   </TouchableOpacity>
                 )}
+
+                {/* Delete button */}
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => handleDeleteBooking(booking.id, booking.customer_name)}
+                >
+                  <Ionicons name="trash" size={18} color="white" />
+                </TouchableOpacity>
               </View>
             </View>
           ))
