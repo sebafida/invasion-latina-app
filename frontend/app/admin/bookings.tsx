@@ -86,18 +86,21 @@ export default function BookingsAdminScreen() {
   };
 
   const handleDeleteBooking = (bookingId: string, customerName: string) => {
-    Alert.alert(
-      'Supprimer',
-      `Voulez-vous vraiment supprimer la réservation de "${customerName}"?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Supprimer', 
-          style: 'destructive',
-          onPress: () => deleteBooking(bookingId)
-        }
-      ]
-    );
+    // Use setTimeout to work around Expo Go Alert.alert issue
+    setTimeout(() => {
+      Alert.alert(
+        'Supprimer',
+        `Voulez-vous vraiment supprimer la réservation de "${customerName}"?`,
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { 
+            text: 'Supprimer', 
+            style: 'destructive',
+            onPress: () => deleteBooking(bookingId)
+          }
+        ]
+      );
+    }, 100);
   };
 
   const clearAllBookings = async () => {
@@ -112,18 +115,21 @@ export default function BookingsAdminScreen() {
   };
 
   const handleClearAllBookings = () => {
-    Alert.alert(
-      'Effacer toutes les réservations',
-      'Voulez-vous vraiment supprimer TOUTES les réservations? Cette action est irréversible.',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Tout effacer', 
-          style: 'destructive',
-          onPress: () => clearAllBookings()
-        }
-      ]
-    );
+    // Use setTimeout to work around Expo Go Alert.alert issue
+    setTimeout(() => {
+      Alert.alert(
+        'Effacer toutes les réservations',
+        'Voulez-vous vraiment supprimer TOUTES les réservations? Cette action est irréversible.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { 
+            text: 'Tout effacer', 
+            style: 'destructive',
+            onPress: () => clearAllBookings()
+          }
+        ]
+      );
+    }, 100);
   };
 
   const openWhatsApp = (booking: Booking) => {
