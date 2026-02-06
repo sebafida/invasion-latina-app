@@ -112,8 +112,7 @@ export default function DJRequestsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>🎵 DJ Requests</Text>
-            <Text style={styles.subtitle}>Vote pour tes sons préférés</Text>
+            <Text style={styles.title}>Requests</Text>
           </View>
         </View>
 
