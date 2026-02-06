@@ -147,4 +147,8 @@ const styles = StyleSheet.create({
   notificationButton: {
     marginRight: theme.spacing.md,
   },
+  backButton: {
+    marginLeft: theme.spacing.md,
+    padding: theme.spacing.sm,
+  },
 });
