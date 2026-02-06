@@ -679,6 +679,23 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
     color: 'white',
   },
+  djSelectionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#00BCD4',
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  djSelectionButtonText: {
+    flex: 1,
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: 'white',
+  },
 
   // Info Section
   infoSection: {
