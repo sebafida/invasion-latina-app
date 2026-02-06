@@ -261,8 +261,8 @@ class SongRequestDeletionTester:
         print("🎵 Test 5: Create another test request for clear-all testing...")
         
         test_data = {
-            "song_title": "Clear All Test Song",
-            "artist_name": "Clear All Test Artist",
+            "song_title": "Clear All Test Song 2",
+            "artist_name": "Clear All Test Artist 2",
             "event_id": "default_event"
         }
         
