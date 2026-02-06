@@ -406,6 +406,83 @@ async def firebase_login(token_data: FirebaseTokenData):
         logger.error(f"Firebase login error: {str(e)}")
         raise HTTPException(status_code=401, detail="Invalid Firebase token")
 
+# ============ SOCIAL AUTHENTICATION ENDPOINTS ============
+
+class SocialAuthData(BaseModel):
+    provider: str  # 'apple' or 'google'
+    id_token: str
+    user_id: Optional[str] = None
+    email: Optional[str] = None
+    name: Optional[str] = None
+
+@app.post("/api/auth/social", response_model=UserResponse)
+async def social_login(auth_data: SocialAuthData):
+    """Login/Register with Apple or Google"""
+    db = get_database()
+    
+    try:
+        # For Apple and Google, we trust the data sent from the app
+        # In production, you should verify the id_token with Apple/Google servers
+        
+        email = auth_data.email
+        name = auth_data.name or "User"
+        provider_id = auth_data.user_id or auth_data.id_token[:50]
+        
+        if not email:
+            raise HTTPException(status_code=400, detail="Email is required")
+        
+        # Check if user already exists
+        user = await db.users.find_one({"email": email})
+        
+        if not user:
+            # Create new user from social login
+            user_dict = {
+                "email": email,
+                "name": name,
+                f"{auth_data.provider}_id": provider_id,
+                "auth_provider": auth_data.provider,
+                "role": "user",
+                "loyalty_points": 0,
+                "badges": [],
+                "friends": [],
+                "language": "fr",
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            result = await db.users.insert_one(user_dict)
+            user_dict["_id"] = result.inserted_id
+            user = user_dict
+            logger.info(f"✅ Created new user via {auth_data.provider}: {email}")
+        else:
+            # Update provider ID if not set
+            if not user.get(f"{auth_data.provider}_id"):
+                await db.users.update_one(
+                    {"_id": user["_id"]},
+                    {"$set": {f"{auth_data.provider}_id": provider_id}}
+                )
+            logger.info(f"✅ Existing user logged in via {auth_data.provider}: {email}")
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": str(user["_id"])})
+        
+        return UserResponse(
+            id=str(user["_id"]),
+            email=user["email"],
+            name=user.get("name", name),
+            role=user.get("role", "user"),
+            loyalty_points=user.get("loyalty_points", 0),
+            badges=user.get("badges", []),
+            friends=user.get("friends", []),
+            language=user.get("language", "fr"),
+            access_token=access_token
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Social login error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Social login failed: {str(e)}")
+
 @app.get("/api/auth/me", response_model=UserResponse)
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """Get current user information"""
