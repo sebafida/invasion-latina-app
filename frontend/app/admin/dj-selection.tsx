@@ -150,6 +150,14 @@ export default function DJSelectionScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Success Banner */}
+      {showSuccessMessage && (
+        <View style={styles.successBanner}>
+          <Ionicons name="checkmark-circle" size={24} color="white" />
+          <Text style={styles.successBannerText}>Sélection enregistrée !</Text>
+        </View>
+      )}
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
