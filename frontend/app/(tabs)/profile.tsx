@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
+import { FreeEntryCard } from '../../src/components/FreeEntryCard';
 import api from '../../src/config/api';
 
 interface LoyaltyData {
