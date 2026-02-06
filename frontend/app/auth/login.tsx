@@ -15,7 +15,6 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import { theme } from '../../src/config/theme';
@@ -23,9 +22,17 @@ import { useAuth } from '../../src/context/AuthContext';
 import { Button } from '../../src/components/Button';
 import api from '../../src/config/api';
 
+// Only import Google Auth on native platforms
+let useAuthRequest: any = null;
+if (Platform.OS !== 'web') {
+  const Google = require('expo-auth-session/providers/google');
+  useAuthRequest = Google.useAuthRequest;
+}
+
 WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_CLIENT_ID = Constants.expoConfig?.extra?.GOOGLE_IOS_CLIENT_ID || '';
+const isNativePlatform = Platform.OS === 'ios' || Platform.OS === 'android';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -36,10 +43,12 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'apple' | 'google' | null>(null);
 
-  // Google Auth
-  const [request, response, promptAsync] = Google.useAuthRequest({
+  // Google Auth - only on native platforms
+  const googleAuth = isNativePlatform && useAuthRequest ? useAuthRequest({
     iosClientId: GOOGLE_CLIENT_ID,
-  });
+  }) : [null, null, () => {}];
+  
+  const [request, response, promptAsync] = googleAuth;
 
   React.useEffect(() => {
     if (response?.type === 'success') {
