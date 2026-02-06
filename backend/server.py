@@ -1081,6 +1081,42 @@ async def get_song_requests(
     return requests
 
 
+@app.delete("/api/dj/requests/{request_id}")
+async def delete_song_request(
+    request_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Delete a specific song request (Admin only)"""
+    db = get_database()
+    
+    try:
+        result = await db.song_requests.delete_one({"_id": ObjectId(request_id)})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Demande non trouvée")
+        
+        logger.info(f"✅ Deleted song request {request_id}")
+        return {"message": "Demande supprimée avec succès"}
+    except Exception as e:
+        logger.error(f"❌ Error deleting song request: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la suppression")
+
+
+@app.delete("/api/dj/requests/clear-all")
+async def clear_all_song_requests(
+    current_user: dict = Depends(get_current_admin)
+):
+    """Delete all song requests (Admin only)"""
+    db = get_database()
+    
+    try:
+        result = await db.song_requests.delete_many({})
+        logger.info(f"✅ Cleared all song requests: {result.deleted_count} deleted")
+        return {"message": f"Toutes les demandes ont été supprimées ({result.deleted_count})"}
+    except Exception as e:
+        logger.error(f"❌ Error clearing song requests: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la suppression")
+
+
 @app.get("/api/dj/admin/all-requests")
 async def get_all_song_requests_admin(
     current_user: dict = Depends(get_current_admin)
