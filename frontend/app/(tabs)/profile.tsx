@@ -709,6 +709,23 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
     color: 'white',
   },
+  freeEntryScannerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#9C27B0',
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  freeEntryScannerButtonText: {
+    flex: 1,
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: 'white',
+  },
 
   // Info Section
   infoSection: {
