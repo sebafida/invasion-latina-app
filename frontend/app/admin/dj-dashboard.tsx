@@ -169,7 +169,19 @@ export default function DJDashboardScreen() {
     }
   };
 
-  const handleDeleteRequest = async (requestId: string, songTitle: string) => {
+  const deleteRequest = async (requestId: string) => {
+    try {
+      await api.delete(`/dj/requests/${requestId}`);
+      Alert.alert('Succès', 'Demande supprimée!');
+      loadRequests();
+      loadEvents();
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Erreur lors de la suppression';
+      Alert.alert('Erreur', message);
+    }
+  };
+
+  const handleDeleteRequest = (requestId: string, songTitle: string) => {
     Alert.alert(
       'Supprimer',
       `Voulez-vous vraiment supprimer "${songTitle}"?`,
@@ -178,23 +190,25 @@ export default function DJDashboardScreen() {
         { 
           text: 'Supprimer', 
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete(`/dj/requests/${requestId}`);
-              Alert.alert('Succès', 'Demande supprimée!');
-              loadRequests();
-              loadEvents();
-            } catch (error: any) {
-              const message = error.response?.data?.detail || 'Erreur lors de la suppression';
-              Alert.alert('Erreur', message);
-            }
-          }
+          onPress: () => deleteRequest(requestId)
         }
       ]
     );
   };
 
-  const handleClearAllRequests = async () => {
+  const clearAllRequests = async () => {
+    try {
+      await api.delete('/dj/requests/clear-all');
+      Alert.alert('Succès', 'Toutes les demandes ont été effacées!');
+      loadRequests();
+      loadEvents();
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Erreur lors de la suppression';
+      Alert.alert('Erreur', message);
+    }
+  };
+
+  const handleClearAllRequests = () => {
     Alert.alert(
       'Effacer toutes les demandes',
       'Voulez-vous vraiment supprimer TOUTES les demandes de chansons? Cette action est irréversible.',
@@ -203,17 +217,7 @@ export default function DJDashboardScreen() {
         { 
           text: 'Tout effacer', 
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete('/dj/requests/clear-all');
-              Alert.alert('Succès', 'Toutes les demandes ont été effacées!');
-              loadRequests();
-              loadEvents();
-            } catch (error: any) {
-              const message = error.response?.data?.detail || 'Erreur lors de la suppression';
-              Alert.alert('Erreur', message);
-            }
-          }
+          onPress: () => clearAllRequests()
         }
       ]
     );
