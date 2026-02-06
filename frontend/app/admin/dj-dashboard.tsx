@@ -433,6 +433,73 @@ export default function DJDashboardScreen() {
         </View>
       </View>
 
+      {/* Delete Single Request Modal */}
+      <Modal
+        visible={showDeleteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <Ionicons name="trash" size={48} color={theme.colors.error} />
+            <Text style={styles.deleteModalTitle}>Supprimer cette demande?</Text>
+            <Text style={styles.deleteModalSubtitle}>"{deleteTarget?.title}"</Text>
+            
+            <View style={styles.deleteModalButtons}>
+              <TouchableOpacity
+                style={styles.deleteModalCancelBtn}
+                onPress={() => {
+                  setShowDeleteModal(false);
+                  setDeleteTarget(null);
+                }}
+              >
+                <Text style={styles.deleteModalCancelText}>Annuler</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.deleteModalConfirmBtn}
+                onPress={() => deleteTarget && deleteRequest(deleteTarget.id)}
+              >
+                <Text style={styles.deleteModalConfirmText}>Supprimer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Clear All Requests Modal */}
+      <Modal
+        visible={showClearAllModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowClearAllModal(false)}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <Ionicons name="warning" size={48} color={theme.colors.error} />
+            <Text style={styles.deleteModalTitle}>Effacer TOUTES les demandes?</Text>
+            <Text style={styles.deleteModalSubtitle}>Cette action est irréversible!</Text>
+            
+            <View style={styles.deleteModalButtons}>
+              <TouchableOpacity
+                style={styles.deleteModalCancelBtn}
+                onPress={() => setShowClearAllModal(false)}
+              >
+                <Text style={styles.deleteModalCancelText}>Annuler</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.deleteModalConfirmBtn}
+                onPress={() => clearAllRequests()}
+              >
+                <Text style={styles.deleteModalConfirmText}>Tout effacer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Reject Reason Modal */}
       <Modal
         visible={showRejectModal}
