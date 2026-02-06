@@ -1914,6 +1914,42 @@ async def admin_update_booking(
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@app.delete("/api/admin/vip-bookings/clear-all")
+async def admin_clear_all_bookings(
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Delete all VIP bookings"""
+    db = get_database()
+    
+    try:
+        result = await db.vip_bookings.delete_many({})
+        logger.info(f"✅ Cleared all VIP bookings: {result.deleted_count} deleted")
+        return {"message": f"Toutes les réservations ont été supprimées ({result.deleted_count})"}
+    except Exception as e:
+        logger.error(f"❌ Error clearing VIP bookings: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la suppression")
+
+
+@app.delete("/api/admin/vip-bookings/{booking_id}")
+async def admin_delete_booking(
+    booking_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Delete a specific VIP booking"""
+    db = get_database()
+    
+    try:
+        result = await db.vip_bookings.delete_one({"_id": ObjectId(booking_id)})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Réservation non trouvée")
+        
+        logger.info(f"✅ Deleted VIP booking {booking_id}")
+        return {"message": "Réservation supprimée avec succès"}
+    except Exception as e:
+        logger.error(f"❌ Error deleting VIP booking: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la suppression")
+
+
 
 # ============ MEDIA GALLERY ENDPOINTS ============
 
