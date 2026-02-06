@@ -168,7 +168,7 @@ export default function ProfileScreen() {
                   />
                 </View>
                 <Text style={styles.progressText}>
-                  {loyaltyData.points_needed} Invasion Coins pour un guest gratuit
+                  {loyaltyData.points_needed} Invasion Coins pour une guest gratuite
                 </Text>
               </View>
 
