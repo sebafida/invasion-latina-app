@@ -46,12 +46,17 @@ const LANGUAGES = [
 export default function LoginScreen() {
   const router = useRouter();
   const { login, setUser, setToken } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'apple' | 'google' | null>(null);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+
+  const getCurrentLanguage = () => {
+    return LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
+  };
 
   // Google Auth - only on native platforms
   const googleAuth = isNativePlatform && useAuthRequest ? useAuthRequest({
