@@ -11,6 +11,7 @@ import {
   Alert,
   Image,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,6 +35,13 @@ WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_CLIENT_ID = Constants.expoConfig?.extra?.GOOGLE_IOS_CLIENT_ID || '';
 const isNativePlatform = Platform.OS === 'ios' || Platform.OS === 'android';
+
+const LANGUAGES = [
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
+];
 
 export default function LoginScreen() {
   const router = useRouter();
