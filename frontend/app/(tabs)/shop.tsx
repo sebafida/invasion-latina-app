@@ -327,7 +327,7 @@ export default function VIPBookingScreen() {
 
         {/* Guest Count */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Nombre de personnes</Text>
+          <Text style={styles.sectionTitle}>{t('numberOfPeople')}</Text>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
@@ -342,11 +342,11 @@ export default function VIPBookingScreen() {
 
         {/* Bottle Preferences */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Préférences bouteilles (optionnel)</Text>
+          <Text style={styles.sectionTitle}>{t('bottlePreferencesOptional')}</Text>
           <View style={styles.textAreaContainer}>
             <TextInput
               style={styles.textArea}
-              placeholder="Ex: Vodka Grey Goose, Champagne Moët..."
+              placeholder={t('bottlePreferencesPlaceholder')}
               placeholderTextColor={theme.colors.textMuted}
               value={bottlePreferences}
               onChangeText={setBottlePreferences}
@@ -358,11 +358,11 @@ export default function VIPBookingScreen() {
 
         {/* Special Requests */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Demandes spéciales (optionnel)</Text>
+          <Text style={styles.sectionTitle}>{t('specialRequestsOptional')}</Text>
           <View style={styles.textAreaContainer}>
             <TextInput
               style={styles.textArea}
-              placeholder="Anniversaire, demande particulière..."
+              placeholder={t('specialRequestsPlaceholder')}
               placeholderTextColor={theme.colors.textMuted}
               value={specialRequests}
               onChangeText={setSpecialRequests}
@@ -374,11 +374,11 @@ export default function VIPBookingScreen() {
 
         {/* Contact Info */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Informations de contact</Text>
+          <Text style={styles.sectionTitle}>{t('contactInfo')}</Text>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.inputNoIcon}
-              placeholder="Nom complet"
+              placeholder={t('fullName')}
               placeholderTextColor={theme.colors.textMuted}
               value={customerName}
               onChangeText={setCustomerName}
@@ -387,7 +387,7 @@ export default function VIPBookingScreen() {
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.inputNoIcon}
-              placeholder="Email"
+              placeholder={t('email')}
               placeholderTextColor={theme.colors.textMuted}
               value={customerEmail}
               onChangeText={setCustomerEmail}
@@ -398,7 +398,7 @@ export default function VIPBookingScreen() {
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.inputNoIcon}
-              placeholder="Téléphone"
+              placeholder={t('phoneNumber')}
               placeholderTextColor={theme.colors.textMuted}
               value={customerPhone}
               onChangeText={setCustomerPhone}
@@ -410,25 +410,25 @@ export default function VIPBookingScreen() {
         {/* Summary */}
         {packageDetails && (
           <View style={[styles.summaryCard, { borderLeftColor: currentRoom.color }]}>
-            <Text style={styles.summaryTitle}>📋 Résumé de votre réservation</Text>
+            <Text style={styles.summaryTitle}>📋 {t('bookingSummary')}</Text>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Salle:</Text>
+              <Text style={styles.summaryLabel}>{t('room')}:</Text>
               <Text style={[styles.summaryValue, { color: currentRoom.color }]}>{currentRoom.name}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Table:</Text>
+              <Text style={styles.summaryLabel}>{t('table')}:</Text>
               <Text style={styles.summaryValue}>{packageDetails.label}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Capacité:</Text>
+              <Text style={styles.summaryLabel}>{t('capacity')}:</Text>
               <Text style={styles.summaryValue}>{packageDetails.capacity}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Prix:</Text>
+              <Text style={styles.summaryLabel}>{t('price')}:</Text>
               <Text style={[styles.summaryPrice, { color: currentRoom.color }]}>{packageDetails.price}€</Text>
             </View>
             <Text style={styles.summaryNote}>
-              💡 La confirmation et le paiement se feront après validation de votre demande
+              💡 {t('paymentNote')}
             </Text>
           </View>
         )}
@@ -441,7 +441,7 @@ export default function VIPBookingScreen() {
         >
           <Ionicons name="send" size={20} color="white" />
           <Text style={styles.submitButtonText}>
-            {loading ? 'Envoi en cours...' : 'Envoyer la demande'}
+            {loading ? t('sending') : t('sendRequest')}
           </Text>
         </TouchableOpacity>
 
@@ -449,7 +449,7 @@ export default function VIPBookingScreen() {
         <View style={styles.infoBox}>
           <Ionicons name="information-circle" size={24} color={theme.colors.primary} />
           <Text style={styles.infoText}>
-            Notre équipe vous contactera sous 24h pour confirmer votre réservation et organiser le paiement.
+            {t('contactWithin24h')}
           </Text>
         </View>
       </View>
@@ -466,18 +466,18 @@ export default function VIPBookingScreen() {
             <View style={styles.successIconContainer}>
               <Ionicons name="checkmark-circle" size={80} color={theme.colors.success} />
             </View>
-            <Text style={styles.modalTitle}>Demande envoyée! 🍾</Text>
+            <Text style={styles.modalTitle}>{t('requestSent')} 🍾</Text>
             <Text style={styles.modalMessage}>
-              Votre demande de réservation a été reçue avec succès!
+              {t('requestSuccessMessage')}
             </Text>
             <Text style={styles.modalSubMessage}>
-              Notre équipe vous contactera sous 24h pour confirmer votre réservation.
+              {t('contactWithin24h')}
             </Text>
             <TouchableOpacity
               style={styles.modalButton}
               onPress={() => setShowSuccessModal(false)}
             >
-              <Text style={styles.modalButtonText}>Super!</Text>
+              <Text style={styles.modalButtonText}>{t('great')}</Text>
             </TouchableOpacity>
           </View>
         </View>
