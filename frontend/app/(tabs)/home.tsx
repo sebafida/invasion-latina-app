@@ -350,7 +350,7 @@ export default function HomeScreen() {
 
         {/* Follow Us */}
         <View style={styles.followSection}>
-          <Text style={styles.followTitle}>{t('followUs')}</Text>
+          <Text style={styles.followTitle}>{t('socialNetworks')}</Text>
         </View>
       </View>
     </ScrollView>
