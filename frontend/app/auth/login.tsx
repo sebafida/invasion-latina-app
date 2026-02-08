@@ -213,7 +213,7 @@ export default function LoginScreen() {
                     ) : (
                       <>
                         <Ionicons name="logo-apple" size={22} color="white" />
-                        <Text style={styles.appleButtonText}>Continuer avec Apple</Text>
+                        <Text style={styles.appleButtonText}>{t('continueWithApple')}</Text>
                       </>
                     )}
                   </TouchableOpacity>
@@ -229,7 +229,7 @@ export default function LoginScreen() {
                   ) : (
                     <>
                       <Ionicons name="logo-google" size={20} color="#4285F4" />
-                      <Text style={styles.googleButtonText}>Continuer avec Google</Text>
+                      <Text style={styles.googleButtonText}>{t('continueWithGoogle')}</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -238,7 +238,7 @@ export default function LoginScreen() {
               {/* Divider */}
               <View style={styles.divider}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>ou</Text>
+                <Text style={styles.dividerText}>{t('or')}</Text>
                 <View style={styles.dividerLine} />
               </View>
             </>
@@ -247,7 +247,7 @@ export default function LoginScreen() {
           {/* Form */}
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>{t('email')}</Text>
               <TextInput
                 style={styles.input}
                 placeholder="ton@email.com"
@@ -261,10 +261,10 @@ export default function LoginScreen() {
             </View>
             
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Mot de passe</Text>
+              <Text style={styles.label}>{t('password')}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Entre ton mot de passe"
+                placeholder={t('enterPassword')}
                 placeholderTextColor={theme.colors.textMuted}
                 value={password}
                 onChangeText={setPassword}
@@ -274,11 +274,11 @@ export default function LoginScreen() {
             </View>
             
             <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
+              <Text style={styles.forgotPasswordText}>{t('forgotPassword')}</Text>
             </TouchableOpacity>
             
             <Button
-              title="Se connecter"
+              title={t('login')}
               onPress={handleLogin}
               loading={loading}
               fullWidth
@@ -292,11 +292,57 @@ export default function LoginScreen() {
             onPress={() => router.push('/auth/register')}
           >
             <Text style={styles.footerText}>
-              Pas encore de compte ? <Text style={styles.footerLink}>Inscris-toi</Text>
+              {t('noAccount')} <Text style={styles.footerLink}>{t('register')}</Text>
             </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Language Modal */}
+      <Modal
+        visible={showLanguageModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <View style={styles.languageModalOverlay}>
+          <View style={styles.languageModalContent}>
+            <View style={styles.languageModalHeader}>
+              <Text style={styles.languageModalTitle}>{t('chooseLanguage')}</Text>
+              <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
+                <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.languageOptions}>
+              {LANGUAGES.map((lang) => (
+                <TouchableOpacity
+                  key={lang.code}
+                  style={[
+                    styles.languageOption,
+                    language === lang.code && styles.languageOptionActive
+                  ]}
+                  onPress={() => {
+                    setLanguage(lang.code as any);
+                    setShowLanguageModal(false);
+                  }}
+                >
+                  <Text style={styles.languageOptionFlag}>{lang.flag}</Text>
+                  <Text style={[
+                    styles.languageOptionText,
+                    language === lang.code && styles.languageOptionTextActive
+                  ]}>
+                    {lang.name}
+                  </Text>
+                  {language === lang.code && (
+                    <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
