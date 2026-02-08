@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import translations, { Language, Translations } from '../i18n/translations';
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => Promise<void>;
-  t: Translations;
+  t: (key: keyof Translations) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -14,7 +14,7 @@ const LANGUAGE_STORAGE_KEY = '@invasion_latina_language';
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('fr');
-  const [t, setT] = useState<Translations>(translations.fr);
+  const [currentTranslations, setCurrentTranslations] = useState<Translations>(translations.fr);
 
   useEffect(() => {
     loadLanguage();
@@ -25,7 +25,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       const savedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
       if (savedLanguage && (savedLanguage === 'fr' || savedLanguage === 'en' || savedLanguage === 'es' || savedLanguage === 'nl')) {
         setLanguageState(savedLanguage as Language);
-        setT(translations[savedLanguage as Language]);
+        setCurrentTranslations(translations[savedLanguage as Language]);
       }
     } catch (error) {
       console.error('Failed to load language:', error);
@@ -36,11 +36,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     try {
       await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
       setLanguageState(lang);
-      setT(translations[lang]);
+      setCurrentTranslations(translations[lang]);
     } catch (error) {
       console.error('Failed to save language:', error);
     }
   };
+
+  // Translation function
+  const t = useCallback((key: keyof Translations): string => {
+    return currentTranslations[key] || key;
+  }, [currentTranslations]);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
