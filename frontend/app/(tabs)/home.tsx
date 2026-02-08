@@ -263,7 +263,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.spotifyInfo}>
             <Text style={styles.spotifyTitle}>Playlist Spotify</Text>
-            <Text style={styles.spotifySubtitle}>Que viva la musica latina</Text>
+            <Text style={styles.spotifySubtitle}>{t.vivaLaMusica}</Text>
           </View>
           <Ionicons name="open-outline" size={24} color="#1DB954" />
         </TouchableOpacity>
@@ -272,7 +272,7 @@ export default function HomeScreen() {
         <View style={styles.lineupSection}>
           <View style={styles.lineupHeader}>
             <Ionicons name="disc" size={24} color={theme.colors.primary} />
-            <Text style={styles.sectionTitle}>LineUp</Text>
+            <Text style={styles.sectionTitle}>{t.lineup}</Text>
           </View>
           
           <View style={styles.lineupGrid}>
