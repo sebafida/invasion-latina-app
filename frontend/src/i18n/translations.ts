@@ -316,6 +316,9 @@ export const translations: Record<Language, Translations> = {
     continueWithApple: 'Continuer avec Apple',
     continueWithGoogle: 'Continuer avec Google',
     orContinueWith: 'ou continuer avec',
+    loginSubtitle: 'Connecte-toi pour continuer la fiesta',
+    enterPassword: 'Entre ton mot de passe',
+    or: 'ou',
     
     // Home
     homeTitle: 'Invasion Latina',
