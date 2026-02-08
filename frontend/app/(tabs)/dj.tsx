@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
+import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
 
 interface SongRequest {
@@ -29,6 +30,7 @@ interface SongRequest {
 
 export default function DJRequestsScreen() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [requests, setRequests] = useState<SongRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [songTitle, setSongTitle] = useState('');
