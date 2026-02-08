@@ -219,29 +219,29 @@ export default function HomeScreen() {
           <View style={styles.actionsGrid}>
             <ActionCard
               icon="musical-notes"
-              title="DJ Requests"
-              subtitle="Vote for songs"
+              title={t('djRequests')}
+              subtitle={t('voteForSongs')}
               color={theme.colors.neonPink}
               onPress={() => router.push('/(tabs)/dj')}
             />
             <ActionCard
               icon="images"
-              title="Photos"
-              subtitle="Event galleries"
+              title={t('photos')}
+              subtitle={t('eventGalleries')}
               color={theme.colors.primary}
               onPress={() => router.push('/galleries')}
             />
             <ActionCard
               icon="play-circle"
-              title="Aftermovies"
-              subtitle="Watch recap"
+              title={t('aftermovies')}
+              subtitle={t('watchRecap')}
               color={theme.colors.neonBlue}
               onPress={() => router.push('/aftermovies')}
             />
             <ActionCard
               icon="wine"
-              title="Booking"
-              subtitle="Tables"
+              title={t('booking')}
+              subtitle={t('tables')}
               color={theme.colors.primary}
               onPress={() => router.push('/(tabs)/shop')}
             />
@@ -262,7 +262,7 @@ export default function HomeScreen() {
             />
           </View>
           <View style={styles.spotifyInfo}>
-            <Text style={styles.spotifyTitle}>Playlist Spotify</Text>
+            <Text style={styles.spotifyTitle}>{t('spotifyPlaylist')}</Text>
             <Text style={styles.spotifySubtitle}>{t('vivaLaMusica')}</Text>
           </View>
           <Ionicons name="open-outline" size={24} color="#1DB954" />
