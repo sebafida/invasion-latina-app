@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
+import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
 
 const { width } = Dimensions.get('window');
@@ -25,101 +26,11 @@ interface Event {
   banner_image?: string;
 }
 
-// Room types with their packages
-const ROOMS = {
-  main_room: {
-    name: 'Main Room',
-    icon: 'musical-notes',
-    color: theme.colors.primary,
-    description: 'Au cœur de l\'action, ambiance garantie!',
-    packages: [
-      {
-        value: 'table_haute',
-        label: 'Table Haute',
-        price: 300,
-        capacity: '4-6 personnes',
-        features: ['Table debout', 'Vue sur la piste'],
-      },
-      {
-        value: 'table_assise',
-        label: 'Table Assise',
-        price: 500,
-        capacity: '6-8 personnes',
-        features: ['Table avec banquette', 'Service dédié'],
-      },
-      {
-        value: 'table_premium',
-        label: 'Table Premium',
-        price: 750,
-        capacity: '8-10 personnes',
-        features: ['Meilleur emplacement'],
-      },
-    ],
-  },
-  classy_room: {
-    name: 'Classy Room',
-    icon: 'wine',
-    color: '#FFD700',
-    description: 'L\'élégance dans une ambiance plus intimiste',
-    packages: [
-      {
-        value: 'table_haute',
-        label: 'Table Haute',
-        price: 300,
-        capacity: '4-6 personnes',
-        features: ['Table debout'],
-      },
-      {
-        value: 'table_assise',
-        label: 'Table Assise',
-        price: 500,
-        capacity: '6-8 personnes',
-        features: ['Table avec banquette', 'Service personnalisé'],
-      },
-      {
-        value: 'table_premium',
-        label: 'Table Premium',
-        price: 750,
-        capacity: '8-10 personnes',
-        features: ['Espace privatif', 'Service exclusif'],
-      },
-    ],
-  },
-  vip: {
-    name: 'VIP',
-    icon: 'diamond',
-    color: '#E91E63',
-    description: 'Le summum du luxe et de l\'exclusivité',
-    packages: [
-      {
-        value: 'table_haute',
-        label: 'Table Haute VIP',
-        price: 500,
-        capacity: '4-6 personnes',
-        features: ['Table premium', 'Accès VIP lounge', 'Entrée prioritaire groupe'],
-      },
-      {
-        value: 'table_assise',
-        label: 'Table Assise VIP',
-        price: 1000,
-        capacity: '8-10 personnes',
-        features: ['Table luxe avec banquette', 'Service VIP dédié', 'Entrée prioritaire groupe'],
-      },
-      {
-        value: 'table_presidentiel',
-        label: 'Table Présidentielle',
-        price: 1500,
-        capacity: '10-15 personnes',
-        features: ['Espace privé exclusif', 'Service butler', 'Entrée prioritaire groupe'],
-      },
-    ],
-  },
-};
-
-type RoomKey = keyof typeof ROOMS;
+type RoomKey = 'main_room' | 'classy_room' | 'vip';
 
 export default function VIPBookingScreen() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState('');
   const [selectedRoom, setSelectedRoom] = useState<RoomKey>('main_room');
@@ -132,6 +43,99 @@ export default function VIPBookingScreen() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Room types with their packages - using translation keys
+  const getRooms = () => ({
+    main_room: {
+      name: t('mainRoom'),
+      icon: 'musical-notes',
+      color: theme.colors.primary,
+      description: t('mainRoomDesc'),
+      packages: [
+        {
+          value: 'table_haute',
+          label: t('tableHaute'),
+          price: 300,
+          capacity: '4-6 ' + t('people'),
+          features: [t('standingTable'), t('danceFloorView')],
+        },
+        {
+          value: 'table_assise',
+          label: t('tableAssise'),
+          price: 500,
+          capacity: '6-8 ' + t('people'),
+          features: [t('seatedTable'), t('dedicatedService')],
+        },
+        {
+          value: 'table_premium',
+          label: t('tablePremium'),
+          price: 750,
+          capacity: '8-10 ' + t('people'),
+          features: [t('bestLocation')],
+        },
+      ],
+    },
+    classy_room: {
+      name: t('classyRoom'),
+      icon: 'wine',
+      color: '#FFD700',
+      description: t('classyRoomDesc'),
+      packages: [
+        {
+          value: 'table_haute',
+          label: t('tableHaute'),
+          price: 300,
+          capacity: '4-6 ' + t('people'),
+          features: [t('standingTable')],
+        },
+        {
+          value: 'table_assise',
+          label: t('tableAssise'),
+          price: 500,
+          capacity: '6-8 ' + t('people'),
+          features: [t('seatedTable'), t('dedicatedService')],
+        },
+        {
+          value: 'table_premium',
+          label: t('tablePremium'),
+          price: 750,
+          capacity: '8-10 ' + t('people'),
+          features: [t('privatifSpace'), t('exclusiveService')],
+        },
+      ],
+    },
+    vip: {
+      name: t('vipRoom'),
+      icon: 'diamond',
+      color: '#E91E63',
+      description: t('vipRoomDesc'),
+      packages: [
+        {
+          value: 'table_haute',
+          label: t('tableHaute') + ' VIP',
+          price: 500,
+          capacity: '4-6 ' + t('people'),
+          features: [t('tablePremium'), t('vipLounge'), t('priorityEntry')],
+        },
+        {
+          value: 'table_assise',
+          label: t('tableAssise') + ' VIP',
+          price: 1000,
+          capacity: '8-10 ' + t('people'),
+          features: [t('luxuryTable'), t('vipDedicatedService'), t('priorityEntry')],
+        },
+        {
+          value: 'table_presidentiel',
+          label: t('tablePresidentielle'),
+          price: 1500,
+          capacity: '10-15 ' + t('people'),
+          features: [t('privateExclusive'), t('butlerService'), t('priorityEntry')],
+        },
+      ],
+    },
+  });
+
+  const ROOMS = getRooms();
 
   useEffect(() => {
     loadEvents();
