@@ -322,7 +322,7 @@ Merci et à bientôt! 🔥`;
                       onPress={() => updateBookingStatus(booking.id, 'confirmed')}
                     >
                       <Ionicons name="checkmark" size={20} color="white" />
-                      <Text style={styles.actionButtonText}>Confirmer</Text>
+                      <Text style={styles.actionButtonText}>{t('confirm')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.cancelButton}
@@ -366,8 +366,8 @@ Merci et à bientôt! 🔥`;
         <View style={styles.deleteModalOverlay}>
           <View style={styles.deleteModalContent}>
             <Ionicons name="trash" size={48} color={theme.colors.error} />
-            <Text style={styles.deleteModalTitle}>Supprimer cette réservation?</Text>
-            <Text style={styles.deleteModalSubtitle}>Réservation de "{deleteTarget?.name}"</Text>
+            <Text style={styles.deleteModalTitle}>{t('deleteBooking')}</Text>
+            <Text style={styles.deleteModalSubtitle}>{t('bookingOf')} "{deleteTarget?.name}"</Text>
             
             <View style={styles.deleteModalButtons}>
               <TouchableOpacity
@@ -377,14 +377,14 @@ Merci et à bientôt! 🔥`;
                   setDeleteTarget(null);
                 }}
               >
-                <Text style={styles.deleteModalCancelText}>Annuler</Text>
+                <Text style={styles.deleteModalCancelText}>{t('cancel')}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 style={styles.deleteModalConfirmBtn}
                 onPress={() => deleteTarget && deleteBooking(deleteTarget.id)}
               >
-                <Text style={styles.deleteModalConfirmText}>Supprimer</Text>
+                <Text style={styles.deleteModalConfirmText}>{t('delete')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -401,22 +401,22 @@ Merci et à bientôt! 🔥`;
         <View style={styles.deleteModalOverlay}>
           <View style={styles.deleteModalContent}>
             <Ionicons name="warning" size={48} color={theme.colors.error} />
-            <Text style={styles.deleteModalTitle}>Effacer TOUTES les réservations?</Text>
-            <Text style={styles.deleteModalSubtitle}>Cette action est irréversible!</Text>
+            <Text style={styles.deleteModalTitle}>{t('clearAllBookings')}?</Text>
+            <Text style={styles.deleteModalSubtitle}>{t('irreversibleAction')}</Text>
             
             <View style={styles.deleteModalButtons}>
               <TouchableOpacity
                 style={styles.deleteModalCancelBtn}
                 onPress={() => setShowClearAllModal(false)}
               >
-                <Text style={styles.deleteModalCancelText}>Annuler</Text>
+                <Text style={styles.deleteModalCancelText}>{t('cancel')}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 style={styles.deleteModalConfirmBtn}
                 onPress={() => clearAllBookings()}
               >
-                <Text style={styles.deleteModalConfirmText}>Tout effacer</Text>
+                <Text style={styles.deleteModalConfirmText}>{t('clearAll')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -433,8 +433,8 @@ Merci et à bientôt! 🔥`;
         <View style={styles.deleteModalOverlay}>
           <View style={styles.deleteModalContent}>
             <Ionicons name="close-circle" size={48} color={theme.colors.error} />
-            <Text style={styles.deleteModalTitle}>Annuler cette réservation?</Text>
-            <Text style={styles.deleteModalSubtitle}>Réservation de "{cancelTarget?.name}"</Text>
+            <Text style={styles.deleteModalTitle}>{t('cancelBooking')}</Text>
+            <Text style={styles.deleteModalSubtitle}>{t('bookingOf')} "{cancelTarget?.name}"</Text>
             
             <View style={styles.deleteModalButtons}>
               <TouchableOpacity
@@ -444,14 +444,14 @@ Merci et à bientôt! 🔥`;
                   setCancelTarget(null);
                 }}
               >
-                <Text style={styles.deleteModalCancelText}>Non</Text>
+                <Text style={styles.deleteModalCancelText}>{t('no')}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 style={styles.deleteModalConfirmBtn}
                 onPress={() => cancelTarget && cancelBooking(cancelTarget.id)}
               >
-                <Text style={styles.deleteModalConfirmText}>Oui, annuler</Text>
+                <Text style={styles.deleteModalConfirmText}>{t('yes')}</Text>
               </TouchableOpacity>
             </View>
           </View>
