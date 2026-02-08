@@ -134,11 +134,11 @@ export default function DJsScreen() {
 
   const handleSubmitSongRequest = async () => {
     if (!songTitle.trim()) {
-      Alert.alert(t.error, t.songTitle);
+      Alert.alert(t('error'), t('songTitle'));
       return;
     }
     if (!artistName.trim()) {
-      Alert.alert(t.error, t.artist);
+      Alert.alert(t('error'), t('artist'));
       return;
     }
 
