@@ -71,13 +71,9 @@ export interface Translations {
   noEventScheduled: string;
   
   // Quick Actions
-  djRequests: string;
   voteForSongs: string;
-  photos: string;
   eventGalleries: string;
-  aftermovies: string;
   watchRecap: string;
-  booking: string;
   tables: string;
   socialNetworks: string;
   spotifyPlaylist: string;
