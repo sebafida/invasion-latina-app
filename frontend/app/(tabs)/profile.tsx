@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Alert,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
@@ -36,6 +37,13 @@ interface FreeEntryVoucher {
   used: boolean;
 }
 
+const LANGUAGES = [
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
+];
+
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { language, setLanguage, t } = useLanguage();
@@ -45,6 +53,8 @@ export default function ProfileScreen() {
   const [showQR, setShowQR] = useState(false);
   const [showFreeEntryQR, setShowFreeEntryQR] = useState(false);
   const [freeEntryVoucher, setFreeEntryVoucher] = useState<FreeEntryVoucher | null>(null);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [changingLanguage, setChangingLanguage] = useState(false);
 
   useEffect(() => {
     loadLoyaltyData();
