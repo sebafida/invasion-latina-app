@@ -125,7 +125,7 @@ export default function DJRequestsScreen() {
           <View style={styles.devModeCard}>
             <View style={styles.devModeHeader}>
               <Ionicons name="code" size={20} color={theme.colors.neonPink} />
-              <Text style={styles.devModeTitle}>Mode Test</Text>
+              <Text style={styles.devModeTitle}>{t.modeTest}</Text>
             </View>
             <View style={styles.devModeToggle}>
               <Text style={styles.devModeText}>
@@ -151,12 +151,12 @@ export default function DJRequestsScreen() {
 
         {/* Request Form */}
         <View style={styles.requestForm}>
-          <Text style={styles.formTitle}>Demander une chanson</Text>
+          <Text style={styles.formTitle}>{t.requestSong}</Text>
           
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.inputFull}
-              placeholder="Titre de la chanson"
+              placeholder={t.songTitle}
               placeholderTextColor={theme.colors.textMuted}
               value={songTitle}
               onChangeText={setSongTitle}
@@ -166,7 +166,7 @@ export default function DJRequestsScreen() {
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.inputFull}
-              placeholder="Artiste"
+              placeholder={t.artist}
               placeholderTextColor={theme.colors.textMuted}
               value={artistName}
               onChangeText={setArtistName}
