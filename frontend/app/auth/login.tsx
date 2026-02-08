@@ -19,6 +19,7 @@ import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
+import { useLanguage } from '../../src/context/LanguageContext';
 import { Button } from '../../src/components/Button';
 import api from '../../src/config/api';
 
@@ -37,6 +38,7 @@ const isNativePlatform = Platform.OS === 'ios' || Platform.OS === 'android';
 export default function LoginScreen() {
   const router = useRouter();
   const { login, setUser, setToken } = useAuth();
+  const { t } = useLanguage();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
