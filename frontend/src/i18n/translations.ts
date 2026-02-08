@@ -440,6 +440,11 @@ export const translations: Record<Language, Translations> = {
     djsDescription: 'Reggaeton • Dembow • Latin House',
     askForSong: 'Demander une chanson',
     playYourFavorite: 'Faites jouer votre titre préféré!',
+    ourResidentDjs: 'Nos DJs Résidents',
+    djsInfoText: 'Découvrez nos DJs résidents qui enflamment la piste chaque événement',
+    followOnInstagram: 'Suivre sur Instagram',
+    masterOfCeremonies: 'Maître de Cérémonie',
+    whatSongWant: 'Quelle chanson veux-tu entendre?',
     
     // Tickets
     ticketsTitle: 'Billetterie',
