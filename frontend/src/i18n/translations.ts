@@ -138,10 +138,7 @@ export interface Translations {
   vipZone: string;
   vipPackage: string;
   guestCount: string;
-  bottlePreferences: string;
   specialRequests: string;
-  contactInfo: string;
-  bookingSummary: string;
   sendBookingRequest: string;
   bronze: string;
   silver: string;
@@ -151,7 +148,6 @@ export interface Translations {
   bookingPending: string;
   selectPackage: string;
   numberOfGuests: string;
-  phoneNumber: string;
   additionalNotes: string;
   confirmBooking: string;
   
