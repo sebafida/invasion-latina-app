@@ -413,24 +413,24 @@ export default function DJDashboardScreen() {
 
         {/* Legend */}
         <View style={styles.legendCard}>
-          <Text style={styles.legendTitle}>Légende</Text>
+          <Text style={styles.legendTitle}>{t('legend')}</Text>
           <View style={styles.legendRow}>
             <View style={[styles.legendIcon, { backgroundColor: theme.colors.success }]}>
               <Ionicons name="checkmark" size={16} color="white" />
             </View>
-            <Text style={styles.legendText}>Marquer comme joué</Text>
+            <Text style={styles.legendText}>{t('markAsPlayedLegend')}</Text>
           </View>
           <View style={styles.legendRow}>
             <View style={[styles.legendIcon, { backgroundColor: theme.colors.error }]}>
               <Ionicons name="close" size={16} color="white" />
             </View>
-            <Text style={styles.legendText}>Rejeter la demande</Text>
+            <Text style={styles.legendText}>{t('rejectRequestLegend')}</Text>
           </View>
           <View style={styles.legendRow}>
             <View style={[styles.legendIcon, { backgroundColor: '#666' }]}>
               <Ionicons name="trash" size={16} color="white" />
             </View>
-            <Text style={styles.legendText}>Supprimer définitivement</Text>
+            <Text style={styles.legendText}>{t('deleteForeverLegend')}</Text>
           </View>
         </View>
       </View>
@@ -445,7 +445,7 @@ export default function DJDashboardScreen() {
         <View style={styles.deleteModalOverlay}>
           <View style={styles.deleteModalContent}>
             <Ionicons name="trash" size={48} color={theme.colors.error} />
-            <Text style={styles.deleteModalTitle}>Supprimer cette demande?</Text>
+            <Text style={styles.deleteModalTitle}>{t('deleteRequest')}?</Text>
             <Text style={styles.deleteModalSubtitle}>"{deleteTarget?.title}"</Text>
             
             <View style={styles.deleteModalButtons}>
@@ -456,14 +456,14 @@ export default function DJDashboardScreen() {
                   setDeleteTarget(null);
                 }}
               >
-                <Text style={styles.deleteModalCancelText}>Annuler</Text>
+                <Text style={styles.deleteModalCancelText}>{t('cancel')}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 style={styles.deleteModalConfirmBtn}
                 onPress={() => deleteTarget && deleteRequest(deleteTarget.id)}
               >
-                <Text style={styles.deleteModalConfirmText}>Supprimer</Text>
+                <Text style={styles.deleteModalConfirmText}>{t('delete')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -480,22 +480,22 @@ export default function DJDashboardScreen() {
         <View style={styles.deleteModalOverlay}>
           <View style={styles.deleteModalContent}>
             <Ionicons name="warning" size={48} color={theme.colors.error} />
-            <Text style={styles.deleteModalTitle}>Effacer TOUTES les demandes?</Text>
-            <Text style={styles.deleteModalSubtitle}>Cette action est irréversible!</Text>
+            <Text style={styles.deleteModalTitle}>{t('clearAllRequests')}?</Text>
+            <Text style={styles.deleteModalSubtitle}>{t('irreversibleAction')}</Text>
             
             <View style={styles.deleteModalButtons}>
               <TouchableOpacity
                 style={styles.deleteModalCancelBtn}
                 onPress={() => setShowClearAllModal(false)}
               >
-                <Text style={styles.deleteModalCancelText}>Annuler</Text>
+                <Text style={styles.deleteModalCancelText}>{t('cancel')}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 style={styles.deleteModalConfirmBtn}
                 onPress={() => clearAllRequests()}
               >
-                <Text style={styles.deleteModalConfirmText}>Tout effacer</Text>
+                <Text style={styles.deleteModalConfirmText}>{t('clearAll')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -512,7 +512,7 @@ export default function DJDashboardScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Pourquoi rejeter?</Text>
+              <Text style={styles.modalTitle}>{t('whyReject')}</Text>
               <TouchableOpacity onPress={() => setShowRejectModal(false)}>
                 <Ionicons name="close" size={28} color={theme.colors.textPrimary} />
               </TouchableOpacity>
@@ -545,7 +545,7 @@ export default function DJDashboardScreen() {
               style={styles.cancelButton}
               onPress={() => setShowRejectModal(false)}
             >
-              <Text style={styles.cancelButtonText}>Annuler</Text>
+              <Text style={styles.cancelButtonText}>{t('cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
