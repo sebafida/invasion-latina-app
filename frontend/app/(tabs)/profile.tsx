@@ -86,7 +86,7 @@ export default function ProfileScreen() {
 
   const handleClaimFreeEntry = async () => {
     if (!loyaltyData || loyaltyData.points < 25) {
-      Alert.alert('Pas encore', `Il te faut ${loyaltyData?.points_needed || 25} Invasion Coins de plus!`);
+      Alert.alert(t('notEnoughCoins'), `${loyaltyData?.points_needed || 25} ${t('coinsForFreeGuest')}`);
       return;
     }
 
@@ -100,8 +100,8 @@ export default function ProfileScreen() {
       loadLoyaltyData();
       setShowFreeEntryQR(true);
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erreur lors de la réclamation';
-      Alert.alert('Erreur', message);
+      const message = error.response?.data?.detail || t('error');
+      Alert.alert(t('error'), message);
     }
   };
 
@@ -120,12 +120,12 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     Alert.alert(
-      'Déconnexion',
-      'Veux-tu vraiment te déconnecter?',
+      t('logout'),
+      t('logoutConfirm'),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         { 
-          text: 'Oui', 
+          text: t('yes'), 
           onPress: async () => {
             await logout();
             router.replace('/auth/login');
