@@ -174,18 +174,18 @@ export default function VIPBookingScreen() {
     console.log('customerName:', customerName);
     
     if (!selectedEvent) {
-      Alert.alert('Erreur', 'Aucun événement disponible. Veuillez réessayer.');
+      Alert.alert(t('error'), t('noEventAvailable'));
       return;
     }
 
     if (!customerName.trim() || !customerEmail.trim() || !customerPhone.trim()) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs de contact');
+      Alert.alert(t('error'), t('fillContactFields'));
       return;
     }
 
     const packageDetails = getSelectedPackageDetails();
     if (!packageDetails) {
-      Alert.alert('Erreur', 'Veuillez sélectionner une table');
+      Alert.alert(t('error'), t('selectTable'));
       return;
     }
 
@@ -223,8 +223,8 @@ export default function VIPBookingScreen() {
       
     } catch (error: any) {
       console.error('Booking error:', error);
-      const message = error.response?.data?.detail || 'Erreur lors de la réservation. Veuillez réessayer.';
-      Alert.alert('Erreur', message);
+      const message = error.response?.data?.detail || t('bookingError');
+      Alert.alert(t('error'), message);
     } finally {
       setLoading(false);
     }
