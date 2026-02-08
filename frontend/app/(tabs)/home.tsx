@@ -347,6 +347,11 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Follow Us */}
+        <View style={styles.followSection}>
+          <Text style={styles.followTitle}>{t.followUs}</Text>
+        </View>
       </View>
     </ScrollView>
   );
