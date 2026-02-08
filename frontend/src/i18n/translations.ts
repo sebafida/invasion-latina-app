@@ -109,6 +109,15 @@ export interface Translations {
   followOnInstagram: string;
   masterOfCeremonies: string;
   whatSongWant: string;
+  residentDj: string;
+  partyLover: string;
+  testModeActive: string;
+  readyToRequest: string;
+  bypassGeofencing: string;
+  sendTheRequest: string;
+  requestSentSuccess: string;
+  recentHistory: string;
+  coins: string;
   
   // Tickets
   ticketsTitle: string;
