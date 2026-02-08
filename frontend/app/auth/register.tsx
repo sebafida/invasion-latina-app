@@ -89,14 +89,14 @@ export default function RegisterScreen() {
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Rejoins Invasion Latina</Text>
-            <Text style={styles.subtitle}>Crée ton compte et prépare-toi à faire la fête</Text>
+            <Text style={styles.title}>{t('joinInvasionLatina')}</Text>
+            <Text style={styles.subtitle}>{t('createAccountSubtitle')}</Text>
           </View>
           
           {/* Form */}
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Nom complet *</Text>
+              <Text style={styles.label}>{t('fullName')} *</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Jean Dupont"
@@ -108,7 +108,7 @@ export default function RegisterScreen() {
             </View>
             
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email *</Text>
+              <Text style={styles.label}>{t('email')} *</Text>
               <TextInput
                 style={styles.input}
                 placeholder="ton@email.com"
@@ -121,7 +121,7 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Numéro de téléphone *</Text>
+              <Text style={styles.label}>{t('phoneNumber')} *</Text>
               <TextInput
                 style={styles.input}
                 placeholder="+32 470 12 34 56"
@@ -133,10 +133,10 @@ export default function RegisterScreen() {
             </View>
             
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Mot de passe *</Text>
+              <Text style={styles.label}>{t('password')} *</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Min. 6 caractères"
+                placeholder={t('minCharacters')}
                 placeholderTextColor={theme.colors.textMuted}
                 value={password}
                 onChangeText={setPassword}
@@ -146,10 +146,10 @@ export default function RegisterScreen() {
             </View>
             
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Confirmer le mot de passe *</Text>
+              <Text style={styles.label}>{t('confirmPassword')} *</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Répète ton mot de passe"
+                placeholder={t('repeatPassword')}
                 placeholderTextColor={theme.colors.textMuted}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -169,10 +169,10 @@ export default function RegisterScreen() {
                   {acceptTerms && <Ionicons name="checkmark" size={16} color="white" />}
                 </View>
                 <Text style={styles.checkboxLabel}>
-                  J'accepte les{' '}
-                  <Text style={styles.linkText}>conditions générales d'utilisation</Text>
-                  {' '}et la{' '}
-                  <Text style={styles.linkText}>politique de confidentialité</Text>
+                  {t('acceptTerms')}{' '}
+                  <Text style={styles.linkText}>{t('termsAndConditions')}</Text>
+                  {' '}et{' '}
+                  <Text style={styles.linkText}>{t('privacyPolicy')}</Text>
                   {' '}*
                 </Text>
               </TouchableOpacity>
@@ -186,16 +186,16 @@ export default function RegisterScreen() {
                   {acceptMarketing && <Ionicons name="checkmark" size={16} color="white" />}
                 </View>
                 <Text style={styles.checkboxLabel}>
-                  J'accepte de recevoir des informations sur les événements, promotions et actualités d'Invasion Latina par email et/ou SMS
+                  {t('marketingConsent')}
                 </Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.requiredNote}>* Champs obligatoires</Text>
+            <Text style={styles.requiredNote}>* {t('requiredFields')}</Text>
 
             {/* Language Selector */}
             <View style={styles.languageSection}>
-              <Text style={styles.languageTitle}>🌐 Langue de l'application</Text>
+              <Text style={styles.languageTitle}>🌐 {t('appLanguage')}</Text>
               <View style={styles.languageOptions}>
                 {LANGUAGES.map((lang) => (
                   <TouchableOpacity
@@ -219,7 +219,7 @@ export default function RegisterScreen() {
             </View>
             
             <Button
-              title="Créer mon compte"
+              title={t('createMyAccount')}
               onPress={handleRegister}
               loading={loading}
               fullWidth
@@ -233,7 +233,7 @@ export default function RegisterScreen() {
             onPress={() => router.back()}
           >
             <Text style={styles.footerText}>
-              Déjà un compte ? <Text style={styles.footerLink}>Se connecter</Text>
+              {t('alreadyAccount')} <Text style={styles.footerLink}>{t('login')}</Text>
             </Text>
           </TouchableOpacity>
         </ScrollView>
