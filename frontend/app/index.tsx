@@ -8,16 +8,26 @@ import {
   StatusBar, 
   Image,
   Dimensions,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../src/config/theme';
 import { Button } from '../src/components/Button';
+import { useLanguage } from '../src/context/LanguageContext';
 import api from '../src/config/api';
 
 const { width } = Dimensions.get('window');
 
 // Default content (fallback)
 const DEFAULT_FLYER = require('../assets/images/event-flyer.jpg');
+
+const LANGUAGES = [
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
+];
 
 interface WelcomeContent {
   flyer_url?: string;
@@ -27,7 +37,9 @@ interface WelcomeContent {
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { t, language, setLanguage } = useLanguage();
   const [content, setContent] = useState<WelcomeContent>({});
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
 
   useEffect(() => {
     loadWelcomeContent();
@@ -42,10 +54,25 @@ export default function WelcomeScreen() {
     }
   };
 
+  const getCurrentLanguage = () => {
+    return LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={styles.content}>
+        {/* Language Selector at top */}
+        <TouchableOpacity 
+          style={styles.languageSelector}
+          onPress={() => setShowLanguageModal(true)}
+        >
+          <Text style={styles.languageSelectorText}>
+            {getCurrentLanguage().flag} {getCurrentLanguage().name}
+          </Text>
+          <Ionicons name="chevron-down" size={16} color={theme.colors.primary} />
+        </TouchableOpacity>
+
         {/* Logo */}
         <View style={styles.logoContainer}>
           <Image 
@@ -68,14 +95,14 @@ export default function WelcomeScreen() {
             resizeMode="cover"
           />
           <View style={styles.flyerBadge}>
-            <Text style={styles.flyerBadgeText}>Prochain Event</Text>
+            <Text style={styles.flyerBadgeText}>{t('nextEventBadge')}</Text>
           </View>
         </View>
         
         {/* CTA Buttons */}
         <View style={styles.buttonContainer}>
           <Button
-            title="Commencer"
+            title={t('getStarted')}
             onPress={() => router.push('/auth/register')}
             variant="primary"
             size="lg"
@@ -87,7 +114,7 @@ export default function WelcomeScreen() {
             onPress={() => router.push('/auth/login')}
           >
             <Text style={styles.loginText}>
-              Déjà un compte? <Text style={styles.loginTextBold}>Se connecter</Text>
+              {t('alreadyHaveAccount')} <Text style={styles.loginTextBold}>{t('login')}</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -95,9 +122,55 @@ export default function WelcomeScreen() {
         {/* Venue Info */}
         <View style={styles.venueInfo}>
           <Text style={styles.venueText}>📍 {content.venue_name || "Mirano Continental, Brussels"}</Text>
-          <Text style={styles.venueSubtext}>Since 2009 • 16 Years of Latin Passion</Text>
+          <Text style={styles.venueSubtext}>{t('sinceYears')}</Text>
         </View>
       </ScrollView>
+
+      {/* Language Modal */}
+      <Modal
+        visible={showLanguageModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <View style={styles.languageModalOverlay}>
+          <View style={styles.languageModalContent}>
+            <View style={styles.languageModalHeader}>
+              <Text style={styles.languageModalTitle}>{t('chooseLanguage')}</Text>
+              <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
+                <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.languageOptions}>
+              {LANGUAGES.map((lang) => (
+                <TouchableOpacity
+                  key={lang.code}
+                  style={[
+                    styles.languageOption,
+                    language === lang.code && styles.languageOptionActive
+                  ]}
+                  onPress={() => {
+                    setLanguage(lang.code as any);
+                    setShowLanguageModal(false);
+                  }}
+                >
+                  <Text style={styles.languageOptionFlag}>{lang.flag}</Text>
+                  <Text style={[
+                    styles.languageOptionText,
+                    language === lang.code && styles.languageOptionTextActive
+                  ]}>
+                    {lang.name}
+                  </Text>
+                  {language === lang.code && (
+                    <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
