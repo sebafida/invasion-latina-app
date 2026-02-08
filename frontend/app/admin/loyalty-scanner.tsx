@@ -17,6 +17,7 @@ import api from '../../src/config/api';
 
 export default function LoyaltyScannerScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [scanning, setScanning] = useState(true);
@@ -35,7 +36,7 @@ export default function LoyaltyScannerScreen() {
       const qrData = JSON.parse(data);
       
       if (qrData.type !== 'loyalty_checkin') {
-        Alert.alert('Erreur', 'QR code invalide');
+        Alert.alert(t('error'), 'QR code invalide');
         setScanned(false);
         setLoading(false);
         return;
@@ -52,8 +53,8 @@ export default function LoyaltyScannerScreen() {
       
     } catch (error: any) {
       console.error('Scan error:', error);
-      const message = error.response?.data?.detail || 'Erreur lors du scan';
-      Alert.alert('Erreur', message);
+      const message = error.response?.data?.detail || t('checkinFailed');
+      Alert.alert(t('error'), message);
       setScanned(false);
     } finally {
       setLoading(false);
@@ -79,12 +80,12 @@ export default function LoyaltyScannerScreen() {
       <View style={styles.container}>
         <View style={styles.permissionCard}>
           <Ionicons name="camera" size={64} color={theme.colors.primary} />
-          <Text style={styles.permissionTitle}>Accès Caméra Requis</Text>
+          <Text style={styles.permissionTitle}>{t('cameraAccessRequired')}</Text>
           <Text style={styles.permissionText}>
-            Pour scanner les QR codes de fidélité, l'accès à la caméra est nécessaire.
+            {t('cameraAccessDescription')}
           </Text>
           <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
-            <Text style={styles.permissionButtonText}>Autoriser la Caméra</Text>
+            <Text style={styles.permissionButtonText}>{t('allowCamera')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -99,8 +100,8 @@ export default function LoyaltyScannerScreen() {
           <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerText}>
-          <Text style={styles.title}>🎫 Scanner Fidélité</Text>
-          <Text style={styles.subtitle}>Scannez le QR code du client</Text>
+          <Text style={styles.title}>🎫 {t('loyaltyScannerTitle')}</Text>
+          <Text style={styles.subtitle}>{t('scanClientQR')}</Text>
         </View>
       </View>
 
@@ -123,7 +124,7 @@ export default function LoyaltyScannerScreen() {
                 <View style={[styles.corner, styles.cornerBR]} />
               </View>
               <Text style={styles.scanText}>
-                {loading ? 'Vérification...' : 'Placez le QR code dans le cadre'}
+                {loading ? t('verifying') : t('placeQRInFrame')}
               </Text>
             </View>
           </CameraView>
@@ -132,7 +133,7 @@ export default function LoyaltyScannerScreen() {
         {loading && (
           <View style={styles.loadingOverlay}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>Vérification en cours...</Text>
+            <Text style={styles.loadingText}>{t('verifying')}</Text>
           </View>
         )}
       </View>
@@ -141,11 +142,11 @@ export default function LoyaltyScannerScreen() {
       <View style={styles.instructions}>
         <View style={styles.instructionItem}>
           <Ionicons name="qr-code" size={24} color={theme.colors.primary} />
-          <Text style={styles.instructionText}>Le client montre son QR code depuis l'app</Text>
+          <Text style={styles.instructionText}>{t('clientShowsQR')}</Text>
         </View>
         <View style={styles.instructionItem}>
           <Ionicons name="checkmark-circle" size={24} color={theme.colors.success} />
-          <Text style={styles.instructionText}>+5 Invasion Coins automatiquement crédités</Text>
+          <Text style={styles.instructionText}>{t('autoCredited')}</Text>
         </View>
       </View>
 
@@ -158,13 +159,13 @@ export default function LoyaltyScannerScreen() {
                 <View style={styles.successIcon}>
                   <Ionicons name="checkmark-circle" size={80} color={theme.colors.success} />
                 </View>
-                <Text style={styles.modalTitle}>Check-in Réussi! 🎉</Text>
+                <Text style={styles.modalTitle}>{t('checkinSuccess')} 🎉</Text>
                 <Text style={styles.modalUserName}>{lastResult.user_name}</Text>
                 <View style={styles.pointsEarned}>
                   <Text style={styles.pointsText}>+{lastResult.points_earned} Coins</Text>
                 </View>
                 <Text style={styles.totalPoints}>
-                  Total: {lastResult.total_points} Invasion Coins
+                  {t('totalPoints')}: {lastResult.total_points} Invasion Coins
                 </Text>
               </>
             ) : (
@@ -172,13 +173,13 @@ export default function LoyaltyScannerScreen() {
                 <View style={styles.errorIcon}>
                   <Ionicons name="close-circle" size={80} color={theme.colors.error} />
                 </View>
-                <Text style={styles.modalTitle}>Erreur</Text>
-                <Text style={styles.errorMessage}>{lastResult?.message || 'Échec du check-in'}</Text>
+                <Text style={styles.modalTitle}>{t('checkinError')}</Text>
+                <Text style={styles.errorMessage}>{lastResult?.message || t('checkinFailed')}</Text>
               </>
             )}
             
             <TouchableOpacity style={styles.continueButton} onPress={handleContinueScanning}>
-              <Text style={styles.continueButtonText}>Continuer à Scanner</Text>
+              <Text style={styles.continueButtonText}>{t('continueScanning')}</Text>
             </TouchableOpacity>
           </View>
         </View>
