@@ -35,12 +35,12 @@ const DJ_PHOTOS: { [key: string]: any } = {
 };
 
 // Default DJs (will be replaced by event-specific lineup from API)
-const DEFAULT_LINEUP = [
-  { id: '1', name: 'DJ GIZMO', role: 'Resident DJ' },
-  { id: '2', name: 'DJ DNK', role: 'Resident DJ' },
-  { id: '3', name: 'DJ CRUZ', role: 'Resident DJ' },
-  { id: '4', name: 'DJ DANIEL MURILLO', role: 'Resident DJ' },
-  { id: '5', name: 'DJ SUNCEE', role: 'Resident DJ' },
+const getDefaultLineup = (t: (key: string) => string) => [
+  { id: '1', name: 'DJ GIZMO', role: t('residentDj') },
+  { id: '2', name: 'DJ DNK', role: t('residentDj') },
+  { id: '3', name: 'DJ CRUZ', role: t('residentDj') },
+  { id: '4', name: 'DJ DANIEL MURILLO', role: t('residentDj') },
+  { id: '5', name: 'DJ SUNCEE', role: t('residentDj') },
   { id: '6', name: 'MC VELASQUEZ', role: 'MC' },
 ];
 
