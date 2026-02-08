@@ -206,7 +206,7 @@ export default function DJsScreen() {
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Nos DJs</Text>
+          <Text style={styles.title}>{t.ourDjs}</Text>
         </View>
 
         {/* DJs Grid */}
