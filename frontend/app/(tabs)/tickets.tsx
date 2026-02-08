@@ -180,7 +180,7 @@ export default function TicketsScreen() {
                 >
                   <Ionicons name="ticket" size={20} color="white" />
                   <Text style={styles.buyButtonText}>
-                    {event.xceed_ticket_url ? 'Acheter sur XCEED' : 'Bientôt disponible'}
+                    {event.xceed_ticket_url ? t.buyOnXceed : t.comingSoon}
                   </Text>
                   {event.xceed_ticket_url && (
                     <Ionicons name="arrow-forward" size={20} color="white" />
@@ -190,7 +190,7 @@ export default function TicketsScreen() {
                 {/* Info Note */}
                 {event.xceed_ticket_url && (
                   <Text style={styles.noteText}>
-                    ℹ️ Vous serez redirigé vers XCEED pour finaliser votre achat
+                    ℹ️ XCEED
                   </Text>
                 )}
               </View>
