@@ -157,7 +157,7 @@ export default function HomeScreen() {
         {/* Hero Section */}
         <View style={styles.hero}>
           <Text style={styles.greeting}>{t('welcome')},</Text>
-          <Text style={styles.userName}>{user?.name || 'Party Lover'}!</Text>
+          <Text style={styles.userName}>{user?.name || t('partyLover')}!</Text>
           
           <View style={styles.pointsCard}>
             <Text style={styles.pointsText}>
