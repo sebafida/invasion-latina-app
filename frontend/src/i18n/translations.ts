@@ -810,6 +810,15 @@ export const translations: Record<Language, Translations> = {
     followOnInstagram: 'Follow on Instagram',
     masterOfCeremonies: 'Master of Ceremonies',
     whatSongWant: 'What song do you want to hear?',
+    residentDj: 'Resident DJ',
+    partyLover: 'Party Lover',
+    testModeActive: 'Test Mode Active',
+    readyToRequest: 'Ready to Request',
+    bypassGeofencing: 'Bypass Geofencing',
+    sendTheRequest: 'Send the Request',
+    requestSentSuccess: 'Request Sent Successfully',
+    recentHistory: 'Recent History',
+    coins: 'Coins',
     
     // Tickets
     ticketsTitle: 'Tickets',
