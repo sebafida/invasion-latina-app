@@ -485,4 +485,77 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontWeight: '700' as any,
   },
+
+  // Language Selector
+  languageSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.xl,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    backgroundColor: theme.colors.elevated,
+    borderRadius: theme.borderRadius.full,
+    alignSelf: 'center',
+  },
+  languageSelectorText: {
+    color: theme.colors.textPrimary,
+    fontSize: theme.fontSize.sm,
+    fontWeight: '500' as any,
+  },
+
+  // Language Modal
+  languageModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'flex-end',
+  },
+  languageModalContent: {
+    backgroundColor: theme.colors.background,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: theme.spacing.xl,
+    paddingBottom: 40,
+  },
+  languageModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl,
+  },
+  languageModalTitle: {
+    fontSize: theme.fontSize.xl,
+    fontWeight: '700' as any,
+    color: theme.colors.textPrimary,
+  },
+  languageOptions: {
+    gap: theme.spacing.md,
+  },
+  languageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.elevated,
+    gap: theme.spacing.md,
+  },
+  languageOptionActive: {
+    backgroundColor: theme.colors.primary + '20',
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+  },
+  languageOptionFlag: {
+    fontSize: 24,
+  },
+  languageOptionText: {
+    flex: 1,
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textPrimary,
+    fontWeight: '500' as any,
+  },
+  languageOptionTextActive: {
+    color: theme.colors.primary,
+    fontWeight: '700' as any,
+  },
 });
