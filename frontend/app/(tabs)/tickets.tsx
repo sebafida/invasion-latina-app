@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
+import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
 
 interface Event {
@@ -34,6 +35,7 @@ interface Event {
 const DEFAULT_EVENT_FLYER = require('../../assets/images/event-flyer.jpg');
 
 export default function TicketsScreen() {
+  const { t } = useLanguage();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
 
