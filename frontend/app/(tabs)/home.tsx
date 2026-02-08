@@ -46,6 +46,7 @@ const DEFAULT_LINEUP = [
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [nextEvent, setNextEvent] = useState<any>(null);
   const [lineup, setLineup] = useState<any[]>(DEFAULT_LINEUP);
