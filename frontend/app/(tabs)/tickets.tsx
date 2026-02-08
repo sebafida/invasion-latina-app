@@ -180,7 +180,7 @@ export default function TicketsScreen() {
                 >
                   <Ionicons name="ticket" size={20} color="white" />
                   <Text style={styles.buyButtonText}>
-                    {event.xceed_ticket_url ? t.buyOnXceed : t.comingSoon}
+                    {event.xceed_ticket_url ? t('buyOnXceed') : t('comingSoon')}
                   </Text>
                   {event.xceed_ticket_url && (
                     <Ionicons name="arrow-forward" size={20} color="white" />
@@ -200,19 +200,19 @@ export default function TicketsScreen() {
 
         {/* Info Section */}
         <View style={styles.infoSection}>
-          <Text style={styles.infoSectionTitle}>Informations</Text>
+          <Text style={styles.infoSectionTitle}>{t('informations')}</Text>
           <View style={styles.infoBox}>
             <Text style={styles.infoBoxText}>
-              • Billets vendus via XCEED (plateforme sécurisée)
+              • {t('ticketsSoldViaXceed')}
             </Text>
             <Text style={styles.infoBoxText}>
-              • Confirmation par email après achat
+              • {t('confirmationByEmail')}
             </Text>
             <Text style={styles.infoBoxText}>
-              • QR Code d'entrée envoyé directement
+              • {t('qrCodeSent')}
             </Text>
             <Text style={styles.infoBoxText}>
-              • Remboursement selon conditions XCEED
+              • {t('refundConditions')}
             </Text>
           </View>
         </View>
