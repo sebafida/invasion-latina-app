@@ -267,7 +267,7 @@ export default function ProfileScreen() {
                           {new Date(checkin.date).toLocaleDateString(language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : language === 'nl' ? 'nl-NL' : 'fr-FR')}
                         </Text>
                       </View>
-                      <Text style={styles.historyPoints}>+{checkin.points} Coins</Text>
+                      <Text style={styles.historyPoints}>+{checkin.points} {t('coins')}</Text>
                     </View>
                   ))}
                 </View>
