@@ -338,8 +338,8 @@ export default function HomeScreen() {
               onPress={() => Linking.openURL('https://www.tiktok.com/@invasionlatina')}
               activeOpacity={0.8}
             >
-              <View style={[styles.socialIconContainer, { backgroundColor: '#00000020' }]}>
-                <Ionicons name="logo-tiktok" size={28} color="#000000" />
+              <View style={[styles.socialIconContainer, { backgroundColor: '#FF004420' }]}>
+                <Ionicons name="logo-tiktok" size={28} color="#FF0044" />
               </View>
               <Text style={styles.socialName}>TikTok</Text>
             </TouchableOpacity>
