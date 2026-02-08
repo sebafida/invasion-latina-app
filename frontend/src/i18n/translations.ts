@@ -459,6 +459,15 @@ export const translations: Record<Language, Translations> = {
     followOnInstagram: 'Suivre sur Instagram',
     masterOfCeremonies: 'Maître de Cérémonie',
     whatSongWant: 'Quelle chanson veux-tu entendre?',
+    residentDj: 'DJ Résident',
+    partyLover: 'Fêtard',
+    testModeActive: 'Mode Test Actif',
+    readyToRequest: 'Prêt à demander',
+    bypassGeofencing: 'Contourner la géolocalisation',
+    sendTheRequest: 'Envoyer la demande',
+    requestSentSuccess: 'Demande envoyée avec succès',
+    recentHistory: 'Historique récent',
+    coins: 'Coins',
     
     // Tickets
     ticketsTitle: 'Billetterie',
