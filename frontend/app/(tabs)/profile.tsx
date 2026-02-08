@@ -337,75 +337,72 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* Language Selector */}
-        <View style={styles.languageSection}>
-          <Text style={styles.languageSectionTitle}>Langue / Language / Taal</Text>
-          <View style={styles.languageButtons}>
-            <TouchableOpacity
-              style={[
-                styles.languageButton,
-                language === 'fr' && styles.languageButtonActive
-              ]}
-              onPress={() => setLanguage('fr')}
-            >
-              <Text style={styles.languageFlag}>🇫🇷</Text>
-              <Text style={[
-                styles.languageButtonText,
-                language === 'fr' && styles.languageButtonTextActive
-              ]}>
-                Français
+        {/* Language Selector Button */}
+        <TouchableOpacity 
+          style={styles.languageSelectorButton}
+          onPress={() => setShowLanguageModal(true)}
+        >
+          <View style={styles.languageSelectorLeft}>
+            <Ionicons name="language" size={24} color={theme.colors.primary} />
+            <View style={styles.languageSelectorInfo}>
+              <Text style={styles.languageSelectorLabel}>Langue</Text>
+              <Text style={styles.languageSelectorValue}>
+                {getCurrentLanguage().flag} {getCurrentLanguage().name}
               </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.languageButton,
-                language === 'en' && styles.languageButtonActive
-              ]}
-              onPress={() => setLanguage('en')}
-            >
-              <Text style={styles.languageFlag}>🇬🇧</Text>
-              <Text style={[
-                styles.languageButtonText,
-                language === 'en' && styles.languageButtonTextActive
-              ]}>
-                English
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.languageButton,
-                language === 'es' && styles.languageButtonActive
-              ]}
-              onPress={() => setLanguage('es')}
-            >
-              <Text style={styles.languageFlag}>🇪🇸</Text>
-              <Text style={[
-                styles.languageButtonText,
-                language === 'es' && styles.languageButtonTextActive
-              ]}>
-                Español
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.languageButton,
-                language === 'nl' && styles.languageButtonActive
-              ]}
-              onPress={() => setLanguage('nl')}
-            >
-              <Text style={styles.languageFlag}>🇳🇱</Text>
-              <Text style={[
-                styles.languageButtonText,
-                language === 'nl' && styles.languageButtonTextActive
-              ]}>
-                Nederlands
-              </Text>
-            </TouchableOpacity>
+            </View>
           </View>
-        </View>
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
+        </TouchableOpacity>
+
+        {/* Language Modal */}
+        <Modal
+          visible={showLanguageModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowLanguageModal(false)}
+        >
+          <View style={styles.languageModalOverlay}>
+            <View style={styles.languageModalContent}>
+              <View style={styles.languageModalHeader}>
+                <Text style={styles.languageModalTitle}>Choisir la langue</Text>
+                <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
+                  <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+                </TouchableOpacity>
+              </View>
+
+              {changingLanguage ? (
+                <View style={styles.languageLoadingContainer}>
+                  <ActivityIndicator size="large" color={theme.colors.primary} />
+                  <Text style={styles.languageLoadingText}>Changement de langue...</Text>
+                </View>
+              ) : (
+                <View style={styles.languageOptions}>
+                  {LANGUAGES.map((lang) => (
+                    <TouchableOpacity
+                      key={lang.code}
+                      style={[
+                        styles.languageOption,
+                        language === lang.code && styles.languageOptionActive
+                      ]}
+                      onPress={() => handleChangeLanguage(lang.code)}
+                    >
+                      <Text style={styles.languageOptionFlag}>{lang.flag}</Text>
+                      <Text style={[
+                        styles.languageOptionText,
+                        language === lang.code && styles.languageOptionTextActive
+                      ]}>
+                        {lang.name}
+                      </Text>
+                      {language === lang.code && (
+                        <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          </View>
+        </Modal>
 
         {/* Info Section */}
         <View style={styles.infoSection}>
