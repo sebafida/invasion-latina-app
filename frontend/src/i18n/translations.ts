@@ -350,6 +350,12 @@ export interface Translations {
   fillContactFields: string;
   selectTable: string;
   bookingError: string;
+  
+  // Welcome page
+  getStarted: string;
+  nextEventBadge: string;
+  alreadyHaveAccount: string;
+  sinceYears: string;
 }
 
 export const translations: Record<Language, Translations> = {
