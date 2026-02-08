@@ -125,7 +125,7 @@ export default function DJRequestsScreen() {
           <View style={styles.devModeCard}>
             <View style={styles.devModeHeader}>
               <Ionicons name="code" size={20} color={theme.colors.neonPink} />
-              <Text style={styles.devModeTitle}>{t.modeTest}</Text>
+              <Text style={styles.devModeTitle}>{t('modeTest')}</Text>
             </View>
             <View style={styles.devModeToggle}>
               <Text style={styles.devModeText}>
@@ -151,12 +151,12 @@ export default function DJRequestsScreen() {
 
         {/* Request Form */}
         <View style={styles.requestForm}>
-          <Text style={styles.formTitle}>{t.requestSong}</Text>
+          <Text style={styles.formTitle}>{t('requestSong')}</Text>
           
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.inputFull}
-              placeholder={t.songTitle}
+              placeholder={t('songTitle')}
               placeholderTextColor={theme.colors.textMuted}
               value={songTitle}
               onChangeText={setSongTitle}
@@ -166,7 +166,7 @@ export default function DJRequestsScreen() {
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.inputFull}
-              placeholder={t.artist}
+              placeholder={t('artist')}
               placeholderTextColor={theme.colors.textMuted}
               value={artistName}
               onChangeText={setArtistName}
@@ -179,7 +179,7 @@ export default function DJRequestsScreen() {
             disabled={loading}
           >
             <Text style={styles.submitButtonText}>
-              {loading ? t.loading : t.sendRequest}
+              {loading ? t('loading') : t('sendRequest')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -187,7 +187,7 @@ export default function DJRequestsScreen() {
         {/* Requests List */}
         <View style={styles.requestsList}>
           <View style={styles.listHeader}>
-            <Text style={styles.listTitle}>{t.requests}</Text>
+            <Text style={styles.listTitle}>{t('requests')}</Text>
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{requests.length}</Text>
             </View>
@@ -196,8 +196,8 @@ export default function DJRequestsScreen() {
           {requests.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="musical-notes-outline" size={64} color={theme.colors.textMuted} />
-              <Text style={styles.emptyText}>{t.noRequests}</Text>
-              <Text style={styles.emptySubtext}>{t.requestSong}!</Text>
+              <Text style={styles.emptyText}>{t('noRequests')}</Text>
+              <Text style={styles.emptySubtext}>{t('requestSong')}!</Text>
             </View>
           ) : (
             requests.map((request, index) => (
