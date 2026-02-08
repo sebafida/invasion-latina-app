@@ -102,6 +102,7 @@ const DEFAULT_DJS: DJ[] = [
 
 export default function DJsScreen() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [djs, setDjs] = useState<DJ[]>(DEFAULT_DJS);
   const [loading, setLoading] = useState(false);
   
@@ -133,11 +134,11 @@ export default function DJsScreen() {
 
   const handleSubmitSongRequest = async () => {
     if (!songTitle.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer le titre de la chanson');
+      Alert.alert(t.error, t.songTitle);
       return;
     }
     if (!artistName.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer le nom de l\'artiste');
+      Alert.alert(t.error, t.artist);
       return;
     }
 
