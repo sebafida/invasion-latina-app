@@ -185,14 +185,6 @@ Merci et à bientôt! 🔥`;
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'confirmed': return 'Confirmé';
-      case 'cancelled': return 'Annulé';
-      default: return 'En attente';
-    }
-  };
-
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
@@ -200,7 +192,7 @@ Merci et à bientôt! 🔥`;
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Réservations Tables</Text>
+        <Text style={styles.headerTitle}>{t('tableReservations')}</Text>
         <TouchableOpacity onPress={loadBookings} style={styles.backButton}>
           <Ionicons name="refresh" size={24} color={theme.colors.primary} />
         </TouchableOpacity>
@@ -210,19 +202,19 @@ Merci et à bientôt! 🔥`;
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{bookings.filter(b => b.status === 'pending').length}</Text>
-          <Text style={styles.statLabel}>En attente</Text>
+          <Text style={styles.statLabel}>{t('pending')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statNumber, { color: theme.colors.success }]}>
             {bookings.filter(b => b.status === 'confirmed').length}
           </Text>
-          <Text style={styles.statLabel}>Confirmées</Text>
+          <Text style={styles.statLabel}>{t('confirmed')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statNumber, { color: theme.colors.primary }]}>
             {bookings.reduce((sum, b) => b.status === 'confirmed' ? sum + b.total_price : sum, 0)}€
           </Text>
-          <Text style={styles.statLabel}>Revenus</Text>
+          <Text style={styles.statLabel}>{t('revenue')}</Text>
         </View>
       </View>
 
@@ -235,7 +227,7 @@ Merci et à bientôt! 🔥`;
             onPress={() => setFilter(f)}
           >
             <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {f === 'all' ? 'Toutes' : f === 'pending' ? 'En attente' : f === 'confirmed' ? 'Confirmées' : 'Annulées'}
+              {f === 'all' ? t('all') : f === 'pending' ? t('pending') : f === 'confirmed' ? t('confirmed') : t('cancelled')}
             </Text>
           </TouchableOpacity>
         ))}
@@ -249,7 +241,7 @@ Merci et à bientôt! 🔥`;
             onPress={handleClearAllBookings}
           >
             <Ionicons name="trash" size={20} color="white" />
-            <Text style={styles.clearAllButtonText}>Effacer toutes les réservations</Text>
+            <Text style={styles.clearAllButtonText}>{t('clearAllBookings')}</Text>
           </TouchableOpacity>
         </View>
       )}
