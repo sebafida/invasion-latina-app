@@ -38,17 +38,6 @@ interface EventStats {
   total: number;
 }
 
-const REJECT_REASONS = [
-  { value: 'not_appropriate', label: 'Pas approprié pour la soirée', icon: 'close-circle' },
-  { value: 'already_played', label: 'Déjà passé ce soir', icon: 'checkmark-done' },
-  { value: 'next_time', label: 'Ça sera pour la prochaine!', icon: 'calendar' },
-  { value: 'not_in_library', label: 'Pas dans notre bibliothèque', icon: 'library' },
-  { value: 'wrong_style', label: 'Ne correspond pas au style', icon: 'musical-notes' },
-  { value: 'too_slow', label: 'Trop lent pour le moment', icon: 'speedometer' },
-  { value: 'explicit_content', label: 'Contenu trop explicite', icon: 'warning' },
-  { value: 'technical_issue', label: 'Problème technique', icon: 'construct' },
-];
-
 export default function DJDashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
