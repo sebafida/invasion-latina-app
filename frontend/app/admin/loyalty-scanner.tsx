@@ -12,6 +12,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { theme } from '../../src/config/theme';
+import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
 
 export default function LoyaltyScannerScreen() {
