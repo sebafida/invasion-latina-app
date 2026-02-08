@@ -210,7 +210,6 @@ export interface Translations {
   joinInvasionLatina: string;
   createAccountSubtitle: string;
   fullName: string;
-  phoneNumber: string;
   confirmPassword: string;
   minCharacters: string;
   repeatPassword: string;
