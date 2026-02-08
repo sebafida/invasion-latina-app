@@ -461,6 +461,11 @@ export const translations: Record<Language, Translations> = {
     price: 'Prix',
     ticketInfo: 'Infos tickets',
     secureYourSpot: 'Réserve ta place',
+    informations: 'Informations',
+    ticketsSoldViaXceed: 'Billets vendus via XCEED (plateforme sécurisée)',
+    confirmationByEmail: 'Confirmation par email après achat',
+    qrCodeSent: 'QR Code d\'entrée envoyé directement',
+    refundConditions: 'Remboursement selon conditions XCEED',
     
     // VIP Tables / Booking
     vipTitle: 'Tables VIP',
