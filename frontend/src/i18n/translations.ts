@@ -582,6 +582,9 @@ export const translations: Record<Language, Translations> = {
     continueWithApple: 'Continue with Apple',
     continueWithGoogle: 'Continue with Google',
     orContinueWith: 'or continue with',
+    loginSubtitle: 'Sign in to continue the party',
+    enterPassword: 'Enter your password',
+    or: 'or',
     
     // Home
     homeTitle: 'Invasion Latina',
