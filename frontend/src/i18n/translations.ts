@@ -189,9 +189,7 @@ export interface Translations {
   // Gallery
   gallery: string;
   galleries: string;
-  photos: string;
   videos: string;
-  aftermovies: string;
   downloadPhoto: string;
   sharePhoto: string;
   
