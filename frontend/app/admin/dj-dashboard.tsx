@@ -255,28 +255,28 @@ export default function DJDashboardScreen() {
             onPress={() => setStatusFilter('all')}
           >
             <Text style={styles.statNumber}>{stats.total}</Text>
-            <Text style={styles.statLabel}>Total</Text>
+            <Text style={styles.statLabel}>{t('total')}</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.statCard, statusFilter === 'pending' && styles.statCardActive]}
             onPress={() => setStatusFilter('pending')}
           >
             <Text style={[styles.statNumber, { color: theme.colors.warning }]}>{stats.pending}</Text>
-            <Text style={styles.statLabel}>En attente</Text>
+            <Text style={styles.statLabel}>{t('pending')}</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.statCard, statusFilter === 'played' && styles.statCardActive]}
             onPress={() => setStatusFilter('played')}
           >
             <Text style={[styles.statNumber, { color: theme.colors.success }]}>{stats.played}</Text>
-            <Text style={styles.statLabel}>Joués</Text>
+            <Text style={styles.statLabel}>{t('played')}</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.statCard, statusFilter === 'rejected' && styles.statCardActive]}
             onPress={() => setStatusFilter('rejected')}
           >
             <Text style={[styles.statNumber, { color: theme.colors.error }]}>{stats.rejected}</Text>
-            <Text style={styles.statLabel}>Rejetés</Text>
+            <Text style={styles.statLabel}>{t('rejected')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -284,7 +284,7 @@ export default function DJDashboardScreen() {
         <View style={styles.infoCard}>
           <Ionicons name="information-circle" size={20} color={theme.colors.primary} />
           <Text style={styles.infoText}>
-            Les requêtes sont triées par votes. Rafraîchissement automatique toutes les 10s.
+            {t('requestsSortedByVotes')} {t('autoRefresh10s')}
           </Text>
         </View>
 
@@ -296,7 +296,7 @@ export default function DJDashboardScreen() {
               onPress={handleClearAllRequests}
             >
               <Ionicons name="trash" size={20} color="white" />
-              <Text style={styles.clearAllButtonText}>Effacer toutes les demandes</Text>
+              <Text style={styles.clearAllButtonText}>{t('clearAllRequests')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -304,15 +304,15 @@ export default function DJDashboardScreen() {
         {/* Requests List */}
         <View style={styles.requestsList}>
           <Text style={styles.listTitle}>
-            {statusFilter === 'all' ? 'Toutes les requêtes' : 
-             statusFilter === 'pending' ? 'Requêtes en attente' :
-             statusFilter === 'played' ? 'Chansons jouées' : 'Requêtes rejetées'}
+            {statusFilter === 'all' ? t('allRequests') : 
+             statusFilter === 'pending' ? t('pendingRequests') :
+             statusFilter === 'played' ? t('playedSongs') : t('rejectedRequests')}
           </Text>
 
           {requests.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="musical-notes-outline" size={64} color={theme.colors.textMuted} />
-              <Text style={styles.emptyText}>Aucune requête {statusFilter !== 'all' ? 'dans cette catégorie' : ''}</Text>
+              <Text style={styles.emptyText}>{statusFilter !== 'all' ? t('noRequestsInCategory') : t('noRequests')}</Text>
             </View>
           ) : (
             requests.map((request, index) => (
