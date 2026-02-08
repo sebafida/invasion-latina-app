@@ -155,7 +155,7 @@ export default function ProfileScreen() {
               <Ionicons name="person" size={40} color={theme.colors.textPrimary} />
             </View>
             <View>
-              <Text style={styles.name}>{user?.name || 'Utilisateur'}</Text>
+              <Text style={styles.name}>{user?.name || t('profile')}</Text>
               <Text style={styles.email}>{user?.email}</Text>
               {user?.role === 'admin' && (
                 <View style={styles.adminBadge}>
@@ -169,7 +169,7 @@ export default function ProfileScreen() {
         {/* Loyalty Card */}
         <View style={styles.loyaltyCard}>
           <View style={styles.loyaltyHeader}>
-            <Text style={styles.loyaltyTitle}>Invasion Rewards</Text>
+            <Text style={styles.loyaltyTitle}>{t('loyaltyTitle')}</Text>
             <TouchableOpacity onPress={() => setShowQR(!showQR)}>
               <Ionicons name="qr-code" size={28} color={theme.colors.neonPink} />
             </TouchableOpacity>
@@ -188,7 +188,7 @@ export default function ProfileScreen() {
                 size={200}
                 backgroundColor="white"
               />
-              <Text style={styles.qrText}>Montre ce QR à l'entrée</Text>
+              <Text style={styles.qrText}>{t('showQrAtEntry')}</Text>
             </View>
           )}
 
@@ -197,7 +197,7 @@ export default function ProfileScreen() {
             <>
               <View style={styles.pointsDisplay}>
                 <Text style={styles.pointsNumber}>{loyaltyData.points}</Text>
-                <Text style={styles.pointsLabel}>Invasion Coins</Text>
+                <Text style={styles.pointsLabel}>{t('points')}</Text>
               </View>
 
               {/* Progress Bar */}
@@ -211,7 +211,7 @@ export default function ProfileScreen() {
                   />
                 </View>
                 <Text style={styles.progressText}>
-                  {loyaltyData.points_needed} Invasion Coins pour une guest gratuite
+                  {loyaltyData.points_needed} {t('coinsForFreeGuest')}
                 </Text>
               </View>
 
@@ -220,12 +220,12 @@ export default function ProfileScreen() {
                 <View style={styles.statItem}>
                   <Ionicons name="checkmark-circle" size={24} color={theme.colors.success} />
                   <Text style={styles.statNumber}>{loyaltyData.check_ins_count}</Text>
-                  <Text style={styles.statLabel}>Visites</Text>
+                  <Text style={styles.statLabel}>{t('visits')}</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Ionicons name="gift" size={24} color={theme.colors.neonPink} />
                   <Text style={styles.statNumber}>{loyaltyData.rewards_earned}</Text>
-                  <Text style={styles.statLabel}>Récompenses</Text>
+                  <Text style={styles.statLabel}>{t('rewards')}</Text>
                 </View>
               </View>
 
@@ -236,7 +236,7 @@ export default function ProfileScreen() {
                   onPress={() => setShowFreeEntryQR(true)}
                 >
                   <Ionicons name="qr-code" size={20} color="white" />
-                  <Text style={styles.claimButtonText}>🎫 Voir mon QR Code Guest Gratuite</Text>
+                  <Text style={styles.claimButtonText}>🎫 {t('viewQrCode')}</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
@@ -249,7 +249,7 @@ export default function ProfileScreen() {
                 >
                   <Ionicons name="ticket" size={20} color="white" />
                   <Text style={styles.claimButtonText}>
-                    {loyaltyData.points >= 25 ? 'Réclamer Guest Gratuite (25 Coins)' : 'Pas encore assez de Coins'}
+                    {loyaltyData.points >= 25 ? t('claimReward') : t('notEnoughCoins')}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -257,14 +257,14 @@ export default function ProfileScreen() {
               {/* Recent Check-ins */}
               {loyaltyData.recent_check_ins.length > 0 && (
                 <View style={styles.historySection}>
-                  <Text style={styles.historyTitle}>Historique récent</Text>
+                  <Text style={styles.historyTitle}>{t('seeAll')}</Text>
                   {loyaltyData.recent_check_ins.map((checkin, index) => (
                     <View key={index} style={styles.historyItem}>
                       <Ionicons name="calendar" size={16} color={theme.colors.primary} />
                       <View style={styles.historyInfo}>
                         <Text style={styles.historyEvent}>{checkin.event_name}</Text>
                         <Text style={styles.historyDate}>
-                          {new Date(checkin.date).toLocaleDateString('fr-FR')}
+                          {new Date(checkin.date).toLocaleDateString(language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : language === 'nl' ? 'nl-NL' : 'fr-FR')}
                         </Text>
                       </View>
                       <Text style={styles.historyPoints}>+{checkin.points} Coins</Text>
@@ -279,14 +279,14 @@ export default function ProfileScreen() {
         {/* Admin DJ Dashboard Button */}
         {user?.role === 'admin' && (
           <View style={styles.adminSection}>
-            <Text style={styles.adminSectionTitle}>Administration</Text>
+            <Text style={styles.adminSectionTitle}>{t('adminSection')}</Text>
             
             <TouchableOpacity
               style={styles.adminButton}
               onPress={() => router.push('/admin/content-manager')}
             >
               <Ionicons name="images" size={24} color="white" />
-              <Text style={styles.adminButtonText}>Gestion du Contenu</Text>
+              <Text style={styles.adminButtonText}>{t('manageContent')}</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
 
@@ -295,7 +295,7 @@ export default function ProfileScreen() {
               onPress={() => router.push('/admin/dj-dashboard')}
             >
               <Ionicons name="headset" size={24} color="white" />
-              <Text style={styles.djDashboardText}>DJ Dashboard</Text>
+              <Text style={styles.djDashboardText}>{t('djDashboard')}</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
 
@@ -304,7 +304,7 @@ export default function ProfileScreen() {
               onPress={() => router.push('/admin/bookings')}
             >
               <Ionicons name="restaurant" size={24} color="white" />
-              <Text style={styles.bookingsButtonText}>Réservations Tables</Text>
+              <Text style={styles.bookingsButtonText}>{t('bookingsManagement')}</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
 
@@ -313,7 +313,7 @@ export default function ProfileScreen() {
               onPress={() => router.push('/admin/loyalty-scanner')}
             >
               <Ionicons name="qr-code" size={24} color="white" />
-              <Text style={styles.scannerButtonText}>Scanner QR Fidélité</Text>
+              <Text style={styles.scannerButtonText}>{t('loyaltyScanner')}</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
 
@@ -322,7 +322,7 @@ export default function ProfileScreen() {
               onPress={() => router.push('/admin/dj-selection')}
             >
               <Ionicons name="people" size={24} color="white" />
-              <Text style={styles.djSelectionButtonText}>Sélection DJs Event</Text>
+              <Text style={styles.djSelectionButtonText}>{t('djSelection')}</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
 
@@ -331,7 +331,7 @@ export default function ProfileScreen() {
               onPress={() => router.push('/admin/free-entry-scanner')}
             >
               <Ionicons name="ticket" size={24} color="white" />
-              <Text style={styles.freeEntryScannerButtonText}>Scanner Entrée Gratuite</Text>
+              <Text style={styles.freeEntryScannerButtonText}>{t('freeEntryScanner')}</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
           </View>
@@ -345,7 +345,7 @@ export default function ProfileScreen() {
           <View style={styles.languageSelectorLeft}>
             <Ionicons name="language" size={24} color={theme.colors.primary} />
             <View style={styles.languageSelectorInfo}>
-              <Text style={styles.languageSelectorLabel}>Langue</Text>
+              <Text style={styles.languageSelectorLabel}>{t('language')}</Text>
               <Text style={styles.languageSelectorValue}>
                 {getCurrentLanguage().flag} {getCurrentLanguage().name}
               </Text>
@@ -364,7 +364,7 @@ export default function ProfileScreen() {
           <View style={styles.languageModalOverlay}>
             <View style={styles.languageModalContent}>
               <View style={styles.languageModalHeader}>
-                <Text style={styles.languageModalTitle}>Choisir la langue</Text>
+                <Text style={styles.languageModalTitle}>{t('chooseLanguage')}</Text>
                 <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
                   <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
                 </TouchableOpacity>
@@ -373,7 +373,7 @@ export default function ProfileScreen() {
               {changingLanguage ? (
                 <View style={styles.languageLoadingContainer}>
                   <ActivityIndicator size="large" color={theme.colors.primary} />
-                  <Text style={styles.languageLoadingText}>Changement de langue...</Text>
+                  <Text style={styles.languageLoadingText}>{t('changingLanguage')}</Text>
                 </View>
               ) : (
                 <View style={styles.languageOptions}>
@@ -406,19 +406,19 @@ export default function ProfileScreen() {
 
         {/* Info Section */}
         <View style={styles.infoSection}>
-          <Text style={styles.infoTitle}>Comment ça marche?</Text>
+          <Text style={styles.infoTitle}>{t('howItWorks')}</Text>
           <View style={styles.infoBox}>
-            <Text style={styles.infoText}>• Montre ton QR code à l'entrée = +5 Invasion Coins</Text>
-            <Text style={styles.infoText}>• 25 Invasion Coins = 1 guest gratuit</Text>
-            <Text style={styles.infoText}>• 1 scan par événement maximum</Text>
-            <Text style={styles.infoText}>• Récompense valable 90 jours</Text>
+            <Text style={styles.infoText}>• {t('loyaltyInfo1')}</Text>
+            <Text style={styles.infoText}>• {t('loyaltyInfo2')}</Text>
+            <Text style={styles.infoText}>• {t('loyaltyInfo3')}</Text>
+            <Text style={styles.infoText}>• {t('loyaltyInfo4')}</Text>
           </View>
         </View>
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out" size={20} color={theme.colors.error} />
-          <Text style={styles.logoutText}>Déconnexion</Text>
+          <Text style={styles.logoutText}>{t('logout')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -433,9 +433,9 @@ export default function ProfileScreen() {
               <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
             </TouchableOpacity>
 
-            <Text style={styles.qrModalTitle}>🎫 Guest Gratuite</Text>
+            <Text style={styles.qrModalTitle}>🎫 {t('freeGuestEntry')}</Text>
             <Text style={styles.qrModalSubtitle}>
-              Présente ce QR code à l'entrée
+              {t('showQrAtEntry')}
             </Text>
 
             {freeEntryVoucher && (
@@ -461,7 +461,7 @@ export default function ProfileScreen() {
             <View style={styles.warningBox}>
               <Ionicons name="warning" size={20} color={theme.colors.warning} />
               <Text style={styles.warningText}>
-                Ce code ne peut être utilisé qu'une seule fois
+                {t('qrCodeOneTime')}
               </Text>
             </View>
           </View>
