@@ -49,6 +49,9 @@ export interface Translations {
   continueWithApple: string;
   continueWithGoogle: string;
   orContinueWith: string;
+  loginSubtitle: string;
+  enterPassword: string;
+  or: string;
   
   // Home
   homeTitle: string;
