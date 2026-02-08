@@ -105,6 +105,19 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleChangeLanguage = async (langCode: string) => {
+    setChangingLanguage(true);
+    // Simulate a small delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setLanguage(langCode);
+    setChangingLanguage(false);
+    setShowLanguageModal(false);
+  };
+
+  const getCurrentLanguage = () => {
+    return LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
+  };
+
   const handleLogout = () => {
     Alert.alert(
       'Déconnexion',
