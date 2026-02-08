@@ -777,6 +777,11 @@ export const translations: Record<Language, Translations> = {
     djsDescription: 'Reggaeton • Dembow • Latin House',
     askForSong: 'Request a song',
     playYourFavorite: 'Play your favorite track!',
+    ourResidentDjs: 'Our Resident DJs',
+    djsInfoText: 'Discover our resident DJs who ignite the dance floor at every event',
+    followOnInstagram: 'Follow on Instagram',
+    masterOfCeremonies: 'Master of Ceremonies',
+    whatSongWant: 'What song do you want to hear?',
     
     // Tickets
     ticketsTitle: 'Tickets',
