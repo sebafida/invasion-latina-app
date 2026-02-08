@@ -178,6 +178,92 @@ export interface Translations {
   tryAgain: string;
   connectionError: string;
   comingSoonFeature: string;
+  
+  // Register/Forms
+  joinInvasionLatina: string;
+  createAccountSubtitle: string;
+  fullName: string;
+  phoneNumber: string;
+  confirmPassword: string;
+  minCharacters: string;
+  repeatPassword: string;
+  acceptTerms: string;
+  termsAndConditions: string;
+  privacyPolicy: string;
+  marketingConsent: string;
+  requiredFields: string;
+  appLanguage: string;
+  createMyAccount: string;
+  alreadyAccount: string;
+  fillAllFields: string;
+  passwordsDontMatch: string;
+  passwordTooShort: string;
+  mustAcceptTerms: string;
+  registrationFailed: string;
+  
+  // Admin Bookings
+  tableReservations: string;
+  pending: string;
+  confirmed: string;
+  cancelled: string;
+  all: string;
+  revenue: string;
+  clearAllBookings: string;
+  deleteBooking: string;
+  cancelBooking: string;
+  bookingOf: string;
+  irreversibleAction: string;
+  clearAll: string;
+  people: string;
+  reservedOn: string;
+  
+  // Admin DJ Dashboard
+  manageRequestsRealtime: string;
+  total: string;
+  played: string;
+  rejected: string;
+  requestsSortedByVotes: string;
+  autoRefresh10s: string;
+  clearAllRequests: string;
+  allRequests: string;
+  pendingRequests: string;
+  playedSongs: string;
+  rejectedRequests: string;
+  noRequestsInCategory: string;
+  whyReject: string;
+  markAsPlayed: string;
+  rejectRequest: string;
+  deleteRequest: string;
+  legend: string;
+  markAsPlayedLegend: string;
+  rejectRequestLegend: string;
+  deleteForeverLegend: string;
+  
+  // Reject reasons
+  notAppropriate: string;
+  alreadyPlayedTonight: string;
+  nextTime: string;
+  notInLibrary: string;
+  wrongStyle: string;
+  tooSlow: string;
+  explicitContent: string;
+  technicalIssue: string;
+  
+  // Scanner
+  loyaltyScannerTitle: string;
+  scanClientQR: string;
+  cameraAccessRequired: string;
+  cameraAccessDescription: string;
+  allowCamera: string;
+  placeQRInFrame: string;
+  verifying: string;
+  clientShowsQR: string;
+  autoCredited: string;
+  checkinSuccess: string;
+  checkinError: string;
+  checkinFailed: string;
+  continueScanning: string;
+  totalPoints: string;
 }
 
 export const translations: Record<Language, Translations> = {
