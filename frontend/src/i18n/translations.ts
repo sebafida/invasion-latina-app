@@ -104,6 +104,11 @@ export interface Translations {
   askForSong: string;
   playYourFavorite: string;
   ourDjs: string;
+  ourResidentDjs: string;
+  djsInfoText: string;
+  followOnInstagram: string;
+  masterOfCeremonies: string;
+  whatSongWant: string;
   
   // Tickets
   ticketsTitle: string;
