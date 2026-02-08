@@ -336,59 +336,15 @@ export interface Translations {
   contactWithin24h: string;
   great: string;
   noEventAvailable: string;
-  // Booking/VIP Tables
-  bookingTitle: string;
-  mainRoom: string;
-  mainRoomDesc: string;
-  classyRoom: string;
-  classyRoomDesc: string;
-  vipRoom: string;
-  vipRoomDesc: string;
-  tableHaute: string;
-  tableAssise: string;
-  tablePremium: string;
-  tablePresidentielle: string;
-  standingTable: string;
-  danceFloorView: string;
-  seatedTable: string;
-  dedicatedService: string;
-  bestLocation: string;
-  privatifSpace: string;
-  exclusiveService: string;
-  vipLounge: string;
-  priorityEntry: string;
-  luxuryTable: string;
-  vipDedicatedService: string;
-  privateExclusive: string;
-  butlerService: string;
-  numberOfPeople: string;
-  bottlePreferences: string;
-  bottlePreferencesOptional: string;
-  bottlePreferencesPlaceholder: string;
-  specialRequestsOptional: string;
-  specialRequestsPlaceholder: string;
-  contactInfo: string;
-  bookingSummary: string;
-  room: string;
-  table: string;
-  capacity: string;
-  price: string;
-  paymentNote: string;
-  sendRequest: string;
-  sending: string;
-  requestSent: string;
-  requestSuccessMessage: string;
-  contactWithin24h: string;
-  great: string;
-  noEventAvailable: string;
-  fillContactFields: string;
-  selectTable: string;
-  bookingError: string;
-  
   // Common properties
   photos: string;
   aftermovies: string;
   phoneNumber: string;
+  bottlePreferences: string;
+  contactInfo: string;
+  bookingSummary: string;
+  price: string;
+  sendRequest: string;
   
   // Welcome page
   getStarted: string;
