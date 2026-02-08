@@ -156,12 +156,12 @@ export default function HomeScreen() {
       <View style={styles.content}>
         {/* Hero Section */}
         <View style={styles.hero}>
-          <Text style={styles.greeting}>Bienvenido a tu fiesta,</Text>
+          <Text style={styles.greeting}>{t.welcome},</Text>
           <Text style={styles.userName}>{user?.name || 'Party Lover'}!</Text>
           
           <View style={styles.pointsCard}>
             <Text style={styles.pointsText}>
-              {user?.loyalty_points || 0} Invasion Coins
+              {user?.loyalty_points || 0} {t.points}
             </Text>
           </View>
         </View>
@@ -170,7 +170,7 @@ export default function HomeScreen() {
         {nextEvent && (
           <View style={styles.eventSection}>
             <View style={styles.eventHeader}>
-              <Text style={styles.sectionTitle}>Next Event</Text>
+              <Text style={styles.sectionTitle}>{t.nextEvent}</Text>
             </View>
             
             <View style={styles.eventCard}>
@@ -189,10 +189,10 @@ export default function HomeScreen() {
               
               {/* Countdown */}
               <View style={styles.countdownContainer}>
-                <CountdownBox value={countdown.days} label="Days" />
-                <CountdownBox value={countdown.hours} label="Hours" />
-                <CountdownBox value={countdown.minutes} label="Mins" />
-                <CountdownBox value={countdown.seconds} label="Secs" />
+                <CountdownBox value={countdown.days} label={t.daysLeft} />
+                <CountdownBox value={countdown.hours} label={t.hoursLeft} />
+                <CountdownBox value={countdown.minutes} label={t.minutesLeft} />
+                <CountdownBox value={countdown.seconds} label={t.secondsLeft} />
               </View>
               
               <TouchableOpacity 
@@ -206,7 +206,7 @@ export default function HomeScreen() {
                 }}
               >
                 <View style={styles.buyButtonContent}>
-                  <Text style={styles.buyButtonText}>Buy Tickets</Text>
+                  <Text style={styles.buyButtonText}>{t.buyTickets}</Text>
                   <Ionicons name="arrow-forward" size={20} color="white" />
                 </View>
               </TouchableOpacity>
