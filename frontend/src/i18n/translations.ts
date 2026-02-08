@@ -1512,6 +1512,15 @@ export const translations: Record<Language, Translations> = {
     followOnInstagram: 'Volgen op Instagram',
     masterOfCeremonies: 'Ceremoniemeester',
     whatSongWant: 'Welk nummer wil je horen?',
+    residentDj: 'Resident DJ',
+    partyLover: 'Feestliefhebber',
+    testModeActive: 'Testmodus Actief',
+    readyToRequest: 'Klaar om te Verzoeken',
+    bypassGeofencing: 'Geolocatie Omzeilen',
+    sendTheRequest: 'Het Verzoek Verzenden',
+    requestSentSuccess: 'Verzoek Succesvol Verzonden',
+    recentHistory: 'Recente Geschiedenis',
+    coins: 'Munten',
     
     // Tickets
     ticketsTitle: 'Tickets',
