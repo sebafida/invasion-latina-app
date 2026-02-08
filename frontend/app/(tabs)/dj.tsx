@@ -179,7 +179,7 @@ export default function DJRequestsScreen() {
             disabled={loading}
           >
             <Text style={styles.submitButtonText}>
-              {loading ? 'Envoi...' : 'Demander 🎵'}
+              {loading ? t.loading : t.sendRequest}
             </Text>
           </TouchableOpacity>
         </View>
@@ -187,7 +187,7 @@ export default function DJRequestsScreen() {
         {/* Requests List */}
         <View style={styles.requestsList}>
           <View style={styles.listHeader}>
-            <Text style={styles.listTitle}>Requêtes en cours</Text>
+            <Text style={styles.listTitle}>{t.requests}</Text>
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{requests.length}</Text>
             </View>
@@ -196,8 +196,8 @@ export default function DJRequestsScreen() {
           {requests.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="musical-notes-outline" size={64} color={theme.colors.textMuted} />
-              <Text style={styles.emptyText}>Aucune requête pour le moment</Text>
-              <Text style={styles.emptySubtext}>Sois le premier à demander un son!</Text>
+              <Text style={styles.emptyText}>{t.noRequests}</Text>
+              <Text style={styles.emptySubtext}>{t.requestSong}!</Text>
             </View>
           ) : (
             requests.map((request, index) => (
@@ -210,12 +210,12 @@ export default function DJRequestsScreen() {
                   <Text style={styles.requestSong}>{request.song_title}</Text>
                   <Text style={styles.requestArtist}>{request.artist_name}</Text>
                   <View style={styles.requestMetadata}>
-                    <Text style={styles.requestUser}>Par {request.user_name}</Text>
+                    <Text style={styles.requestUser}>{t.requestedBy} {request.user_name}</Text>
                     {request.times_requested > 1 && (
                       <>
                         <Text style={styles.metadataSeparator}>•</Text>
                         <Text style={styles.requestTimesRequested}>
-                          Demandée {request.times_requested}x
+                          {request.times_requested}x {t.requestedTimes}
                         </Text>
                       </>
                     )}
