@@ -256,7 +256,7 @@ Merci et à bientôt! 🔥`;
         {filteredBookings.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="calendar-outline" size={48} color={theme.colors.textMuted} />
-            <Text style={styles.emptyText}>Aucune réservation</Text>
+            <Text style={styles.emptyText}>{t('noResults')}</Text>
           </View>
         ) : (
           filteredBookings.map((booking) => (
@@ -283,7 +283,7 @@ Merci et à bientôt! 🔥`;
                 </View>
                 <View style={styles.detailRow}>
                   <Ionicons name="people" size={16} color={theme.colors.textMuted} />
-                  <Text style={styles.detailText}>{booking.guest_count} personnes</Text>
+                  <Text style={styles.detailText}>{booking.guest_count} {t('people')}</Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Ionicons name="cash" size={16} color={theme.colors.textMuted} />
@@ -301,7 +301,7 @@ Merci et à bientôt! 🔥`;
 
               {/* Date */}
               <Text style={styles.dateText}>
-                Réservé le {new Date(booking.submitted_at).toLocaleDateString('fr-FR')} à {new Date(booking.submitted_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                {t('reservedOn')} {new Date(booking.submitted_at).toLocaleDateString(getLocale())} - {new Date(booking.submitted_at).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}
               </Text>
 
               {/* Actions */}
