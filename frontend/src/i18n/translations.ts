@@ -120,6 +120,11 @@ export interface Translations {
   price: string;
   ticketInfo: string;
   secureYourSpot: string;
+  informations: string;
+  ticketsSoldViaXceed: string;
+  confirmationByEmail: string;
+  qrCodeSent: string;
+  refundConditions: string;
   
   // VIP Tables / Booking
   vipTitle: string;
