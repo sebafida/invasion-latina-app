@@ -99,7 +99,7 @@ export default function HomeScreen() {
           .map((dj: any) => ({
             id: dj.id,
             name: dj.name,
-            role: dj.type === 'mc' ? 'MC' : 'Resident DJ'
+            role: dj.type === 'mc' ? 'MC' : t('residentDj')
           }));
         
         if (selectedDjs.length > 0) {
