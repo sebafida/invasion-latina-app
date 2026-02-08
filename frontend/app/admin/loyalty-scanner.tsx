@@ -165,7 +165,7 @@ export default function LoyaltyScannerScreen() {
                   <Text style={styles.pointsText}>+{lastResult.points_earned} Coins</Text>
                 </View>
                 <Text style={styles.totalPoints}>
-                  {t('totalPoints')}: {lastResult.total_points} Invasion Coins
+                  {t('totalPoints')}: {lastResult.total_points} {t('coins')}
                 </Text>
               </>
             ) : (
