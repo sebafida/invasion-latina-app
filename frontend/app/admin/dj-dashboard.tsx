@@ -52,6 +52,7 @@ const REJECT_REASONS = [
 export default function DJDashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [requests, setRequests] = useState<DJRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ total: 0, pending: 0, played: 0, rejected: 0 });
@@ -68,6 +69,17 @@ export default function DJDashboardScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
   const [showClearAllModal, setShowClearAllModal] = useState(false);
+
+  const REJECT_REASONS = [
+    { value: 'not_appropriate', label: t('notAppropriate'), icon: 'close-circle' },
+    { value: 'already_played', label: t('alreadyPlayedTonight'), icon: 'checkmark-done' },
+    { value: 'next_time', label: t('nextTime'), icon: 'calendar' },
+    { value: 'not_in_library', label: t('notInLibrary'), icon: 'library' },
+    { value: 'wrong_style', label: t('wrongStyle'), icon: 'musical-notes' },
+    { value: 'too_slow', label: t('tooSlow'), icon: 'speedometer' },
+    { value: 'explicit_content', label: t('explicitContent'), icon: 'warning' },
+    { value: 'technical_issue', label: t('technicalIssue'), icon: 'construct' },
+  ];
 
   useEffect(() => {
     // Delay check to allow navigation to mount
