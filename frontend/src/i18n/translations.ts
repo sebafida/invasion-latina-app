@@ -1397,6 +1397,18 @@ export const translations: Record<Language, Translations> = {
     lineup: 'Line-up',
     noEventScheduled: 'Geen evenement gepland',
     
+    // Quick Actions
+    djRequests: 'DJ Verzoeken',
+    voteForSongs: 'Stem op nummers',
+    photos: 'Foto\'s',
+    eventGalleries: 'Evenement galerijen',
+    aftermovies: 'Aftermovies',
+    watchRecap: 'Bekijk samenvattingen',
+    booking: 'Reservering',
+    tables: 'VIP Tafels',
+    socialNetworks: 'Sociale Netwerken',
+    spotifyPlaylist: 'Spotify Playlist',
+    
     // DJ Requests
     djTitle: 'Requests',
     djSubtitle: 'Vraag je favoriete nummers aan',
@@ -1416,6 +1428,9 @@ export const translations: Record<Language, Translations> = {
     djsTitle: 'Onze DJs',
     djsSubtitle: 'De beste DJs van de Latino scene',
     ourDjs: 'Onze DJs',
+    djsDescription: 'Reggaeton • Dembow • Latin House',
+    askForSong: 'Vraag een nummer aan',
+    playYourFavorite: 'Laat je favoriete nummer draaien!',
     
     // Tickets
     ticketsTitle: 'Tickets',
