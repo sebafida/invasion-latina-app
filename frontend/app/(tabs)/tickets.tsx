@@ -75,8 +75,8 @@ export default function TicketsScreen() {
   const handleBuyTickets = async (event: Event) => {
     if (!event.xceed_ticket_url) {
       Alert.alert(
-        t.comingSoon,
-        t.comingSoonFeature
+        t('comingSoon'),
+        t('comingSoonFeature')
       );
       return;
     }
@@ -86,16 +86,16 @@ export default function TicketsScreen() {
       if (canOpen) {
         await Linking.openURL(event.xceed_ticket_url);
       } else {
-        Alert.alert(t.error, t.connectionError);
+        Alert.alert(t('error'), t('connectionError'));
       }
     } catch (error) {
       console.error('Failed to open XCEED link:', error);
-      Alert.alert(t.error, t.connectionError);
+      Alert.alert(t('error'), t('connectionError'));
     }
   };
 
   const getPriceRange = (categories: Array<{ name: string; price: number }>) => {
-    if (!categories || categories.length === 0) return t.comingSoon;
+    if (!categories || categories.length === 0) return t('comingSoon');
     const prices = categories.map(c => c.price);
     const min = Math.min(...prices);
     // Show only minimum price
@@ -118,9 +118,9 @@ export default function TicketsScreen() {
         {events.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="calendar-outline" size={64} color={theme.colors.textMuted} />
-            <Text style={styles.emptyText}>{t.noEventScheduled}</Text>
+            <Text style={styles.emptyText}>{t('noEventScheduled')}</Text>
             <Text style={styles.emptySubtext}>
-              {t.comingSoonFeature}
+              {t('comingSoonFeature')}
             </Text>
           </View>
         ) : (
