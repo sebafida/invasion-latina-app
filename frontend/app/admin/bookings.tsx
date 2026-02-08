@@ -77,10 +77,27 @@ export default function BookingsAdminScreen() {
   const updateBookingStatus = async (bookingId: string, newStatus: string) => {
     try {
       await api.put(`/admin/vip-bookings/${bookingId}`, { status: newStatus });
-      Alert.alert('Succès', `Réservation ${newStatus === 'confirmed' ? 'confirmée' : 'annulée'}`);
+      Alert.alert(t('success'), newStatus === 'confirmed' ? t('confirmed') : t('cancelled'));
       loadBookings();
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de mettre à jour la réservation');
+      Alert.alert(t('error'), t('connectionError'));
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'confirmed': return t('confirmed');
+      case 'cancelled': return t('cancelled');
+      default: return t('pending');
+    }
+  };
+
+  const getLocale = () => {
+    switch (language) {
+      case 'en': return 'en-US';
+      case 'es': return 'es-ES';
+      case 'nl': return 'nl-NL';
+      default: return 'fr-FR';
     }
   };
 
