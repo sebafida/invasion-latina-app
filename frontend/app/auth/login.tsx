@@ -183,9 +183,20 @@ export default function LoginScreen() {
           
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Bienvenue</Text>
-            <Text style={styles.subtitle}>Connecte-toi pour continuer la fiesta</Text>
+            <Text style={styles.title}>{t('welcome')}</Text>
+            <Text style={styles.subtitle}>{t('loginSubtitle')}</Text>
           </View>
+
+          {/* Language Selector */}
+          <TouchableOpacity 
+            style={styles.languageSelector}
+            onPress={() => setShowLanguageModal(true)}
+          >
+            <Text style={styles.languageSelectorText}>
+              {getCurrentLanguage().flag} {getCurrentLanguage().name}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={theme.colors.primary} />
+          </TouchableOpacity>
 
           {/* Social Login Buttons - Only on native platforms */}
           {isNativePlatform && (
