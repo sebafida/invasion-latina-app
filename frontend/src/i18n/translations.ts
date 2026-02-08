@@ -803,6 +803,11 @@ export const translations: Record<Language, Translations> = {
     price: 'Price',
     ticketInfo: 'Ticket info',
     secureYourSpot: 'Secure your spot',
+    informations: 'Information',
+    ticketsSoldViaXceed: 'Tickets sold via XCEED (secure platform)',
+    confirmationByEmail: 'Confirmation by email after purchase',
+    qrCodeSent: 'Entry QR Code sent directly',
+    refundConditions: 'Refund according to XCEED conditions',
     
     // VIP Tables / Booking
     vipTitle: 'VIP Tables',
