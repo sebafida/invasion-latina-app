@@ -70,6 +70,18 @@ export interface Translations {
   lineup: string;
   noEventScheduled: string;
   
+  // Quick Actions
+  djRequests: string;
+  voteForSongs: string;
+  photos: string;
+  eventGalleries: string;
+  aftermovies: string;
+  watchRecap: string;
+  booking: string;
+  tables: string;
+  socialNetworks: string;
+  spotifyPlaylist: string;
+  
   // DJ Requests
   djTitle: string;
   djSubtitle: string;
@@ -88,6 +100,9 @@ export interface Translations {
   // DJs Page
   djsTitle: string;
   djsSubtitle: string;
+  djsDescription: string;
+  askForSong: string;
+  playYourFavorite: string;
   ourDjs: string;
   
   // Tickets
