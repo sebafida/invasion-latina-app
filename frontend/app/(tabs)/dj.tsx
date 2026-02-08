@@ -129,7 +129,7 @@ export default function DJRequestsScreen() {
             </View>
             <View style={styles.devModeToggle}>
               <Text style={styles.devModeText}>
-                Bypass geofencing & horaires
+                {t('bypassGeofencing')}
               </Text>
               <Switch
                 value={devMode}
@@ -145,7 +145,7 @@ export default function DJRequestsScreen() {
         <View style={styles.statusCard}>
           <Ionicons name="checkmark-circle" size={24} color={theme.colors.success} />
           <Text style={styles.statusText}>
-            {devMode ? '🔧 Mode Test Activé' : '✅ Prêt à demander'}
+            {devMode ? t('testModeActive') : t('readyToRequest')}
           </Text>
         </View>
 
