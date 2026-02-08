@@ -927,4 +927,103 @@ const styles = StyleSheet.create({
   claimButtonActive: {
     backgroundColor: theme.colors.success,
   },
+
+  // Language Selector Button
+  languageSelectorButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.cardBackground,
+    marginHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.borderRadius.md,
+  },
+  languageSelectorLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  languageSelectorInfo: {
+    flexDirection: 'column',
+  },
+  languageSelectorLabel: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textMuted,
+  },
+  languageSelectorValue: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+  },
+
+  // Language Modal
+  languageModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'flex-end',
+  },
+  languageModalContent: {
+    backgroundColor: theme.colors.cardBackground,
+    borderTopLeftRadius: theme.borderRadius.xl,
+    borderTopRightRadius: theme.borderRadius.xl,
+    paddingBottom: theme.spacing.xl,
+  },
+  languageModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.elevated,
+  },
+  languageModalTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+  },
+  languageLoadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.xl * 2,
+  },
+  languageLoadingText: {
+    marginTop: theme.spacing.md,
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textSecondary,
+  },
+  languageOptions: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+  },
+  languageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.sm,
+    backgroundColor: theme.colors.elevated,
+  },
+  languageOptionActive: {
+    backgroundColor: theme.colors.primary + '20',
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+  },
+  languageOptionFlag: {
+    fontSize: 28,
+    marginRight: theme.spacing.md,
+  },
+  languageOptionText: {
+    flex: 1,
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.medium,
+    color: theme.colors.textPrimary,
+  },
+  languageOptionTextActive: {
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.bold,
+  },
 });
