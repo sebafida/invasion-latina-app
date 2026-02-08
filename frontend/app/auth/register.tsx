@@ -28,7 +28,7 @@ const LANGUAGES = [
 export default function RegisterScreen() {
   const router = useRouter();
   const { register } = useAuth();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -41,22 +41,22 @@ export default function RegisterScreen() {
   
   const handleRegister = async () => {
     if (!name || !email || !phone || !password || !confirmPassword) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      Alert.alert(t('error'), t('fillAllFields'));
       return;
     }
     
     if (password !== confirmPassword) {
-      Alert.alert('Erreur', 'Les mots de passe ne correspondent pas');
+      Alert.alert(t('error'), t('passwordsDontMatch'));
       return;
     }
     
     if (password.length < 6) {
-      Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 6 caractères');
+      Alert.alert(t('error'), t('passwordTooShort'));
       return;
     }
 
     if (!acceptTerms) {
-      Alert.alert('Erreur', 'Vous devez accepter les conditions générales');
+      Alert.alert(t('error'), t('mustAcceptTerms'));
       return;
     }
     
@@ -65,7 +65,7 @@ export default function RegisterScreen() {
       await register(name, email, password, phone, acceptMarketing);
       router.replace('/(tabs)/home');
     } catch (error: any) {
-      Alert.alert('Inscription échouée', error.message);
+      Alert.alert(t('registrationFailed'), error.message);
     } finally {
       setLoading(false);
     }
