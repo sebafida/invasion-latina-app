@@ -251,7 +251,7 @@ export default function DJsScreen() {
               
               {/* Tap to follow */}
               {dj.instagram_url && (
-                <Text style={styles.followText}>Suivre sur Instagram</Text>
+                <Text style={styles.followText}>{t('followOnInstagram')}</Text>
               )}
             </TouchableOpacity>
           ))}
@@ -298,7 +298,7 @@ export default function DJsScreen() {
                   {/* Info */}
                   <View style={styles.mcInfo}>
                     <Text style={styles.mcName}>{mc.name}</Text>
-                    <Text style={styles.mcRole}>Master of Ceremonies</Text>
+                    <Text style={styles.mcRole}>{t('masterOfCeremonies')}</Text>
                     {mc.instagram_url && (
                       <View style={styles.mcInstagram}>
                         <Ionicons name="logo-instagram" size={16} color={theme.colors.primary} />
@@ -319,9 +319,9 @@ export default function DJsScreen() {
           <View style={styles.infoCard}>
             <Ionicons name="musical-notes" size={24} color={theme.colors.primary} />
             <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>Reggaeton • Dembow • Latin House</Text>
+              <Text style={styles.infoTitle}>{t('djsDescription')}</Text>
               <Text style={styles.infoText}>
-                Nos DJs résidents font vibrer la scène depuis 2009 avec les meilleurs hits latino!
+                {t('djsInfoText')}
               </Text>
             </View>
           </View>
@@ -335,8 +335,8 @@ export default function DJsScreen() {
           >
             <Ionicons name="musical-note" size={24} color="white" />
             <View style={styles.requestButtonContent}>
-              <Text style={styles.requestButtonTitle}>Demander une chanson</Text>
-              <Text style={styles.requestButtonSubtitle}>Fais jouer ton son préféré!</Text>
+              <Text style={styles.requestButtonTitle}>{t('askForSong')}</Text>
+              <Text style={styles.requestButtonSubtitle}>{t('playYourFavorite')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color="white" />
           </TouchableOpacity>
@@ -354,18 +354,18 @@ export default function DJsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Demander une chanson</Text>
+              <Text style={styles.modalTitle}>{t('askForSong')}</Text>
               <TouchableOpacity onPress={() => setShowRequestModal(false)}>
                 <Ionicons name="close" size={28} color={theme.colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
             <Text style={styles.modalSubtitle}>
-              Dis-nous quelle chanson tu veux que le DJ joue!
+              {t('whatSongWant')}
             </Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Titre de la chanson</Text>
+              <Text style={styles.inputLabel}>{t('songTitle')}</Text>
               <TextInput
                 style={styles.modalInput}
                 placeholder="Ex: Pepas"
@@ -376,7 +376,7 @@ export default function DJsScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Artiste</Text>
+              <Text style={styles.inputLabel}>{t('artist')}</Text>
               <TextInput
                 style={styles.modalInput}
                 placeholder="Ex: Farruko"
