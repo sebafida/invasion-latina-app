@@ -1717,8 +1717,6 @@ export const translations: Record<Language, Translations> = {
     comingSoonFeature: 'Functie binnenkort beschikbaar',
     
     // Success/Error messages
-    success: 'Succes',
-    error: 'Fout',
     voteRegistered: 'Stem geregistreerd!',
     fillAllFields: 'Vul alle verplichte velden in',
     
