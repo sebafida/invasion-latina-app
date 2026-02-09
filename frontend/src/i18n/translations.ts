@@ -132,6 +132,32 @@ export interface Translations {
   qrCodeSent: string;
   refundConditions: string;
   
+  // Galleries
+  galleriesTitle: string;
+  galleriesSubtitle: string;
+  loadingGalleries: string;
+  noGalleryAvailable: string;
+  photosPublishedAfterEvent: string;
+  viewPhotos: string;
+  features: string;
+  hdDownload: string;
+  downloadHdPhotos: string;
+  available: string;
+  socialShare: string;
+  shareOnInstagram: string;
+  
+  // Aftermovies
+  aftermoviesTitle: string;
+  aftermoviesSubtitle: string;
+  latestVideo: string;
+  allVideos: string;
+  loadingVideos: string;
+  noVideoAvailable: string;
+  aftermoviesComingSoon: string;
+  stayConnected: string;
+  followUsForAftermovies: string;
+  views: string;
+  
   // VIP Tables / Booking
   vipTitle: string;
   vipSubtitle: string;
