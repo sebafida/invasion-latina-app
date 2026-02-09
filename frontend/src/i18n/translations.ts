@@ -580,6 +580,7 @@ export const translations: Record<Language, Translations> = {
     loyaltyScanner: 'Scanner Fidélité',
     djSelection: 'Sélection DJs Event',
     freeEntryScanner: 'Scanner Entrée Gratuite',
+    eventSettings: 'Paramètres Événement',
     
     // Gallery
     gallery: 'Galerie',
