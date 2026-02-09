@@ -78,7 +78,7 @@ export default function EventSettingsScreen() {
           onPress: async () => {
             setActionLoading('start');
             try {
-              const response = await api.post('/api/admin/settings/start-event');
+              const response = await api.post('/admin/settings/start-event');
               Alert.alert('🎉 Événement démarré!', response.data.message);
               fetchSettings();
             } catch (error: any) {
