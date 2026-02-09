@@ -1369,7 +1369,6 @@ export const translations: Record<Language, Translations> = {
     appLanguage: 'Idioma de la app',
     createMyAccount: 'Crear mi cuenta',
     alreadyAccount: '¿Ya tienes cuenta?',
-    fillAllFields: 'Por favor completa todos los campos obligatorios',
     passwordsDontMatch: 'Las contraseñas no coinciden',
     passwordTooShort: 'La contraseña debe tener al menos 6 caracteres',
     mustAcceptTerms: 'Debes aceptar los términos y condiciones',
