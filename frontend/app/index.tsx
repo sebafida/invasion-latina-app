@@ -183,7 +183,9 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.xl,
+    paddingTop: 60,
+    paddingBottom: theme.spacing.xl,
+    justifyContent: 'space-between',
   },
   
   // Logo
