@@ -62,67 +62,73 @@ export default function WelcomeScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Language Selector at top */}
-        <TouchableOpacity 
-          style={styles.languageSelector}
-          onPress={() => setShowLanguageModal(true)}
-        >
-          <Text style={styles.languageSelectorText}>
-            {getCurrentLanguage().flag} {getCurrentLanguage().name}
+        {/* Top Section */}
+        <View style={styles.topSection}>
+          {/* Language Selector at top */}
+          <TouchableOpacity 
+            style={styles.languageSelector}
+            onPress={() => setShowLanguageModal(true)}
+          >
+            <Text style={styles.languageSelectorText}>
+              {getCurrentLanguage().flag} {getCurrentLanguage().name}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={theme.colors.primary} />
+          </TouchableOpacity>
+
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <Image 
+              source={require('../assets/images/invasion-logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+          
+          {/* Tagline */}
+          <Text style={styles.tagline}>
+            {content.tagline || "The Biggest Latino-Reggaeton Party in Belgium"}
           </Text>
-          <Ionicons name="chevron-down" size={16} color={theme.colors.primary} />
-        </TouchableOpacity>
 
-        {/* Logo */}
-        <View style={styles.logoContainer}>
-          <Image 
-            source={require('../assets/images/invasion-logo.png')}
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
-        </View>
-        
-        {/* Tagline */}
-        <Text style={styles.tagline}>
-          {content.tagline || "The Biggest Latino-Reggaeton Party in Belgium"}
-        </Text>
-
-        {/* Event Flyer */}
-        <View style={styles.flyerContainer}>
-          <Image
-            source={content.flyer_url ? { uri: content.flyer_url } : DEFAULT_FLYER}
-            style={styles.flyerImage}
-            resizeMode="cover"
-          />
-          <View style={styles.flyerBadge}>
-            <Text style={styles.flyerBadgeText}>{t('nextEventBadge')}</Text>
+          {/* Event Flyer */}
+          <View style={styles.flyerContainer}>
+            <Image
+              source={content.flyer_url ? { uri: content.flyer_url } : DEFAULT_FLYER}
+              style={styles.flyerImage}
+              resizeMode="cover"
+            />
+            <View style={styles.flyerBadge}>
+              <Text style={styles.flyerBadgeText}>{t('nextEventBadge')}</Text>
+            </View>
           </View>
         </View>
         
-        {/* CTA Buttons */}
-        <View style={styles.buttonContainer}>
-          <Button
-            title={t('getStarted')}
-            onPress={() => router.push('/auth/register')}
-            variant="primary"
-            size="lg"
-            fullWidth
-          />
+        {/* Bottom Section */}
+        <View style={styles.bottomSection}>
+          {/* CTA Buttons */}
+          <View style={styles.buttonContainer}>
+            <Button
+              title={t('getStarted')}
+              onPress={() => router.push('/auth/register')}
+              variant="primary"
+              size="lg"
+              fullWidth
+            />
+            
+            <TouchableOpacity
+              style={styles.loginLink}
+              onPress={() => router.push('/auth/login')}
+            >
+              <Text style={styles.loginText}>
+                {t('alreadyHaveAccount')} <Text style={styles.loginTextBold}>{t('login')}</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
           
-          <TouchableOpacity
-            style={styles.loginLink}
-            onPress={() => router.push('/auth/login')}
-          >
-            <Text style={styles.loginText}>
-              {t('alreadyHaveAccount')} <Text style={styles.loginTextBold}>{t('login')}</Text>
-            </Text>
-          </TouchableOpacity>
-        </View>
-        
-        {/* Venue Info */}
-        <View style={styles.venueInfo}>
-          <Text style={styles.venueText}>📍 {content.venue_name || "Mirano Continental, Brussels"}</Text>
-          <Text style={styles.venueSubtext}>{t('sinceYears')}</Text>
+          {/* Venue Info */}
+          <View style={styles.venueInfo}>
+            <Text style={styles.venueText}>📍 {content.venue_name || "Mirano Continental, Brussels"}</Text>
+            <Text style={styles.venueSubtext}>{t('sinceYears')}</Text>
+          </View>
         </View>
       </ScrollView>
 
