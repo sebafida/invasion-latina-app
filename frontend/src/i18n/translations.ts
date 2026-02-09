@@ -114,6 +114,7 @@ export interface Translations {
   requestSentSuccess: string;
   recentHistory: string;
   coins: string;
+  songAddedToList: string;
   
   // Tickets
   ticketsTitle: string;
