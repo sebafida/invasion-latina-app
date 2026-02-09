@@ -988,6 +988,14 @@ async def request_song(
     """Request a song"""
     db = get_database()
     
+    # Check if song requests are enabled
+    settings = await db.app_settings.find_one({"_id": "global"})
+    if not settings or not settings.get("requests_enabled", False):
+        raise HTTPException(
+            status_code=403, 
+            detail="Les demandes de chansons sont désactivées pour le moment. Revenez pendant l'événement!"
+        )
+    
     # Validate required fields
     if not song_data.get("song_title") or not song_data.get("artist_name"):
         raise HTTPException(status_code=400, detail="Song title and artist name are required")
