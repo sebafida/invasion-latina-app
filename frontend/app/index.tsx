@@ -260,6 +260,7 @@ const styles = StyleSheet.create({
   venueInfo: {
     alignItems: 'center',
     paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl,
     borderTopWidth: 1,
     borderTopColor: theme.colors.cardBackground,
   },
@@ -271,6 +272,14 @@ const styles = StyleSheet.create({
   venueSubtext: {
     color: theme.colors.textMuted,
     fontSize: theme.fontSize.sm,
+  },
+
+  // Sections
+  topSection: {
+    flex: 1,
+  },
+  bottomSection: {
+    marginTop: theme.spacing.lg,
   },
 
   // Language Selector
