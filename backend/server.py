@@ -2286,10 +2286,21 @@ async def admin_scan_checkin(
         if qr_info.get("type") != "loyalty_checkin":
             raise HTTPException(status_code=400, detail="QR code invalide")
         user_id = qr_info["user_id"]
+        qr_version = qr_info.get("version", 1)
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Format QR code invalide")
     except KeyError:
         raise HTTPException(status_code=400, detail="QR code incomplet")
+    
+    # Check QR code version
+    settings = await db.app_settings.find_one({"_id": "global"})
+    current_qr_version = settings.get("loyalty_qr_version", 1) if settings else 1
+    
+    if qr_version != current_qr_version:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"QR code expiré! Demandez à l'utilisateur de régénérer son QR code dans l'app."
+        )
     
     # Get current/latest event if not specified
     if event_id == "current" or not event_id:
