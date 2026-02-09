@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { theme } from '../src/config/theme';
 import api from '../src/config/api';
+import { useLanguage } from '../src/context/LanguageContext';
 
 interface Aftermovie {
   id: string;
@@ -27,6 +28,7 @@ interface Aftermovie {
 
 export default function AftermoviesScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [videos, setVideos] = useState<Aftermovie[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -94,15 +96,15 @@ export default function AftermoviesScreen() {
             <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <Text style={styles.title}>🎬 Aftermovies</Text>
-            <Text style={styles.subtitle}>Revois les meilleures soirées</Text>
+            <Text style={styles.title}>🎬 {t('aftermoviesTitle')}</Text>
+            <Text style={styles.subtitle}>{t('rewatchBestParties')}</Text>
           </View>
         </View>
 
         {/* Featured Video */}
         {videos.length > 0 && (
           <View style={styles.featuredSection}>
-            <Text style={styles.sectionTitle}>⭐ Dernière vidéo</Text>
+            <Text style={styles.sectionTitle}>⭐ {t('latestVideo')}</Text>
             <TouchableOpacity
               style={styles.featuredCard}
               onPress={() => openVideo(videos[0])}
@@ -123,7 +125,7 @@ export default function AftermoviesScreen() {
                 <View style={styles.featuredMeta}>
                   <View style={styles.metaItem}>
                     <Ionicons name="eye" size={14} color={theme.colors.textSecondary} />
-                    <Text style={styles.metaText}>{formatViews(videos[0].views)} vues</Text>
+                    <Text style={styles.metaText}>{formatViews(videos[0].views)} {t('views')}</Text>
                   </View>
                   <View style={styles.metaItem}>
                     <Ionicons name="time" size={14} color={theme.colors.textSecondary} />
@@ -137,18 +139,18 @@ export default function AftermoviesScreen() {
 
         {/* All Videos */}
         <View style={styles.allVideosSection}>
-          <Text style={styles.sectionTitle}>📹 Toutes les vidéos</Text>
+          <Text style={styles.sectionTitle}>📹 {t('allVideos')}</Text>
           
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={theme.colors.primary} />
-              <Text style={styles.loadingText}>Chargement des vidéos...</Text>
+              <Text style={styles.loadingText}>{t('loadingVideos')}</Text>
             </View>
           ) : videos.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="film-outline" size={64} color={theme.colors.textMuted} />
-              <Text style={styles.emptyText}>Aucune vidéo disponible</Text>
-              <Text style={styles.emptySubtext}>Les aftermovies seront publiés bientôt!</Text>
+              <Text style={styles.emptyText}>{t('noVideoAvailable')}</Text>
+              <Text style={styles.emptySubtext}>{t('aftermoviesComingSoon')}</Text>
             </View>
           ) : (
             videos.map((video, index) => (
@@ -182,7 +184,7 @@ export default function AftermoviesScreen() {
                   </Text>
                   <View style={styles.videoStats}>
                     <Ionicons name="eye" size={12} color={theme.colors.textMuted} />
-                    <Text style={styles.statsText}>{formatViews(video.views)} vues</Text>
+                    <Text style={styles.statsText}>{formatViews(video.views)} {t('views')}</Text>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -192,9 +194,9 @@ export default function AftermoviesScreen() {
 
         {/* Social CTA */}
         <View style={styles.socialSection}>
-          <Text style={styles.socialTitle}>🔔 Reste connecté!</Text>
+          <Text style={styles.socialTitle}>🔔 {t('stayConnected')}</Text>
           <Text style={styles.socialText}>
-            Suis-nous sur les réseaux pour ne rater aucun aftermovie
+            {t('followUsForAftermovies')}
           </Text>
           <View style={styles.socialButtons}>
             <TouchableOpacity 
