@@ -16,7 +16,7 @@ const getBackendUrl = () => {
   }
   
   // 3. Fallback to hardcoded URL for production
-  return 'https://invasionlatina.preview.emergentagent.com';
+  return 'https://lingua-latina-1.preview.emergentagent.com';
 };
 
 const BACKEND_URL = getBackendUrl();

@@ -1,318 +1,216 @@
 <analysis>
 <original_problem_statement>
-The user's primary goal is to finalize their Invasion Latina mobile app, deploy it to TestFlight for beta testing, and then release it on the App Store.
+The user's primary goal is to finalize their Invasion Latina mobile app for release. This involves completing a full internationalization (i18n) for four languages (French, English, Spanish, Dutch), fixing all remaining UI text issues, and successfully deploying a feature-complete version to TestFlight for beta testing, ultimately leading to an App Store release.
 
-The initial scope included fixing a TestFlight login bug (404 error), a logout redirection bug, and adding numerous features: Social Logins, Admin DJ Selection, UI cleanups, and a Free Entry QR Code system.
-
-During the session, the user added more requests:
-- Add a back arrow to all main tab screens.
-- Add functionality for an admin to delete song requests and table bookings.
-- Clean up the UI on the Request page.
-- Change the app icon for the App Store.
-- Remove an emoji from the home page.
-- Redesign the language selector to be a sub-menu in the profile.
-- Change the TikTok logo to be more visible.
-- Implement full internationalization (i18n) for four languages (French, English, Spanish, Dutch).
-
-**Unclear Request:**
-- The user mentioned needing a back arrow in the Request tab, but the context was unclear. This was partially addressed by adding a header with a back arrow to all tabs, but the original intent might have been different.
+During the session, the user's requests evolved:
+- Initially, the main task was to finish the i18n implementation that was already in progress.
+- The user discovered a critical bug where the profile page crashed due to an i18n implementation error ().
+- The user requested that language selection be available on the very first screen when the app opens, and also on the login page.
+- Through multiple rounds of feedback with screenshots, the user pointed out numerous hardcoded (untranslated) text strings in various parts of the app, including titles, buttons, alert messages, and descriptive text.
+- The user requested a specific UI change on the home page: the Spotify section's subtitle should always be Que viva la m√∫sica latina, and a duplicate Social Networks section should be removed.
+- A new backend requirement was added: create a non-admin user account specifically for Apple's review process with the credentials  / .
 </original_problem_statement>
 
 **User's preferred language**: French (fr). The next agent MUST respond in French.
 
 **what currently exists?**
-The application is a full-stack Expo/FastAPI project. The code on the development server (and visible in Expo Go) is nearly feature-complete according to the user's requests. This includes social logins, admin pages for DJ selection and QR code scanning, a complete loyalty QR code flow in the user profile, and robust admin panels for deleting song requests and table bookings using custom confirmation modals. The internationalization (i18n) framework is in place with a comprehensive translation file, and the agent has begun applying it across the app.
+The application's i18n implementation is now nearly complete and robust. The agent fixed a critical crash by refactoring the  to provide a translation function  and updated the entire codebase to use this new, consistent syntax. Language selection modals are now present on both the initial welcome screen () and the login screen ().
 
-However, the version on TestFlight is critically broken and severely out of date. It suffers from a 404 login error and is missing all the recently developed features because the builds are being created from the user's local Mac, which is not correctly synchronized with the agent's updated code.
+The agent has gone through multiple iterative cycles of finding and replacing hardcoded text based on user feedback, covering most pages, modals, and alerts.
+
+A backend user account for the Apple reviewer has been successfully created and its login functionality verified via .
+
+The critical issue from the previous fork‚Äîthe TestFlight build being out of sync‚Äîhas not been addressed in this session and remains a major blocker for the project's final goal. The code on the development server is significantly more advanced than what is on the user's local machine for building.
 
 **Last working item**:
-- Last item agent was working: Implementing full internationalization (i18n) across the entire application. The agent created a comprehensive  file with four languages and began applying the translation keys () to various components, starting with , , , , and .
+- Last item agent was working: The agent was in the process of translating the final two pages pointed out by the user: Galeries Photos () and Aftermovies (). The agent had just located the files and viewed their contents to identify the hardcoded text.
 - Status: IN PROGRESS
 - Agent Testing Done: N
-- Which testing method agent to use? After completing the i18n implementation, the user must perform manual testing in Expo Go.
+- Which testing method agent to use? After applying the translations, the user must perform manual testing in Expo Go by switching languages and navigating to these pages.
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- Issue 1: TestFlight build is completely out of sync with Expo Go, making it unusable. (P0)
-- Issue 2: The deletion buttons for song requests and table bookings were not working in Expo Go due to an  bug. (P1)
-- Issue 3: The user's request for a back arrow in the Request tab is unresolved and needs clarification. (P2)
+- Issue 1: Finalize translations for  and . (P0, HIGHEST)
+- Issue 2: TestFlight build is completely out of sync with the development environment, making it unusable for testing. (P1)
+- Issue 3: The user's request from a previous session for a back arrow in the Request tab is still unresolved and needs explicit confirmation. (P2)
 
 **Issues Detail**:
-- **Issue 1: TestFlight build is out of sync and unusable.**
-    - **Attempted fixes**: The agent correctly identified multiple root causes and implemented fixes in the server-side code: 1) Added the  to . 2) Made  more robust to find the backend URL. However, these fixes are not present in the user's local build environment. The agent guided the user through numerous , HEAD is now at 11c9a7b9 auto-commit for 7d91ba34-eee9-4614-8c4a-efc3d60943a3, manual file edits (, ), and 
-added 983 packages, and audited 984 packages in 13s
-
-185 packages are looking for funding
-  run `npm fund` for details
-
-1 high severity vulnerability
-
-To address all issues, run:
-  npm audit fix
-
-Run `npm audit` for details. cycles. This has been a recurring failure point due to the complexity of debugging a remote user's local environment. The  command was the most successful at updating the user's files.
+- **Issue 1: Finalize translations for  and .**
+    - **Attempted fixes**: The agent successfully located the files (, ) and was about to add the necessary translation keys and apply them.
     - **Next debug checklist**:
-        1.  Confirm with the user that they have successfully saved the latest code to GitHub using the Save to GitHub button.
-        2.  Guide the user to run * main to confirm they are on the correct branch ( was the last used one).
-        3.  Guide them to run  to force their local files to match the remote.
-        4.  Verify the presence of new files like  and  using total 140
-drwxr-xr-x 2 root root  4096 Feb  6 12:15 .
-drwxr-xr-x 6 root root  4096 Feb  3 11:59 ..
--rw-r--r-- 1 root root 23775 Feb  6 13:41 bookings.tsx
--rw-r--r-- 1 root root 33224 Feb  3 20:03 content-manager.tsx
--rw-r--r-- 1 root root 31105 Feb  6 13:38 dj-dashboard.tsx
--rw-r--r-- 1 root root 15352 Feb  6 11:59 dj-selection.tsx
--rw-r--r-- 1 root root 12001 Feb  6 12:15 free-entry-scanner.tsx
--rw-r--r-- 1 root root 11853 Feb  4 10:52 loyalty-scanner.tsx.
-        5.  This issue is the absolute highest priority. No progress can be made on the final app until the user can create a build from the correct, up-to-date source code.
-    - **Why fix this issue and what will be achieved with the fix?**: This is the main blocker for the entire project. Fixing it will make the TestFlight app functional, allowing the user to test all the new features in a real-world environment.
+        1.  Add new translation keys to  for all hardcoded text in  and .
+        2.  Provide the translations for all four languages (FR, EN, ES, NL).
+        3.  Use  to replace the hardcoded strings in both files with the  function.
+        4.  Perform one final  across the entire  directory for any other common French/English words to ensure nothing was missed.
+    - **Why fix this issue and what will be achieved with the fix?**: This will complete the user's request for a fully translated application, which is a prerequisite for the TestFlight submission.
     - **Status**: IN PROGRESS
+    - **Is recurring issue?**: Y (The overall missed translation issue has been recurring throughout the session).
+    - **Should Test frontend/backend/both after fix?**: User will test the frontend manually in Expo Go.
+    - **Blocked on other issue**: None.
+
+- **Issue 2: TestFlight build is out of sync and unusable.**
+    - **Attempted fixes**: This was not worked on in the current session. Previous fixes involved updating  and , but the core problem is that these changes are not on the user's local machine used for building. The previously identified solution (HEAD is now at 89388601 auto-commit for 58e8b8b2-b0bc-44f0-8587-b65729e00e0d) has not been executed yet.
+    - **Next debug checklist**:
+        1.  Once all translation work is confirmed complete by the user, this becomes the highest priority task.
+        2.  Guide the user to run  to force-sync their local files.
+        3.  Verify the sync by asking the user to ê¯@@–√9@8
+BUILD_INSTRUCTIONS.md
+README.md
+app
+app.json
+assets
+dist
+eas.json
+eslint.config.js
+expo-env.d.ts
+metro.config.js
+node_modules
+package-lock.json
+package.json
+scripts
+src
+tsconfig.json
+yarn.lock for new files like .
+        4.  Guide the user to increment the  in .
+        5.  Guide the user to run An Expo user account is required to proceed.
+
+Log in to EAS with email or username (exit and run eas login --help to see other login options)
+Input is required, but stdin is not readable. Failed to display prompt: Email or username and An Expo user account is required to proceed.
+
+Log in to EAS with email or username (exit and run eas login --help to see other login options)
+Input is required, but stdin is not readable. Failed to display prompt: Email or username.
+    - **Why fix this issue and what will be achieved with the fix?**: This is the main blocker for the entire project. Fixing it will allow the user to test the complete, up-to-date application on a real device.
+    - **Status**: NOT STARTED (in this session)
     - **Is recurring issue?**: Y
     - **Should Test frontend/backend/both after fix?**: User will test the entire application on TestFlight.
-    - **Blocked on other issue**: Blocked on completing the i18n task (Task 1) so all changes can be included in the next build.
-
-- **Issue 2: Deletion buttons not working in Expo Go.**
-    - **Attempted fixes**: The agent correctly diagnosed this as a known bug with  in Expo Go. An attempted fix using  failed. The agent then successfully re-implemented the feature using custom  components for confirmation in  and . The user confirmed this fix works in Expo Go.
-    - **Next debug checklist**: None. The fix is complete and working in Expo Go. It just needs to be deployed to TestFlight.
-    - **Why fix this issue and what will be achieved with the fix?**: Provides critical admin functionality.
-    - **Status**: RESOLVED (in Expo Go, pending TestFlight deployment)
-    - **Is recurring issue?**: N
-    - **Should Test frontend/backend/both after fix?**: N/A
-    - **Blocked on other issue**: Blocked on .
+    - **Blocked on other issue**: Blocked on completing .
 
 - **Issue 3: User's request for a back arrow in the Request tab is unresolved.**
-    - **Attempted fixes**: The agent added a header with a back button to all main tabs, including the DJ tab (which contains Requests). This might have solved the user's issue, but it was never explicitly confirmed.
-    - **Next debug checklist**: Ask the user: Now that there is a back arrow at the top of all pages, is your request for a back arrow in the Request tab fulfilled, or did you have something else in mind?
-    - **Why fix this issue and what will be achieved with the fix?**: Ensure all user navigation feedback is addressed.
+    - **Attempted fixes**: A global header with a back button was added in a previous session.
+    - **Next debug checklist**: Ask the user for confirmation: Now that the app is fully translated and navigation is in place, is your original request for a back arrow in the Request tab fulfilled?
+    - **Why fix this issue and what will be achieved with the fix?**: Closes an old feedback loop and ensures all UI/UX concerns are addressed.
     - **Status**: NOT STARTED
     - **Is recurring issue?**: N
-    - **Should Test frontend/backend/both after fix?**: Frontend
+    - **Should Test frontend/backend/both after fix?**: Frontend.
     - **Blocked on other issue**: User clarification.
 
 **In progress Task List**:
 - **Task 1: Complete i18n Implementation (P0)**
-    - **Where to resume**: The agent needs to continue applying translation keys  to all remaining hardcoded text strings in the application. Files that still need significant work include , all admin pages (, , etc.), , , and various components and modals.
-    - **What will be achieved with this?**: A fully multilingual application, as requested by the user.
+    - **Where to resume**: The agent needs to add translation keys for  and  to  and then apply them to the respective files.
+    - **What will be achieved with this?**: A fully multilingual application, fulfilling the user's primary request for this session.
     - **Status**: IN PROGRESS
     - **Should Test frontend/backend/both after fix?**: User will test via Expo Go.
     - **Blocked on something**: None.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **P0: Final TestFlight Build & Submission**: After i18n is complete and verified by the user in Expo Go, guide the user through a final, successful build and submission to TestFlight. This will be the ultimate test of resolving the code synchronization issue.
-    - **P1: Submit to the main App Store**: Once the user is satisfied with the TestFlight version, guide them through the process of App Store submission.
-    - **P2: Generate Android Beta Build**: Create an Android build once the iOS version is stable.
+    - **P0: Final User Verification of Translations**: After fixing , ask the user to perform a full review of the app in Expo Go to confirm all text is translated correctly.
+    - **P1: Final TestFlight Build & Submission**: Guide the user through a successful build and submission to TestFlight. This is the most critical step after i18n is done.
+    - **P2: Submit to the main App Store**: Once the user approves the TestFlight version.
 - **Future Tasks**:
+    - Generate Android Beta Build.
     - Comprehensive Web Admin Dashboard.
 
 **Completed work in this session**
-- **Deletion Feature (MAJOR)**: Implemented and debugged a robust deletion system for song requests and table bookings, moving the UI from the public page to the correct admin dashboards (, ) and using custom confirmation modals to work around Expo Go limitations.
-- **Backend API for Deletion**: Created new backend endpoints (, , , ).
-- **Profile & Loyalty QR Code Refactor**:
-    - Removed a redundant UI component from .
-    - Corrected a translation (un guest gratuit -> une guest gratuite).
-    - Re-implemented the loyalty reward feature to show a scannable QR code in a modal when claimed.
-- **UI/UX Improvements**:
-    - Added a header with a back arrow to all main tab screens.
-    - Redesigned the language selector in the profile to use a button that opens a modal.
-    - Replaced the TikTok logo on the home page with a more visible version.
-    - Cleaned up the Request page UI and fixed the form to reset after submission.
-- **Build & Deployment Debugging**:
-    - Correctly configured  with the production backend URL.
-    - Made  more resilient by adding a hardcoded fallback URL.
-    - Guided the user through multiple An Expo user account is required to proceed.
-
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username and An Expo user account is required to proceed.
-
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username cycles, including debugging  conflicts and providing step-by-step instructions for their local machine.
-    - Identified that the core blocker is the user's local environment being out-of-sync.
-- **i18n Foundation**: Created a comprehensive translation file () for 4 languages and began applying it across several pages.
+- **Full i18n Implementation & Refactor (MAJOR)**:
+    - **Crash Fix**: Repaired a critical app crash on the profile page by refactoring  to provide  as a function instead of an object.
+    - **Code Refactoring**: Updated the entire existing codebase (, , , , , etc.) to use the consistent  syntax.
+    - **Comprehensive Translation**: Iteratively added dozens of new translation keys and applied them to nearly every file in the app, including , , , , , , , , and .
+    - **Dynamic Text Translation**: Translated text inside  calls and custom modals.
+- **Feature: Language Selection on App Start**:
+    - Implemented a language selection modal on the initial welcome screen ().
+    - Implemented a language selection modal on the login screen ().
+- **Backend: Apple Reviewer Account Creation**:
+    - Created a Python script to add a user directly to the MongoDB database.
+    - Debugged and resolved multiple issues during creation: invalid email format, missing , and an incorrect database field name ( vs. ).
+    - Successfully created and verified the login for the user .
+- **UI/UX Polish**:
+    - As requested, modified the home page to remove a duplicate Follow Us section and ensure the R√©seaux Sociaux title is translated.
+    - Modified the  translation key to have the static value Que viva la m√∫sica latina for all languages.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Unclear Request Tab Navigation**
-    -   **Debug checklist**: Ask the user for clarification or a screenshot.
-    -   **Why to solve this issue and what will be achieved with this?**: To fully address the user's UI feedback.
+    -   **Debug checklist**: Ask the user for clarification or confirmation that the global header fixed their concern.
+    -   **Why to solve this issue and what will be achieved with this?**: To fully address all of the user's UI feedback.
     -   **Should Test frontend/backend/both after fix**: Frontend.
     -   **Is recurring issue?**: N
 
 **Known issue recurrence from previous fork**
-- None.
+- None in this session, but the *risk* of the TestFlight sync issue from the previous fork remains high.
 
 **Code Architecture**
-env
+
 
 **Key Technical Concepts**
--   **i18n Implementation**: Using React Context () and a central translation object () to provide multi-language support.
--   **Custom Confirmation Modals**: Building custom modal components as a robust workaround for the unreliability of  in Expo Go, especially for asynchronous operations.
--   **Remote Build Debugging**: The complex and error-prone process of guiding a non-technical user to manage their local development environment (usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
-           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
-           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
-           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
-           [--super-prefix=<path>] [--config-env=<name>=<envvar>]
-           <command> [<args>]
-
-These are common Git commands used in various situations:
-
-start a working area (see also: git help tutorial)
-   clone     Clone a repository into a new directory
-   init      Create an empty Git repository or reinitialize an existing one
-
-work on the current change (see also: git help everyday)
-   add       Add file contents to the index
-   mv        Move or rename a file, a directory, or a symlink
-   restore   Restore working tree files
-   rm        Remove files from the working tree and from the index
-
-examine the history and state (see also: git help revisions)
-   bisect    Use binary search to find the commit that introduced a bug
-   diff      Show changes between commits, commit and working tree, etc
-   grep      Print lines matching a pattern
-   log       Show commit logs
-   show      Show various types of objects
-   status    Show the working tree status
-
-grow, mark and tweak your common history
-   branch    List, create, or delete branches
-   commit    Record changes to the repository
-   merge     Join two or more development histories together
-   rebase    Reapply commits on top of another base tip
-   reset     Reset current HEAD to the specified state
-   switch    Switch branches
-   tag       Create, list, delete or verify a tag object signed with GPG
-
-collaborate (see also: git help workflows)
-   fetch     Download objects and refs from another repository
-   pull      Fetch from and integrate with another repository or a local branch
-   push      Update remote refs along with associated objects
-
-'git help -a' and 'git help -g' list available subcommands and some
-concept guides. See 'git help <command>' or 'git help <concept>'
-to read about a specific subcommand or concept.
-See 'git help git' for an overview of the system., npm <command>
-
-Usage:
-
-npm install        install all the dependencies in your project
-npm install <foo>  add the <foo> dependency to your project
-npm test           run this project's tests
-npm run <foo>      run the script named <foo>
-npm <command> -h   quick help on <command>
-npm -l             display usage info for all commands
-npm help <term>    search for help on <term>
-npm help npm       more involved overview
-
-All commands:
-
-    access, adduser, audit, bugs, cache, ci, completion,
-    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
-    edit, exec, explain, explore, find-dupes, fund, get, help,
-    help-search, hook, init, install, install-ci-test,
-    install-test, link, ll, login, logout, ls, org, outdated,
-    owner, pack, ping, pkg, prefix, profile, prune, publish,
-    query, rebuild, repo, restart, root, run-script, sbom,
-    search, set, shrinkwrap, star, stars, start, stop, team,
-    test, token, uninstall, unpublish, unstar, update, version,
-    view, whoami
-
-Specify configs in the ini-formatted file:
-    /root/.npmrc
-or on the command line via: npm <command> --key=value
-
-More configuration info: npm help config
-Configuration fields: npm help 7 config
-
-npm@10.8.2 /usr/lib/node_modules/npm, file edits) to create successful production builds with EAS.
--   **EAS Build Environment Variables**: Understanding how to correctly inject environment variables into a production build using  and access them in the app via .
--   **Declarative UI State**: Managing UI state for modals (, ) to create interactive confirmation flows.
+-   **i18n Refactoring**: Migrating an entire application's translation access pattern from object property access () to a function call () to fix a critical runtime error and improve consistency. This involved changing the React Context provider and updating all consumer components.
+-   **Iterative Translation**: A development process driven by tight user feedback loops, where translation gaps are identified via screenshots, fixed, and re-verified.
+-   **Direct Database Manipulation**: Using a one-off Python script with  and  to securely create a new user in the MongoDB database from the command line, bypassing the standard registration flow.
+-   **Backend Login Debugging**: Using  to test a login endpoint and analyzing  responses by checking backend logs to identify and fix a .
 
 **key DB schema**
-- No schema changes. New endpoints were added to delete documents from the  and  collections.
+- No schema changes.
+- A new document was added to the  collection with the following important fields: , , , .
 
 **changes in tech stack**
-- No new packages added. The focus was on implementing features and fixing bugs with the existing stack.
+- No changes to the tech stack.
 
 **All files of reference**
--   : **Crucial.** Contains the fix for the TestFlight 404 error. The user's local version *must* match the server's version.
--   : **Crucial.** Contains the logic for determining the backend URL. Has been made more robust.
--   : **Crucial.** The  must be incremented before every new build attempt.
--   : Contains the custom modal implementation for deleting song requests.
--   : Contains the custom modal implementation for deleting/cancelling table bookings.
--   : Contains the new language selector modal and the loyalty QR code modal.
--   : The source of truth for all text in the app. Needs to be fully applied.
--    & : These files exist on the server but have been consistently missing from the user's local machine, causing features to be absent from TestFlight builds.
-
-**Areas that need refactoring**:
-- None. The agent has done a good job of refactoring problematic code (e.g., replacing ).
-
-**key api endpoints**
--   : Deletes all song requests.
--   : Deletes a single song request.
--   : Deletes all VIP bookings.
--   : Deletes a single VIP booking.
+-   : **Central file for this session.** Massively updated and contains all UI text.
+-   : **Crucial.** Contains the fix for the app-breaking crash.
+-   : **Next to be edited.** Contains hardcoded text.
+-   : **Next to be edited.** Contains hardcoded text.
+-   : Contains the new language selector on the welcome screen.
+-   : Contains the new language selector on the login screen.
+-   : Was heavily modified for UI cleanup and translation.
+-   : The login endpoint () was debugged against.
 
 **Critical Info for New Agent**
--   **Your immediate first task is to finish the i18n implementation.** The user wants the entire app translated. Go through every file and replace hardcoded strings with .
--   **The main challenge is the user's local environment.** Builds for TestFlight are made from their Mac, which is constantly out of sync with your work. Do not assume any of your changes are on their machine.
--   **The most reliable sync method is Save to GitHub followed by .** You will need to guide the user through this. Be patient and explicit.
--   **After syncing, you MUST guide the user to increment the  in  before running An Expo user account is required to proceed.
+-   **Your immediate first task is to finish the translations for  and .** The user is very thorough and will spot any remaining hardcoded text.
+-   After translating those two files, do a final  for common French words (, , , , ) in the  files to catch anything missed.
+-   Once the user confirms ALL translations are perfect in Expo Go, your **most important task** is to guide them to create a new TestFlight build. You must re-address the sync issue. The proven method is: Save to GitHub, then guide the user on their machine to run , increment  in , and then run An Expo user account is required to proceed.
 
 Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username.** This has been a recurring point of failure.
--   **Do not trust  for critical confirmation flows.** The custom Modal pattern is proven to work and should be used if new confirmation dialogs are needed.
--   After completing the i18n task, ask the user to verify EVERYTHING in Expo Go first, before attempting another TestFlight build.
+Input is required, but stdin is not readable. Failed to display prompt: Email or username. Be patient and explicit.
+-   The Apple reviewer account is  with password . The user will need this for their TestFlight submission.
 
 **documents created in this job**
--   None.
+- None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST)**: Asked to redesign the language selector and change the TikTok logo. Then agreed to translate the entire app now. **Status: IN PROGRESS (i18n implementation started).**
-2.  **User**: Confirmed the Apple server error during An Expo user account is required to proceed.
-
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username is temporary and agreed to continue improving the app on Expo Go. **Status: ADDRESSED.**
-3.  **User**: Reported a new An Expo user account is required to proceed.
-
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username failure related to a  error. **Status: RESOLVED (User was in the wrong directory).**
-4.  **User**: Reported An Expo user account is required to proceed.
-
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username failing again due to a duplicate . **Status: ADDRESSED (Agent explained the need to increment the number before each build).**
-5.  **User**: Reported that the TestFlight build is still missing features (social login, admin links, deletion options). **Status: IN PROGRESS (This is the core sync issue).**
-6.  **User**: Confirmed that the login finally works on TestFlight (Build 4) but key features are missing. **Status: IN PROGRESS (Sync issue).**
-7.  **User**: Reported login still failing with 404 on TestFlight (Build 3). **Status: ADDRESSED (Agent provided a more robust fix in ).**
-8.  **User**: Confirmed that the An Expo user account is required to proceed.
-
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username for Build 3 was successful and they were waiting for Apple. **Status: ADDRESSED.**
-9.  **User**: Reported the TestFlight app was crashing on open. **Status: RESOLVED (Agent fixed syntax errors and guided user to restart Expo Go).**
-10. **User**: Confirmed  was a known Expo Go issue and asked if the custom modals would work on TestFlight. **Status: ADDRESSED (Agent confirmed they would).**
+1.  **User (LATEST)**: Reported untranslated text on the Galeries Photos and Aftermovies pages with screenshots. **Status: IN PROGRESS (Agent was about to fix this).**
+2.  **User**: Asked why the newly created Apple reviewer account couldn't log in. **Status: RESOLVED (Agent fixed the account and verified login).**
+3.  **User**: Requested UI changes for the Spotify and Social Media sections, and asked to create a backend account for Apple reviewers. **Status: RESOLVED.**
+4.  **User**: Reported that despite previous fixes, there was still untranslated text, providing a screenshot of R√©seaux Sociaux. **Status: RESOLVED.**
+5.  **User**: Stated that many things are still not translated. **Status: ADDRESSED (Agent did a major pass to fix many items).**
+6.  **User**: Reported more untranslated text with multiple screenshots (DJ Requests, Line-up, etc.). **Status: RESOLVED.**
+7.  **User**: Reported untranslated text in the booking section and requested a language selector on the app's very first page. **Status: RESOLVED.**
+8.  **User**: Reported that the profile page was crashing () and asked for a language selector when the app opens. **Status: RESOLVED (Crash fixed, language selector added).**
+9.  **User**: Agreed to the agent's plan to finish translations. **Status: ADDRESSED.**
+10. **User**: Confirmed the agent's summary and asked to continue with the translation work. **Status: ADDRESSED.**
 
 **Project Health Check:**
--   **Broken**: The TestFlight build is non-functional and missing features due to a persistent code synchronization issue with the user's local machine. The application code on the agent's server (and in Expo Go) is largely functional.
+-   **Broken**: The deployed TestFlight build is critically out of date and non-functional. The project's deployment pipeline (reliant on the user's local machine) is the single biggest point of failure.
 -   **Mocked**: None.
 
 **3rd Party Integrations**
--   **Expo Application Services (EAS)**: Used for cloud builds, updates, and submissions.
--   **Apple Sign-In**: Integrated via .
--   **Google Sign-In**: Integrated via .
--   **GitHub**: Used for version control, but synchronization with the user's local machine is a major issue.
--   **XCEED, Instagram, Facebook, TikTok**: External URL links.
+-   Expo Application Services (EAS)
+-   Apple Sign-In
+-   Google Sign-In
+-   GitHub
+-   XCEED, Instagram, Facebook, TikTok (External links)
 
 **Testing status**
--   Testing agent used after significant changes: YES (Backend testing agent successfully tested and helped debug the deletion APIs).
--   Troubleshoot agent used after agent stuck in loop: YES (Used to diagnose the  issue in Expo Go).
+-   Testing agent used after significant changes: NO
+-   Troubleshoot agent used after agent stuck in loop: NO (Agent self-resolved issues).
 -   Test files created: None.
--   Known regressions: The current TestFlight app has regressed to a non-working state due to being built from outdated code. Login fails and new features are absent.
+-   Known regressions: The TestFlight app is still in a regressed state from the previous fork. No new regressions were introduced in the dev environment; in fact, a major crash was fixed.
 
 **Credentials to test flow:**
--   **Admin Email 1**: 
--   **Admin Email 2**: 
--   **Password (for both)**: 
--   **Google Client ID (iOS)**: 
+-   **Admin Email**:  / 
+-   **Admin Password**: 
+-   **Apple Reviewer Email**: 
+-   **Apple Reviewer Password**: 
 
 **What agent forgot to execute**
-- The agent never got final confirmation from the user about the back arrow in Request tab request after implementing the global header back arrows. It's a minor but still open loop.
+- The agent has not yet confirmed with the user if the back arrow in Request tab issue from the previous fork is considered resolved by the global header implementation. This is a minor but open loop.
 </analysis>
