@@ -104,7 +104,7 @@ export default function EventSettingsScreen() {
           onPress: async () => {
             setActionLoading('end');
             try {
-              const response = await api.post('/api/admin/settings/end-event');
+              const response = await api.post('/admin/settings/end-event');
               Alert.alert('✅ Événement terminé!', response.data.message);
               fetchSettings();
             } catch (error: any) {
