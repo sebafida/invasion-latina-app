@@ -214,6 +214,7 @@ export interface Translations {
   loyaltyScanner: string;
   djSelection: string;
   freeEntryScanner: string;
+  eventSettings: string;
   
   // Gallery
   gallery: string;
