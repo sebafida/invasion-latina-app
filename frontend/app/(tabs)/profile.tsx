@@ -334,6 +334,15 @@ export default function ProfileScreen() {
               <Text style={styles.freeEntryScannerButtonText}>{t('freeEntryScanner')}</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.eventSettingsButton}
+              onPress={() => router.push('/admin/event-settings')}
+            >
+              <Ionicons name="settings" size={24} color="white" />
+              <Text style={styles.eventSettingsButtonText}>{t('eventSettings')}</Text>
+              <Ionicons name="arrow-forward" size={20} color="white" />
+            </TouchableOpacity>
           </View>
         )}
 
