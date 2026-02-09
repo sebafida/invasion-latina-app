@@ -1724,6 +1724,12 @@ export const translations: Record<Language, Translations> = {
     connectionError: 'Verbindingsfout',
     comingSoonFeature: 'Functie binnenkort beschikbaar',
     
+    // Success/Error messages
+    success: 'Succes',
+    error: 'Fout',
+    voteRegistered: 'Stem geregistreerd!',
+    fillAllFields: 'Vul alle verplichte velden in',
+    
     // Register/Forms
     joinInvasionLatina: 'Word lid van Invasion Latina',
     createAccountSubtitle: 'Maak je account aan en bereid je voor op feesten',
