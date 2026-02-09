@@ -989,8 +989,6 @@ export const translations: Record<Language, Translations> = {
     comingSoonFeature: 'Feature coming soon',
     
     // Success/Error messages
-    success: 'Success',
-    error: 'Error',
     voteRegistered: 'Vote registered!',
     fillAllFields: 'Please fill in all required fields',
     
