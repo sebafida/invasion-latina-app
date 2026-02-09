@@ -1753,6 +1753,7 @@ export const translations: Record<Language, Translations> = {
     loyaltyScanner: 'Loyaliteit Scanner',
     djSelection: 'DJ Selectie Evenement',
     freeEntryScanner: 'Gratis Toegang Scanner',
+    eventSettings: 'Evenement Instellingen',
     
     // Gallery
     gallery: 'Galerij',
