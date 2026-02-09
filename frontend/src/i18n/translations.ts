@@ -830,6 +830,7 @@ export const translations: Record<Language, Translations> = {
     bypassGeofencing: 'Bypass geofencing & schedules',
     sendTheRequest: 'Send request',
     requestSentSuccess: 'Request sent!',
+    songAddedToList: 'Your song was added to the list. The DJ will play it if possible!',
     recentHistory: 'Recent history',
     coins: 'Coins',
     residentDj: 'Resident DJ',
