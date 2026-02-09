@@ -206,6 +206,12 @@ export interface Translations {
   connectionError: string;
   comingSoonFeature: string;
   
+  // Success/Error messages
+  success: string;
+  error: string;
+  voteRegistered: string;
+  fillAllFields: string;
+  
   // Register/Forms
   joinInvasionLatina: string;
   createAccountSubtitle: string;
