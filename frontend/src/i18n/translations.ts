@@ -1461,6 +1461,8 @@ export const translations: Record<Language, Translations> = {
     no: 'Nee',
     ok: 'OK',
     close: 'Sluiten',
+    voteRegistered: 'Stem geregistreerd! 👍',
+    fillAllFields: 'Vul alle velden in',
     
     // Navigation
     home: 'Home',
