@@ -34,7 +34,7 @@ export default function EventSettingsScreen() {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const response = await api.get('/api/admin/settings');
+      const response = await api.get('/admin/settings');
       setSettings(response.data);
     } catch (error: any) {
       console.error('Error fetching settings:', error);
