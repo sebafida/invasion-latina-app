@@ -1732,7 +1732,6 @@ export const translations: Record<Language, Translations> = {
     appLanguage: 'App-taal',
     createMyAccount: 'Mijn account aanmaken',
     alreadyAccount: 'Al een account?',
-    fillAllFields: 'Vul alle verplichte velden in',
     passwordsDontMatch: 'Wachtwoorden komen niet overeen',
     passwordTooShort: 'Wachtwoord moet minimaal 6 tekens bevatten',
     mustAcceptTerms: 'Je moet de voorwaarden accepteren',
