@@ -1518,6 +1518,151 @@ async def admin_dashboard(current_user: dict = Depends(get_current_admin)):
 
 # Note: Additional endpoints for media upload, notifications, etc. can be added as needed
 
+# ============ APP SETTINGS ENDPOINTS (ADMIN) ============
+
+@app.get("/api/admin/settings")
+async def get_app_settings(current_user: dict = Depends(get_current_admin)):
+    """Get current app settings"""
+    db = get_database()
+    
+    settings = await db.app_settings.find_one({"_id": "global"})
+    
+    if not settings:
+        settings = {
+            "_id": "global",
+            "requests_enabled": False,
+            "current_event_id": None,
+            "loyalty_qr_version": 1
+        }
+    
+    return {
+        "requests_enabled": settings.get("requests_enabled", False),
+        "current_event_id": settings.get("current_event_id"),
+        "loyalty_qr_version": settings.get("loyalty_qr_version", 1),
+        "updated_at": settings.get("updated_at"),
+        "updated_by": settings.get("updated_by")
+    }
+
+@app.post("/api/admin/settings/toggle-requests")
+async def toggle_song_requests(current_user: dict = Depends(get_current_admin)):
+    """Toggle song requests ON/OFF"""
+    db = get_database()
+    
+    settings = await db.app_settings.find_one({"_id": "global"})
+    current_status = settings.get("requests_enabled", False) if settings else False
+    new_status = not current_status
+    
+    await db.app_settings.update_one(
+        {"_id": "global"},
+        {
+            "$set": {
+                "requests_enabled": new_status,
+                "updated_at": datetime.utcnow(),
+                "updated_by": current_user["email"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "success": True,
+        "requests_enabled": new_status,
+        "message": f"Les demandes de chansons sont maintenant {'ACTIVÉES' if new_status else 'DÉSACTIVÉES'}"
+    }
+
+@app.post("/api/admin/settings/end-event")
+async def end_current_event(current_user: dict = Depends(get_current_admin)):
+    """End current event and generate new QR code version for next event"""
+    db = get_database()
+    
+    settings = await db.app_settings.find_one({"_id": "global"})
+    current_qr_version = settings.get("loyalty_qr_version", 1) if settings else 1
+    new_qr_version = current_qr_version + 1
+    
+    # Update settings: disable requests and increment QR version
+    await db.app_settings.update_one(
+        {"_id": "global"},
+        {
+            "$set": {
+                "requests_enabled": False,
+                "loyalty_qr_version": new_qr_version,
+                "current_event_id": None,
+                "updated_at": datetime.utcnow(),
+                "updated_by": current_user["email"]
+            }
+        },
+        upsert=True
+    )
+    
+    # Clear all pending song requests
+    await db.song_requests.delete_many({"status": "pending"})
+    
+    return {
+        "success": True,
+        "message": f"Événement terminé! Nouveau QR code (version {new_qr_version}) prêt pour le prochain événement.",
+        "new_qr_version": new_qr_version,
+        "requests_cleared": True
+    }
+
+@app.post("/api/admin/settings/start-event")
+async def start_new_event(
+    event_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Start a new event - enables requests and sets current event"""
+    db = get_database()
+    
+    # If no event_id provided, get the next upcoming event
+    if not event_id:
+        next_event = await db.events.find_one(
+            {"status": "upcoming"},
+            sort=[("event_date", 1)]
+        )
+        if next_event:
+            event_id = str(next_event["_id"])
+    
+    await db.app_settings.update_one(
+        {"_id": "global"},
+        {
+            "$set": {
+                "requests_enabled": True,
+                "current_event_id": event_id,
+                "updated_at": datetime.utcnow(),
+                "updated_by": current_user["email"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "success": True,
+        "message": "Événement démarré! Les demandes de chansons sont activées.",
+        "requests_enabled": True,
+        "current_event_id": event_id
+    }
+
+@app.get("/api/settings/requests-status")
+async def get_requests_status():
+    """Public endpoint to check if song requests are enabled"""
+    db = get_database()
+    
+    settings = await db.app_settings.find_one({"_id": "global"})
+    
+    return {
+        "requests_enabled": settings.get("requests_enabled", False) if settings else False
+    }
+
+@app.get("/api/loyalty/qr-version")
+async def get_qr_version():
+    """Get current QR code version for loyalty scanning"""
+    db = get_database()
+    
+    settings = await db.app_settings.find_one({"_id": "global"})
+    
+    return {
+        "qr_version": settings.get("loyalty_qr_version", 1) if settings else 1
+    }
+
 
 # ============ LOYALTY PROGRAM ENDPOINTS ============
 
