@@ -992,6 +992,12 @@ export const translations: Record<Language, Translations> = {
     connectionError: 'Connection error',
     comingSoonFeature: 'Feature coming soon',
     
+    // Success/Error messages
+    success: 'Success',
+    error: 'Error',
+    voteRegistered: 'Vote registered!',
+    fillAllFields: 'Please fill in all required fields',
+    
     // Register/Forms
     joinInvasionLatina: 'Join Invasion Latina',
     createAccountSubtitle: 'Create your account and get ready to party',
