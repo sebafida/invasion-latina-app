@@ -416,15 +416,15 @@ export default function DJsScreen() {
             <View style={styles.successIconContainer}>
               <Ionicons name="checkmark-circle" size={80} color={theme.colors.success} />
             </View>
-            <Text style={styles.successTitle}>Demande envoyée!</Text>
+            <Text style={styles.successTitle}>{t('requestSentSuccess')}</Text>
             <Text style={styles.successMessage}>
-              Ta chanson a été ajoutée à la liste des demandes. Le DJ la jouera si possible!
+              {t('songAddedToList')}
             </Text>
             <TouchableOpacity
               style={styles.successButton}
               onPress={() => setShowSuccessModal(false)}
             >
-              <Text style={styles.successButtonText}>Super!</Text>
+              <Text style={styles.successButtonText}>{t('great')}</Text>
             </TouchableOpacity>
           </View>
         </View>
