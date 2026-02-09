@@ -643,7 +643,6 @@ export const translations: Record<Language, Translations> = {
     appLanguage: 'Langue de l\'application',
     createMyAccount: 'Créer mon compte',
     alreadyAccount: 'Déjà un compte ?',
-    fillAllFields: 'Veuillez remplir tous les champs obligatoires',
     passwordsDontMatch: 'Les mots de passe ne correspondent pas',
     passwordTooShort: 'Le mot de passe doit contenir au moins 6 caractères',
     mustAcceptTerms: 'Vous devez accepter les conditions générales',
