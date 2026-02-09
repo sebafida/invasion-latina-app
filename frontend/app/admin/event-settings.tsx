@@ -57,7 +57,7 @@ export default function EventSettingsScreen() {
   const toggleRequests = async () => {
     setActionLoading('toggle');
     try {
-      const response = await api.post('/api/admin/settings/toggle-requests');
+      const response = await api.post('/admin/settings/toggle-requests');
       Alert.alert('Succès', response.data.message);
       fetchSettings();
     } catch (error: any) {
