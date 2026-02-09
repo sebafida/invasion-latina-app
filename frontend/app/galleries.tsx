@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { theme } from '../src/config/theme';
 import api from '../src/config/api';
+import { useLanguage } from '../src/context/LanguageContext';
 
 interface EventGallery {
   id: string;
@@ -24,6 +25,7 @@ interface EventGallery {
 
 export default function GalleriesScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [galleries, setGalleries] = useState<EventGallery[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -93,8 +95,8 @@ export default function GalleriesScreen() {
             <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <Text style={styles.title}>Galeries Photos</Text>
-            <Text style={styles.subtitle}>Revivez les meilleurs moments</Text>
+            <Text style={styles.title}>{t('galleriesTitle')}</Text>
+            <Text style={styles.subtitle}>{t('reliveTheBestMoments')}</Text>
           </View>
         </View>
 
@@ -102,14 +104,14 @@ export default function GalleriesScreen() {
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>Chargement des galeries...</Text>
+            <Text style={styles.loadingText}>{t('loadingGalleries')}</Text>
           </View>
         ) : galleries.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="images-outline" size={64} color={theme.colors.textMuted} />
-            <Text style={styles.emptyText}>Aucune galerie disponible</Text>
+            <Text style={styles.emptyText}>{t('noGalleryAvailable')}</Text>
             <Text style={styles.emptySubtext}>
-              Les photos seront publiées après le prochain événement
+              {t('photosPublishedAfterEvent')}
             </Text>
           </View>
         ) : (
@@ -150,7 +152,7 @@ export default function GalleriesScreen() {
               </View>
               
               <View style={styles.viewButton}>
-                <Text style={styles.viewButtonText}>Voir les photos</Text>
+                <Text style={styles.viewButtonText}>{t('viewPhotos')}</Text>
                 <Ionicons name="arrow-forward" size={20} color="white" />
               </View>
             </TouchableOpacity>
@@ -159,27 +161,27 @@ export default function GalleriesScreen() {
 
         {/* Features Coming Soon */}
         <View style={styles.featuresSection}>
-          <Text style={styles.featuresTitle}>Fonctionnalités</Text>
+          <Text style={styles.featuresTitle}>{t('features')}</Text>
           
           <View style={styles.featureCard}>
             <Ionicons name="download" size={24} color={theme.colors.neonBlue} />
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Téléchargement HD</Text>
-              <Text style={styles.featureDesc}>Télécharge tes photos en haute qualité</Text>
+              <Text style={styles.featureTitle}>{t('hdDownload')}</Text>
+              <Text style={styles.featureDesc}>{t('downloadHdPhotos')}</Text>
             </View>
             <View style={styles.availableBadge}>
-              <Text style={styles.availableText}>Disponible</Text>
+              <Text style={styles.availableText}>{t('available')}</Text>
             </View>
           </View>
           
           <View style={styles.featureCard}>
             <Ionicons name="share-social" size={24} color={theme.colors.secondary} />
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Partage Social</Text>
-              <Text style={styles.featureDesc}>Partage directement sur Instagram, etc.</Text>
+              <Text style={styles.featureTitle}>{t('socialShare')}</Text>
+              <Text style={styles.featureDesc}>{t('shareOnInstagram')}</Text>
             </View>
             <View style={styles.availableBadge}>
-              <Text style={styles.availableText}>Disponible</Text>
+              <Text style={styles.availableText}>{t('available')}</Text>
             </View>
           </View>
         </View>
