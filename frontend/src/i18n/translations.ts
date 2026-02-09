@@ -971,6 +971,7 @@ export const translations: Record<Language, Translations> = {
     loyaltyScanner: 'Loyalty Scanner',
     djSelection: 'DJ Selection Event',
     freeEntryScanner: 'Free Entry Scanner',
+    eventSettings: 'Event Settings',
     
     // Gallery
     gallery: 'Gallery',
