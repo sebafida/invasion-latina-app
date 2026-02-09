@@ -225,7 +225,6 @@ export interface Translations {
   appLanguage: string;
   createMyAccount: string;
   alreadyAccount: string;
-  fillAllFields: string;
   passwordsDontMatch: string;
   passwordTooShort: string;
   mustAcceptTerms: string;
