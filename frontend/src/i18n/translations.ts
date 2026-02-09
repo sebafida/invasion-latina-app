@@ -1096,6 +1096,8 @@ export const translations: Record<Language, Translations> = {
     no: 'No',
     ok: 'OK',
     close: 'Cerrar',
+    voteRegistered: '¡Voto registrado! 👍',
+    fillAllFields: 'Por favor rellena todos los campos',
     
     // Navigation
     home: 'Inicio',
