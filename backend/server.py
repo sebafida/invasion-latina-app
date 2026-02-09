@@ -269,6 +269,24 @@ async def create_sample_products():
         await db.products.insert_many(products)
         logger.info(f"✅ Created {len(products)} sample products")
 
+async def init_app_settings():
+    """Initialize app settings if not exists"""
+    db = get_database()
+    
+    existing = await db.app_settings.find_one({"_id": "global"})
+    
+    if not existing:
+        default_settings = {
+            "_id": "global",
+            "requests_enabled": False,  # DJ song requests toggle
+            "current_event_id": None,   # Current active event for QR codes
+            "loyalty_qr_version": 1,    # Increment this to invalidate old QR codes
+            "updated_at": datetime.utcnow(),
+            "updated_by": "system"
+        }
+        await db.app_settings.insert_one(default_settings)
+        logger.info("✅ Created default app settings")
+
 # ============ ROOT & HEALTH ENDPOINTS ============
 
 @app.get("/")
