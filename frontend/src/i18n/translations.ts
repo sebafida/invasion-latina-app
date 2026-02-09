@@ -1006,7 +1006,6 @@ export const translations: Record<Language, Translations> = {
     appLanguage: 'App language',
     createMyAccount: 'Create my account',
     alreadyAccount: 'Already have an account?',
-    fillAllFields: 'Please fill in all required fields',
     passwordsDontMatch: 'Passwords do not match',
     passwordTooShort: 'Password must be at least 6 characters',
     mustAcceptTerms: 'You must accept the terms and conditions',
