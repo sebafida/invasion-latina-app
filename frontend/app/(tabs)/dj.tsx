@@ -59,7 +59,7 @@ export default function DJRequestsScreen() {
 
   const handleRequestSong = async () => {
     if (!songTitle.trim() || !artistName.trim()) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+      Alert.alert(t('error'), t('fillAllFields'));
       return;
     }
 
@@ -81,10 +81,10 @@ export default function DJRequestsScreen() {
       setArtistName('');
       
       loadRequests();
-      Alert.alert('Succès', response.data.message || 'Chanson demandée! 🎵');
+      Alert.alert(t('success'), t('songRequested'));
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erreur lors de la demande';
-      Alert.alert('Info', message);
+      const message = error.response?.data?.detail || t('error');
+      Alert.alert(t('error'), message);
     } finally {
       setLoading(false);
     }
@@ -93,11 +93,11 @@ export default function DJRequestsScreen() {
   const handleVote = async (requestId: string) => {
     try {
       await api.post(`/dj/vote/${requestId}`);
-      Alert.alert('Succès', 'Vote enregistré! 👍');
+      Alert.alert(t('success'), t('voteRegistered'));
       loadRequests();
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erreur lors du vote';
-      Alert.alert('Info', message);
+      const message = error.response?.data?.detail || t('error');
+      Alert.alert(t('error'), message);
     }
   };
 
