@@ -309,7 +309,7 @@ export default function HomeScreen() {
         <View style={styles.socialSection}>
           <View style={styles.lineupHeader}>
             <Ionicons name="share-social" size={24} color={theme.colors.primary} />
-            <Text style={styles.sectionTitle}>Réseaux Sociaux</Text>
+            <Text style={styles.sectionTitle}>{t('socialNetworks')}</Text>
           </View>
           
           <View style={styles.socialGrid}>
@@ -346,11 +346,6 @@ export default function HomeScreen() {
               <Text style={styles.socialName}>TikTok</Text>
             </TouchableOpacity>
           </View>
-        </View>
-
-        {/* Follow Us */}
-        <View style={styles.followSection}>
-          <Text style={styles.followTitle}>{t('socialNetworks')}</Text>
         </View>
       </View>
     </ScrollView>
