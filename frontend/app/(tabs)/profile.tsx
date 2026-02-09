@@ -828,6 +828,23 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
     color: 'white',
   },
+  eventSettingsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#607D8B',
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  eventSettingsButtonText: {
+    flex: 1,
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: 'white',
+  },
 
   // Info Section
   infoSection: {
