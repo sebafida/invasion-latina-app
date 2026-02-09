@@ -1562,6 +1562,7 @@ export const translations: Record<Language, Translations> = {
     bypassGeofencing: 'Bypass geofencing & schema\'s',
     sendTheRequest: 'Verzoek verzenden',
     requestSentSuccess: 'Verzoek verzonden!',
+    songAddedToList: 'Je nummer is toegevoegd aan de lijst. De DJ zal het draaien indien mogelijk!',
     recentHistory: 'Recente geschiedenis',
     coins: 'Munten',
     residentDj: 'Resident DJ',
