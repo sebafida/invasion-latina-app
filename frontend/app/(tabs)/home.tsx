@@ -263,7 +263,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.spotifyInfo}>
             <Text style={styles.spotifyTitle}>{t('spotifyPlaylist')}</Text>
-            <Text style={styles.spotifySubtitle}>{t('vivaLaMusica')}</Text>
+            <Text style={styles.spotifySubtitle}>Que viva la música latina</Text>
           </View>
           <Ionicons name="open-outline" size={24} color="#1DB954" />
         </TouchableOpacity>
