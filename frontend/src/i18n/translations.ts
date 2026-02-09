@@ -339,15 +339,6 @@ export interface Translations {
   contactWithin24h: string;
   great: string;
   noEventAvailable: string;
-  // Common properties
-  photos: string;
-  aftermovies: string;
-  phoneNumber: string;
-  bottlePreferences: string;
-  contactInfo: string;
-  bookingSummary: string;
-  price: string;
-  sendRequest: string;
   
   // Welcome page
   getStarted: string;
