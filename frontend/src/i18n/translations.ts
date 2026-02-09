@@ -1353,8 +1353,6 @@ export const translations: Record<Language, Translations> = {
     comingSoonFeature: 'Función próximamente',
     
     // Success/Error messages
-    success: 'Éxito',
-    error: 'Error',
     voteRegistered: '¡Voto registrado!',
     fillAllFields: 'Por favor completa todos los campos obligatorios',
     
