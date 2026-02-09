@@ -147,7 +147,7 @@ export default function DJsScreen() {
       await api.post('/dj/request-song', {
         song_title: songTitle.trim(),
         artist_name: artistName.trim(),
-        user_name: user?.name || 'Anonyme'
+        user_name: user?.name || t('partyLover')
       });
       
       // Reset form and close modal
@@ -158,8 +158,8 @@ export default function DJsScreen() {
       // Show success modal
       setShowSuccessModal(true);
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erreur lors de l\'envoi';
-      Alert.alert('Erreur', message);
+      const message = error.response?.data?.detail || t('error');
+      Alert.alert(t('error'), message);
     } finally {
       setSubmitting(false);
     }
