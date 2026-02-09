@@ -207,8 +207,6 @@ export interface Translations {
   comingSoonFeature: string;
   
   // Success/Error messages
-  success: string;
-  error: string;
   voteRegistered: string;
   fillAllFields: string;
   
