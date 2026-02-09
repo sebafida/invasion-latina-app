@@ -119,6 +119,9 @@ async def lifespan(app: FastAPI):
     # Create sample products
     await create_sample_products()
     
+    # Initialize app settings
+    await init_app_settings()
+    
     yield
     
     # Shutdown
