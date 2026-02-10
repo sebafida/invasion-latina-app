@@ -1730,6 +1730,72 @@ async def get_my_rewards(current_user: dict = Depends(get_current_user)):
     
     return rewards
 
+
+# ============ USER NOTIFICATION PREFERENCES ============
+
+@app.get("/api/user/notification-preferences")
+async def get_notification_preferences(current_user: dict = Depends(get_current_user)):
+    """Get user's notification preferences"""
+    db = get_database()
+    
+    prefs = await db.notification_preferences.find_one({"user_id": str(current_user["_id"])})
+    
+    if not prefs:
+        # Return default preferences
+        return {
+            "push_enabled": True,
+            "new_events": True,
+            "event_reminders": True,
+            "promotions": True,
+            "invasion_coins": True,
+            "dj_updates": True,
+            "newsletter_email": False
+        }
+    
+    return {
+        "push_enabled": prefs.get("push_enabled", True),
+        "new_events": prefs.get("new_events", True),
+        "event_reminders": prefs.get("event_reminders", True),
+        "promotions": prefs.get("promotions", True),
+        "invasion_coins": prefs.get("invasion_coins", True),
+        "dj_updates": prefs.get("dj_updates", True),
+        "newsletter_email": prefs.get("newsletter_email", False)
+    }
+
+@app.put("/api/user/notification-preferences")
+async def update_notification_preferences(
+    preferences: Dict[str, bool] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user's notification preferences"""
+    db = get_database()
+    
+    # Validate keys
+    allowed_keys = ["push_enabled", "new_events", "event_reminders", "promotions", "invasion_coins", "dj_updates", "newsletter_email"]
+    update_data = {k: v for k, v in preferences.items() if k in allowed_keys}
+    update_data["user_id"] = str(current_user["_id"])
+    update_data["updated_at"] = datetime.utcnow()
+    
+    # Upsert preferences
+    await db.notification_preferences.update_one(
+        {"user_id": str(current_user["_id"])},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    # Log consent for GDPR compliance
+    await db.consent_logs.insert_one({
+        "user_id": str(current_user["_id"]),
+        "user_email": current_user.get("email"),
+        "action": "notification_preferences_updated",
+        "preferences": update_data,
+        "timestamp": datetime.utcnow(),
+        "ip_address": None  # Could be added if needed
+    })
+    
+    return {"success": True, "message": "Préférences mises à jour"}
+
+
 @app.post("/api/loyalty/claim-reward")
 async def claim_reward(current_user: dict = Depends(get_current_user)):
     """Claim a free entry reward (25 Invasion Coins)"""
