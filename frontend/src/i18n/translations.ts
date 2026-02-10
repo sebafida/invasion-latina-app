@@ -1920,7 +1920,7 @@ export const translations: Record<Language, Translations> = {
     vipLounge: 'Toegang tot VIP lounge',
     vipSpaceAccess: 'Toegang tot VIP ruimte',
     largerSpace: 'Grotere ruimte',
-    priorityEntry: 'Prioriteitstoegang',
+    priorityEntry: 'Prioritaire toegang',
     luxuryTable: 'Luxe tafel met bank',
     vipDedicatedService: 'Toegewijde VIP service',
     privateExclusive: 'Exclusieve privéruimte',
