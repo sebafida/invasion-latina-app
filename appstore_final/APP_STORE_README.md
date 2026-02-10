@@ -6,7 +6,7 @@
 **Bundle ID:** com.invasionlatina.app
 **Version:** 1.0.0
 **Category:** Entertainment / Music
-**Age Rating:** 17+
+**Age Rating:** 18+
 
 ---
 
