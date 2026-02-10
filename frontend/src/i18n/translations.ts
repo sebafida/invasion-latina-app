@@ -344,6 +344,8 @@ export interface Translations {
   privatifSpace: string;
   exclusiveService: string;
   vipLounge: string;
+  vipSpaceAccess: string;
+  largerSpace: string;
   priorityEntry: string;
   luxuryTable: string;
   vipDedicatedService: string;
