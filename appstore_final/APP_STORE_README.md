@@ -14,7 +14,7 @@
 
 **Subtitle (30 chars):**
 ```
-La fête latino #1 en Belgique
+#1 reggaeton en BE
 ```
 
 **Description:**
