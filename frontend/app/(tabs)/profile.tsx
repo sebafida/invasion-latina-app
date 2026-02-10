@@ -363,6 +363,23 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
         </TouchableOpacity>
 
+        {/* Notification Preferences Button */}
+        <TouchableOpacity 
+          style={styles.notificationPrefButton}
+          onPress={() => router.push('/settings/notification-preferences')}
+        >
+          <View style={styles.languageSelectorLeft}>
+            <Ionicons name="notifications" size={24} color={theme.colors.secondary} />
+            <View style={styles.languageSelectorInfo}>
+              <Text style={styles.languageSelectorLabel}>{t('notificationPreferences')}</Text>
+              <Text style={styles.languageSelectorValue}>
+                {t('chooseWhatToReceive')}
+              </Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
+        </TouchableOpacity>
+
         {/* Language Modal */}
         <Modal
           visible={showLanguageModal}
