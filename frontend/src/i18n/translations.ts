@@ -377,6 +377,35 @@ export interface Translations {
   nextEventBadge: string;
   alreadyHaveAccount: string;
   sinceYears: string;
+  
+  // Notification Preferences
+  notificationPreferences: string;
+  chooseWhatToReceive: string;
+  systemNotificationSettings: string;
+  tapToOpenSystemSettings: string;
+  enableAll: string;
+  disableAll: string;
+  disable: string;
+  disableAllNotifications: string;
+  disableAllNotificationsConfirm: string;
+  allNotificationsEnabled: string;
+  pushNotifications: string;
+  enablePushNotifications: string;
+  enablePushNotificationsDesc: string;
+  newEvents: string;
+  newEventsDesc: string;
+  eventReminders: string;
+  eventRemindersDesc: string;
+  promotionsAndOffers: string;
+  promotions: string;
+  promotionsDesc: string;
+  invasionCoinsNotif: string;
+  invasionCoinsNotifDesc: string;
+  djUpdates: string;
+  djUpdatesDesc: string;
+  newsletterEmail: string;
+  newsletterEmailDesc: string;
+  notificationPrivacyNotice: string;
 }
 
 export const translations: Record<Language, Translations> = {
