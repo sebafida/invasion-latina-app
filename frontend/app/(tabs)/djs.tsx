@@ -314,19 +314,6 @@ export default function DJsScreen() {
           </>
         )}
 
-        {/* Info Section */}
-        <View style={styles.infoSection}>
-          <View style={styles.infoCard}>
-            <Ionicons name="musical-notes" size={24} color={theme.colors.primary} />
-            <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>{t('djsDescription')}</Text>
-              <Text style={styles.infoText}>
-                {t('djsInfoText')}
-              </Text>
-            </View>
-          </View>
-        </View>
-
         {/* Song Request Section */}
         <View style={styles.requestSection}>
           <TouchableOpacity
