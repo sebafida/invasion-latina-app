@@ -67,7 +67,7 @@ latino,reggaeton,soirée,fête,bruxelles,mirano,dj,musique,club,nightlife
 
 **Subtitle:**
 ```
-The #1 Latino Party in Belgium
+#1 reggaeton in BE
 ```
 
 **Description:**
