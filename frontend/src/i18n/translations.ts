@@ -1525,7 +1525,7 @@ export const translations: Record<Language, Translations> = {
     privatifSpace: 'Espacio privado',
     exclusiveService: 'Servicio exclusivo',
     vipLounge: 'Acceso al lounge VIP',
-    vipSpaceAccess: 'Acceso al espacio VIP',
+    vipSpaceAccess: 'Acceso espacio VIP',
     largerSpace: 'Espacio más grande',
     priorityEntry: 'Entrada prioritaria',
     luxuryTable: 'Mesa de lujo con banqueta',
