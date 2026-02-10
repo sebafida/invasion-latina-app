@@ -173,6 +173,6 @@ Table booking and ticket purchases redirect to external services (XCEED/WhatsApp
 - [ ] Privacy Policy URL accessible
 - [ ] Support URL accessible
 - [ ] Demo account working
-- [ ] Age rating set to 17+
+- [ ] Age rating set to 18+
 - [ ] Category: Entertainment (primary), Music (secondary)
 - [ ] Build selected (Build 11 or latest)
