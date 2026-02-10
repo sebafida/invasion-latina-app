@@ -745,7 +745,7 @@ export const translations: Record<Language, Translations> = {
     luxuryTable: 'Table luxe avec banquette',
     vipDedicatedService: 'Service VIP dédié',
     privateExclusive: 'Espace privé exclusif',
-    butlerService: 'Service butler',
+    butlerService: 'Service VIP dédié',
     numberOfPeople: 'Nombre de personnes',
     bottlePreferencesOptional: 'Préférences bouteilles (optionnel)',
     bottlePreferencesPlaceholder: 'Ex: Vodka Grey Goose, Champagne Moët...',
