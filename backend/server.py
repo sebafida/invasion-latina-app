@@ -447,13 +447,25 @@ async def social_login(auth_data: SocialAuthData):
         
         email = auth_data.email
         name = auth_data.name or "User"
-        provider_id = auth_data.user_id or auth_data.id_token[:50]
+        provider_id = auth_data.user_id or auth_data.id_token[:50] if auth_data.id_token else None
+        
+        # For Apple Sign In, email might be null on subsequent logins
+        # In that case, try to find user by provider_id
+        if not email and auth_data.provider == 'apple' and provider_id:
+            existing_user = await db.users.find_one({"apple_id": provider_id})
+            if existing_user:
+                email = existing_user.get("email")
+                name = existing_user.get("name", name)
         
         if not email:
-            raise HTTPException(status_code=400, detail="Email is required")
+            raise HTTPException(status_code=400, detail="Email is required. Please use email login or try Sign in with Apple again.")
         
         # Check if user already exists
         user = await db.users.find_one({"email": email})
+        
+        if not user and auth_data.provider == 'apple' and provider_id:
+            # Also check by Apple ID
+            user = await db.users.find_one({"apple_id": provider_id})
         
         if not user:
             # Create new user from social login
