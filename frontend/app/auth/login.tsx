@@ -117,12 +117,22 @@ export default function LoginScreen() {
         ],
       });
       
+      console.log('Apple credential received:', {
+        user: credential.user,
+        email: credential.email,
+        hasIdentityToken: !!credential.identityToken
+      });
+      
+      // Apple only provides email on first sign in
+      // For subsequent sign ins, we need to use the user ID to find the account
+      const email = credential.email || `${credential.user}@privaterelay.appleid.com`;
+      
       // Send to our backend
       const result = await api.post('/auth/social', {
         provider: 'apple',
         id_token: credential.identityToken,
         user_id: credential.user,
-        email: credential.email,
+        email: email,
         name: credential.fullName 
           ? `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim()
           : undefined,
@@ -139,7 +149,7 @@ export default function LoginScreen() {
         return;
       }
       console.error('Apple sign in error:', error);
-      Alert.alert('Erreur', 'Connexion Apple échouée');
+      Alert.alert(t('error'), t('appleSignInFailed') || 'Apple sign in failed. Please try again or use email login.');
     } finally {
       setSocialLoading(null);
     }
