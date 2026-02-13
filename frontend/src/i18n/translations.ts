@@ -860,6 +860,12 @@ export const translations: Record<Language, Translations> = {
     no: 'No',
     ok: 'OK',
     close: 'Close',
+    
+    // Auth errors
+    appleSignInFailed: 'Apple sign-in failed. Please try again or use another method.',
+    googleSignInFailed: 'Google sign-in failed. Please try again or use another method.',
+    loginFailed: 'Login failed. Please check your credentials.',
+    
     voteRegistered: 'Vote registered! 👍',
     fillAllFields: 'Please fill in all fields',
     
