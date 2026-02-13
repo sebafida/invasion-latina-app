@@ -1720,7 +1720,7 @@ export const translations: Record<Language, Translations> = {
     // Auth errors
     appleSignInFailed: 'Apple inloggen mislukt. Probeer opnieuw of gebruik een andere methode.',
     googleSignInFailed: 'Google inloggen mislukt. Probeer opnieuw of gebruik een andere methode.',
-    loginFailed: 'Inloggen mislukt. Controleer je inloggegevens.',
+    loginFailed: 'Inloggen mislukt. Controleer je gegevens.',
     
     voteRegistered: 'Stem geregistreerd! 👍',
     fillAllFields: 'Vul alle velden in',
