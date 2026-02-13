@@ -22,6 +22,11 @@ export interface Translations {
   ok: string;
   close: string;
   
+  // Auth errors
+  appleSignInFailed: string;
+  googleSignInFailed: string;
+  loginFailed: string;
+  
   // Navigation
   home: string;
   djRequests: string;
