@@ -157,7 +157,7 @@ export default function LoginScreen() {
   
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+      Alert.alert(t('error'), t('fillAllFields') || 'Please fill all fields');
       return;
     }
     
@@ -169,7 +169,7 @@ export default function LoginScreen() {
       router.replace('/(tabs)/home');
     } catch (error: any) {
       console.error('Login error:', error);
-      Alert.alert('Erreur de connexion', error.message || 'Erreur inconnue');
+      Alert.alert(t('error'), t('loginFailed') || error.message || 'Login failed');
     } finally {
       setLoading(false);
     }
