@@ -84,6 +84,8 @@ export default function LoginScreen() {
       );
       const userInfo = await userInfoResponse.json();
       
+      console.log('Google user info:', { id: userInfo.id, email: userInfo.email });
+      
       // Send to our backend
       const result = await api.post('/auth/social', {
         provider: 'google',
@@ -100,7 +102,7 @@ export default function LoginScreen() {
       }
     } catch (error: any) {
       console.error('Google sign in error:', error);
-      Alert.alert('Erreur', 'Connexion Google échouée');
+      Alert.alert(t('error'), t('googleSignInFailed') || 'Google sign in failed. Please try again.');
     } finally {
       setSocialLoading(null);
     }
