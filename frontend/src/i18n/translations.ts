@@ -1288,6 +1288,12 @@ export const translations: Record<Language, Translations> = {
     no: 'No',
     ok: 'OK',
     close: 'Cerrar',
+    
+    // Auth errors
+    appleSignInFailed: 'Error al iniciar sesión con Apple. Inténtalo de nuevo o usa otro método.',
+    googleSignInFailed: 'Error al iniciar sesión con Google. Inténtalo de nuevo o usa otro método.',
+    loginFailed: 'Error al iniciar sesión. Verifica tus credenciales.',
+    
     voteRegistered: '¡Voto registrado! 👍',
     fillAllFields: 'Por favor rellena todos los campos',
     
