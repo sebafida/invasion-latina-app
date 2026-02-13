@@ -432,6 +432,12 @@ export const translations: Record<Language, Translations> = {
     no: 'Non',
     ok: 'OK',
     close: 'Fermer',
+    
+    // Auth errors
+    appleSignInFailed: 'Connexion Apple échouée. Veuillez réessayer ou utiliser une autre méthode.',
+    googleSignInFailed: 'Connexion Google échouée. Veuillez réessayer ou utiliser une autre méthode.',
+    loginFailed: 'Connexion échouée. Vérifiez vos identifiants.',
+    
     voteRegistered: 'Vote enregistré! 👍',
     fillAllFields: 'Veuillez remplir tous les champs',
     
