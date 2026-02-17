@@ -38,6 +38,7 @@ export default function DJRequestsScreen() {
   const [songTitle, setSongTitle] = useState('');
   const [artistName, setArtistName] = useState('');
   const [devMode, setDevMode] = useState(true); // Mode test activé par défaut
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     loadRequests();
