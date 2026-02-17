@@ -321,9 +321,12 @@ export default function DJsScreen() {
         <View style={styles.requestSection}>
           <TouchableOpacity
             style={styles.requestButton}
-            onPress={() => {
-              console.log('Song request button pressed, user:', user, 'isAuthenticated:', isAuthenticated);
-              if (isAuthenticated && user) {
+            onPress={async () => {
+              // Check token directly from AsyncStorage to get the freshest state
+              const token = await AsyncStorage.getItem('auth_token');
+              console.log('Song request button pressed, token exists:', !!token);
+              
+              if (token && user) {
                 setShowRequestModal(true);
               } else {
                 console.log('Not authenticated, showing login modal');
