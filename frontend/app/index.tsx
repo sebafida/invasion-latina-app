@@ -66,6 +66,8 @@ export default function WelcomeScreen() {
     // Clear any existing auth token to ensure guest mode
     await AsyncStorage.removeItem('auth_token');
     await logout();
+    // Small delay to ensure state updates before navigation
+    await new Promise(resolve => setTimeout(resolve, 100));
     router.replace('/(tabs)/home');
   };
 
