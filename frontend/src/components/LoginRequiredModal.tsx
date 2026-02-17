@@ -26,6 +26,8 @@ export const LoginRequiredModal: React.FC<LoginRequiredModalProps> = ({
   const router = useRouter();
   const { t } = useLanguage();
 
+  console.log('LoginRequiredModal render, visible:', visible);
+
   const handleLogin = () => {
     onClose();
     router.push('/auth/login');
