@@ -1703,6 +1703,18 @@ export const translations: Record<Language, Translations> = {
     nextEventBadge: 'Próximo Evento',
     alreadyHaveAccount: '¿Ya tienes cuenta?',
     sinceYears: 'Desde 2009 • 16 Años de Pasión Latina',
+    exploreWithoutAccount: 'Explorar sin cuenta',
+
+    // Login Required Modal
+    loginRequired: 'Inicio de sesión requerido',
+    loginRequiredMessage: 'Inicia sesión para acceder a todas las funciones',
+    loginRequiredForFeature: 'Inicia sesión para {feature}',
+    benefitRequestSongs: 'Pedir canciones al DJ',
+    benefitBookTables: 'Reservar mesas VIP',
+    benefitEarnCoins: 'Ganar Invasion Coins',
+    createFreeAccount: 'Crear una cuenta gratis',
+    alreadyHaveAccountLogin: '¿Ya tienes una cuenta? Iniciar sesión',
+    continueBrowsing: 'Continuar sin cuenta',
     
     // Notification Preferences
     notificationPreferences: 'Preferencias de Notificaciones',
