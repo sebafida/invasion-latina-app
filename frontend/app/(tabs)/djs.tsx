@@ -320,7 +320,13 @@ export default function DJsScreen() {
         <View style={styles.requestSection}>
           <TouchableOpacity
             style={styles.requestButton}
-            onPress={() => setShowRequestModal(true)}
+            onPress={() => {
+              if (user) {
+                setShowRequestModal(true);
+              } else {
+                setShowLoginModal(true);
+              }
+            }}
           >
             <Ionicons name="musical-note" size={24} color="white" />
             <View style={styles.requestButtonContent}>
