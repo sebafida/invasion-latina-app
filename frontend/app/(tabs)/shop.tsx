@@ -490,6 +490,13 @@ export default function VIPBookingScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Login Required Modal */}
+      <LoginRequiredModal
+        visible={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        feature={t('vipTables')}
+      />
     </ScrollView>
   );
 }
