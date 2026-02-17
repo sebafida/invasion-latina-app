@@ -102,7 +102,7 @@ const DEFAULT_DJS: DJ[] = [
 ];
 
 export default function DJsScreen() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { t } = useLanguage();
   const [djs, setDjs] = useState<DJ[]>(DEFAULT_DJS);
   const [loading, setLoading] = useState(false);
