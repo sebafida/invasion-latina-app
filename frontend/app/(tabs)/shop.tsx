@@ -439,7 +439,7 @@ export default function VIPBookingScreen() {
         <TouchableOpacity
           style={[styles.submitButton, { backgroundColor: currentRoom.color }, loading && styles.submitButtonDisabled]}
           onPress={() => {
-            if (user) {
+            if (isAuthenticated && user) {
               handleSubmitBooking();
             } else {
               setShowLoginModal(true);
