@@ -438,7 +438,13 @@ export default function VIPBookingScreen() {
         {/* Submit Button */}
         <TouchableOpacity
           style={[styles.submitButton, { backgroundColor: currentRoom.color }, loading && styles.submitButtonDisabled]}
-          onPress={handleSubmitBooking}
+          onPress={() => {
+            if (user) {
+              handleSubmitBooking();
+            } else {
+              setShowLoginModal(true);
+            }
+          }}
           disabled={loading}
         >
           <Ionicons name="send" size={20} color="white" />
