@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://lingua-latina-1.preview.emergentagent.com"
+BACKEND_URL = "https://guest-access-beta.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 # Test credentials from review request
