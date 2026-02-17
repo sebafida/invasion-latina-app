@@ -133,7 +133,6 @@ export default function WelcomeScreen() {
               style={styles.exploreButton}
               onPress={handleExploreAsGuest}
             >
-              <Ionicons name="compass-outline" size={20} color={theme.colors.textSecondary} />
               <Text style={styles.exploreText}>{t('exploreWithoutAccount')}</Text>
             </TouchableOpacity>
           </View>
