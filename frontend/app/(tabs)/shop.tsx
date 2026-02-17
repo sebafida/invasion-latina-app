@@ -30,7 +30,7 @@ interface Event {
 type RoomKey = 'main_room' | 'classy_room' | 'vip';
 
 export default function VIPBookingScreen() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { t } = useLanguage();
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState('');
