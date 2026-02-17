@@ -269,19 +269,22 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
   },
 
-  // Explore without account button
+  // Explore without account button - secondary style with border
   exploreButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
-    gap: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.textMuted,
+    borderRadius: theme.borderRadius.md,
   },
   exploreText: {
     color: theme.colors.textSecondary,
     fontSize: theme.fontSize.md,
-    textDecorationLine: 'underline',
+    fontWeight: '500' as any,
   },
   
   // Venue
