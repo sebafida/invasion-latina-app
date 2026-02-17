@@ -2143,6 +2143,18 @@ export const translations: Record<Language, Translations> = {
     nextEventBadge: 'Volgend Evenement',
     alreadyHaveAccount: 'Heb je al een account?',
     sinceYears: 'Sinds 2009 • 16 Jaar Latijnse Passie',
+    exploreWithoutAccount: 'Verkennen zonder account',
+
+    // Login Required Modal
+    loginRequired: 'Inloggen vereist',
+    loginRequiredMessage: 'Log in om toegang te krijgen tot alle functies',
+    loginRequiredForFeature: 'Log in om {feature}',
+    benefitRequestSongs: 'Nummers aanvragen bij de DJ',
+    benefitBookTables: 'VIP tafels reserveren',
+    benefitEarnCoins: 'Invasion Coins verdienen',
+    createFreeAccount: 'Maak een gratis account aan',
+    alreadyHaveAccountLogin: 'Heb je al een account? Inloggen',
+    continueBrowsing: 'Doorgaan zonder account',
     
     // Notification Preferences
     notificationPreferences: 'Notificatievoorkeuren',
