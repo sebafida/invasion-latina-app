@@ -12,9 +12,11 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../src/config/theme';
 import { Button } from '../src/components/Button';
 import { useLanguage } from '../src/context/LanguageContext';
+import { useAuth } from '../src/context/AuthContext';
 import api from '../src/config/api';
 
 const { width } = Dimensions.get('window');
