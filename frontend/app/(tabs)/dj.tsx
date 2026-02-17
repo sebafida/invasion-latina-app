@@ -93,6 +93,16 @@ export default function DJRequestsScreen() {
     }
   };
 
+  const handleSubmitRequest = async () => {
+    // Check token directly from AsyncStorage
+    const token = await AsyncStorage.getItem('auth_token');
+    if (token && user) {
+      handleRequestSong();
+    } else {
+      setShowLoginModal(true);
+    }
+  };
+
   const handleVote = async (requestId: string) => {
     try {
       await api.post(`/dj/vote/${requestId}`);
