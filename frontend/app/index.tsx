@@ -40,6 +40,7 @@ interface WelcomeContent {
 export default function WelcomeScreen() {
   const router = useRouter();
   const { t, language, setLanguage } = useLanguage();
+  const { logout } = useAuth();
   const [content, setContent] = useState<WelcomeContent>({});
   const [showLanguageModal, setShowLanguageModal] = useState(false);
 
@@ -60,8 +61,11 @@ export default function WelcomeScreen() {
     return LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
   };
 
-  // Navigate to tabs as guest (without account)
-  const handleExploreAsGuest = () => {
+  // Navigate to tabs as guest (without account) - clear any existing session
+  const handleExploreAsGuest = async () => {
+    // Clear any existing auth token to ensure guest mode
+    await AsyncStorage.removeItem('auth_token');
+    await logout();
     router.replace('/(tabs)/home');
   };
 
