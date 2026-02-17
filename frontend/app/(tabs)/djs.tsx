@@ -424,6 +424,13 @@ export default function DJsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Login Required Modal */}
+      <LoginRequiredModal
+        visible={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        feature={t('askForSong')}
+      />
     </ScrollView>
   );
 }
