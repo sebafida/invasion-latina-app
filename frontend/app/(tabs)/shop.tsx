@@ -44,6 +44,7 @@ export default function VIPBookingScreen() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Room types with their packages - using translation keys
   const getRooms = () => ({
