@@ -382,6 +382,18 @@ export interface Translations {
   nextEventBadge: string;
   alreadyHaveAccount: string;
   sinceYears: string;
+  exploreWithoutAccount: string;
+  
+  // Login Required Modal
+  loginRequired: string;
+  loginRequiredMessage: string;
+  loginRequiredForFeature: string;
+  benefitRequestSongs: string;
+  benefitBookTables: string;
+  benefitEarnCoins: string;
+  createFreeAccount: string;
+  alreadyHaveAccountLogin: string;
+  continueBrowsing: string;
   
   // Notification Preferences
   notificationPreferences: string;
