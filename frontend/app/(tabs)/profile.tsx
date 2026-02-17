@@ -17,6 +17,7 @@ import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
+import { LoginRequiredModal } from '../../src/components/LoginRequiredModal';
 
 interface LoyaltyData {
   points: number;
@@ -55,13 +56,17 @@ export default function ProfileScreen() {
   const [freeEntryVoucher, setFreeEntryVoucher] = useState<FreeEntryVoucher | null>(null);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [changingLanguage, setChangingLanguage] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
-    loadLoyaltyData();
-    checkFreeEntryVoucher();
-  }, []);
+    if (user) {
+      loadLoyaltyData();
+      checkFreeEntryVoucher();
+    }
+  }, [user]);
 
   const loadLoyaltyData = async () => {
+    if (!user) return;
     try {
       setLoading(true);
       const response = await api.get('/loyalty/my-points');
@@ -74,6 +79,7 @@ export default function ProfileScreen() {
   };
 
   const checkFreeEntryVoucher = async () => {
+    if (!user) return;
     try {
       const response = await api.get('/loyalty/free-entry/check');
       if (response.data.voucher && !response.data.voucher.used) {
@@ -128,7 +134,7 @@ export default function ProfileScreen() {
           text: t('yes'), 
           onPress: async () => {
             await logout();
-            router.replace('/auth/login');
+            router.replace('/');
           }, 
           style: 'destructive' 
         }
@@ -136,6 +142,125 @@ export default function ProfileScreen() {
     );
   };
 
+  // Guest view - show when user is not logged in
+  if (!user) {
+    return (
+      <ScrollView style={styles.container}>
+        <View style={styles.content}>
+          {/* Guest Header */}
+          <View style={styles.guestHeader}>
+            <View style={styles.guestAvatar}>
+              <Ionicons name="person-outline" size={50} color={theme.colors.textMuted} />
+            </View>
+            <Text style={styles.guestTitle}>{t('profile')}</Text>
+            <Text style={styles.guestSubtitle}>{t('loginRequiredMessage')}</Text>
+          </View>
+
+          {/* Benefits Card */}
+          <View style={styles.benefitsCard}>
+            <Text style={styles.benefitsTitle}>{t('howItWorks')}</Text>
+            <View style={styles.benefitItem}>
+              <Ionicons name="checkmark-circle" size={20} color={theme.colors.success} />
+              <Text style={styles.benefitText}>{t('benefitRequestSongs')}</Text>
+            </View>
+            <View style={styles.benefitItem}>
+              <Ionicons name="checkmark-circle" size={20} color={theme.colors.success} />
+              <Text style={styles.benefitText}>{t('benefitBookTables')}</Text>
+            </View>
+            <View style={styles.benefitItem}>
+              <Ionicons name="checkmark-circle" size={20} color={theme.colors.success} />
+              <Text style={styles.benefitText}>{t('benefitEarnCoins')}</Text>
+            </View>
+          </View>
+
+          {/* Login / Register buttons */}
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => router.push('/auth/register')}
+          >
+            <Ionicons name="person-add" size={20} color="white" />
+            <Text style={styles.loginButtonText}>{t('createFreeAccount')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => router.push('/auth/login')}
+          >
+            <Text style={styles.secondaryButtonText}>{t('alreadyHaveAccountLogin')}</Text>
+          </TouchableOpacity>
+
+          {/* Language Selector */}
+          <TouchableOpacity 
+            style={styles.languageSelectorButton}
+            onPress={() => setShowLanguageModal(true)}
+          >
+            <View style={styles.languageSelectorLeft}>
+              <Ionicons name="language" size={24} color={theme.colors.primary} />
+              <View style={styles.languageSelectorInfo}>
+                <Text style={styles.languageSelectorLabel}>{t('language')}</Text>
+                <Text style={styles.languageSelectorValue}>
+                  {getCurrentLanguage().flag} {getCurrentLanguage().name}
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Language Modal */}
+        <Modal
+          visible={showLanguageModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowLanguageModal(false)}
+        >
+          <View style={styles.languageModalOverlay}>
+            <View style={styles.languageModalContent}>
+              <View style={styles.languageModalHeader}>
+                <Text style={styles.languageModalTitle}>{t('chooseLanguage')}</Text>
+                <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
+                  <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+                </TouchableOpacity>
+              </View>
+
+              {changingLanguage ? (
+                <View style={styles.languageLoadingContainer}>
+                  <ActivityIndicator size="large" color={theme.colors.primary} />
+                  <Text style={styles.languageLoadingText}>{t('changingLanguage')}</Text>
+                </View>
+              ) : (
+                <View style={styles.languageOptions}>
+                  {LANGUAGES.map((lang) => (
+                    <TouchableOpacity
+                      key={lang.code}
+                      style={[
+                        styles.languageOption,
+                        language === lang.code && styles.languageOptionActive
+                      ]}
+                      onPress={() => handleChangeLanguage(lang.code)}
+                    >
+                      <Text style={styles.languageOptionFlag}>{lang.flag}</Text>
+                      <Text style={[
+                        styles.languageOptionText,
+                        language === lang.code && styles.languageOptionTextActive
+                      ]}>
+                        {lang.name}
+                      </Text>
+                      {language === lang.code && (
+                        <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          </View>
+        </Modal>
+      </ScrollView>
+    );
+  }
+
+  // Logged-in user view
   return (
     <ScrollView
       style={styles.container}
@@ -493,6 +618,12 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Login Required Modal */}
+      <LoginRequiredModal
+        visible={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+      />
     </ScrollView>
   );
 }
@@ -505,6 +636,84 @@ const styles = StyleSheet.create({
 
   content: {
     paddingBottom: 40,
+  },
+
+  // Guest styles
+  guestHeader: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xxl,
+    paddingHorizontal: theme.spacing.xl,
+  },
+  guestAvatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: theme.colors.cardBackground,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.lg,
+  },
+  guestTitle: {
+    fontSize: theme.fontSize.xxl,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.sm,
+  },
+  guestSubtitle: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  benefitsCard: {
+    marginHorizontal: theme.spacing.xl,
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.xl,
+  },
+  benefitsTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.md,
+  },
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  benefitText: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textPrimary,
+  },
+  loginButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.primary,
+    marginHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  loginButtonText: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: 'white',
+  },
+  secondaryButton: {
+    alignItems: 'center',
+    marginHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.md,
+    marginBottom: theme.spacing.xl,
+  },
+  secondaryButtonText: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.medium,
   },
 
   // Header

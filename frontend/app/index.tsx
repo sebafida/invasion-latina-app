@@ -58,6 +58,11 @@ export default function WelcomeScreen() {
     return LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
   };
 
+  // Navigate to tabs as guest (without account)
+  const handleExploreAsGuest = () => {
+    router.replace('/(tabs)/home');
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -121,6 +126,15 @@ export default function WelcomeScreen() {
               <Text style={styles.loginText}>
                 {t('alreadyHaveAccount')} <Text style={styles.loginTextBold}>{t('login')}</Text>
               </Text>
+            </TouchableOpacity>
+
+            {/* Explore without account button */}
+            <TouchableOpacity
+              style={styles.exploreButton}
+              onPress={handleExploreAsGuest}
+            >
+              <Ionicons name="compass-outline" size={20} color={theme.colors.textSecondary} />
+              <Text style={styles.exploreText}>{t('exploreWithoutAccount')}</Text>
             </TouchableOpacity>
           </View>
           
@@ -254,6 +268,21 @@ const styles = StyleSheet.create({
   loginTextBold: {
     color: theme.colors.primary,
     fontWeight: theme.fontWeight.bold,
+  },
+
+  // Explore without account button
+  exploreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    gap: theme.spacing.sm,
+  },
+  exploreText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.fontSize.md,
+    textDecorationLine: 'underline',
   },
   
   // Venue
