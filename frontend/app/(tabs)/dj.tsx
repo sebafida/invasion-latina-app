@@ -188,7 +188,7 @@ export default function DJRequestsScreen() {
 
           <TouchableOpacity
             style={styles.submitButton}
-            onPress={handleRequestSong}
+            onPress={handleSubmitRequest}
             disabled={loading}
           >
             <Text style={styles.submitButtonText}>
