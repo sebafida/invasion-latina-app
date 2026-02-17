@@ -439,8 +439,10 @@ export default function VIPBookingScreen() {
         {/* Submit Button */}
         <TouchableOpacity
           style={[styles.submitButton, { backgroundColor: currentRoom.color }, loading && styles.submitButtonDisabled]}
-          onPress={() => {
-            if (isAuthenticated && user) {
+          onPress={async () => {
+            // Check token directly from AsyncStorage to get the freshest state
+            const token = await AsyncStorage.getItem('auth_token');
+            if (token && user) {
               handleSubmitBooking();
             } else {
               setShowLoginModal(true);
