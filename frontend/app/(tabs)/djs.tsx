@@ -321,11 +321,11 @@ export default function DJsScreen() {
           <TouchableOpacity
             style={styles.requestButton}
             onPress={() => {
-              console.log('Song request button pressed, user:', user);
-              if (user) {
+              console.log('Song request button pressed, user:', user, 'isAuthenticated:', isAuthenticated);
+              if (isAuthenticated && user) {
                 setShowRequestModal(true);
               } else {
-                console.log('No user, showing login modal');
+                console.log('Not authenticated, showing login modal');
                 setShowLoginModal(true);
               }
             }}
