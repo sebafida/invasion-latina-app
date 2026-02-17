@@ -1263,6 +1263,18 @@ export const translations: Record<Language, Translations> = {
     nextEventBadge: 'Next Event',
     alreadyHaveAccount: 'Already have an account?',
     sinceYears: 'Since 2009 • 16 Years of Latin Passion',
+    exploreWithoutAccount: 'Explore without account',
+
+    // Login Required Modal
+    loginRequired: 'Login required',
+    loginRequiredMessage: 'Sign in to access all features',
+    loginRequiredForFeature: 'Sign in to {feature}',
+    benefitRequestSongs: 'Request songs from the DJ',
+    benefitBookTables: 'Book VIP tables',
+    benefitEarnCoins: 'Earn Invasion Coins',
+    createFreeAccount: 'Create a free account',
+    alreadyHaveAccountLogin: 'Already have an account? Sign in',
+    continueBrowsing: 'Continue without account',
     
     // Notification Preferences
     notificationPreferences: 'Notification Preferences',
