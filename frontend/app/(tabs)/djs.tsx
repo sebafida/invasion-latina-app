@@ -18,6 +18,7 @@ import { theme } from '../../src/config/theme';
 import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
 import { useAuth } from '../../src/context/AuthContext';
+import { LoginRequiredModal } from '../../src/components/LoginRequiredModal';
 
 interface DJ {
   id: string;
