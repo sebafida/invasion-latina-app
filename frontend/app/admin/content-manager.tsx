@@ -415,9 +415,25 @@ export default function ContentManagerScreen() {
       setLoading(false);
       
       if (cloudinaryUrl) {
-        setFlyerUrl(cloudinaryUrl);
+        setWelcomeFlyerUrl(cloudinaryUrl);
         Alert.alert('Succès', 'Flyer uploadé avec succès !');
       }
+    }
+  };
+
+  const handleSaveWelcomeContent = async () => {
+    try {
+      setLoading(true);
+      await api.put('/admin/welcome-content', {
+        flyer_url: welcomeFlyerUrl,
+        tagline: welcomeTagline,
+        venue_name: welcomeVenue,
+      });
+      Alert.alert('Succès', 'Contenu de la page d\'accueil mis à jour !');
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de sauvegarder le contenu');
+    } finally {
+      setLoading(false);
     }
   };
 
