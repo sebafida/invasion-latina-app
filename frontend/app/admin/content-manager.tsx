@@ -1481,4 +1481,25 @@ const styles = StyleSheet.create({
   previewContainer: {
     marginTop: theme.spacing.md,
   },
+  welcomeFlyerPreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: theme.borderRadius.md,
+    marginTop: theme.spacing.sm,
+  },
+  saveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.success,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.lg,
+  },
+  saveButtonText: {
+    fontSize: theme.fontSize.md,
+    color: 'white',
+    fontWeight: theme.fontWeight.bold,
+  },
 });
