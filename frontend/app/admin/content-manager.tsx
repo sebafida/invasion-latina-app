@@ -1099,6 +1099,7 @@ export default function ContentManagerScreen() {
 
       {/* Content */}
       <ScrollView style={styles.content}>
+        {activeTab === 'welcome' && renderWelcomeTab()}
         {activeTab === 'flyer' && renderFlyerTab()}
         {activeTab === 'photos' && renderPhotosTab()}
         {activeTab === 'aftermovies' && renderAftermoviesTab()}
