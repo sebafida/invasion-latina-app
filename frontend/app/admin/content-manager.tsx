@@ -490,6 +490,17 @@ export default function ContentManagerScreen() {
         </ScrollView>
       </View>
 
+      {/* Upload Button */}
+      <TouchableOpacity 
+        style={styles.uploadButton}
+        onPress={() => pickGalleryPhoto()}
+      >
+        <Ionicons name="cloud-upload" size={24} color={theme.colors.primary} />
+        <Text style={styles.uploadButtonText}>Sélectionner une photo</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.orText}>ou entrez une URL :</Text>
+
       {/* Photo URL Input */}
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>URL de la Photo</Text>
