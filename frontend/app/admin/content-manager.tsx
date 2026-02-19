@@ -755,6 +755,15 @@ export default function ContentManagerScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Delete Button */}
+          <TouchableOpacity 
+            style={styles.deleteButton}
+            onPress={() => handleDeleteEvent(event.id, event.name)}
+          >
+            <Ionicons name="trash-outline" size={16} color={theme.colors.error} />
+            <Text style={styles.deleteButtonText}>Supprimer cet événement</Text>
+          </TouchableOpacity>
         </View>
       ))}
 
