@@ -58,6 +58,11 @@ export default function ContentManagerScreen() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
   
+  // Welcome content states
+  const [welcomeFlyerUrl, setWelcomeFlyerUrl] = useState('');
+  const [welcomeTagline, setWelcomeTagline] = useState('');
+  const [welcomeVenue, setWelcomeVenue] = useState('Mirano Continental, Brussels');
+  
   // Form states
   const [flyerUrl, setFlyerUrl] = useState('');
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
