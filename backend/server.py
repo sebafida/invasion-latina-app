@@ -3059,3 +3059,23 @@ async def admin_toggle_event_visibility(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
+
+@app.delete("/api/admin/events/{event_id}")
+async def admin_delete_event(
+    event_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Delete an event"""
+    db = get_database()
+    
+    try:
+        result = await db.events.delete_one({"_id": ObjectId(event_id)})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Événement non trouvé")
+        
+        return {"message": "Événement supprimé avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
