@@ -129,15 +129,24 @@ export default function LoginScreen() {
       // For subsequent sign ins, we need to use the user ID to find the account
       const email = credential.email || `${credential.user}@privaterelay.appleid.com`;
       
+      // Get name from Apple credential (only available on first sign in)
+      let userName = undefined;
+      if (credential.fullName) {
+        const givenName = credential.fullName.givenName || '';
+        const familyName = credential.fullName.familyName || '';
+        const fullName = `${givenName} ${familyName}`.trim();
+        if (fullName && fullName.length > 0) {
+          userName = fullName;
+        }
+      }
+      
       // Send to our backend
       const result = await api.post('/auth/social', {
         provider: 'apple',
         id_token: credential.identityToken,
         user_id: credential.user,
         email: email,
-        name: credential.fullName 
-          ? `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim()
-          : undefined,
+        name: userName,
       });
       
       if (result.data.access_token) {
