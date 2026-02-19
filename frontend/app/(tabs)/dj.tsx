@@ -151,16 +151,15 @@ export default function DJRequestsScreen() {
                 thumbColor={devMode ? theme.colors.neonPink : '#f4f3f4'}
               />
             </View>
+            {/* Status only for admin */}
+            <View style={styles.statusCardInline}>
+              <Ionicons name="checkmark-circle" size={20} color={theme.colors.success} />
+              <Text style={styles.statusTextSmall}>
+                {devMode ? t('testModeActive') : t('readyToRequest')}
+              </Text>
+            </View>
           </View>
         )}
-
-        {/* Status */}
-        <View style={styles.statusCard}>
-          <Ionicons name="checkmark-circle" size={24} color={theme.colors.success} />
-          <Text style={styles.statusText}>
-            {devMode ? t('testModeActive') : t('readyToRequest')}
-          </Text>
-        </View>
 
         {/* Request Form */}
         <View style={styles.requestForm}>
