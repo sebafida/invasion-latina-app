@@ -530,6 +530,69 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
         language=current_user.get("language", "en")
     )
 
+
+@app.put("/api/users/push-token")
+async def update_push_token(
+    token_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user's push notification token"""
+    db = get_database()
+    
+    push_token = token_data.get("push_token")
+    if not push_token:
+        raise HTTPException(status_code=400, detail="Push token is required")
+    
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"push_token": push_token, "push_token_updated_at": datetime.utcnow()}}
+    )
+    
+    return {"message": "Push token updated successfully"}
+
+
+async def send_push_notification_to_admins(title: str, body: str, data: dict = None):
+    """Send push notification to all admin users"""
+    import httpx
+    
+    db = get_database()
+    
+    # Get all admin users with push tokens
+    admins = []
+    async for admin in db.users.find({"role": "admin", "push_token": {"$exists": True, "$ne": None}}):
+        admins.append(admin)
+    
+    if not admins:
+        print("No admin push tokens found")
+        return
+    
+    # Send notification to each admin via Expo Push API
+    messages = []
+    for admin in admins:
+        push_token = admin.get("push_token")
+        if push_token and push_token.startswith("ExponentPushToken"):
+            messages.append({
+                "to": push_token,
+                "sound": "default",
+                "title": title,
+                "body": body,
+                "data": data or {}
+            })
+    
+    if messages:
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://exp.host/--/api/v2/push/send",
+                    json=messages,
+                    headers={"Content-Type": "application/json"}
+                )
+                print(f"Push notification sent: {response.status_code}")
+        except Exception as e:
+            print(f"Error sending push notification: {e}")
+
+
+
 # ============ EVENT ENDPOINTS ============
 
 @app.get("/api/events", response_model=List[EventResponse])
