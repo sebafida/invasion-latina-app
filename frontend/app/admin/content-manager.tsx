@@ -595,6 +595,17 @@ export default function ContentManagerScreen() {
           </View>
 
           <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Heure de l'événement * (HH:MM)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="23:00"
+              placeholderTextColor={theme.colors.textMuted}
+              value={eventTime}
+              onChangeText={setEventTime}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Description</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
