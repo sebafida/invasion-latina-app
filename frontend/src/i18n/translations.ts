@@ -836,6 +836,11 @@ export const translations: Record<Language, Translations> = {
     alreadyHaveAccountLogin: 'Déjà un compte ? Se connecter',
     continueBrowsing: 'Continuer sans compte',
     
+    // Biometric Lock
+    welcomeBack: 'Bon retour',
+    tapToUnlock: 'Appuyez pour déverrouiller',
+    useAnotherAccount: 'Utiliser un autre compte',
+    
     // Notification Preferences
     notificationPreferences: 'Préférences de Notifications',
     chooseWhatToReceive: 'Choisissez ce que vous souhaitez recevoir',
