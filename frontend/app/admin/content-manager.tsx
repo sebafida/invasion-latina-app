@@ -287,6 +287,59 @@ export default function ContentManagerScreen() {
     );
   };
 
+  // Image picker functions
+  const pickEventFlyer = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission requise', 'Nous avons besoin d\'accéder à votre galerie.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [9, 16], // Portrait pour les flyers
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      // Pour l'instant, on affiche juste un message
+      // L'upload vers Cloudinary sera activé plus tard
+      Alert.alert(
+        'Image sélectionnée !',
+        'L\'upload automatique vers Cloudinary sera disponible bientôt.\n\nPour l\'instant, uploadez votre image sur un service comme Imgur ou Cloudinary et collez l\'URL ci-dessous.',
+        [{ text: 'OK' }]
+      );
+      // On pourrait prévisualiser l'image locale
+      // setEventBannerUrl(result.assets[0].uri);
+    }
+  };
+
+  const pickGalleryPhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission requise', 'Nous avons besoin d\'accéder à votre galerie.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      Alert.alert(
+        'Photo sélectionnée !',
+        'L\'upload automatique vers Cloudinary sera disponible bientôt.\n\nPour l\'instant, uploadez votre photo sur un service comme Imgur ou Cloudinary et collez l\'URL ci-dessous.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
   const handleUpdateFlyer = async () => {
     if (!flyerUrl.trim()) {
       Alert.alert('Erreur', 'Veuillez entrer une URL de flyer');
