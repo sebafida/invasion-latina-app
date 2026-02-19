@@ -21,9 +21,9 @@ interface ImageUploaderProps {
   placeholder?: string;
 }
 
-// Configuration Cloudinary - à remplacer par vos vraies valeurs
-const CLOUDINARY_CLOUD_NAME = ''; // Sera configuré plus tard
-const CLOUDINARY_UPLOAD_PRESET = ''; // Sera configuré plus tard
+// Configuration Cloudinary
+const CLOUDINARY_CLOUD_NAME = 'dpj64f0zp';
+const CLOUDINARY_UPLOAD_PRESET = 'unsigned_preset';
 
 export const ImageUploader: React.FC<ImageUploaderProps> = ({
   label,
