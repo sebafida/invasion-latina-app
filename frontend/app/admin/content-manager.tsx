@@ -108,6 +108,18 @@ export default function ContentManagerScreen() {
       // Load aftermovies
       const aftermoviesRes = await api.get('/media/aftermovies');
       setAftermovies(aftermoviesRes.data);
+
+      // Load welcome content
+      try {
+        const welcomeRes = await api.get('/welcome-content');
+        if (welcomeRes.data) {
+          setWelcomeFlyerUrl(welcomeRes.data.flyer_url || '');
+          setWelcomeTagline(welcomeRes.data.tagline || '');
+          setWelcomeVenue(welcomeRes.data.venue_name || 'Mirano Continental, Brussels');
+        }
+      } catch (e) {
+        console.log('No welcome content found');
+      }
       
     } catch (error) {
       console.error('Failed to load data:', error);
