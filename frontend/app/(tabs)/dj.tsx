@@ -324,25 +324,18 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     color: theme.colors.textSecondary,
   },
-
-  // Status
-  statusCard: {
-    marginHorizontal: theme.spacing.xl,
-    marginBottom: theme.spacing.md,
+  statusCardInline: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 2,
-    backgroundColor: theme.colors.success + '20',
-    borderColor: theme.colors.success,
+    marginTop: theme.spacing.sm,
+    paddingTop: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.elevated,
   },
-  statusText: {
-    flex: 1,
-    marginLeft: theme.spacing.sm,
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textPrimary,
+  statusTextSmall: {
+    marginLeft: theme.spacing.xs,
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.success,
   },
 
   // Form
