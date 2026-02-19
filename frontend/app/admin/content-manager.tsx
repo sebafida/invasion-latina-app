@@ -222,6 +222,7 @@ export default function ContentManagerScreen() {
   const resetEventForm = () => {
     setEventName('');
     setEventDate('');
+    setEventTime('23:00');
     setEventDescription('');
     setEventVenue('Mirano Continental');
     setEventXceedUrl('');
@@ -231,7 +232,12 @@ export default function ContentManagerScreen() {
   const startEditEvent = (event: Event) => {
     setEditingEvent(event);
     setEventName(event.name);
+    // Extract date and time from event_date
+    const dateTime = new Date(event.event_date);
     setEventDate(event.event_date.split('T')[0]); // Format YYYY-MM-DD
+    const hours = dateTime.getHours().toString().padStart(2, '0');
+    const minutes = dateTime.getMinutes().toString().padStart(2, '0');
+    setEventTime(`${hours}:${minutes}`);
     setEventDescription(event.description || '');
     setEventVenue(event.venue_name || 'Mirano Continental');
     setEventXceedUrl(event.xceed_ticket_url || '');
