@@ -70,12 +70,30 @@ export default function DJRequestsScreen() {
     try {
       setLoading(true);
       
-      // Use mock coordinates (Mirano Continental)
+      // Get real location
+      let latitude = null;
+      let longitude = null;
+      
+      // Request location permission
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status === 'granted') {
+        try {
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High,
+          });
+          latitude = location.coords.latitude.toString();
+          longitude = location.coords.longitude.toString();
+        } catch (locError) {
+          console.log('Could not get location:', locError);
+        }
+      }
+
       const requestData = {
         song_title: songTitle.trim(),
         artist_name: artistName.trim(),
-        latitude: '50.8486',
-        longitude: '4.3722',
+        latitude,
+        longitude,
       };
 
       const response = await api.post('/dj/request-song', requestData);
