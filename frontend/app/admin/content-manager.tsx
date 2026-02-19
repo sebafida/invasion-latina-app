@@ -1151,4 +1151,21 @@ const styles = StyleSheet.create({
     color: theme.colors.success,
     fontWeight: theme.fontWeight.bold,
   },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.error + '15',
+    borderWidth: 1,
+    borderColor: theme.colors.error + '30',
+  },
+  deleteButtonText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.error,
+    fontWeight: theme.fontWeight.medium,
+  },
 });
