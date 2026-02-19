@@ -19,6 +19,8 @@ const BackToHomeButton = () => {
 };
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tabs
       screenOptions={{
@@ -28,8 +30,8 @@ export default function TabLayout() {
           backgroundColor: theme.colors.black,
           borderTopColor: theme.colors.elevated,
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 6,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom + 6,
           paddingTop: 6,
           paddingHorizontal: 10,
         },
