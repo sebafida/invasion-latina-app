@@ -250,6 +250,32 @@ export default function ContentManagerScreen() {
     }
   };
 
+  const handleDeleteEvent = async (eventId: string, eventName: string) => {
+    Alert.alert(
+      'Supprimer l\'événement',
+      `Êtes-vous sûr de vouloir supprimer "${eventName}" ? Cette action est irréversible.`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await api.delete(`/admin/events/${eventId}`);
+              Alert.alert('Succès', 'Événement supprimé');
+              loadData();
+            } catch (error) {
+              Alert.alert('Erreur', 'Impossible de supprimer l\'événement');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleUpdateFlyer = async () => {
     if (!flyerUrl.trim()) {
       Alert.alert('Erreur', 'Veuillez entrer une URL de flyer');
