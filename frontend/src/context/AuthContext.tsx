@@ -103,10 +103,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setToken(null);
     setIsAuthenticated(false);
+    setIsLocked(false);
   };
 
   const loadUser = async () => {
     try {
+      setIsLoading(true);
       const storedToken = await AsyncStorage.getItem('auth_token');
       if (!storedToken) {
         setIsAuthenticated(false);
@@ -114,12 +116,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      setIsLoading(true);
       const response = await api.get('/auth/me');
       
       setUser(response.data);
       setToken(storedToken);
       setIsAuthenticated(true);
+      
+      // Check if biometrics are available and lock the app
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      
+      if (hasHardware && isEnrolled) {
+        setIsLocked(true);
+      }
     } catch (error) {
       await AsyncStorage.removeItem('auth_token');
       setUser(null);
@@ -127,6 +136,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const unlockWithBiometrics = async (): Promise<boolean> => {
+    try {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+      if (!hasHardware || !isEnrolled) {
+        setIsLocked(false);
+        return true;
+      }
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Déverrouiller Invasion Latina',
+        cancelLabel: 'Annuler',
+        disableDeviceFallback: false,
+        fallbackLabel: 'Utiliser le code',
+      });
+
+      if (result.success) {
+        setIsLocked(false);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Biometric auth error:', error);
+      setIsLocked(false);
+      return true;
     }
   };
 
