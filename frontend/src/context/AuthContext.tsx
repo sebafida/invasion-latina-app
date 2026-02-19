@@ -179,10 +179,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         token,
         isLoading,
         isAuthenticated,
+        isLocked,
         login,
         register,
         logout,
         loadUser,
+        unlockWithBiometrics,
+        setIsLocked,
         setUser: (newUser: User | null) => {
           setUser(newUser);
           setIsAuthenticated(!!newUser);
