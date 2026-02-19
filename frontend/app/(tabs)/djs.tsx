@@ -123,9 +123,21 @@ export default function DJsScreen() {
   const loadDJs = async () => {
     try {
       setLoading(true);
+      // First get the next event to know which DJs are selected
+      const eventResponse = await api.get('/events/next');
+      const selectedDjIds = eventResponse.data?.event?.selected_djs || [];
+      
+      // Then get all DJs
       const response = await api.get('/djs');
       if (response.data && response.data.length > 0) {
-        setDjs(response.data);
+        // Map the DJs and mark which ones are selected for the event
+        const djsWithSelection = response.data.map((dj: any) => ({
+          ...dj,
+          is_selected: selectedDjIds.includes(dj.id) || selectedDjIds.includes(String(dj.id))
+        }));
+        // Sort to put selected DJs first
+        djsWithSelection.sort((a: any, b: any) => (b.is_selected ? 1 : 0) - (a.is_selected ? 1 : 0));
+        setDjs(djsWithSelection);
       }
     } catch (error) {
       console.log('Using default DJs data');
