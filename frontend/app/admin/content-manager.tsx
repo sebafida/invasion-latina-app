@@ -69,6 +69,7 @@ export default function ContentManagerScreen() {
   // Event form states
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
+  const [eventTime, setEventTime] = useState('23:00');
   const [eventDescription, setEventDescription] = useState('');
   const [eventVenue, setEventVenue] = useState('Mirano Continental');
   const [eventXceedUrl, setEventXceedUrl] = useState('');
