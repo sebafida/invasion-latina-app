@@ -2509,6 +2509,26 @@ async def admin_scan_checkin(
     }
 
 
+@app.delete("/api/loyalty/admin/reset-checkin/{user_id}/{event_id}")
+async def admin_reset_checkin(
+    user_id: str,
+    event_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Reset a user's check-in for an event (for testing purposes)"""
+    db = get_database()
+    
+    result = await db.loyalty_checkins.delete_one({
+        "user_id": user_id,
+        "event_id": event_id
+    })
+    
+    if result.deleted_count == 0:
+        return {"success": False, "message": "Aucun check-in trouvé pour cet utilisateur/événement"}
+    
+    return {"success": True, "message": "Check-in réinitialisé avec succès"}
+
+
 # ============ DJS MANAGEMENT ENDPOINTS ============
 
 # Default DJs data
