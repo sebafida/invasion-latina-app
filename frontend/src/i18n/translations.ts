@@ -1281,6 +1281,11 @@ export const translations: Record<Language, Translations> = {
     alreadyHaveAccountLogin: 'Already have an account? Sign in',
     continueBrowsing: 'Continue without account',
     
+    // Biometric Lock
+    welcomeBack: 'Welcome back',
+    tapToUnlock: 'Tap to unlock',
+    useAnotherAccount: 'Use another account',
+    
     // Notification Preferences
     notificationPreferences: 'Notification Preferences',
     chooseWhatToReceive: 'Choose what you want to receive',
