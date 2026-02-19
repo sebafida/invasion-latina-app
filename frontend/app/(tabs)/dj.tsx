@@ -235,7 +235,11 @@ export default function DJRequestsScreen() {
             </View>
           ) : (
             requests.map((request, index) => (
-              <View key={request.id} style={styles.requestCard}>
+              <View key={request.id} style={[
+                styles.requestCard,
+                request.status === 'rejected' && styles.requestCardRejected,
+                request.status === 'played' && styles.requestCardPlayed
+              ]}>
                 <View style={styles.requestRank}>
                   <Text style={styles.rankNumber}>#{index + 1}</Text>
                 </View>
@@ -254,18 +258,37 @@ export default function DJRequestsScreen() {
                       </>
                     )}
                   </View>
+                  
+                  {/* Status badges */}
+                  {request.status === 'played' && (
+                    <View style={styles.statusBadgePlayed}>
+                      <Ionicons name="checkmark-circle" size={14} color={theme.colors.success} />
+                      <Text style={styles.statusTextPlayed}>{t('played') || 'Joué'}</Text>
+                    </View>
+                  )}
+                  
+                  {request.status === 'rejected' && (
+                    <View style={styles.statusBadgeRejected}>
+                      <Ionicons name="close-circle" size={14} color={theme.colors.error} />
+                      <Text style={styles.statusTextRejected}>
+                        {request.rejection_label || t('rejected') || 'Refusé'}
+                      </Text>
+                    </View>
+                  )}
                 </View>
 
                 <TouchableOpacity
                   style={[
                     styles.voteButton,
-                    !request.can_vote && styles.voteButtonDisabled
+                    !request.can_vote && styles.voteButtonDisabled,
+                    request.status === 'rejected' && styles.voteButtonRejected,
+                    request.status === 'played' && styles.voteButtonPlayed
                   ]}
                   onPress={() => handleVote(request.id)}
-                  disabled={!request.can_vote}
+                  disabled={!request.can_vote || request.status === 'rejected' || request.status === 'played'}
                 >
                   <Ionicons
-                    name={request.can_vote ? 'arrow-up' : 'checkmark'}
+                    name={request.status === 'played' ? 'checkmark' : request.status === 'rejected' ? 'close' : request.can_vote ? 'arrow-up' : 'checkmark'}
                     size={20}
                     color="white"
                   />
