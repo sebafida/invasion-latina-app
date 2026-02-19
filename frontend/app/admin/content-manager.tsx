@@ -467,6 +467,20 @@ export default function ContentManagerScreen() {
         </ScrollView>
       </View>
 
+      {/* Upload Button */}
+      <TouchableOpacity 
+        style={styles.uploadButton}
+        onPress={() => pickWelcomeFlyer()}
+        disabled={loading}
+      >
+        <Ionicons name="cloud-upload" size={24} color={theme.colors.primary} />
+        <Text style={styles.uploadButtonText}>
+          {loading ? 'Upload en cours...' : 'Sélectionner un flyer (16:9)'}
+        </Text>
+      </TouchableOpacity>
+
+      <Text style={styles.orText}>ou entrez une URL :</Text>
+
       {/* Flyer URL Input */}
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>URL du Flyer (image)</Text>
