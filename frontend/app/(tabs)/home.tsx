@@ -145,6 +145,32 @@ export default function HomeScreen() {
       setCountdown({ days, hours, minutes, seconds });
     }
   };
+
+  // Get display name - "Familia" for guests, first name for logged in users
+  const getDisplayName = () => {
+    if (!user) {
+      return 'Familia';
+    }
+    
+    // If name is "user" or starts with "user" (Apple Sign In default), try to extract real name
+    const name = user.name || '';
+    
+    // Check if it's a default Apple Sign In name (starts with random characters or "user")
+    if (!name || name.toLowerCase() === 'user' || name.toLowerCase().startsWith('user')) {
+      // Try to get first name from email
+      const email = user.email || '';
+      if (email && !email.includes('privaterelay.appleid.com')) {
+        const emailName = email.split('@')[0];
+        // Capitalize first letter
+        return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+      }
+      return 'Familia';
+    }
+    
+    // Get first name only (split by space and take first part)
+    const firstName = name.split(' ')[0];
+    return firstName;
+  };
   
   return (
     <ScrollView
@@ -157,7 +183,7 @@ export default function HomeScreen() {
         {/* Hero Section */}
         <View style={styles.hero}>
           <Text style={styles.greeting}>{t('welcome')},</Text>
-          <Text style={styles.userName}>{user?.name || t('partyLover')}!</Text>
+          <Text style={styles.userName}>{getDisplayName()}!</Text>
           
           <View style={styles.pointsCard}>
             <Text style={styles.pointsText}>
