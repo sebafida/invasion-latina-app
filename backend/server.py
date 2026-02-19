@@ -2156,6 +2156,15 @@ async def create_vip_booking(
     
     await send_whatsapp_notification(notification_message)
     
+    # Send push notification to admins
+    push_title = "🍾 Nouvelle réservation table!"
+    push_body = f"{customer_name} - {zone} - {guest_count} pers. - {total_price}€"
+    await send_push_notification_to_admins(
+        push_title, 
+        push_body, 
+        {"booking_id": str(result.inserted_id), "type": "vip_booking"}
+    )
+    
     return {
         "message": "VIP booking request submitted successfully",
         "booking_id": str(result.inserted_id),
