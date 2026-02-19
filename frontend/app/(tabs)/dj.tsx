@@ -29,6 +29,9 @@ interface SongRequest {
   requested_at: string;
   can_vote: boolean;
   can_request: boolean;
+  status?: string;
+  rejection_reason?: string;
+  rejection_label?: string;
 }
 
 export default function DJRequestsScreen() {
