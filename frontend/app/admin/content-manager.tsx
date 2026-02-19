@@ -642,7 +642,19 @@ export default function ContentManagerScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>URL du Flyer</Text>
+            <Text style={styles.inputLabel}>📸 Flyer de l'événement</Text>
+            
+            {/* Upload Button */}
+            <TouchableOpacity 
+              style={styles.uploadButton}
+              onPress={() => pickEventFlyer()}
+            >
+              <Ionicons name="cloud-upload" size={24} color={theme.colors.primary} />
+              <Text style={styles.uploadButtonText}>Sélectionner une image</Text>
+            </TouchableOpacity>
+
+            {/* Or use URL */}
+            <Text style={styles.orText}>ou entrez une URL :</Text>
             <TextInput
               style={styles.input}
               placeholder="https://..."
@@ -651,6 +663,18 @@ export default function ContentManagerScreen() {
               onChangeText={setEventBannerUrl}
               autoCapitalize="none"
             />
+
+            {/* Preview */}
+            {eventBannerUrl ? (
+              <View style={styles.previewContainer}>
+                <Text style={styles.previewLabel}>Aperçu :</Text>
+                <Image 
+                  source={{ uri: eventBannerUrl }} 
+                  style={styles.flyerPreview}
+                  resizeMode="cover"
+                />
+              </View>
+            ) : null}
           </View>
 
           <View style={styles.formButtons}>
