@@ -287,7 +287,42 @@ export default function ContentManagerScreen() {
     );
   };
 
-  // Image picker functions
+  // Image picker functions - with Cloudinary upload
+  const CLOUDINARY_CLOUD_NAME = 'dpj64f0zp';
+  const CLOUDINARY_UPLOAD_PRESET = 'unsigned_preset';
+
+  const uploadToCloudinary = async (uri: string): Promise<string | null> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', {
+        uri,
+        type: 'image/jpeg',
+        name: 'upload.jpg',
+      } as any);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+      
+      if (data.secure_url) {
+        return data.secure_url;
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      console.error('Cloudinary upload error:', error);
+      Alert.alert('Erreur', 'Impossible d\'uploader l\'image. Veuillez réessayer.');
+      return null;
+    }
+  };
+
   const pickEventFlyer = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
@@ -297,22 +332,21 @@ export default function ContentManagerScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [9, 16], // Portrait pour les flyers
       quality: 0.8,
     });
 
     if (!result.canceled && result.assets[0]) {
-      // Pour l'instant, on affiche juste un message
-      // L'upload vers Cloudinary sera activé plus tard
-      Alert.alert(
-        'Image sélectionnée !',
-        'L\'upload automatique vers Cloudinary sera disponible bientôt.\n\nPour l\'instant, uploadez votre image sur un service comme Imgur ou Cloudinary et collez l\'URL ci-dessous.',
-        [{ text: 'OK' }]
-      );
-      // On pourrait prévisualiser l'image locale
-      // setEventBannerUrl(result.assets[0].uri);
+      setLoading(true);
+      const cloudinaryUrl = await uploadToCloudinary(result.assets[0].uri);
+      setLoading(false);
+      
+      if (cloudinaryUrl) {
+        setEventBannerUrl(cloudinaryUrl);
+        Alert.alert('Succès', 'Image uploadée avec succès !');
+      }
     }
   };
 
@@ -325,18 +359,48 @@ export default function ContentManagerScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
     });
 
     if (!result.canceled && result.assets[0]) {
-      Alert.alert(
-        'Photo sélectionnée !',
-        'L\'upload automatique vers Cloudinary sera disponible bientôt.\n\nPour l\'instant, uploadez votre photo sur un service comme Imgur ou Cloudinary et collez l\'URL ci-dessous.',
-        [{ text: 'OK' }]
-      );
+      setLoading(true);
+      const cloudinaryUrl = await uploadToCloudinary(result.assets[0].uri);
+      setLoading(false);
+      
+      if (cloudinaryUrl) {
+        setNewPhotoUrl(cloudinaryUrl);
+        Alert.alert('Succès', 'Photo uploadée avec succès !');
+      }
+    }
+  };
+
+  const pickWelcomeFlyer = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission requise', 'Nous avons besoin d\'accéder à votre galerie.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 9], // Format paysage pour le flyer d'accueil
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setLoading(true);
+      const cloudinaryUrl = await uploadToCloudinary(result.assets[0].uri);
+      setLoading(false);
+      
+      if (cloudinaryUrl) {
+        setFlyerUrl(cloudinaryUrl);
+        Alert.alert('Succès', 'Flyer uploadé avec succès !');
+      }
     }
   };
 
