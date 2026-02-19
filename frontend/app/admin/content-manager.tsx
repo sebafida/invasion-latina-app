@@ -470,6 +470,91 @@ export default function ContentManagerScreen() {
     { key: 'events', label: 'Events', icon: 'calendar' },
   ];
 
+  // Render Welcome Tab (for the landing page flyer)
+  const renderWelcomeTab = () => (
+    <View style={styles.tabContent}>
+      <Text style={styles.sectionTitle}>🏠 Page d'accueil</Text>
+      <Text style={styles.helpText}>
+        Modifiez le flyer et les informations qui s'affichent sur la page d'accueil (avant connexion)
+      </Text>
+
+      {/* Upload Button */}
+      <TouchableOpacity 
+        style={styles.uploadButton}
+        onPress={() => pickWelcomeFlyer()}
+        disabled={loading}
+      >
+        <Ionicons name="cloud-upload" size={24} color={theme.colors.primary} />
+        <Text style={styles.uploadButtonText}>
+          {loading ? 'Upload en cours...' : 'Sélectionner le flyer (16:9)'}
+        </Text>
+      </TouchableOpacity>
+
+      <Text style={styles.orText}>ou entrez une URL :</Text>
+
+      {/* Flyer URL Input */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.inputLabel}>URL du Flyer</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="https://..."
+          placeholderTextColor={theme.colors.textMuted}
+          value={welcomeFlyerUrl}
+          onChangeText={setWelcomeFlyerUrl}
+          autoCapitalize="none"
+        />
+      </View>
+
+      {/* Preview */}
+      {welcomeFlyerUrl ? (
+        <View style={styles.previewContainer}>
+          <Text style={styles.previewLabel}>Aperçu :</Text>
+          <Image 
+            source={{ uri: welcomeFlyerUrl }} 
+            style={styles.welcomeFlyerPreview}
+            resizeMode="cover"
+          />
+        </View>
+      ) : null}
+
+      {/* Tagline */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.inputLabel}>Slogan (sous le logo)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="The Biggest Latino-Reggaeton Party in Belgium"
+          placeholderTextColor={theme.colors.textMuted}
+          value={welcomeTagline}
+          onChangeText={setWelcomeTagline}
+        />
+      </View>
+
+      {/* Venue */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.inputLabel}>Lieu</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Mirano Continental, Brussels"
+          placeholderTextColor={theme.colors.textMuted}
+          value={welcomeVenue}
+          onChangeText={setWelcomeVenue}
+        />
+      </View>
+
+      {/* Save Button */}
+      <TouchableOpacity 
+        style={styles.saveButton}
+        onPress={handleSaveWelcomeContent}
+        disabled={loading}
+      >
+        <Ionicons name="save" size={20} color="white" />
+        <Text style={styles.saveButtonText}>
+          {loading ? 'Sauvegarde...' : 'Sauvegarder'}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   const renderFlyerTab = () => (
     <View style={styles.tabContent}>
       <Text style={styles.sectionTitle}>📸 Modifier le Flyer de l'événement</Text>
