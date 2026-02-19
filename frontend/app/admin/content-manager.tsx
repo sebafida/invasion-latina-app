@@ -19,7 +19,7 @@ import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/config/api';
 
-type TabType = 'events' | 'photos' | 'aftermovies' | 'flyer';
+type TabType = 'welcome' | 'events' | 'photos' | 'aftermovies' | 'flyer';
 
 interface Event {
   id: string;
