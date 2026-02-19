@@ -1245,4 +1245,31 @@ const styles = StyleSheet.create({
     color: theme.colors.error,
     fontWeight: theme.fontWeight.medium,
   },
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.primary + '20',
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    borderStyle: 'dashed',
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.lg,
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  uploadButtonText: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.bold,
+  },
+  orText: {
+    textAlign: 'center',
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textMuted,
+    marginVertical: theme.spacing.sm,
+  },
+  previewContainer: {
+    marginTop: theme.spacing.md,
+  },
 });
