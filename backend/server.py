@@ -1008,6 +1008,62 @@ async def request_song(
             detail="Les demandes de chansons sont désactivées pour le moment. Revenez pendant l'événement!"
         )
     
+    # ============ GEOLOCATION AND TIME CHECK ============
+    # Mirano Continental coordinates
+    MIRANO_LAT = 50.8389
+    MIRANO_LNG = 4.3660
+    MAX_DISTANCE_METERS = 40  # 40 meters radius
+    
+    # Get user's location from request
+    user_lat = song_data.get("latitude")
+    user_lng = song_data.get("longitude")
+    
+    # Check if location is provided
+    if user_lat and user_lng:
+        try:
+            user_lat = float(user_lat)
+            user_lng = float(user_lng)
+            
+            # Calculate distance using Haversine formula
+            import math
+            R = 6371000  # Earth radius in meters
+            
+            lat1, lat2 = math.radians(MIRANO_LAT), math.radians(user_lat)
+            dlat = math.radians(user_lat - MIRANO_LAT)
+            dlng = math.radians(user_lng - MIRANO_LNG)
+            
+            a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng/2)**2
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+            distance = R * c
+            
+            if distance > MAX_DISTANCE_METERS:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Vous devez être au Mirano Continental pour demander une chanson (vous êtes à {int(distance)}m)"
+                )
+        except (ValueError, TypeError):
+            # If location parsing fails, skip location check
+            pass
+    else:
+        # Location not provided - require it
+        raise HTTPException(
+            status_code=403,
+            detail="Activez votre localisation pour demander une chanson"
+        )
+    
+    # Check time - only allow between 23h and 5h
+    from datetime import datetime
+    current_hour = datetime.now().hour
+    
+    # Allow requests between 23:00 (23) and 05:00 (5)
+    # This means: hour >= 23 OR hour < 5
+    if not (current_hour >= 23 or current_hour < 5):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Les demandes de chansons sont disponibles uniquement entre 23h et 5h"
+        )
+    # ============ END GEOLOCATION AND TIME CHECK ============
+    
     # Validate required fields
     if not song_data.get("song_title") or not song_data.get("artist_name"):
         raise HTTPException(status_code=400, detail="Song title and artist name are required")
