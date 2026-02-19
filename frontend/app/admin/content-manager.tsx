@@ -172,9 +172,11 @@ export default function ContentManagerScreen() {
 
     try {
       setLoading(true);
+      // Combine date and time
+      const dateTimeString = `${eventDate}T${eventTime}:00`;
       await api.post('/admin/events', {
         name: eventName,
-        event_date: new Date(eventDate).toISOString(),
+        event_date: new Date(dateTimeString).toISOString(),
         description: eventDescription,
         venue_name: eventVenue,
         xceed_ticket_url: eventXceedUrl,
@@ -199,9 +201,11 @@ export default function ContentManagerScreen() {
 
     try {
       setLoading(true);
+      // Combine date and time
+      const dateTimeString = `${eventDate}T${eventTime}:00`;
       await api.put(`/admin/events/${editingEvent.id}`, {
         name: eventName,
-        event_date: new Date(eventDate).toISOString(),
+        event_date: new Date(dateTimeString).toISOString(),
         description: eventDescription,
         venue_name: eventVenue,
         xceed_ticket_url: eventXceedUrl,
