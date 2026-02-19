@@ -580,4 +580,54 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.sm,
     backgroundColor: theme.colors.error + '20',
   },
+  
+  // Status styles
+  requestCardRejected: {
+    opacity: 0.6,
+    borderWidth: 1,
+    borderColor: theme.colors.error + '50',
+  },
+  requestCardPlayed: {
+    borderWidth: 1,
+    borderColor: theme.colors.success + '50',
+  },
+  statusBadgeRejected: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.error + '20',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.borderRadius.full,
+    marginTop: theme.spacing.xs,
+    alignSelf: 'flex-start',
+    gap: 4,
+  },
+  statusTextRejected: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.error,
+    fontWeight: theme.fontWeight.medium,
+  },
+  statusBadgePlayed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.success + '20',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.borderRadius.full,
+    marginTop: theme.spacing.xs,
+    alignSelf: 'flex-start',
+    gap: 4,
+  },
+  statusTextPlayed: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.success,
+    fontWeight: theme.fontWeight.medium,
+  },
+  voteButtonRejected: {
+    backgroundColor: theme.colors.error,
+    opacity: 0.5,
+  },
+  voteButtonPlayed: {
+    backgroundColor: theme.colors.success,
+  },
 });
