@@ -1,162 +1,211 @@
 <analysis>
+<original_problem_statement>
+The application was accepted to the App Store, but users are experiencing intermittent login/registration failures. This was diagnosed as being caused by the backend running on an unstable development server (ngrok tunnel), which is not suitable for a production application. The user has agreed to migrate the backend to a stable production hosting service (Railway) and the database to MongoDB Atlas.
 
-**original_problem_statement**: The user's primary goal is to get their Invasion Latina mobile app published on the Apple App Store. After successfully implementing full internationalization and fixing several bugs, the user submitted the app for review. Apple has now rejected the application twice.
+Before starting the migration, the user requested a large number of additional features and bug fixes to be bundled into the next app update. The agent has implemented code for all of these requests, but none have been fully tested or verified by the user.
 
-The most recent rejection (**Guideline 5.1.1 - Data Collection and Storage**) is because the app forces users to register or log in to access any content, even features that are not account-based (like viewing events or DJ lists).
-
-The user has agreed to a guest mode solution where users can browse public content without an account but will be prompted to log in or register when they try to use account-specific features (e.g., booking a table, requesting a song, viewing their loyalty QR code).
-
-The agent has just started implementing this guest mode feature.
+**User's List of New Requirements/Bugs:**
+1.  **Mode test activé**: This text in the Requests tab should only be visible to admins.
+2.  **Tab Bar UI**: The bottom tab bar icons are obscured by the iPhone's home indicator bar. They need to be raised.
+3.  **Event Image Bug**: The event image, hosted on a local NAS, is not appearing in the Tickets section.
+4.  **Event Deletion**: Admins need a way to delete past events from the content manager.
+5.  **Countdown Timer**: The countdown on the home page is not working. It needs an event *time* to be added in the admin panel.
+6.  **Image Uploads**: The user wants to upload images directly from the app instead of providing URLs. This applies to event flyers, welcome screen flyers, and photo galleries. The user has provided Cloudinary credentials.
+7.  **Welcome Message**: Fix the Bienvenue user message for Apple/Google sign-ins to use the person's actual name. For guest users, it should say Bienvenue Familia.
+8.  **Welcome Flyer**: The main flyer on the welcome/login screen needs to be editable from the admin panel.
+9.  **Persistent Login & Face ID**: The app should keep users logged in and/or use Face ID to unlock the app for returning users.
+10. **DJ List Sync**: When an admin changes the list of DJs for an event, it doesn't update for users.
+11. **Song Request Geofencing**: Song requests should only be possible when the user is within 40 meters of the venue (Mirano) and between 23:00 and 05:00.
+12. **Song Rejection Reason**: When a DJ rejects a song request with a predefined reason, the user should see that reason in their app.
+13. **Loyalty QR Code Bug**: When testing the loyalty scanner, an admin gets a user already registered error even for a new event.
+14. **Admin Push Notifications**: Admins should receive a push notification on their iPhone when a user submits a new VIP table reservation request.
+</original_problem_statement>
 
 **User's preferred language**: French (fr). The next agent MUST respond in French.
 
 **what currently exists?**
-The application is feature-complete and has undergone significant bug fixing and feature additions in this session.
-- Full internationalization for FR, EN, ES, and NL is complete.
-- Admin features for enabling/disabling DJ song requests and generating new QR codes for loyalty points are implemented and working.
-- A user-facing notification preference management system has been added.
-- Critical login bugs on iPad (Apple's first rejection) and a registration bug (found by the user on TestFlight) have been fixed.
-- A full set of App Store assets (descriptions, keywords, screenshots, privacy policy HTML pages) has been created.
-- The project's source code is now in a new, clean GitHub repository after resolving a file corruption issue.
-- The agent has begun implementing the guest mode by creating a  component and starting to add the necessary translations.
+The React Native/Expo app is live on the Apple App Store. However, its backend is running on an unstable development server, causing critical, intermittent login failures for production users. The agent has just completed a massive sprint, writing code to address 14 different feature requests and bug fixes simultaneously. This includes major new functionality like Face ID, geofencing, direct image uploads to Cloudinary, and admin push notifications. The code for these features has been written and committed, but it is largely untested and has not been verified by the user. The project is prepared for backend migration with  and a .
 
 **Last working item**:
-- Last item agent was working: The agent was implementing a guest mode to comply with Apple's review guidelines (5.1.1). This involves allowing users to browse the app without an account and showing a login/register prompt for account-specific actions. The agent had just created the  component and started adding the necessary translations for it.
-- Status: IN PROGRESS
+- Last item agent was working: The agent was implementing a large batch of 6 critical user requests. The final piece was adding the logic to register a user's push notification token to the backend so that admins can receive notifications for new table bookings. This involved modifying  to get and send the token, and adding multiple endpoints and logic to .
+- Status: IN PROGRESS (The entire batch of 14 features is implemented but not verified).
 - Agent Testing Done: N
-- Which testing method agent to use? After implementation, manual testing by the user in Expo Go and on a TestFlight build will be required. The user should test both as a guest and as a logged-in user.
+- Which testing method agent to use? manual testing by curl. The user must be heavily involved in testing all the new frontend features via Expo Go and then a new TestFlight build. Backend changes (like geofencing and push notifications) will need to be verified through this frontend testing.
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: App rejected by Apple for requiring login to browse (P0, HIGHEST)**
+- Issue 1: Production App is Unstable Due to Development Backend (P0, CRITICAL)
+- Issue 2: Massive Batch of 14 New Features/Fixes Awaiting Verification (P1)
+- Issue 3: Event Countdown Timer Not Working (P2)
+- Issue 4: Event Image Not Displaying from NAS (P2)
 
 **Issues Detail**:
--   **Issue 1: App rejected by Apple for requiring login to browse (Guideline 5.1.1)**
-    -   **Attempted fixes**: The agent started implementing a guest mode. A new component  was created to prompt non-logged-in users to sign up when they try to perform protected actions. The agent was adding translations for this modal.
-    -   **Next debug checklist**:
-        1.  Finalize adding all translations for the new modal in .
-        2.  Modify the root layout  and the  in  to allow users to enter the main app tabs even if they are not authenticated.
-        3.  Add a button Explorer sans compte (Explore without account) to the welcome screen () that navigates the user to the home tab.
-        4.  Integrate the  into pages with protected actions. For each action (e.g., requesting a song, booking a table, viewing the profile/QR code), add a check: . Key files to modify are: , , , and potentially  for the loyalty scanner.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is the primary blocker for App Store approval. Fixing it will allow the app to be resubmitted for review.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: Frontend (manual testing by user on Expo Go/TestFlight).
-    -   **Blocked on other issue**: None.
+- **Issue 1: Production App is Unstable Due to Development Backend**
+    - **Attempted fixes**: The agent correctly diagnosed the problem: the production app is pointing to an unstable  tunnel. Files (, ) have been created to prepare for migration to Railway. The  package, which caused a build failure on Railway, was removed from .
+    - **Next debug checklist**:
+        1.  Guide the user to create a free **MongoDB Atlas** account and get the connection string.
+        2.  Guide the user to deploy the backend to **Railway**, setting the  and  environment variables.
+        3.  Once deployed, get the new stable production URL from Railway.
+        4.  Update the  in the frontend's  file to the new Railway URL.
+        5.  Create a new build and submit it to the App Store to fix the production instability.
+    - **Why fix this issue and what will be achieved with the fix?**: This is the highest priority. Fixing it will stabilize the live application and resolve the critical login/registration failures for users.
+    - **Status**: IN PROGRESS
+    - **Is recurring issue?**: N
+    - **Should Test frontend/backend/both after fix?**: Both. The entire app's functionality needs to be re-verified against the new production backend.
+    - **Blocked on other issue**: None. This is the main blocker.
+
+- **Issue 2: Massive Batch of 14 New Features/Fixes Awaiting Verification**
+    - **Attempted fixes**: Code has been written and committed for all 14 points. This includes UI changes, new screens, new backend endpoints, and new 3rd party integrations (Cloudinary, Expo Location, Expo Local Authentication).
+    - **Next debug checklist**:
+        1.  After the backend is migrated (Issue 1), systematically go through each of the 14 points with the user.
+        2.  Have the user test each feature on Expo Go.
+        3.  Debug any issues that arise from the implementation. For example, verify the geofencing coordinates and time logic, check that Cloudinary uploads work, and confirm push notifications are received by admins.
+    - **Why fix this issue and what will be achieved with the fix?**: This will deliver a huge amount of value requested by the user and significantly improve the app's functionality and admin capabilities.
+    - **Status**: USER VERIFICATION PENDING
+    - **Is recurring issue?**: N
+    - **Should Test frontend/backend/both after fix?**: Both. This requires extensive end-to-end testing.
+    - **Blocked on other issue**: Issue 1. These features should be tested against the new, stable production backend.
+
+- **Issue 3: Event Countdown Timer Not Working**
+    - **Attempted fixes**: The agent diagnosed that the server's clock is set to 2026, while the test events are dated in 2025, causing the countdown to show as expired. The agent added an event time field to the admin panel.
+    - **Next debug checklist**:
+        1.  Guide the user to create a new event with a future date and time (relative to 2026).
+        2.  Verify if the countdown on the home page works correctly with the new data.
+        3.  If it still fails, debug the date/time parsing logic in .
+    - **Why fix this issue and what will be achieved with the fix?**: This will fix a user-facing bug on the app's home screen.
+    - **Status**: USER VERIFICATION PENDING
+    - **Is recurring issue?**: Y
+    - **Should Test frontend/backend/both after fix?**: Frontend.
+    - **Blocked on other issue**: None.
+
+- **Issue 4: Event Image Not Displaying from NAS**
+    - **Attempted fixes**: The agent diagnosed this as the local NAS URL not being publicly accessible. The agent implemented Cloudinary for image uploads as the solution.
+    - **Next debug checklist**:
+        1.  This issue is superseded by the Cloudinary implementation.
+        2.  The user needs to test uploading an event flyer via the new admin interface and confirm it displays correctly in the app.
+    - **Why fix this issue and what will be achieved with the fix?**: This will allow event images to be displayed reliably in the app.
+    - **Status**: IN PROGRESS (Awaiting verification of the Cloudinary fix).
+    - **Is recurring issue?**: Y
+    - **Should Test frontend/backend/both after fix?**: Both.
+    - **Blocked on other issue**: Issue 2.
 
 **In progress Task List**:
--   **Task 1: Implement Guest Mode for App Store Compliance (P0)**
-    -   **Where to resume**: The  component exists. The next step is to modify the app's navigation and authentication logic to allow unauthenticated access to public content and then trigger the modal for protected actions.
-    -   **What will be achieved with this?**: The app will comply with Apple's Guideline 5.1.1, allowing for resubmission to the App Store.
-    -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?**: Frontend (manual user testing).
-    -   **Blocked on something**: None.
+- **Task 1: Deploy Backend to Production (P0)**
+    - **Where to resume**: Guide the user through setting up MongoDB Atlas and deploying the existing backend code to Railway.
+    - **What will be achieved with this?**: A stable, production-ready backend for the live application, fixing the critical login issues.
+    - **Status**: IN PROGRESS
+    - **Should Test frontend/backend/both after fix?**: Both.
+    - **Blocked on something**: User action is required to create accounts on MongoDB Atlas and Railway.
+
+- **Task 2: Finalize and Test New Features (P1)**
+    - **Where to resume**: Once the backend is migrated, systematically test each of the 14 new features with the user on Expo Go.
+    - **What will be achieved with this?**: Verifying and debugging a large set of new functionalities before releasing them to the App Store.
+    - **Status**: NOT STARTED (blocked by Task 1)
+    - **Should Test frontend/backend/both after fix?**: Both.
+    - **Blocked on something**: Task 1.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks**:
-    -   **P0: Security - Face ID/Touch ID for QR Code**: Implement a system where the user must authenticate with biometrics (Face ID/Touch ID) to display their loyalty QR code. This will prevent account sharing. This also includes making the QR code dynamic (changing every ~60 seconds).
-    -   **P1: Admin Push Notification Panel**: Create a new admin page in the frontend to allow admins to manually write and send push notifications to users based on their notification preferences.
--   **Future Tasks**:
-    -   Generate Android Beta Build.
+- **Future Tasks**:
+    - **P2**: Generate and submit an Android Beta Build for the Google Play Store.
 
 **Completed work in this session**
-- **App Store Rejection Fixes**:
-  - **Login Crash on iPad (FIXED)**: Resolved Apple's first rejection by robustly handling  email values from subsequent Apple Sign-In attempts in both frontend and backend.
-  - **Email Registration Failure (FIXED)**: Diagnosed and fixed a bug preventing new user registration by dropping a faulty unique index () from the MongoDB  collection.
-- **New Features**:
-  - **Admin Event Controls**: Implemented backend endpoints and a frontend admin page () to allow admins to enable/disable song requests and cycle the loyalty QR code version.
-  - **Notification Preferences**: Added a full-stack feature allowing users to manage their notification preferences from their profile ().
-- **App Store Submission Preparation**:
-  - Created full App Store descriptions in French, English, and Spanish.
-  - Generated and provided correctly-sized screenshots (1284x2778px) without marketing text, as per user's final request.
-  - Created , , and  pages and guided the user on how to get them hosted.
-- **Codebase & Repository Management**:
-  - **Resolved Git Corruption**: Migrated the entire project to a new, clean GitHub repository () to overcome a persistent local file corruption issue that was blocking the user.
-- **i18n & UI/UX**:
-  - **Finalized Translations**: Completed all translations for the  and  pages.
-  - **UI Fixes**: Corrected layout issues on the welcome screen (), updated table descriptions on the booking page (), and removed a text section from the DJ page ().
+- **Guest Mode Implementation (Full)**: Resolved Apple's Guideline 5.1.1 rejection by implementing a complete guest mode, allowing users to browse the app and prompting for login/registration only for protected actions. This included UI iterations based on user feedback.
+- **Production Bug Diagnosis**: Correctly identified that the live app's instability was due to it using an unstable development backend.
+- **Production Migration Preparation**: Prepared the backend repository for deployment on Railway by adding  and , and cleaning .
+- **New Feature Implementation (Code Complete, Awaiting Testing)**:
+    - **Admin Panel**: Added features to delete events, add event time, and manage the main welcome screen flyer.
+    - **Image Uploads**: Integrated Cloudinary for direct image uploads in the admin panel for event flyers and welcome flyers.
+    - **UI/UX Fixes**: Corrected the tab bar height for iPhones, fixed welcome messages for social/guest logins, and restricted the Test Mode visibility to admins.
+    - **Biometric Login**: Implemented an app lock screen using Face ID/Touch ID ().
+    - **Geofencing**: Added backend logic and frontend location requests to restrict song requests by location (40m radius of Mirano) and time (23h-5h).
+    - **User Feedback**: Implemented UI to show users the reason their song request was rejected.
+    - **Admin Tooling**: Added a backend endpoint for admins to reset loyalty QR code scans for testing purposes.
+    - **Push Notifications**: Implemented a system to send push notifications to admins when a new table booking is made.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **App Store Guideline Compliance**: Adapting an application's architecture to meet Apple's specific rules, particularly Guideline 5.1.1 (requiring a guest mode).
--   **Conditional Rendering & Navigation**: Implementing logic to show/hide features and control navigation based on user authentication state (logged-in vs. guest).
--   **MongoDB Index Management**: Debugging and resolving a critical backend error by identifying and dropping a problematic database index using a Pymongo script.
--   **Git Repository Recovery**: Migrating a project to a new, clean Git repository to resolve persistent local file corruption issues.
--   **Robust Social Login**: Hardening the Apple/Google Sign-In flow to handle edge cases, such as  email values on subsequent logins.
+-   **Production Infrastructure Migration**: Moving a live application's backend from an unstable development environment (ngrok) to a production-grade host (Railway) and database (MongoDB Atlas).
+-   **Cloud Media Management**: Integrating a third-party service (Cloudinary) for handling direct image uploads, storage, and delivery.
+-   **Biometric Authentication**: Using  to implement Face ID/Touch ID for securing app access.
+-   **Geofencing**: Using  on the frontend to get user coordinates and performing server-side validation to restrict features based on geographical proximity to a fixed point.
+-   **Push Notifications (for Admins)**: Storing admin push tokens and using  (or similar) on the backend to send targeted notifications for specific events (e.g., new table booking).
+-   **Imperative vs. Declarative State**: Switched from a declarative check () to an imperative check () to solve a stale state issue in the guest mode implementation.
 
 **key DB schema**
--   **users**: a unique index on  was dropped to fix registration.
--   **app_settings**: A new singleton collection was created to store global settings like .
--   User documents in the  collection were updated to potentially include a  object.
+-   **events**: Potentially updated to store  alongside .
+-   **users**: A  field has been added to store the Expo push token for admin users.
+-   **check_ins**: A new collection likely exists to track  pairs for loyalty scans.
+-   **vip_bookings**: This collection now triggers a push notification on creation.
+-   **welcome_content**: A new singleton collection was likely created to store the URL and visibility of the main welcome screen flyer.
 
 **changes in tech stack**
--   None.
+-   **Upcoming**: The backend hosting will change from the Emergent development server to **Railway**.
+-   **Upcoming**: The database will migrate from a local MongoDB instance to **MongoDB Atlas**.
+-   **Added**: **Cloudinary** for image hosting.
+-   **Added**:  for biometrics.
+-   **Added**:  for geofencing.
 
 **All files of reference**
--   : **Core of the current task.** The modal to be shown to guest users.
--   : **Must be modified** to change the root navigation logic for guest mode.
--   : **Must be modified** to handle a  user state without forcing a redirect to login.
--   : **Must be modified** to add an Explore without account button.
--   : Several files in this directory will need to be updated to wrap protected actions with a check for  and trigger the .
--   : The  function was fixed here by dropping the DB index.
+-   : Contains all new backend logic for the 14-point feature list.
+-   : Contains the bulk of the new admin UI features.
+-   : Contains the new biometric lock logic.
+-   : Root layout modified for the tab bar and biometric lock.
+-   : The new UI for Face ID.
+-   : Contains the new geofencing and rejection reason logic.
 
 **Critical Info for New Agent**
--   **Your immediate and highest priority is to implement the Guest Mode to get the app approved by Apple.** This is the current blocker. The user has approved the strategy of allowing browsing while locking key actions.
--   The implementation has started with . You need to integrate this into the app's navigation and action flows. Refer to the  for Issue 1 for a step-by-step guide.
--   Once the Guest Mode is implemented and tested by the user, you must guide them to create a new build (e.g., **Build 16**) and resubmit to the App Store, carefully explaining how to select the new build in App Store Connect.
--   Be aware of two major features the user has requested but which have **not been started**:
-    1.  **Face ID / Dynamic QR Code** for security.
-    2.  An **admin panel to send push notifications**.
--   Do not get distracted by other tasks until the App Store rejection is resolved.
+-   **Your #1 priority is to stabilize the production application.** Guide the user to migrate the backend to Railway and the database to MongoDB Atlas. The app is currently unreliable for live users.
+-   After the migration, you must undertake a thorough, systematic verification of the 14 new features that were just implemented. Do not assume they work. Test each one with the user via Expo Go before creating a new TestFlight build.
+-   Be prepared to debug the newly implemented features. Given the volume of changes, there are likely to be bugs or logical errors.
+-   Once the new backend is live and all features are verified, you will need to update the  in the frontend  file, create a new build (e.g., Build 17), and guide the user through submitting the update to the App Store.
 
 **documents created in this job**
 -   
 -   
--   
--   Multiple sets of App Store screenshots, with the final versions located in .
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (LATEST)**: Agreed to implement the guest mode solution to satisfy Apple's requirements. **Status: IN PROGRESS.**
-2.  **User**: Asked if it's possible to force users to sign up anyway. **Status: RESOLVED (Agent explained Apple's policy and proposed the accepted workaround).**
-3.  **User**: Pasted the latest App Store rejection notice regarding Guideline 5.1.1 (requiring login to browse). **Status: ADDRESSED (Agent is now working on the fix).**
-4.  **User**: Reported the app no longer opens in Expo Go and login fails on TestFlight. **Status: PARTIALLY RESOLVED (Agent confirmed the backend is fine and suggested user reinstalls app, but the root cause wasn't definitively found before the new rejection notice arrived).**
-5.  **User**: Asked how to submit the fixed build (Build 15) to the App Store. **Status: RESOLVED (Agent provided instructions).**
-6.  **User**: Confirmed that the registration bug is fixed on TestFlight (Build 15). **Status: RESOLVED.**
-7.  **User**: Reported that creating a new account via email fails on TestFlight. **Status: RESOLVED (Agent found and fixed a backend DB index issue).**
-8.  **User**: Asked if TestFlight functions identically to the final App Store version for testing social logins. **Status: RESOLVED (Agent confirmed it does).**
-9.  **User**: Agreed to create Build 14 to test the fix for the iPad login issue. **Status: ADDRESSED.**
-10. **User**: Asked if push notifications will be sent automatically. **Status: RESOLVED (Agent clarified that the admin will send them manually and proposed an admin panel for it).**
+1.  **User**: Asks for 6 more major features/fixes (Face ID, DJ sync, geofencing, rejection reason, QR bug, admin notifications). **Status: IN PROGRESS (Code written, not tested).**
+2.  **User**: Confirms a new  tab is needed for the welcome screen flyer. **Status: COMPLETED.**
+3.  **User**: Asks if App Store updates are faster than initial reviews. **Status: RESOLVED (Agent confirmed they usually are).**
+4.  **User**: Provides Cloudinary keys and asks for more fixes (flyer format, Bienvenue user message, Familia for guests). **Status: COMPLETED (Code written, not tested).**
+5.  **User**: Asks to add upload buttons to the UI before proceeding with the backend migration. **Status: COMPLETED (Code written, not tested).**
+6.  **User**: Asks for clarification on Cloudinary and if it can be connected directly for uploads. **Status: RESOLVED.**
+7.  **User**: Reports the countdown timer is still not working and asks for advice on NAS vs. Cloud for image hosting. **Status: ADDRESSED (Agent diagnosed date issue, recommended Cloudinary).**
+8.  **User**: Lists a large batch of new feature requests and bug fixes to be done. **Status: IN PROGRESS.**
+9.  **User**: Asks if changes can be made after migrating to Railway. **Status: RESOLVED (Agent explained the workflow).**
+10. **User**: Confirms they are ready to proceed with the Railway migration. **Status: ADDRESSED.**
 
 **Project Health Check:**
--   **Broken**: The app's current logic is not compliant with Apple's App Store guidelines, making it un-publishable. This is the main broken aspect being fixed.
--   **Mocked**: The Stripe service is mocked, as indicated by backend logs.
+-   **Broken**: The live production application is critically unstable because it relies on a development backend. This is the top priority to fix.
+-   **Mocked**: Stripe service is mocked.
 
 **3rd Party Integrations**
 -   Expo Application Services (EAS)
 -   Apple Sign-In
 -   Google Sign-In
--   XCEED (external link for tickets)
+-   XCEED (external link)
 -   Instagram, Facebook, TikTok (external links)
--   Stripe (currently mocked)
+-   Stripe (mocked)
+-   **Cloudinary** (NEW, for image uploads)
+-   **Railway** (PLANNED, for backend hosting)
+-   **MongoDB Atlas** (PLANNED, for database hosting)
+-   **Expo Local Authentication** (NEW, for biometrics)
+-   **Expo Location** (NEW, for geofencing)
 
 **Testing status**
 -   Testing agent used after significant changes: NO
 -   Troubleshoot agent used after agent stuck in loop: NO
 -   Test files created: None.
--   Known regressions: None. The user tests manually on TestFlight after each build.
+-   Known regressions: The entire live app is unreliable due to backend instability.
 
 **Credentials to test flow:**
 -   **Admin Email**:  / 
 -   **Admin Password**: 
--   **Apple Reviewer Email**: 
--   **Apple Reviewer Password**: 
+-   **Cloudinary Name**: 
+-   **Cloudinary Upload Preset**: 
 
 **What agent forgot to execute**
--   The agent discussed but did not start implementation for two user-requested features:
-    1.  The security system using Face ID/Touch ID and a dynamic QR code to prevent account sharing.
-    2.  An admin panel for manually sending push notifications.
-    These should be treated as high-priority upcoming tasks after the App Store rejection is resolved.
-
+-   The agent did not forget tasks but instead implemented a very large number of complex features in a single, long run without intermediate user testing. This creates a high risk of bugs and makes the upcoming verification phase very complex. The primary strategic error was not prioritizing the production infrastructure fix *before* adding a dozen new features.
 </analysis>

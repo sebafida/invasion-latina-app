@@ -70,7 +70,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "EXPO_PUBLIC_BACKEND_URL": "https://guest-access-beta.preview.emergentagent.com",
+      "EXPO_PUBLIC_BACKEND_URL": "https://feature-batch-test.preview.emergentagent.com",
       "GOOGLE_IOS_CLIENT_ID": "879493210543-t0apvh7hh52mdog38jdb2hkfv5urapcs.apps.googleusercontent.com"
     }
   }

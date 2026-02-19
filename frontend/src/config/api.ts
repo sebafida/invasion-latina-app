@@ -16,7 +16,7 @@ const getBackendUrl = () => {
   }
   
   // 3. Fallback to hardcoded URL for production
-  return 'https://guest-access-beta.preview.emergentagent.com';
+  return 'https://feature-batch-test.preview.emergentagent.com';
 };
 
 const BACKEND_URL = getBackendUrl();
