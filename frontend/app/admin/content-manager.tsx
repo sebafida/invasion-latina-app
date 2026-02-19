@@ -430,6 +430,7 @@ export default function ContentManagerScreen() {
   };
 
   const tabs: { key: TabType; label: string; icon: string }[] = [
+    { key: 'welcome', label: 'Accueil', icon: 'home' },
     { key: 'flyer', label: 'Flyer', icon: 'image' },
     { key: 'photos', label: 'Photos', icon: 'images' },
     { key: 'aftermovies', label: 'Aftermovies', icon: 'videocam' },
