@@ -16,7 +16,7 @@ const getBackendUrl = () => {
   }
   
   // 3. Fallback to hardcoded URL for production
-  return 'https://feature-batch-test.preview.emergentagent.com';
+  return 'https://invasion-latina-app-production.up.railway.app';
 };
 
 const BACKEND_URL = getBackendUrl();
