@@ -480,7 +480,7 @@ export const translations: Record<Language, Translations> = {
     continueWithApple: 'Continuer avec Apple',
     continueWithGoogle: 'Continuer avec Google',
     orContinueWith: 'ou continuer avec',
-    loginSubtitle: 'Connecte-toi pour continuer la fiesta',
+    loginSubtitle: 'Entre en tu mundo de Invasion Latina',
     enterPassword: 'Entre ton mot de passe',
     or: 'ou',
     
