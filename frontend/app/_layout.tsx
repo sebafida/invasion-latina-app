@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
@@ -10,17 +10,23 @@ function AppContent() {
   const { isLoading, isLocked, isAuthenticated, user, setIsLocked, logout } = useAuth();
   const router = useRouter();
   const segments = useSegments();
+  const hasRedirected = useRef(false);
 
-  // Redirect authenticated users to home after unlock
+  // Redirect authenticated users to home when unlocked
   useEffect(() => {
-    if (!isLoading && isAuthenticated && !isLocked) {
-      // If user is authenticated, not locked, and on the welcome page, redirect to home
-      const inAuthGroup = segments[0] === '(tabs)';
-      if (!inAuthGroup) {
-        router.replace('/(tabs)/home');
-      }
+    if (!isLoading && isAuthenticated && !isLocked && !hasRedirected.current) {
+      // User is authenticated and unlocked - go to home
+      hasRedirected.current = true;
+      router.replace('/(tabs)/home');
     }
-  }, [isLoading, isAuthenticated, isLocked, segments]);
+  }, [isLoading, isAuthenticated, isLocked]);
+
+  // Reset redirect flag when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      hasRedirected.current = false;
+    }
+  }, [isAuthenticated]);
 
   // Show loading screen while checking auth status
   if (isLoading) {
@@ -36,7 +42,6 @@ function AppContent() {
     return (
       <BiometricLock
         onAuthenticated={() => {
-          // Simply unlock - the biometric auth was already done in BiometricLock
           setIsLocked(false);
         }}
         onCancel={logout}
