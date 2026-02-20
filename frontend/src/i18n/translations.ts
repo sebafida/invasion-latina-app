@@ -925,7 +925,7 @@ export const translations: Record<Language, Translations> = {
     continueWithApple: 'Continue with Apple',
     continueWithGoogle: 'Continue with Google',
     orContinueWith: 'or continue with',
-    loginSubtitle: 'Sign in to continue the party',
+    loginSubtitle: 'Entre en tu mundo de Invasion Latina',
     enterPassword: 'Enter your password',
     or: 'or',
     
