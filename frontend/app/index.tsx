@@ -159,7 +159,7 @@ export default function WelcomeScreen() {
           
           {/* Venue Info */}
           <View style={styles.venueInfo}>
-            <Text style={styles.venueText}>📍 {content.venue_name || "Mirano Continental, Brussels"}</Text>
+            <Text style={styles.venueText}>📍 {content?.venue_name || "Mirano Continental, Brussels"}</Text>
             <Text style={styles.venueSubtext}>{t('sinceYears')}</Text>
           </View>
         </View>
