@@ -3,25 +3,22 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Slot, useRouter } from 'expo-router';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { LanguageProvider } from '../src/context/LanguageContext';
-import { BiometricLock } from '../src/components/BiometricLock';
 import { theme } from '../src/config/theme';
 
 function AppContent() {
-  const { authState, user, unlock, logout } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
 
-  // When fully authenticated, go to home
+  // When user is authenticated, go to home
   useEffect(() => {
-    if (authState === 'authenticated') {
-      console.log('AppContent: authenticated - navigating to home');
+    if (!isLoading && isAuthenticated) {
+      console.log('User authenticated - navigating to home');
       router.replace('/(tabs)/home');
     }
-  }, [authState]);
+  }, [isLoading, isAuthenticated]);
 
-  console.log('AppContent render - authState:', authState);
-
-  // LOADING: Show spinner while checking stored token
-  if (authState === 'loading') {
+  // Show loading screen while checking auth status
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -29,19 +26,8 @@ function AppContent() {
     );
   }
 
-  // LOCKED: User was previously logged in, needs Face ID
-  if (authState === 'locked') {
-    return (
-      <BiometricLock
-        onAuthenticated={unlock}
-        onCancel={logout}
-        userName={user?.name?.split(' ')[0] || 'Familia'}
-      />
-    );
-  }
-
-  // UNAUTHENTICATED: Show login/welcome page
-  // AUTHENTICATED: Will redirect via useEffect, show Slot briefly
+  // Show welcome/login page if not authenticated
+  // Or briefly show Slot before redirect if authenticated
   return <Slot />;
 }
 
