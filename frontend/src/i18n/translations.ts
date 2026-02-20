@@ -480,7 +480,7 @@ export const translations: Record<Language, Translations> = {
     continueWithApple: 'Continuer avec Apple',
     continueWithGoogle: 'Continuer avec Google',
     orContinueWith: 'ou continuer avec',
-    loginSubtitle: 'Entre en tu mundo de Invasion Latina',
+    loginSubtitle: 'Entra en tu mundo de Invasion Latina',
     enterPassword: 'Entre ton mot de passe',
     or: 'ou',
     
@@ -925,7 +925,7 @@ export const translations: Record<Language, Translations> = {
     continueWithApple: 'Continue with Apple',
     continueWithGoogle: 'Continue with Google',
     orContinueWith: 'or continue with',
-    loginSubtitle: 'Entre en tu mundo de Invasion Latina',
+    loginSubtitle: 'Entra en tu mundo de Invasion Latina',
     enterPassword: 'Enter your password',
     or: 'or',
     
@@ -1370,7 +1370,7 @@ export const translations: Record<Language, Translations> = {
     continueWithApple: 'Continuar con Apple',
     continueWithGoogle: 'Continuar con Google',
     orContinueWith: 'o continuar con',
-    loginSubtitle: 'Entre en tu mundo de Invasion Latina',
+    loginSubtitle: 'Entra en tu mundo de Invasion Latina',
     enterPassword: 'Ingresa tu contraseña',
     or: 'o',
     
@@ -1810,7 +1810,7 @@ export const translations: Record<Language, Translations> = {
     continueWithApple: 'Doorgaan met Apple',
     continueWithGoogle: 'Doorgaan met Google',
     orContinueWith: 'of doorgaan met',
-    loginSubtitle: 'Entre en tu mundo de Invasion Latina',
+    loginSubtitle: 'Entra en tu mundo de Invasion Latina',
     enterPassword: 'Voer je wachtwoord in',
     or: 'of',
     
