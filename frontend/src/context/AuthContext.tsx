@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
 import api from '../config/api';
@@ -36,6 +36,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  
+  // Flag to track if user just logged in (to skip Face ID after fresh login)
+  const justLoggedIn = useRef(false);
 
   const login = async (email: string, password: string) => {
     try {
@@ -43,7 +46,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Login attempt - API URL:', api.defaults.baseURL);
       const response = await api.post('/auth/login', { email, password });
       console.log('Login response received:', response.status);
-      console.log('Response data keys:', Object.keys(response.data));
       
       const { access_token, id, email: userEmail, name, role, loyalty_points, badges } = response.data;
       
@@ -52,6 +54,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       await AsyncStorage.setItem('auth_token', access_token);
+      
+      // Mark that user just logged in - NO Face ID needed
+      justLoggedIn.current = true;
       
       setToken(access_token);
       setUser({ 
@@ -63,10 +68,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         badges: badges || [] 
       });
       setIsAuthenticated(true);
+      setIsLocked(false); // NOT locked after fresh login
       console.log('Login successful!');
     } catch (error: any) {
       console.error('Login error:', error);
-      console.error('Error details:', error.message, error.code);
       throw new Error(error.response?.data?.detail || error.message || 'Login failed');
     } finally {
       setIsLoading(false);
@@ -88,9 +93,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { access_token, user_id } = response.data;
       await AsyncStorage.setItem('auth_token', access_token);
       
+      // Mark that user just registered - NO Face ID needed
+      justLoggedIn.current = true;
+      
       setToken(access_token);
       setUser({ id: user_id, email, name, role: 'user', loyalty_points: 0, badges: [] });
       setIsAuthenticated(true);
+      setIsLocked(false); // NOT locked after fresh registration
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || 'Registration failed');
     } finally {
@@ -100,40 +109,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     await AsyncStorage.removeItem('auth_token');
+    justLoggedIn.current = false;
     setUser(null);
     setToken(null);
     setIsAuthenticated(false);
     setIsLocked(false);
   };
 
+  // This is called ONLY at app startup to check if user was previously logged in
   const loadUser = async () => {
     try {
       setIsLoading(true);
-      const storedToken = await AsyncStorage.getItem('auth_token');
-      if (!storedToken) {
-        setIsAuthenticated(false);
+      
+      // If user just logged in, don't reload and don't lock
+      if (justLoggedIn.current) {
         setIsLoading(false);
         return;
       }
       
-      const response = await api.get('/auth/me');
+      const storedToken = await AsyncStorage.getItem('auth_token');
       
-      setUser(response.data);
-      setToken(storedToken);
-      setIsAuthenticated(true);
-      
-      // Check if biometrics are available and lock the app
-      const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-      
-      if (hasHardware && isEnrolled) {
-        setIsLocked(true);
+      // No token = user never logged in or logged out
+      if (!storedToken) {
+        setIsAuthenticated(false);
+        setIsLocked(false);
+        setIsLoading(false);
+        return;
       }
-    } catch (error) {
-      await AsyncStorage.removeItem('auth_token');
-      setUser(null);
-      setToken(null);
-      setIsAuthenticated(false);
+      
+      // Token exists = user was previously logged in, verify it's still valid
+      try {
+        const response = await api.get('/auth/me');
+        
+        setUser(response.data);
+        setToken(storedToken);
+        setIsAuthenticated(true);
+        
+        // RETURNING USER: Check if biometrics are available and LOCK the app
+        const hasHardware = await LocalAuthentication.hasHardwareAsync();
+        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+        
+        if (hasHardware && isEnrolled) {
+          // Lock the app - user must use Face ID to enter
+          setIsLocked(true);
+        } else {
+          // No biometrics available - let them in
+          setIsLocked(false);
+        }
+      } catch (error) {
+        // Token invalid - clear everything
+        await AsyncStorage.removeItem('auth_token');
+        setUser(null);
+        setToken(null);
+        setIsAuthenticated(false);
+        setIsLocked(false);
+      }
     } finally {
       setIsLoading(false);
     }
