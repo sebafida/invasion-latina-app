@@ -474,6 +474,15 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
+              style={styles.usersButton}
+              onPress={() => router.push('/admin/users')}
+            >
+              <Ionicons name="people-circle" size={24} color="white" />
+              <Text style={styles.usersButtonText}>Utilisateurs & Stats</Text>
+              <Ionicons name="arrow-forward" size={20} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={styles.djSelectionButton}
               onPress={() => router.push('/admin/dj-selection')}
             >
