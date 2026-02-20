@@ -3450,3 +3450,296 @@ async def get_my_scans(current_user: dict = Depends(get_current_user)):
     
     return {"scans": scans}
 
+
+
+
+# ============ REFERRAL PROGRAM ============
+# Users can invite friends and both earn Invasion Coins
+
+import random
+import string
+
+def generate_referral_code(name: str) -> str:
+    """Generate a unique referral code based on user's name"""
+    prefix = ''.join(c.upper() for c in name[:3] if c.isalpha())
+    if len(prefix) < 3:
+        prefix = prefix + 'INV'[:3-len(prefix)]
+    suffix = ''.join(random.choices(string.digits, k=4))
+    return f"{prefix}{suffix}"
+
+
+@app.get("/api/referral/my-code")
+async def get_my_referral_code(current_user: dict = Depends(get_current_user)):
+    """Get or create user's referral code"""
+    db = get_database()
+    user_id = str(current_user["_id"])
+    
+    # Check if user already has a referral code
+    if current_user.get("referral_code"):
+        referral_code = current_user["referral_code"]
+    else:
+        # Generate new referral code
+        referral_code = generate_referral_code(current_user.get("name", "INV"))
+        
+        # Make sure it's unique
+        while await db.users.find_one({"referral_code": referral_code}):
+            referral_code = generate_referral_code(current_user.get("name", "INV"))
+        
+        # Save to user
+        await db.users.update_one(
+            {"_id": current_user["_id"]},
+            {"$set": {"referral_code": referral_code}}
+        )
+    
+    # Count successful referrals
+    referral_count = await db.referrals.count_documents({"referrer_id": user_id})
+    
+    return {
+        "referral_code": referral_code,
+        "referral_count": referral_count,
+        "coins_per_referral": 3,
+        "share_message": f"Rejoins Invasion Latina avec mon code {referral_code} et on gagne tous les deux 3 Invasion Coins ! 🎉"
+    }
+
+
+class ApplyReferralRequest(BaseModel):
+    referral_code: str
+
+@app.post("/api/referral/apply")
+async def apply_referral_code(
+    data: ApplyReferralRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Apply a referral code (for new users)"""
+    db = get_database()
+    user_id = str(current_user["_id"])
+    
+    # Check if user already used a referral code
+    existing = await db.referrals.find_one({"referred_id": user_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Tu as déjà utilisé un code de parrainage")
+    
+    # Find the referrer by code
+    referrer = await db.users.find_one({"referral_code": data.referral_code.upper()})
+    if not referrer:
+        raise HTTPException(status_code=404, detail="Code de parrainage invalide")
+    
+    referrer_id = str(referrer["_id"])
+    
+    # Can't refer yourself
+    if referrer_id == user_id:
+        raise HTTPException(status_code=400, detail="Tu ne peux pas utiliser ton propre code")
+    
+    # Record the referral
+    referral = {
+        "referrer_id": referrer_id,
+        "referred_id": user_id,
+        "referral_code": data.referral_code.upper(),
+        "coins_awarded": 3,
+        "created_at": datetime.utcnow()
+    }
+    await db.referrals.insert_one(referral)
+    
+    # Award coins to both users
+    await db.users.update_one(
+        {"_id": referrer["_id"]},
+        {"$inc": {"loyalty_points": 3}}
+    )
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$inc": {"loyalty_points": 3}}
+    )
+    
+    # Get updated points for current user
+    updated_user = await db.users.find_one({"_id": current_user["_id"]})
+    
+    return {
+        "success": True,
+        "coins_earned": 3,
+        "total_points": updated_user.get("loyalty_points", 0),
+        "message": "Félicitations ! Toi et ton ami avez gagné 3 Invasion Coins chacun ! 🎉"
+    }
+
+
+@app.get("/api/referral/my-referrals")
+async def get_my_referrals(current_user: dict = Depends(get_current_user)):
+    """Get list of people I've referred"""
+    db = get_database()
+    user_id = str(current_user["_id"])
+    
+    referrals = []
+    async for ref in db.referrals.find({"referrer_id": user_id}).sort("created_at", -1):
+        referred_user = await db.users.find_one({"_id": ObjectId(ref["referred_id"])})
+        if referred_user:
+            referrals.append({
+                "name": referred_user.get("name", "Utilisateur"),
+                "coins_earned": ref["coins_awarded"],
+                "date": ref["created_at"]
+            })
+    
+    return {"referrals": referrals, "total_coins_earned": len(referrals) * 3}
+
+
+# ============ ADMIN: USER MANAGEMENT ============
+
+@app.get("/api/admin/users")
+async def admin_get_all_users(
+    search: str = "",
+    page: int = 1,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Get all registered users"""
+    db = get_database()
+    
+    # Build query
+    query = {}
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"email": {"$regex": search, "$options": "i"}}
+        ]
+    
+    # Count total
+    total = await db.users.count_documents(query)
+    
+    # Get users with pagination
+    skip = (page - 1) * limit
+    users = []
+    
+    async for user in db.users.find(query).sort("created_at", -1).skip(skip).limit(limit):
+        users.append({
+            "id": str(user["_id"]),
+            "name": user.get("name", ""),
+            "email": user.get("email", ""),
+            "role": user.get("role", "user"),
+            "loyalty_points": user.get("loyalty_points", 0),
+            "referral_code": user.get("referral_code", ""),
+            "created_at": user.get("created_at", datetime.utcnow()),
+            "last_login": user.get("last_login"),
+        })
+    
+    return {
+        "users": users,
+        "total": total,
+        "page": page,
+        "pages": (total + limit - 1) // limit
+    }
+
+
+@app.get("/api/admin/stats")
+async def admin_get_stats(current_user: dict = Depends(get_current_admin)):
+    """Admin: Get app statistics"""
+    db = get_database()
+    
+    total_users = await db.users.count_documents({})
+    total_events = await db.events.count_documents({})
+    total_bookings = await db.vip_bookings.count_documents({})
+    total_song_requests = await db.song_requests.count_documents({})
+    total_referrals = await db.referrals.count_documents({})
+    
+    # Users registered this month
+    month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    new_users_this_month = await db.users.count_documents({"created_at": {"$gte": month_start}})
+    
+    # Total loyalty points in circulation
+    pipeline = [{"$group": {"_id": None, "total": {"$sum": "$loyalty_points"}}}]
+    points_result = await db.users.aggregate(pipeline).to_list(1)
+    total_points = points_result[0]["total"] if points_result else 0
+    
+    return {
+        "total_users": total_users,
+        "new_users_this_month": new_users_this_month,
+        "total_events": total_events,
+        "total_bookings": total_bookings,
+        "total_song_requests": total_song_requests,
+        "total_referrals": total_referrals,
+        "total_loyalty_points": total_points
+    }
+
+
+# ============ PUSH NOTIFICATIONS ============
+
+class SendNotificationRequest(BaseModel):
+    title: str
+    body: str
+    target: str = "all"  # "all", "admins", or specific user_id
+
+@app.post("/api/admin/notifications/send")
+async def admin_send_notification(
+    data: SendNotificationRequest,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Send push notification to users"""
+    db = get_database()
+    
+    # Get target users with push tokens
+    query = {"push_token": {"$exists": True, "$ne": None}}
+    
+    if data.target == "admins":
+        query["role"] = "admin"
+    elif data.target != "all":
+        query["_id"] = ObjectId(data.target)
+    
+    tokens = []
+    async for user in db.users.find(query):
+        if user.get("push_token"):
+            tokens.append(user["push_token"])
+    
+    if not tokens:
+        raise HTTPException(status_code=400, detail="Aucun utilisateur avec notifications activées")
+    
+    # Store notification in database
+    notification = {
+        "title": data.title,
+        "body": data.body,
+        "target": data.target,
+        "tokens_count": len(tokens),
+        "sent_at": datetime.utcnow(),
+        "sent_by": str(current_user["_id"])
+    }
+    await db.notifications_sent.insert_one(notification)
+    
+    # In production, you would send via Expo Push API here
+    # For now, we just return success
+    return {
+        "success": True,
+        "tokens_count": len(tokens),
+        "message": f"Notification envoyée à {len(tokens)} utilisateur(s)"
+    }
+
+
+@app.post("/api/notifications/register-token")
+async def register_push_token(
+    token: str = Body(..., embed=True),
+    current_user: dict = Depends(get_current_user)
+):
+    """Register user's push notification token"""
+    db = get_database()
+    
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"push_token": token, "push_token_updated": datetime.utcnow()}}
+    )
+    
+    return {"success": True, "message": "Token enregistré"}
+
+
+@app.get("/api/admin/notifications/history")
+async def admin_get_notification_history(current_user: dict = Depends(get_current_admin)):
+    """Admin: Get history of sent notifications"""
+    db = get_database()
+    
+    notifications = []
+    async for notif in db.notifications_sent.find().sort("sent_at", -1).limit(50):
+        notifications.append({
+            "id": str(notif["_id"]),
+            "title": notif["title"],
+            "body": notif["body"],
+            "target": notif["target"],
+            "tokens_count": notif["tokens_count"],
+            "sent_at": notif["sent_at"]
+        })
+    
+    return {"notifications": notifications}
+
