@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { Slot } from 'expo-router';
+import { Slot, useRouter, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { LanguageProvider } from '../src/context/LanguageContext';
 import { BiometricLock } from '../src/components/BiometricLock';
@@ -8,6 +8,19 @@ import { theme } from '../src/config/theme';
 
 function AppContent() {
   const { isLoading, isLocked, isAuthenticated, user, setIsLocked, logout } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+
+  // Redirect authenticated users to home after unlock
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && !isLocked) {
+      // If user is authenticated, not locked, and on the welcome page, redirect to home
+      const inAuthGroup = segments[0] === '(tabs)';
+      if (!inAuthGroup) {
+        router.replace('/(tabs)/home');
+      }
+    }
+  }, [isLoading, isAuthenticated, isLocked, segments]);
 
   // Show loading screen while checking auth status
   if (isLoading) {
