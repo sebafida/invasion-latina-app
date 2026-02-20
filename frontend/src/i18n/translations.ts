@@ -1810,7 +1810,7 @@ export const translations: Record<Language, Translations> = {
     continueWithApple: 'Doorgaan met Apple',
     continueWithGoogle: 'Doorgaan met Google',
     orContinueWith: 'of doorgaan met',
-    loginSubtitle: 'Log in om het feest voort te zetten',
+    loginSubtitle: 'Entre en tu mundo de Invasion Latina',
     enterPassword: 'Voer je wachtwoord in',
     or: 'of',
     
