@@ -12,9 +12,17 @@ interface User {
   badges: string[];
 }
 
+// Auth states:
+// 'loading' - checking stored token
+// 'unauthenticated' - no token or token invalid, show login page
+// 'locked' - has valid token, need Face ID to unlock
+// 'authenticated' - fully authenticated, show app
+type AuthState = 'loading' | 'unauthenticated' | 'locked' | 'authenticated';
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  authState: AuthState;
   isLoading: boolean;
   isAuthenticated: boolean;
   isLocked: boolean;
@@ -26,6 +34,7 @@ interface AuthContextType {
   setToken: (token: string | null) => void;
   unlockWithBiometrics: () => Promise<boolean>;
   setIsLocked: (locked: boolean) => void;
+  unlock: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,19 +42,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
-  
-  // Flag to track if user just logged in (to skip Face ID after fresh login)
-  const justLoggedIn = useRef(false);
+  const [authState, setAuthState] = useState<AuthState>('loading');
+
+  // Computed values for backward compatibility
+  const isLoading = authState === 'loading';
+  const isAuthenticated = authState === 'locked' || authState === 'authenticated';
+  const isLocked = authState === 'locked';
 
   const login = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
-      console.log('Login attempt - API URL:', api.defaults.baseURL);
+      setAuthState('loading');
+      console.log('Login attempt...');
       const response = await api.post('/auth/login', { email, password });
-      console.log('Login response received:', response.status);
       
       const { access_token, id, email: userEmail, name, role, loyalty_points, badges } = response.data;
       
@@ -54,9 +62,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       await AsyncStorage.setItem('auth_token', access_token);
-      
-      // Mark that user just logged in - NO Face ID needed
-      justLoggedIn.current = true;
       
       setToken(access_token);
       setUser({ 
@@ -67,20 +72,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loyalty_points: loyalty_points || 0, 
         badges: badges || [] 
       });
-      setIsAuthenticated(true);
-      setIsLocked(false); // NOT locked after fresh login
-      console.log('Login successful!');
+      
+      // After fresh login - go directly to app, NO Face ID
+      setAuthState('authenticated');
+      console.log('Login successful - going to app');
     } catch (error: any) {
       console.error('Login error:', error);
+      setAuthState('unauthenticated');
       throw new Error(error.response?.data?.detail || error.message || 'Login failed');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const register = async (name: string, email: string, password: string, phone?: string, acceptMarketing?: boolean) => {
     try {
-      setIsLoading(true);
+      setAuthState('loading');
       const response = await api.post('/auth/register', {
         name,
         email,
@@ -93,92 +98,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { access_token, user_id } = response.data;
       await AsyncStorage.setItem('auth_token', access_token);
       
-      // Mark that user just registered - NO Face ID needed
-      justLoggedIn.current = true;
-      
       setToken(access_token);
       setUser({ id: user_id, email, name, role: 'user', loyalty_points: 0, badges: [] });
-      setIsAuthenticated(true);
-      setIsLocked(false); // NOT locked after fresh registration
+      
+      // After fresh registration - go directly to app, NO Face ID
+      setAuthState('authenticated');
     } catch (error: any) {
+      setAuthState('unauthenticated');
       throw new Error(error.response?.data?.detail || 'Registration failed');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const logout = async () => {
     await AsyncStorage.removeItem('auth_token');
-    justLoggedIn.current = false;
     setUser(null);
     setToken(null);
-    setIsAuthenticated(false);
-    setIsLocked(false);
+    setAuthState('unauthenticated');
   };
 
-  // This is called ONLY at app startup to check if user was previously logged in
+  const unlock = () => {
+    // Called after successful Face ID
+    setAuthState('authenticated');
+  };
+
+  // Called at app startup to check if user was previously logged in
   const loadUser = async () => {
     try {
-      setIsLoading(true);
-      
-      // If user just logged in, don't reload and don't lock
-      if (justLoggedIn.current) {
-        setIsLoading(false);
-        return;
-      }
-      
+      console.log('loadUser: Checking for stored token...');
       const storedToken = await AsyncStorage.getItem('auth_token');
       
-      // No token = user never logged in or logged out
+      // No token = never logged in or logged out
       if (!storedToken) {
-        setIsAuthenticated(false);
-        setIsLocked(false);
-        setIsLoading(false);
+        console.log('loadUser: No token found - show login page');
+        setAuthState('unauthenticated');
         return;
       }
       
-      // Token exists = user was previously logged in, verify it's still valid
+      console.log('loadUser: Token found - verifying with server...');
+      
+      // Verify token is still valid
       try {
         const response = await api.get('/auth/me');
-        
         setUser(response.data);
         setToken(storedToken);
-        setIsAuthenticated(true);
         
-        // RETURNING USER: Check if biometrics are available and LOCK the app
+        // Check if biometrics are available
         const hasHardware = await LocalAuthentication.hasHardwareAsync();
         const isEnrolled = await LocalAuthentication.isEnrolledAsync();
         
         if (hasHardware && isEnrolled) {
-          // Lock the app - user must use Face ID to enter
-          setIsLocked(true);
+          // RETURNING USER with biometrics - show Face ID lock
+          console.log('loadUser: Returning user - show Face ID');
+          setAuthState('locked');
         } else {
-          // No biometrics available - let them in
-          setIsLocked(false);
+          // No biometrics - go directly to app
+          console.log('loadUser: No biometrics - go to app');
+          setAuthState('authenticated');
         }
       } catch (error) {
-        // Token invalid - clear everything
+        // Token invalid - clear and show login
+        console.log('loadUser: Token invalid - show login');
         await AsyncStorage.removeItem('auth_token');
         setUser(null);
         setToken(null);
-        setIsAuthenticated(false);
-        setIsLocked(false);
+        setAuthState('unauthenticated');
       }
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.error('loadUser error:', error);
+      setAuthState('unauthenticated');
     }
   };
 
   const unlockWithBiometrics = async (): Promise<boolean> => {
     try {
-      const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-
-      if (!hasHardware || !isEnrolled) {
-        setIsLocked(false);
-        return true;
-      }
-
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: 'Déverrouiller Invasion Latina',
         cancelLabel: 'Annuler',
@@ -187,14 +179,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (result.success) {
-        setIsLocked(false);
+        setAuthState('authenticated');
         return true;
       }
       return false;
     } catch (error) {
       console.error('Biometric auth error:', error);
-      setIsLocked(false);
+      setAuthState('authenticated');
       return true;
+    }
+  };
+
+  // For backward compatibility
+  const setIsLocked = (locked: boolean) => {
+    if (locked) {
+      setAuthState('locked');
+    } else {
+      setAuthState('authenticated');
     }
   };
 
@@ -207,6 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         token,
+        authState,
         isLoading,
         isAuthenticated,
         isLocked,
@@ -216,9 +218,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loadUser,
         unlockWithBiometrics,
         setIsLocked,
+        unlock,
         setUser: (newUser: User | null) => {
           setUser(newUser);
-          setIsAuthenticated(!!newUser);
+          if (newUser) {
+            setAuthState('authenticated');
+          } else {
+            setAuthState('unauthenticated');
+          }
         },
         setToken: async (newToken: string | null) => {
           setToken(newToken);
