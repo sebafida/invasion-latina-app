@@ -402,6 +402,21 @@ export default function ProfileScreen() {
           )}
         </View>
 
+        {/* Scan QR Code Button */}
+        <TouchableOpacity
+          style={styles.scanQRButton}
+          onPress={() => router.push('/scan-qr')}
+        >
+          <View style={styles.scanQRIcon}>
+            <Ionicons name="scan" size={28} color="white" />
+          </View>
+          <View style={styles.scanQRInfo}>
+            <Text style={styles.scanQRTitle}>Scanner le QR Code</Text>
+            <Text style={styles.scanQRSubtitle}>Gagne des Invasion Coins à chaque soirée !</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={24} color={theme.colors.textMuted} />
+        </TouchableOpacity>
+
         {/* Admin DJ Dashboard Button */}
         {user?.role === 'admin' && (
           <View style={styles.adminSection}>
