@@ -451,10 +451,10 @@ export default function ProfileScreen() {
 
             <TouchableOpacity
               style={styles.scannerButton}
-              onPress={() => router.push('/admin/loyalty-scanner')}
+              onPress={() => router.push('/admin/qr-manager')}
             >
               <Ionicons name="qr-code" size={24} color="white" />
-              <Text style={styles.scannerButtonText}>{t('loyaltyScanner')}</Text>
+              <Text style={styles.scannerButtonText}>Gestion QR Codes</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
 
@@ -464,15 +464,6 @@ export default function ProfileScreen() {
             >
               <Ionicons name="people" size={24} color="white" />
               <Text style={styles.djSelectionButtonText}>{t('djSelection')}</Text>
-              <Ionicons name="arrow-forward" size={20} color="white" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.freeEntryScannerButton}
-              onPress={() => router.push('/admin/free-entry-scanner')}
-            >
-              <Ionicons name="ticket" size={24} color="white" />
-              <Text style={styles.freeEntryScannerButtonText}>{t('freeEntryScanner')}</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
 
