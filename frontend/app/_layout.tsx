@@ -7,18 +7,21 @@ import { BiometricLock } from '../src/components/BiometricLock';
 import { theme } from '../src/config/theme';
 
 function AppContent() {
-  const { isLoading, isLocked, isAuthenticated, user, setIsLocked, logout } = useAuth();
+  const { authState, user, unlock, logout } = useAuth();
   const router = useRouter();
 
-  // When user is authenticated and not locked, go to home
+  // When fully authenticated, go to home
   useEffect(() => {
-    if (!isLoading && isAuthenticated && !isLocked) {
+    if (authState === 'authenticated') {
+      console.log('AppContent: authenticated - navigating to home');
       router.replace('/(tabs)/home');
     }
-  }, [isLoading, isAuthenticated, isLocked]);
+  }, [authState]);
 
-  // Show loading screen while checking auth status
-  if (isLoading) {
+  console.log('AppContent render - authState:', authState);
+
+  // LOADING: Show spinner while checking stored token
+  if (authState === 'loading') {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -26,26 +29,19 @@ function AppContent() {
     );
   }
 
-  // User is authenticated but app is locked = RETURNING USER
-  // Show Face ID screen
-  if (isAuthenticated && isLocked) {
+  // LOCKED: User was previously logged in, needs Face ID
+  if (authState === 'locked') {
     return (
       <BiometricLock
-        onAuthenticated={() => {
-          // Face ID success - unlock and go to home
-          setIsLocked(false);
-        }}
-        onCancel={() => {
-          // Face ID cancelled - log out and show login page
-          logout();
-        }}
+        onAuthenticated={unlock}
+        onCancel={logout}
         userName={user?.name?.split(' ')[0] || 'Familia'}
       />
     );
   }
 
-  // Not authenticated = show welcome/login page
-  // OR authenticated and not locked = will redirect to home via useEffect
+  // UNAUTHENTICATED: Show login/welcome page
+  // AUTHENTICATED: Will redirect via useEffect, show Slot briefly
   return <Slot />;
 }
 
