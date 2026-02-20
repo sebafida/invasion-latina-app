@@ -41,8 +41,9 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const { t, language, setLanguage } = useLanguage();
   const { logout } = useAuth();
-  const [content, setContent] = useState<WelcomeContent>({});
+  const [content, setContent] = useState<WelcomeContent | null>(null);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [isLoadingContent, setIsLoadingContent] = useState(true);
 
   useEffect(() => {
     loadWelcomeContent();
@@ -50,10 +51,14 @@ export default function WelcomeScreen() {
 
   const loadWelcomeContent = async () => {
     try {
+      setIsLoadingContent(true);
       const response = await api.get('/welcome-content');
       setContent(response.data);
     } catch (error) {
       console.log('Using default welcome content');
+      setContent({}); // Use empty object to trigger default flyer
+    } finally {
+      setIsLoadingContent(false);
     }
   };
 
