@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
 import api from '../config/api';
@@ -39,9 +39,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Key to track if user just logged in (persisted briefly)
+const JUST_LOGGED_IN_KEY = 'just_logged_in';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [user, setUserState] = useState<User | null>(null);
+  const [token, setTokenState] = useState<string | null>(null);
   const [authState, setAuthState] = useState<AuthState>('loading');
 
   // Computed values for backward compatibility
@@ -61,10 +64,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Invalid response from server');
       }
       
+      // Save token
       await AsyncStorage.setItem('auth_token', access_token);
       
-      setToken(access_token);
-      setUser({ 
+      // Mark that user just logged in - this prevents Face ID on next app open
+      await AsyncStorage.setItem(JUST_LOGGED_IN_KEY, 'true');
+      
+      setTokenState(access_token);
+      setUserState({ 
         id, 
         email: userEmail, 
         name, 
@@ -75,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // After fresh login - go directly to app, NO Face ID
       setAuthState('authenticated');
-      console.log('Login successful - going to app');
+      console.log('Login successful - authState set to authenticated');
     } catch (error: any) {
       console.error('Login error:', error);
       setAuthState('unauthenticated');
@@ -98,8 +105,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { access_token, user_id } = response.data;
       await AsyncStorage.setItem('auth_token', access_token);
       
-      setToken(access_token);
-      setUser({ id: user_id, email, name, role: 'user', loyalty_points: 0, badges: [] });
+      // Mark that user just registered - this prevents Face ID on next app open
+      await AsyncStorage.setItem(JUST_LOGGED_IN_KEY, 'true');
+      
+      setTokenState(access_token);
+      setUserState({ id: user_id, email, name, role: 'user', loyalty_points: 0, badges: [] });
       
       // After fresh registration - go directly to app, NO Face ID
       setAuthState('authenticated');
@@ -111,8 +121,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     await AsyncStorage.removeItem('auth_token');
-    setUser(null);
-    setToken(null);
+    await AsyncStorage.removeItem(JUST_LOGGED_IN_KEY);
+    setUserState(null);
+    setTokenState(null);
     setAuthState('unauthenticated');
   };
 
@@ -124,43 +135,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Called at app startup to check if user was previously logged in
   const loadUser = async () => {
     try {
-      console.log('loadUser: Checking for stored token...');
+      console.log('loadUser: Starting...');
+      
       const storedToken = await AsyncStorage.getItem('auth_token');
+      const justLoggedIn = await AsyncStorage.getItem(JUST_LOGGED_IN_KEY);
+      
+      console.log('loadUser: Token exists:', !!storedToken, 'Just logged in:', justLoggedIn);
       
       // No token = never logged in or logged out
       if (!storedToken) {
-        console.log('loadUser: No token found - show login page');
+        console.log('loadUser: No token - show login page');
         setAuthState('unauthenticated');
         return;
       }
       
-      console.log('loadUser: Token found - verifying with server...');
+      // If user just logged in, clear the flag and go directly to app
+      if (justLoggedIn === 'true') {
+        console.log('loadUser: Just logged in flag found - skip Face ID');
+        await AsyncStorage.removeItem(JUST_LOGGED_IN_KEY);
+        
+        // Verify token and go to app
+        try {
+          const response = await api.get('/auth/me');
+          setUserState(response.data);
+          setTokenState(storedToken);
+          setAuthState('authenticated');
+          console.log('loadUser: Token valid - going directly to app');
+        } catch (error) {
+          console.log('loadUser: Token invalid after login - show login');
+          await AsyncStorage.removeItem('auth_token');
+          setAuthState('unauthenticated');
+        }
+        return;
+      }
       
-      // Verify token is still valid
+      // RETURNING USER (app was closed and reopened)
+      console.log('loadUser: Returning user - verifying token...');
+      
       try {
         const response = await api.get('/auth/me');
-        setUser(response.data);
-        setToken(storedToken);
+        setUserState(response.data);
+        setTokenState(storedToken);
         
         // Check if biometrics are available
         const hasHardware = await LocalAuthentication.hasHardwareAsync();
         const isEnrolled = await LocalAuthentication.isEnrolledAsync();
         
+        console.log('loadUser: Biometrics available:', hasHardware && isEnrolled);
+        
         if (hasHardware && isEnrolled) {
           // RETURNING USER with biometrics - show Face ID lock
-          console.log('loadUser: Returning user - show Face ID');
+          console.log('loadUser: Showing Face ID screen');
           setAuthState('locked');
         } else {
           // No biometrics - go directly to app
-          console.log('loadUser: No biometrics - go to app');
+          console.log('loadUser: No biometrics - going to app');
           setAuthState('authenticated');
         }
       } catch (error) {
         // Token invalid - clear and show login
         console.log('loadUser: Token invalid - show login');
         await AsyncStorage.removeItem('auth_token');
-        setUser(null);
-        setToken(null);
+        setUserState(null);
+        setTokenState(null);
         setAuthState('unauthenticated');
       }
     } catch (error) {
@@ -199,6 +236,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Custom setUser that also updates auth state
+  const setUser = (newUser: User | null) => {
+    setUserState(newUser);
+    if (newUser && authState !== 'authenticated') {
+      setAuthState('authenticated');
+    } else if (!newUser) {
+      setAuthState('unauthenticated');
+    }
+  };
+
+  // Custom setToken that also persists to storage
+  const setToken = async (newToken: string | null) => {
+    setTokenState(newToken);
+    if (newToken) {
+      await AsyncStorage.setItem('auth_token', newToken);
+      // Also mark as just logged in
+      await AsyncStorage.setItem(JUST_LOGGED_IN_KEY, 'true');
+    } else {
+      await AsyncStorage.removeItem('auth_token');
+    }
+  };
+
   useEffect(() => {
     loadUser();
   }, []);
@@ -219,22 +278,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         unlockWithBiometrics,
         setIsLocked,
         unlock,
-        setUser: (newUser: User | null) => {
-          setUser(newUser);
-          if (newUser) {
-            setAuthState('authenticated');
-          } else {
-            setAuthState('unauthenticated');
-          }
-        },
-        setToken: async (newToken: string | null) => {
-          setToken(newToken);
-          if (newToken) {
-            await AsyncStorage.setItem('auth_token', newToken);
-          } else {
-            await AsyncStorage.removeItem('auth_token');
-          }
-        },
+        setUser,
+        setToken,
       }}
     >
       {children}
