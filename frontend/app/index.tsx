@@ -109,11 +109,17 @@ export default function WelcomeScreen() {
 
           {/* Event Flyer */}
           <View style={styles.flyerContainer}>
-            <Image
-              source={content.flyer_url ? { uri: content.flyer_url } : DEFAULT_FLYER}
-              style={styles.flyerImage}
-              resizeMode="cover"
-            />
+            {isLoadingContent ? (
+              <View style={[styles.flyerImage, styles.flyerLoading]}>
+                <ActivityIndicator size="large" color={theme.colors.primary} />
+              </View>
+            ) : (
+              <Image
+                source={content?.flyer_url ? { uri: content.flyer_url } : DEFAULT_FLYER}
+                style={styles.flyerImage}
+                resizeMode="cover"
+              />
+            )}
             <View style={styles.flyerBadge}>
               <Text style={styles.flyerBadgeText}>{t('nextEventBadge')}</Text>
             </View>
