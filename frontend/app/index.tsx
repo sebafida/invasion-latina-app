@@ -257,6 +257,11 @@ const styles = StyleSheet.create({
     height: 320,
     borderRadius: theme.borderRadius.lg,
   },
+  flyerLoading: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.elevated,
+  },
   flyerBadge: {
     position: 'absolute',
     top: theme.spacing.xs,
