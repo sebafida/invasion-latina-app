@@ -105,7 +105,7 @@ export default function WelcomeScreen() {
           
           {/* Tagline */}
           <Text style={styles.tagline}>
-            {content.tagline || "The Biggest Latino-Reggaeton Party in Belgium"}
+            {content?.tagline || "The Biggest Latino-Reggaeton Party in Belgium"}
           </Text>
 
           {/* Event Flyer */}
