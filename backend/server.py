@@ -3227,3 +3227,226 @@ async def admin_delete_event(
         
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+
+# ============ EVENT QR CODE SYSTEM FOR LOYALTY POINTS ============
+# Users scan QR codes at events to earn Invasion Coins
+
+class EventQRCodeCreate(BaseModel):
+    event_id: str
+    points_value: int = 5  # How many Invasion Coins users get
+
+@app.post("/api/admin/event-qr/create")
+async def admin_create_event_qr(
+    data: EventQRCodeCreate,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Create a new QR code for an event (for users to scan)"""
+    db = get_database()
+    
+    # Verify event exists
+    event = await db.events.find_one({"_id": ObjectId(data.event_id)})
+    if not event:
+        raise HTTPException(status_code=404, detail="Événement non trouvé")
+    
+    # Deactivate any existing active QR for this event
+    await db.event_qr_codes.update_many(
+        {"event_id": data.event_id, "is_active": True},
+        {"$set": {"is_active": False, "deactivated_at": datetime.utcnow()}}
+    )
+    
+    # Create new QR code
+    qr_code = str(uuid.uuid4())
+    
+    new_qr = {
+        "event_id": data.event_id,
+        "event_name": event["name"],
+        "qr_code": qr_code,
+        "points_value": data.points_value,
+        "is_active": True,
+        "created_at": datetime.utcnow(),
+        "created_by": str(current_user["_id"]),
+        "scans_count": 0
+    }
+    
+    result = await db.event_qr_codes.insert_one(new_qr)
+    
+    return {
+        "id": str(result.inserted_id),
+        "qr_code": qr_code,
+        "event_name": event["name"],
+        "points_value": data.points_value,
+        "is_active": True,
+        "message": "QR code créé avec succès"
+    }
+
+
+@app.get("/api/admin/event-qr/active")
+async def admin_get_active_qr(current_user: dict = Depends(get_current_admin)):
+    """Admin: Get currently active event QR code"""
+    db = get_database()
+    
+    qr = await db.event_qr_codes.find_one({"is_active": True})
+    
+    if not qr:
+        return {"active_qr": None}
+    
+    return {
+        "active_qr": {
+            "id": str(qr["_id"]),
+            "event_id": qr["event_id"],
+            "event_name": qr["event_name"],
+            "qr_code": qr["qr_code"],
+            "points_value": qr["points_value"],
+            "scans_count": qr.get("scans_count", 0),
+            "created_at": qr["created_at"]
+        }
+    }
+
+
+@app.put("/api/admin/event-qr/{qr_id}/toggle")
+async def admin_toggle_qr(
+    qr_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Activate or deactivate a QR code"""
+    db = get_database()
+    
+    qr = await db.event_qr_codes.find_one({"_id": ObjectId(qr_id)})
+    if not qr:
+        raise HTTPException(status_code=404, detail="QR code non trouvé")
+    
+    new_status = not qr.get("is_active", False)
+    
+    # If activating, deactivate all others first
+    if new_status:
+        await db.event_qr_codes.update_many(
+            {"is_active": True},
+            {"$set": {"is_active": False, "deactivated_at": datetime.utcnow()}}
+        )
+    
+    await db.event_qr_codes.update_one(
+        {"_id": ObjectId(qr_id)},
+        {"$set": {"is_active": new_status}}
+    )
+    
+    return {
+        "is_active": new_status,
+        "message": "QR code activé" if new_status else "QR code désactivé"
+    }
+
+
+@app.get("/api/admin/event-qr/history")
+async def admin_get_qr_history(current_user: dict = Depends(get_current_admin)):
+    """Admin: Get history of all event QR codes"""
+    db = get_database()
+    
+    qr_codes = []
+    async for qr in db.event_qr_codes.find().sort("created_at", -1).limit(20):
+        qr_codes.append({
+            "id": str(qr["_id"]),
+            "event_id": qr["event_id"],
+            "event_name": qr["event_name"],
+            "qr_code": qr["qr_code"],
+            "points_value": qr["points_value"],
+            "is_active": qr.get("is_active", False),
+            "scans_count": qr.get("scans_count", 0),
+            "created_at": qr["created_at"]
+        })
+    
+    return {"qr_codes": qr_codes}
+
+
+# ============ USER QR CODE SCANNING ============
+
+class ScanQRRequest(BaseModel):
+    qr_code: str
+
+@app.post("/api/loyalty/scan-event-qr")
+async def user_scan_event_qr(
+    data: ScanQRRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """User: Scan an event QR code to earn Invasion Coins"""
+    db = get_database()
+    
+    # Find the QR code
+    qr = await db.event_qr_codes.find_one({"qr_code": data.qr_code})
+    
+    if not qr:
+        raise HTTPException(status_code=404, detail="QR code invalide")
+    
+    if not qr.get("is_active", False):
+        raise HTTPException(status_code=400, detail="Ce QR code n'est plus actif")
+    
+    user_id = str(current_user["_id"])
+    qr_id = str(qr["_id"])
+    event_id = qr["event_id"]
+    
+    # Check if user already scanned this QR code
+    existing_scan = await db.event_qr_scans.find_one({
+        "user_id": user_id,
+        "qr_id": qr_id
+    })
+    
+    if existing_scan:
+        raise HTTPException(
+            status_code=400, 
+            detail="Tu as déjà scanné ce QR code. Un seul scan par soirée !"
+        )
+    
+    # Record the scan
+    scan_record = {
+        "user_id": user_id,
+        "qr_id": qr_id,
+        "event_id": event_id,
+        "points_earned": qr["points_value"],
+        "scanned_at": datetime.utcnow()
+    }
+    
+    await db.event_qr_scans.insert_one(scan_record)
+    
+    # Update scan count on QR
+    await db.event_qr_codes.update_one(
+        {"_id": qr["_id"]},
+        {"$inc": {"scans_count": 1}}
+    )
+    
+    # Award points to user
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$inc": {"loyalty_points": qr["points_value"]}}
+    )
+    
+    # Get updated user points
+    updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
+    new_points = updated_user.get("loyalty_points", 0)
+    
+    return {
+        "success": True,
+        "points_earned": qr["points_value"],
+        "total_points": new_points,
+        "event_name": qr["event_name"],
+        "message": f"Félicitations ! Tu as gagné {qr['points_value']} Invasion Coins !"
+    }
+
+
+@app.get("/api/loyalty/my-scans")
+async def get_my_scans(current_user: dict = Depends(get_current_user)):
+    """User: Get history of scanned QR codes"""
+    db = get_database()
+    
+    scans = []
+    async for scan in db.event_qr_scans.find(
+        {"user_id": str(current_user["_id"])}
+    ).sort("scanned_at", -1).limit(20):
+        qr = await db.event_qr_codes.find_one({"_id": ObjectId(scan["qr_id"])})
+        scans.append({
+            "event_name": qr["event_name"] if qr else "Événement inconnu",
+            "points_earned": scan["points_earned"],
+            "scanned_at": scan["scanned_at"]
+        })
+    
+    return {"scans": scans}
+
