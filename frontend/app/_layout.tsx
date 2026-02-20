@@ -7,7 +7,7 @@ import { BiometricLock } from '../src/components/BiometricLock';
 import { theme } from '../src/config/theme';
 
 function AppContent() {
-  const { isLoading, isLocked, isAuthenticated, user, unlockWithBiometrics, logout } = useAuth();
+  const { isLoading, isLocked, isAuthenticated, user, setIsLocked, logout } = useAuth();
 
   // Show loading screen while checking auth status
   if (isLoading) {
@@ -24,7 +24,6 @@ function AppContent() {
       <BiometricLock
         onAuthenticated={() => {
           // Simply unlock - the biometric auth was already done in BiometricLock
-          const { setIsLocked } = useAuth();
           setIsLocked(false);
         }}
         onCancel={logout}
