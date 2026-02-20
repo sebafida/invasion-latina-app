@@ -417,6 +417,21 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={24} color={theme.colors.textMuted} />
         </TouchableOpacity>
 
+        {/* Referral Button */}
+        <TouchableOpacity
+          style={styles.referralButton}
+          onPress={() => router.push('/referral')}
+        >
+          <View style={styles.referralIcon}>
+            <FontAwesome name="gift" size={28} color="white" />
+          </View>
+          <View style={styles.referralInfo}>
+            <Text style={styles.referralTitle}>Parrainage</Text>
+            <Text style={styles.referralSubtitle}>Invite tes amis, gagnez 3 coins chacun !</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={24} color={theme.colors.textMuted} />
+        </TouchableOpacity>
+
         {/* Admin DJ Dashboard Button */}
         {user?.role === 'admin' && (
           <View style={styles.adminSection}>
