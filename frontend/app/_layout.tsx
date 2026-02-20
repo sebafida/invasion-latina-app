@@ -22,7 +22,11 @@ function AppContent() {
   if (isAuthenticated && isLocked) {
     return (
       <BiometricLock
-        onAuthenticated={() => unlockWithBiometrics()}
+        onAuthenticated={() => {
+          // Simply unlock - the biometric auth was already done in BiometricLock
+          const { setIsLocked } = useAuth();
+          setIsLocked(false);
+        }}
         onCancel={logout}
         userName={user?.name?.split(' ')[0] || 'Familia'}
       />
