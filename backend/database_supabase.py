@@ -6,6 +6,7 @@ Uses SQLAlchemy async with Transaction Pooler connection
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 import logging
@@ -65,8 +66,8 @@ async def init_db():
     """Initialize database connection"""
     try:
         async with engine.begin() as conn:
-            # Test connection
-            await conn.execute("SELECT 1")
+            # Test connection using text()
+            await conn.execute(text("SELECT 1"))
         logger.info("✅ Connected to Supabase PostgreSQL")
     except Exception as e:
         logger.error(f"❌ Failed to connect to Supabase: {e}")
