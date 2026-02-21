@@ -104,7 +104,7 @@ export default function AftermoviesScreen() {
         {/* Featured Video */}
         {videos.length > 0 && (
           <View style={styles.featuredSection}>
-            <Text style={styles.sectionTitle}>⭐ {t('latestVideo')}</Text>
+            <Text style={styles.sectionTitle}>{t('latestVideo')}</Text>
             <TouchableOpacity
               style={styles.featuredCard}
               onPress={() => openVideo(videos[0])}
