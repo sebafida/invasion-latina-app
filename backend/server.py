@@ -507,7 +507,7 @@ async def social_login(auth_data: SocialAuthData, db: AsyncSession = Depends(get
     """Login/Register with Apple or Google"""
     try:
         email = auth_data.email
-        name = auth_data.name or "User"
+        name = auth_data.name  # Don't use fallback here, check later
         provider_id = auth_data.user_id or (auth_data.id_token[:50] if auth_data.id_token else None)
         
         # For Apple Sign In, email might be null on subsequent logins
@@ -516,7 +516,9 @@ async def social_login(auth_data: SocialAuthData, db: AsyncSession = Depends(get
             existing_user = result.scalar_one_or_none()
             if existing_user:
                 email = existing_user.email
-                name = existing_user.name or name
+                # Keep existing name if we don't have a new one
+                if not name or name.lower() == 'user':
+                    name = existing_user.name
         
         if not email:
             raise HTTPException(status_code=400, detail="Email is required. Please use email login or try Sign in with Apple again.")
@@ -531,6 +533,15 @@ async def social_login(auth_data: SocialAuthData, db: AsyncSession = Depends(get
         
         if not user:
             # Create new user from social login
+            # If no name provided, try to extract from email
+            if not name or name.lower() == 'user':
+                if email and '@' in email and not 'privaterelay' in email:
+                    # Extract name from email (e.g., john.doe@gmail.com -> John Doe)
+                    email_name = email.split('@')[0]
+                    name = ' '.join([part.capitalize() for part in email_name.replace('.', ' ').replace('_', ' ').split()])
+                else:
+                    name = "Nuevo Miembro"  # "New Member" in Spanish for the Latino app
+            
             user = User(
                 email=email,
                 name=name,
@@ -558,6 +569,17 @@ async def social_login(auth_data: SocialAuthData, db: AsyncSession = Depends(get
             elif auth_data.provider == 'google' and not user.google_id:
                 user.google_id = provider_id
                 await db.commit()
+            
+            # Update name if we received a better one from Apple (first login)
+            if name and name.lower() != 'user' and (not user.name or user.name.lower() == 'user' or user.name == 'Nuevo Miembro'):
+                user.name = name
+                await db.commit()
+                logger.info(f"✅ Updated user name to: {name}")
+            
+            # Use stored name if no new name provided
+            if not name or name.lower() == 'user':
+                name = user.name
+            
             logger.info(f"✅ Existing user logged in via {auth_data.provider}: {email}")
         
         access_token = create_access_token(data={"sub": user.id})
