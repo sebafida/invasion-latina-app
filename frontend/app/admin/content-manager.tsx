@@ -79,6 +79,8 @@ export default function ContentManagerScreen() {
   const [eventVenue, setEventVenue] = useState('Mirano Continental');
   const [eventXceedUrl, setEventXceedUrl] = useState('');
   const [eventBannerUrl, setEventBannerUrl] = useState('');
+  const [eventTicketPrice, setEventTicketPrice] = useState('');
+
 
   // Check admin access
   useEffect(() => {
