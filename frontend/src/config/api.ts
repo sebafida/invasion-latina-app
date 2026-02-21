@@ -51,9 +51,11 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
+      // Token expired or invalid - clear everything
+      console.log('API: Token expired or invalid - clearing auth data');
       await AsyncStorage.removeItem('auth_token');
-      // Redirect to login
+      await AsyncStorage.removeItem('auth_version');
+      // The AuthContext will detect the missing token and redirect to login
     }
     return Promise.reject(error);
   }
