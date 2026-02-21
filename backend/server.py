@@ -1743,3 +1743,391 @@ async def get_welcome_content(db: AsyncSession = Depends(get_db)):
             "subtitle": "Het grootste Latino-Reggaeton feest in België!"
         }
     }
+
+
+
+# ============ ADMIN CONTENT MANAGEMENT ============
+
+class WelcomeContentUpdate(BaseModel):
+    flyer_url: Optional[str] = None
+    tagline: Optional[str] = None
+    venue_name: Optional[str] = None
+
+@app.put("/api/admin/welcome-content")
+async def update_welcome_content(
+    data: WelcomeContentUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Update welcome screen content (Admin only)"""
+    result = await db.execute(
+        select(AppSettings).where(AppSettings.id == "welcome")
+    )
+    settings = result.scalar_one_or_none()
+    
+    welcome_data = {
+        "flyer_url": data.flyer_url,
+        "tagline": data.tagline,
+        "venue_name": data.venue_name
+    }
+    
+    if settings:
+        settings.welcome_content = welcome_data
+        settings.updated_by = current_user.email
+    else:
+        settings = AppSettings(
+            id="welcome",
+            type="welcome_content",
+            welcome_content=welcome_data,
+            updated_by=current_user.email
+        )
+        db.add(settings)
+    
+    await db.commit()
+    
+    return {"success": True, "message": "Welcome content updated"}
+
+@app.get("/api/media/aftermovies")
+async def get_media_aftermovies(db: AsyncSession = Depends(get_db)):
+    """Get all aftermovies for media section"""
+    result = await db.execute(
+        select(Aftermovie).order_by(Aftermovie.event_date.desc())
+    )
+    videos = result.scalars().all()
+    
+    return [
+        {
+            "id": video.id,
+            "title": video.title,
+            "youtube_url": video.youtube_url,
+            "video_url": video.youtube_url,
+            "thumbnail_url": video.thumbnail_url,
+            "event_date": video.event_date.isoformat() if video.event_date else None
+        }
+        for video in videos
+    ]
+
+class PhotoCreate(BaseModel):
+    url: str
+    event_id: str
+    thumbnail_url: Optional[str] = None
+
+@app.post("/api/admin/media/photos")
+async def add_photo(
+    data: PhotoCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Add a photo to an event gallery (Admin only)"""
+    # Verify event exists
+    result = await db.execute(select(Event).where(Event.id == data.event_id))
+    event = result.scalar_one_or_none()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    photo = Photo(
+        event_id=data.event_id,
+        url=data.url,
+        thumbnail_url=data.thumbnail_url or data.url,
+        uploaded_by=current_user.id
+    )
+    
+    db.add(photo)
+    await db.commit()
+    await db.refresh(photo)
+    
+    return {"success": True, "photo_id": photo.id}
+
+class AftermovieCreate(BaseModel):
+    title: str
+    video_url: str
+    thumbnail_url: Optional[str] = None
+    event_date: Optional[str] = None
+
+@app.post("/api/admin/media/aftermovies")
+async def add_aftermovie(
+    data: AftermovieCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Add an aftermovie (Admin only)"""
+    aftermovie = Aftermovie(
+        title=data.title,
+        youtube_url=data.video_url,
+        thumbnail_url=data.thumbnail_url or "https://via.placeholder.com/400x225",
+        event_date=datetime.fromisoformat(data.event_date.replace('Z', '+00:00')) if data.event_date else datetime.now(timezone.utc)
+    )
+    
+    db.add(aftermovie)
+    await db.commit()
+    await db.refresh(aftermovie)
+    
+    return {"success": True, "aftermovie_id": aftermovie.id}
+
+# ============ ADMIN EVENT MANAGEMENT ============
+
+class AdminEventCreate(BaseModel):
+    name: str
+    event_date: str
+    description: Optional[str] = None
+    venue_name: Optional[str] = "Mirano Continental"
+    venue_address: Optional[str] = "Chaussée de Louvain 38, 1210 Brussels"
+    xceed_ticket_url: Optional[str] = None
+    banner_image: Optional[str] = None
+    lineup: Optional[List[Dict[str, str]]] = []
+    ticket_categories: Optional[List[Dict[str, Any]]] = []
+
+@app.post("/api/admin/events")
+async def admin_create_event(
+    data: AdminEventCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Create a new event (Admin only)"""
+    event_date = datetime.fromisoformat(data.event_date.replace('Z', '+00:00'))
+    
+    event = Event(
+        name=data.name,
+        description=data.description,
+        event_date=event_date,
+        venue_name=data.venue_name or "Mirano Continental",
+        venue_address=data.venue_address or "Chaussée de Louvain 38, 1210 Brussels",
+        xceed_ticket_url=data.xceed_ticket_url,
+        banner_image=data.banner_image,
+        lineup=data.lineup or [],
+        ticket_categories=data.ticket_categories or [],
+        status="upcoming"
+    )
+    
+    db.add(event)
+    await db.commit()
+    await db.refresh(event)
+    
+    return {"success": True, "event_id": event.id, "message": "Event created successfully"}
+
+class AdminEventUpdate(BaseModel):
+    name: Optional[str] = None
+    event_date: Optional[str] = None
+    description: Optional[str] = None
+    venue_name: Optional[str] = None
+    venue_address: Optional[str] = None
+    xceed_ticket_url: Optional[str] = None
+    banner_image: Optional[str] = None
+    lineup: Optional[List[Dict[str, str]]] = None
+    ticket_categories: Optional[List[Dict[str, Any]]] = None
+    status: Optional[str] = None
+
+@app.put("/api/admin/events/{event_id}")
+async def admin_update_event(
+    event_id: str,
+    data: AdminEventUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Update an event (Admin only)"""
+    result = await db.execute(select(Event).where(Event.id == event_id))
+    event = result.scalar_one_or_none()
+    
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    if data.name is not None:
+        event.name = data.name
+    if data.event_date is not None:
+        event.event_date = datetime.fromisoformat(data.event_date.replace('Z', '+00:00'))
+    if data.description is not None:
+        event.description = data.description
+    if data.venue_name is not None:
+        event.venue_name = data.venue_name
+    if data.venue_address is not None:
+        event.venue_address = data.venue_address
+    if data.xceed_ticket_url is not None:
+        event.xceed_ticket_url = data.xceed_ticket_url
+    if data.banner_image is not None:
+        event.banner_image = data.banner_image
+    if data.lineup is not None:
+        event.lineup = data.lineup
+    if data.ticket_categories is not None:
+        event.ticket_categories = data.ticket_categories
+    if data.status is not None:
+        event.status = data.status
+    
+    await db.commit()
+    
+    return {"success": True, "message": "Event updated successfully"}
+
+class VisibilityUpdate(BaseModel):
+    gallery_visible: Optional[bool] = None
+    aftermovie_visible: Optional[bool] = None
+
+@app.put("/api/admin/events/{event_id}/visibility")
+async def update_event_visibility(
+    event_id: str,
+    data: VisibilityUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Update event visibility settings (Admin only)"""
+    result = await db.execute(select(Event).where(Event.id == event_id))
+    event = result.scalar_one_or_none()
+    
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    if data.gallery_visible is not None:
+        event.gallery_visible = data.gallery_visible
+    if data.aftermovie_visible is not None:
+        event.aftermovie_visible = data.aftermovie_visible
+    
+    await db.commit()
+    
+    return {"success": True, "message": "Visibility updated"}
+
+@app.delete("/api/admin/events/{event_id}")
+async def admin_delete_event(
+    event_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Delete an event (Admin only)"""
+    result = await db.execute(select(Event).where(Event.id == event_id))
+    event = result.scalar_one_or_none()
+    
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    await db.delete(event)
+    await db.commit()
+    
+    return {"success": True, "message": "Event deleted successfully"}
+
+# ============ ADMIN QR CODE MANAGEMENT (NEW ENDPOINTS) ============
+
+class CreateQRCode(BaseModel):
+    event_id: str
+    points_value: int = 5
+
+@app.get("/api/admin/event-qr/active")
+async def get_active_qr(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Get currently active QR code (Admin only)"""
+    result = await db.execute(
+        select(EventQRCode).where(EventQRCode.is_active == True)
+    )
+    qr = result.scalar_one_or_none()
+    
+    if not qr:
+        return {"active_qr": None}
+    
+    return {
+        "active_qr": {
+            "id": qr.id,
+            "qr_code": qr.qr_code,
+            "event_id": qr.event_id,
+            "event_name": qr.event_name,
+            "points_value": qr.coins_reward,
+            "scan_count": qr.scan_count or 0,
+            "created_at": qr.created_at.isoformat() if qr.created_at else None,
+            "is_active": qr.is_active
+        }
+    }
+
+@app.get("/api/admin/event-qr/history")
+async def get_qr_history(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Get QR code history (Admin only)"""
+    result = await db.execute(
+        select(EventQRCode).order_by(EventQRCode.created_at.desc()).limit(50)
+    )
+    qr_codes = result.scalars().all()
+    
+    return {
+        "qr_codes": [
+            {
+                "id": qr.id,
+                "qr_code": qr.qr_code,
+                "event_id": qr.event_id,
+                "event_name": qr.event_name,
+                "points_value": qr.coins_reward,
+                "scan_count": qr.scan_count or 0,
+                "created_at": qr.created_at.isoformat() if qr.created_at else None,
+                "is_active": qr.is_active
+            }
+            for qr in qr_codes
+        ]
+    }
+
+@app.post("/api/admin/event-qr/create")
+async def create_qr_code(
+    data: CreateQRCode,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Create a new QR code for an event (Admin only)"""
+    # Verify event exists
+    result = await db.execute(select(Event).where(Event.id == data.event_id))
+    event = result.scalar_one_or_none()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    # Deactivate other active QR codes
+    await db.execute(
+        update(EventQRCode)
+        .where(EventQRCode.is_active == True)
+        .values(is_active=False)
+    )
+    
+    # Generate unique QR code
+    qr_code = f"IL-{event.id[:8]}-{uuid.uuid4().hex[:8].upper()}"
+    
+    new_qr = EventQRCode(
+        event_id=data.event_id,
+        event_name=event.name,
+        qr_code=qr_code,
+        coins_reward=data.points_value,
+        is_active=True,
+        scan_count=0,
+        created_by=current_user.id
+    )
+    
+    db.add(new_qr)
+    await db.commit()
+    await db.refresh(new_qr)
+    
+    return {
+        "success": True,
+        "message": f"QR Code créé pour {event.name}",
+        "qr_code": new_qr.qr_code,
+        "points_value": new_qr.coins_reward
+    }
+
+@app.put("/api/admin/event-qr/{qr_id}/toggle")
+async def toggle_qr_status(
+    qr_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Toggle QR code active status (Admin only)"""
+    result = await db.execute(select(EventQRCode).where(EventQRCode.id == qr_id))
+    qr = result.scalar_one_or_none()
+    
+    if not qr:
+        raise HTTPException(status_code=404, detail="QR code not found")
+    
+    if not qr.is_active:
+        # Deactivate all others first
+        await db.execute(
+            update(EventQRCode)
+            .where(EventQRCode.is_active == True)
+            .values(is_active=False)
+        )
+    
+    qr.is_active = not qr.is_active
+    await db.commit()
+    
+    status = "activé" if qr.is_active else "désactivé"
+    return {"success": True, "message": f"QR Code {status}", "is_active": qr.is_active}
