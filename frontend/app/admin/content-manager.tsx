@@ -830,28 +830,42 @@ export default function ContentManagerScreen() {
         Ajoutez des photos de vos événements pour la galerie
       </Text>
 
-      {/* Event Selector */}
+      {/* Event Dropdown Selector */}
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Événement</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.eventSelector}>
-          {events.map((event) => (
-            <TouchableOpacity
-              key={event.id}
-              style={[
-                styles.eventChip,
-                selectedEventId === event.id && styles.eventChipSelected
-              ]}
-              onPress={() => setSelectedEventId(event.id)}
-            >
-              <Text style={[
-                styles.eventChipText,
-                selectedEventId === event.id && styles.eventChipTextSelected
-              ]}>
-                {event.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <Text style={styles.inputLabel}>Événement *</Text>
+        {events.length === 0 ? (
+          <View style={styles.noEventsWarning}>
+            <Ionicons name="warning" size={20} color={theme.colors.warning} />
+            <Text style={styles.noEventsText}>
+              Aucun événement disponible. Créez d'abord un événement dans l'onglet "Events".
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.dropdownContainer}>
+            {events.map((event) => (
+              <TouchableOpacity
+                key={event.id}
+                style={[
+                  styles.dropdownItem,
+                  selectedEventId === event.id && styles.dropdownItemSelected
+                ]}
+                onPress={() => setSelectedEventId(event.id)}
+              >
+                <Ionicons 
+                  name={selectedEventId === event.id ? "radio-button-on" : "radio-button-off"} 
+                  size={20} 
+                  color={selectedEventId === event.id ? theme.colors.primary : theme.colors.textMuted} 
+                />
+                <Text style={[
+                  styles.dropdownItemText,
+                  selectedEventId === event.id && styles.dropdownItemTextSelected
+                ]}>
+                  {event.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* Clear Gallery Button */}
@@ -868,10 +882,25 @@ export default function ContentManagerScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Upload Button */}
+      {/* Multiple Photos Upload Button */}
+      <TouchableOpacity 
+        style={[styles.uploadButton, { backgroundColor: theme.colors.success + '20', borderColor: theme.colors.success }]}
+        onPress={pickMultiplePhotos}
+        disabled={!selectedEventId || loading}
+      >
+        <Ionicons name="images" size={24} color={theme.colors.success} />
+        <Text style={[styles.uploadButtonText, { color: theme.colors.success }]}>
+          {loading ? 'Upload en cours...' : 'Sélectionner PLUSIEURS photos (max 10)'}
+        </Text>
+      </TouchableOpacity>
+
+      <Text style={styles.orText}>ou une seule photo :</Text>
+
+      {/* Single Photo Upload Button */}
       <TouchableOpacity 
         style={styles.uploadButton}
         onPress={() => pickGalleryPhoto()}
+        disabled={!selectedEventId}
       >
         <Ionicons name="cloud-upload" size={24} color={theme.colors.primary} />
         <Text style={styles.uploadButtonText}>Sélectionner une photo</Text>
@@ -905,9 +934,9 @@ export default function ContentManagerScreen() {
       ) : null}
 
       <TouchableOpacity
-        style={styles.primaryButton}
+        style={[styles.primaryButton, (!selectedEventId || !newPhotoUrl) && { opacity: 0.5 }]}
         onPress={handleAddPhoto}
-        disabled={loading}
+        disabled={loading || !selectedEventId || !newPhotoUrl}
       >
         {loading ? (
           <ActivityIndicator color="white" />
@@ -922,7 +951,7 @@ export default function ContentManagerScreen() {
       <View style={styles.infoBox}>
         <Ionicons name="bulb" size={20} color={theme.colors.secondary} />
         <Text style={styles.infoText}>
-          Pour ajouter plusieurs photos, répétez l'opération pour chaque URL.
+          💡 Conseil : Utilisez "Sélectionner PLUSIEURS photos" pour gagner du temps !
         </Text>
       </View>
     </View>
