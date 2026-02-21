@@ -2135,3 +2135,667 @@ async def toggle_qr_status(
     
     status = "activé" if qr.is_active else "désactivé"
     return {"success": True, "message": f"QR Code {status}", "is_active": qr.is_active}
+
+
+
+# ============ VIP BOOKING ADDITIONAL ENDPOINTS ============
+
+class VIPBookCreate(BaseModel):
+    event_id: str
+    name: str
+    email: str
+    phone: str
+    guests: int = 1
+    message: Optional[str] = None
+
+@app.post("/api/vip/book")
+async def book_vip_table(
+    data: VIPBookCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_supabase)
+):
+    """Book a VIP table (alias for /vip/booking)"""
+    # Verify event exists
+    result = await db.execute(select(Event).where(Event.id == data.event_id))
+    event = result.scalar_one_or_none()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    booking = VIPBooking(
+        user_id=current_user.id,
+        event_id=data.event_id,
+        name=data.name,
+        email=data.email,
+        phone=data.phone,
+        guests=data.guests,
+        message=data.message,
+        status="pending"
+    )
+    
+    db.add(booking)
+    await db.commit()
+    await db.refresh(booking)
+    
+    return {
+        "success": True,
+        "booking_id": booking.id,
+        "message": "Demande de réservation VIP envoyée!"
+    }
+
+@app.get("/api/admin/vip-bookings")
+async def get_all_vip_bookings(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Get all VIP bookings (Admin only)"""
+    result = await db.execute(
+        select(VIPBooking).order_by(VIPBooking.submitted_at.desc())
+    )
+    bookings = result.scalars().all()
+    
+    booking_list = []
+    for booking in bookings:
+        event_result = await db.execute(select(Event).where(Event.id == booking.event_id))
+        event = event_result.scalar_one_or_none()
+        
+        booking_list.append({
+            "id": booking.id,
+            "user_id": booking.user_id,
+            "event_id": booking.event_id,
+            "event_name": event.name if event else "Unknown Event",
+            "event_date": event.event_date.isoformat() if event and event.event_date else None,
+            "name": booking.name,
+            "email": booking.email,
+            "phone": booking.phone,
+            "guests": booking.guests,
+            "message": booking.message,
+            "status": booking.status,
+            "submitted_at": booking.submitted_at.isoformat() if booking.submitted_at else None
+        })
+    
+    return booking_list
+
+class VIPBookingStatusUpdate(BaseModel):
+    status: str
+
+@app.put("/api/admin/vip-bookings/{booking_id}")
+async def update_vip_booking_status(
+    booking_id: str,
+    data: VIPBookingStatusUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Update VIP booking status (Admin only)"""
+    result = await db.execute(select(VIPBooking).where(VIPBooking.id == booking_id))
+    booking = result.scalar_one_or_none()
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    booking.status = data.status
+    if data.status == "confirmed":
+        booking.confirmed_at = datetime.now(timezone.utc)
+    elif data.status == "rejected":
+        booking.rejected_at = datetime.now(timezone.utc)
+    
+    await db.commit()
+    
+    return {"success": True, "message": f"Booking status updated to {data.status}"}
+
+@app.delete("/api/admin/vip-bookings/{booking_id}")
+async def delete_vip_booking(
+    booking_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Delete a VIP booking (Admin only)"""
+    result = await db.execute(select(VIPBooking).where(VIPBooking.id == booking_id))
+    booking = result.scalar_one_or_none()
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    await db.delete(booking)
+    await db.commit()
+    
+    return {"success": True, "message": "Booking deleted"}
+
+@app.delete("/api/admin/vip-bookings/clear-all")
+async def clear_all_vip_bookings(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Delete all VIP bookings (Admin only)"""
+    await db.execute(delete(VIPBooking))
+    await db.commit()
+    return {"success": True, "message": "All bookings cleared"}
+
+# ============ ADMIN STATS ============
+
+@app.get("/api/admin/stats")
+async def get_admin_stats(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Get admin statistics"""
+    total_users = (await db.execute(select(func.count()).select_from(User))).scalar()
+    total_events = (await db.execute(select(func.count()).select_from(Event))).scalar()
+    total_bookings = (await db.execute(select(func.count()).select_from(VIPBooking))).scalar()
+    pending_bookings = (await db.execute(
+        select(func.count()).select_from(VIPBooking).where(VIPBooking.status == "pending")
+    )).scalar()
+    total_orders = (await db.execute(select(func.count()).select_from(Order))).scalar()
+    
+    return {
+        "total_users": total_users,
+        "total_events": total_events,
+        "total_bookings": total_bookings,
+        "pending_bookings": pending_bookings,
+        "total_orders": total_orders
+    }
+
+# ============ NOTIFICATION PREFERENCES ============
+
+@app.get("/api/user/notification-preferences")
+async def get_notification_preferences(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_supabase)
+):
+    """Get user's notification preferences"""
+    result = await db.execute(
+        select(NotificationPreference).where(NotificationPreference.user_id == current_user.id)
+    )
+    prefs = result.scalar_one_or_none()
+    
+    if not prefs:
+        return {
+            "events": True,
+            "promotions": True,
+            "song_requests": True,
+            "friends": True
+        }
+    
+    return {
+        "events": prefs.events,
+        "promotions": prefs.promotions,
+        "song_requests": prefs.song_requests,
+        "friends": prefs.friends
+    }
+
+class NotificationPreferenceUpdate(BaseModel):
+    events: Optional[bool] = None
+    promotions: Optional[bool] = None
+    song_requests: Optional[bool] = None
+    friends: Optional[bool] = None
+
+@app.put("/api/user/notification-preferences")
+async def update_notification_preferences(
+    data: NotificationPreferenceUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_supabase)
+):
+    """Update user's notification preferences"""
+    result = await db.execute(
+        select(NotificationPreference).where(NotificationPreference.user_id == current_user.id)
+    )
+    prefs = result.scalar_one_or_none()
+    
+    if not prefs:
+        prefs = NotificationPreference(
+            user_id=current_user.id,
+            events=data.events if data.events is not None else True,
+            promotions=data.promotions if data.promotions is not None else True,
+            song_requests=data.song_requests if data.song_requests is not None else True,
+            friends=data.friends if data.friends is not None else True
+        )
+        db.add(prefs)
+    else:
+        if data.events is not None:
+            prefs.events = data.events
+        if data.promotions is not None:
+            prefs.promotions = data.promotions
+        if data.song_requests is not None:
+            prefs.song_requests = data.song_requests
+        if data.friends is not None:
+            prefs.friends = data.friends
+    
+    await db.commit()
+    
+    return {"success": True, "message": "Preferences updated"}
+
+# ============ MEDIA GALLERIES ============
+
+@app.get("/api/media/galleries")
+async def get_media_galleries(db: AsyncSession = Depends(get_db)):
+    """Get all event galleries"""
+    result = await db.execute(
+        select(Event)
+        .where(Event.gallery_visible == True)
+        .order_by(Event.event_date.desc())
+    )
+    events = result.scalars().all()
+    
+    galleries = []
+    for event in events:
+        photo_count = (await db.execute(
+            select(func.count()).select_from(Photo).where(Photo.event_id == event.id)
+        )).scalar()
+        
+        cover_result = await db.execute(
+            select(Photo).where(Photo.event_id == event.id).limit(1)
+        )
+        cover_photo = cover_result.scalar_one_or_none()
+        
+        galleries.append({
+            "id": event.id,
+            "name": event.name,
+            "event_date": event.event_date.isoformat() if event.event_date else None,
+            "photo_count": photo_count,
+            "cover_image": cover_photo.url if cover_photo else None
+        })
+    
+    return galleries
+
+@app.get("/api/media/gallery/{event_id}")
+async def get_media_gallery(event_id: str, db: AsyncSession = Depends(get_db)):
+    """Get photos for an event gallery"""
+    result = await db.execute(select(Event).where(Event.id == event_id))
+    event = result.scalar_one_or_none()
+    
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    result = await db.execute(
+        select(Photo)
+        .where(Photo.event_id == event_id)
+        .order_by(Photo.uploaded_at.desc())
+    )
+    photos = result.scalars().all()
+    
+    return {
+        "event": {
+            "id": event.id,
+            "name": event.name,
+            "event_date": event.event_date.isoformat() if event.event_date else None
+        },
+        "photos": [
+            {
+                "id": photo.id,
+                "url": photo.url,
+                "thumbnail_url": photo.thumbnail_url or photo.url,
+                "likes": photo.likes or 0
+            }
+            for photo in photos
+        ]
+    }
+
+# ============ LOYALTY ADDITIONAL ENDPOINTS ============
+
+@app.post("/api/loyalty/scan-event-qr")
+async def scan_loyalty_qr(
+    data: ScanEventQRCode,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_supabase)
+):
+    """Scan event QR code to earn coins (User) - alias"""
+    result = await db.execute(
+        select(EventQRCode)
+        .where(EventQRCode.qr_code == data.qr_code)
+        .where(EventQRCode.is_active == True)
+    )
+    qr = result.scalar_one_or_none()
+    
+    if not qr:
+        raise HTTPException(status_code=404, detail="QR code invalide ou expiré")
+    
+    user_id = current_user.id
+    
+    # Check if already scanned
+    result = await db.execute(
+        select(EventQRScan)
+        .where(EventQRScan.qr_id == qr.id)
+        .where(EventQRScan.user_id == user_id)
+    )
+    existing_scan = result.scalar_one_or_none()
+    
+    if existing_scan:
+        raise HTTPException(status_code=400, detail="Tu as déjà scanné ce QR code!")
+    
+    # Create scan record
+    scan = EventQRScan(
+        qr_id=qr.id,
+        user_id=user_id,
+        coins_earned=qr.coins_reward
+    )
+    db.add(scan)
+    
+    # Update QR scan count
+    qr.scan_count = (qr.scan_count or 0) + 1
+    
+    # Update user loyalty points
+    current_user.loyalty_points = (current_user.loyalty_points or 0) + qr.coins_reward
+    
+    await db.commit()
+    await db.refresh(current_user)
+    
+    return {
+        "success": True,
+        "message": f"Félicitations! Tu as gagné {qr.coins_reward} Invasion Coins! 🎉",
+        "coins_earned": qr.coins_reward,
+        "total_coins": current_user.loyalty_points,
+        "event_name": qr.event_name
+    }
+
+@app.post("/api/loyalty/claim-reward")
+async def claim_loyalty_reward(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_supabase)
+):
+    """Claim a free entry reward (costs 25 loyalty points)"""
+    if (current_user.loyalty_points or 0) < 25:
+        raise HTTPException(status_code=400, detail="Tu as besoin de 25 points de fidélité")
+    
+    # Check for existing active voucher
+    result = await db.execute(
+        select(FreeEntryVoucher)
+        .where(FreeEntryVoucher.user_id == current_user.id)
+        .where(FreeEntryVoucher.used == False)
+        .where(FreeEntryVoucher.expires_at > datetime.now(timezone.utc))
+    )
+    existing = result.scalar_one_or_none()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Tu as déjà une entrée gratuite active")
+    
+    # Deduct points
+    current_user.loyalty_points = (current_user.loyalty_points or 0) - 25
+    
+    # Create voucher
+    voucher = FreeEntryVoucher(
+        user_id=current_user.id,
+        user_name=current_user.name,
+        user_email=current_user.email,
+        expires_at=datetime.now(timezone.utc) + timedelta(days=90)
+    )
+    
+    db.add(voucher)
+    await db.commit()
+    await db.refresh(voucher)
+    
+    return {
+        "success": True,
+        "message": "Entrée gratuite obtenue!",
+        "voucher": {
+            "id": voucher.id,
+            "user_id": voucher.user_id,
+            "created_at": voucher.created_at.isoformat() if voucher.created_at else None,
+            "expires_at": voucher.expires_at.isoformat() if voucher.expires_at else None,
+            "used": voucher.used
+        }
+    }
+
+class LoyaltyCheckinScan(BaseModel):
+    qr_code: str = None
+    user_id: str = None
+
+@app.post("/api/loyalty/admin/scan-checkin")
+async def admin_scan_checkin(
+    data: LoyaltyCheckinScan,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Admin scan for loyalty check-in"""
+    # Get current event
+    result = await db.execute(
+        select(Event)
+        .where(Event.status.in_(["live", "upcoming"]))
+        .order_by(Event.event_date.desc())
+        .limit(1)
+    )
+    current_event = result.scalar_one_or_none()
+    
+    if not current_event:
+        raise HTTPException(status_code=400, detail="No active event")
+    
+    # Get app settings for QR version
+    result = await db.execute(select(AppSettings).where(AppSettings.id == "global"))
+    settings = result.scalar_one_or_none()
+    qr_version = settings.loyalty_qr_version if settings else 1
+    
+    user_id = data.user_id
+    if not user_id:
+        raise HTTPException(status_code=400, detail="User ID required")
+    
+    # Check for existing check-in
+    result = await db.execute(
+        select(LoyaltyCheckin)
+        .where(LoyaltyCheckin.user_id == user_id)
+        .where(LoyaltyCheckin.event_id == current_event.id)
+        .where(LoyaltyCheckin.qr_version == qr_version)
+    )
+    existing = result.scalar_one_or_none()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Déjà check-in pour cet événement")
+    
+    # Get user
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Create check-in
+    checkin = LoyaltyCheckin(
+        user_id=user_id,
+        event_id=current_event.id,
+        qr_version=qr_version,
+        points_earned=5,
+        checked_in_by=current_user.id
+    )
+    db.add(checkin)
+    
+    # Add points to user
+    user.loyalty_points = (user.loyalty_points or 0) + 5
+    
+    await db.commit()
+    
+    return {
+        "success": True,
+        "message": f"Check-in réussi! {user.name} a gagné 5 points",
+        "user_name": user.name,
+        "points_earned": 5,
+        "total_points": user.loyalty_points
+    }
+
+# ============ DJ ADMIN ENDPOINTS ============
+
+@app.get("/api/dj/admin/all-requests")
+async def get_all_dj_requests(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Get all song requests for admin/DJ"""
+    result = await db.execute(
+        select(SongRequest).order_by(SongRequest.requested_at.desc()).limit(200)
+    )
+    requests = result.scalars().all()
+    
+    return [
+        {
+            "id": req.id,
+            "song_title": req.song_title,
+            "artist_name": req.artist_name,
+            "user_name": req.user_name,
+            "votes": req.votes,
+            "times_requested": req.times_requested or 1,
+            "requested_at": req.requested_at.isoformat() if req.requested_at else None,
+            "status": req.status,
+            "rejection_reason": req.rejection_reason,
+            "rejection_label": req.rejection_label,
+            "event_id": req.event_id
+        }
+        for req in requests
+    ]
+
+@app.delete("/api/dj/requests/{request_id}")
+async def delete_song_request(
+    request_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Delete a specific song request (Admin only)"""
+    result = await db.execute(select(SongRequest).where(SongRequest.id == request_id))
+    request = result.scalar_one_or_none()
+    
+    if not request:
+        raise HTTPException(status_code=404, detail="Request not found")
+    
+    await db.delete(request)
+    await db.commit()
+    
+    return {"success": True, "message": "Request deleted"}
+
+# ============ ADMIN SETTINGS ADDITIONAL ============
+
+@app.post("/api/admin/settings/start-event")
+async def start_event(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Start an event (enable requests, etc.)"""
+    result = await db.execute(select(AppSettings).where(AppSettings.id == "global"))
+    settings = result.scalar_one_or_none()
+    
+    # Get next event
+    result = await db.execute(
+        select(Event)
+        .where(Event.status == "upcoming")
+        .order_by(Event.event_date)
+        .limit(1)
+    )
+    next_event = result.scalar_one_or_none()
+    
+    if settings:
+        settings.requests_enabled = True
+        if next_event:
+            settings.current_event_id = next_event.id
+            next_event.status = "live"
+        settings.updated_by = current_user.email
+    else:
+        settings = AppSettings(
+            id="global",
+            requests_enabled=True,
+            current_event_id=next_event.id if next_event else None,
+            updated_by=current_user.email
+        )
+        db.add(settings)
+        if next_event:
+            next_event.status = "live"
+    
+    await db.commit()
+    
+    return {
+        "success": True,
+        "message": "Événement démarré! Les demandes de chansons sont activées.",
+        "requests_enabled": True,
+        "current_event_id": settings.current_event_id
+    }
+
+@app.post("/api/admin/settings/end-event")
+async def end_event(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """End the current event"""
+    result = await db.execute(select(AppSettings).where(AppSettings.id == "global"))
+    settings = result.scalar_one_or_none()
+    
+    if settings and settings.current_event_id:
+        # Mark event as past
+        result = await db.execute(select(Event).where(Event.id == settings.current_event_id))
+        current_event = result.scalar_one_or_none()
+        if current_event:
+            current_event.status = "past"
+        
+        settings.requests_enabled = False
+        settings.current_event_id = None
+        settings.loyalty_qr_version = (settings.loyalty_qr_version or 1) + 1
+        settings.updated_by = current_user.email
+    
+    await db.commit()
+    
+    return {
+        "success": True,
+        "message": "Événement terminé. Les demandes de chansons sont désactivées.",
+        "requests_enabled": False
+    }
+
+# ============ EVENT FLYER UPDATE ============
+
+class FlyerUpdate(BaseModel):
+    banner_image: str
+
+@app.put("/api/admin/events/{event_id}/flyer")
+async def update_event_flyer(
+    event_id: str,
+    data: FlyerUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Update event flyer/banner image"""
+    result = await db.execute(select(Event).where(Event.id == event_id))
+    event = result.scalar_one_or_none()
+    
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    event.banner_image = data.banner_image
+    await db.commit()
+    
+    return {"success": True, "message": "Flyer updated"}
+
+# ============ FREE ENTRY VALIDATION ============
+
+class FreeEntryValidation(BaseModel):
+    voucher_id: str
+
+@app.post("/api/admin/free-entry/validate")
+async def validate_free_entry(
+    data: FreeEntryValidation,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Validate a free entry voucher (Admin only)"""
+    result = await db.execute(
+        select(FreeEntryVoucher).where(FreeEntryVoucher.id == data.voucher_id)
+    )
+    voucher = result.scalar_one_or_none()
+    
+    if not voucher:
+        raise HTTPException(status_code=404, detail="Voucher not found")
+    
+    if voucher.used:
+        raise HTTPException(status_code=400, detail="Voucher already used")
+    
+    if voucher.expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Voucher expired")
+    
+    voucher.used = True
+    voucher.used_at = datetime.now(timezone.utc)
+    voucher.validated_by = current_user.id
+    
+    # Get current event
+    result = await db.execute(select(AppSettings).where(AppSettings.id == "global"))
+    settings = result.scalar_one_or_none()
+    if settings and settings.current_event_id:
+        voucher.event_id = settings.current_event_id
+    
+    await db.commit()
+    
+    return {
+        "success": True,
+        "message": "Entrée gratuite validée!",
+        "user_name": voucher.user_name,
+        "user_email": voucher.user_email
+    }
