@@ -9,6 +9,7 @@ When ready to switch, rename this file to server.py
 ⚠️  IMPORTANT: This uses MOCK Firebase and Stripe services
 """
 
+import os
 from fastapi import FastAPI, HTTPException, Depends, Query, Body, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
