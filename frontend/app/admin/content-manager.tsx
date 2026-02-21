@@ -917,11 +917,21 @@ export default function ContentManagerScreen() {
       {/* Existing Aftermovies */}
       {aftermovies.length > 0 && (
         <View style={styles.existingSection}>
-          <Text style={styles.existingSectionTitle}>Aftermovies existants</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <Text style={styles.existingSectionTitle}>Aftermovies existants</Text>
+            <TouchableOpacity onPress={handleClearAllAftermovies}>
+              <Text style={{ color: '#FF3B30', fontSize: 14 }}>Tout supprimer</Text>
+            </TouchableOpacity>
+          </View>
           {aftermovies.map((video) => (
-            <View key={video.id} style={styles.existingItem}>
-              <Ionicons name="play-circle" size={24} color={theme.colors.primary} />
-              <Text style={styles.existingItemText}>{video.title}</Text>
+            <View key={video.id} style={[styles.existingItem, { justifyContent: 'space-between' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                <Ionicons name="play-circle" size={24} color={theme.colors.primary} />
+                <Text style={[styles.existingItemText, { flex: 1 }]}>{video.title}</Text>
+              </View>
+              <TouchableOpacity onPress={() => handleDeleteAftermovie(video.id)}>
+                <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+              </TouchableOpacity>
             </View>
           ))}
         </View>
