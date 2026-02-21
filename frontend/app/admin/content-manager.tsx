@@ -1767,4 +1767,47 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: theme.fontWeight.bold,
   },
+  // Dropdown styles
+  dropdownContainer: {
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.elevated,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.borderRadius.sm,
+    gap: theme.spacing.sm,
+  },
+  dropdownItemSelected: {
+    backgroundColor: theme.colors.primary + '20',
+  },
+  dropdownItemText: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textSecondary,
+    flex: 1,
+  },
+  dropdownItemTextSelected: {
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.bold,
+  },
+  noEventsWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.warning + '20',
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    gap: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.warning + '40',
+  },
+  noEventsText: {
+    flex: 1,
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.warning,
+  },
 });
