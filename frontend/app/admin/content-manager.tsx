@@ -797,6 +797,20 @@ export default function ContentManagerScreen() {
         </ScrollView>
       </View>
 
+      {/* Clear Gallery Button */}
+      {selectedEventId && (
+        <TouchableOpacity 
+          style={[styles.dangerButton, { marginBottom: 15 }]}
+          onPress={() => {
+            const event = events.find(e => e.id === selectedEventId);
+            handleClearGallery(selectedEventId, event?.name || 'cet événement');
+          }}
+        >
+          <Ionicons name="trash" size={20} color="white" />
+          <Text style={styles.dangerButtonText}>Vider la galerie de cet événement</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Upload Button */}
       <TouchableOpacity 
         style={styles.uploadButton}
