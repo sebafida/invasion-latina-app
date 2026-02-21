@@ -19,7 +19,8 @@ import api from '../../src/config/api';
 interface DJ {
   id: string;
   name: string;
-  type: 'dj' | 'mc';
+  type?: 'dj' | 'mc';
+  bio?: string;
   photo_url?: string;
   instagram_url?: string;
   is_resident: boolean;
