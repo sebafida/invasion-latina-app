@@ -126,17 +126,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('loadUser: Token found - verifying...');
       
       try {
-        const response = await api.get('/auth/me');
+        // Use a shorter timeout for token verification
+        const response = await api.get('/auth/me', { timeout: 10000 });
         setUserState(response.data);
         setTokenState(storedToken);
         setIsAuthenticated(true);
         console.log('loadUser: Token valid - user authenticated');
-      } catch (error) {
-        console.log('loadUser: Token invalid - clearing');
+      } catch (error: any) {
+        console.log('loadUser: Token verification failed -', error.message);
+        // Clear token on ANY error (401, network error, timeout)
         await AsyncStorage.removeItem('auth_token');
+        await AsyncStorage.removeItem('auth_version');
         setUserState(null);
         setTokenState(null);
         setIsAuthenticated(false);
+        console.log('loadUser: Cleared auth data - redirecting to login');
       }
     } catch (error) {
       console.error('loadUser error:', error);
