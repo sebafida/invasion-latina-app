@@ -99,23 +99,29 @@ async def get_current_user_supabase(credentials: HTTPAuthorizationCredentials = 
     from database_supabase import AsyncSessionLocal
     from models_supabase import User
     
-    token = credentials.credentials
-    payload = decode_token(token)
-    
-    user_id = payload.get("sub")
-    if user_id is None:
-        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-    
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(select(User).where(User.id == user_id))
-        user = result.scalar_one_or_none()
+    try:
+        token = credentials.credentials
+        payload = decode_token(token)
         
-        if user is None:
-            raise HTTPException(status_code=401, detail="User not found")
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
         
-        # Detach from session to use outside
-        db.expunge(user)
-        return user
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(select(User).where(User.id == user_id))
+            user = result.scalar_one_or_none()
+            
+            if user is None:
+                raise HTTPException(status_code=401, detail="User not found")
+            
+            # Detach from session to use outside
+            db.expunge(user)
+            return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Authentication error: {e}")
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
 async def get_current_admin_supabase(current_user = Depends(get_current_user_supabase)):
