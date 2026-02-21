@@ -2182,22 +2182,8 @@ async def book_vip_table(
     phone = data.phone or data.customer_phone or ""
     guests = data.guests or data.guest_count or 1
     
-    # Build message from various fields
-    message_parts = []
-    if data.zone:
-        message_parts.append(f"Zone: {data.zone}")
-    if data.package:
-        message_parts.append(f"Package: {data.package}")
-    if data.bottle_preferences:
-        message_parts.append(f"Bouteilles: {data.bottle_preferences}")
-    if data.special_requests:
-        message_parts.append(f"Demandes spéciales: {data.special_requests}")
-    if data.message:
-        message_parts.append(data.message)
-    if data.total_price:
-        message_parts.append(f"Prix total: {data.total_price}€")
-    
-    message = "\n".join(message_parts) if message_parts else None
+    # Build message from special requests
+    message = data.special_requests or data.message or None
     
     booking = VIPBooking(
         user_id=current_user.id,
@@ -2207,6 +2193,11 @@ async def book_vip_table(
         phone=phone,
         guests=guests,
         message=message,
+        zone=data.zone,
+        package=data.package,
+        total_price=data.total_price,
+        bottle_preferences=data.bottle_preferences,
+        special_requests=data.special_requests,
         status="pending"
     )
     
