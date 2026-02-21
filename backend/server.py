@@ -9,6 +9,7 @@ When ready to switch, rename this file to server.py
 ⚠️  IMPORTANT: This uses MOCK Firebase and Stripe services
 """
 
+import os
 from fastapi import FastAPI, HTTPException, Depends, Query, Body, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -354,6 +355,47 @@ async def health_check(db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=503, detail=f"Database error: {str(e)}")
 
 # ============ AUTHENTICATION ENDPOINTS ============
+
+class AdminSetupRequest(BaseModel):
+    secret_key: str
+
+@app.post("/api/admin/setup")
+async def setup_admin_account(data: AdminSetupRequest, db: AsyncSession = Depends(get_db)):
+    """Create or reset admin account (secured by secret key)"""
+    # Secret key for admin setup - must match the one in .env or use a default for setup
+    SETUP_SECRET = os.environ.get("ADMIN_SETUP_SECRET", "invasion-latina-2009-setup")
+    
+    if data.secret_key != SETUP_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid setup key")
+    
+    admin_email = "info@invasionlatina.be"
+    admin_password = "Invasion2009-"
+    
+    # Check if admin exists
+    result = await db.execute(select(User).where(User.email == admin_email))
+    existing_admin = result.scalar_one_or_none()
+    
+    if existing_admin:
+        # Update password and ensure admin role
+        existing_admin.hashed_password = hash_password(admin_password)
+        existing_admin.role = "admin"
+        await db.commit()
+        return {"success": True, "message": "Admin account updated", "email": admin_email}
+    else:
+        # Create new admin
+        new_admin = User(
+            email=admin_email,
+            name="Admin Invasion",
+            hashed_password=hash_password(admin_password),
+            role="admin",
+            loyalty_points=0,
+            badges=[],
+            friends=[],
+            language="fr"
+        )
+        db.add(new_admin)
+        await db.commit()
+        return {"success": True, "message": "Admin account created", "email": admin_email}
 
 @app.post("/api/auth/register", response_model=UserResponse)
 async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
