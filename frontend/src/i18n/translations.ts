@@ -687,8 +687,8 @@ export const translations: Record<Language, Translations> = {
     fillAllFields: 'Veuillez remplir tous les champs obligatoires',
     
     // Register/Forms
-    joinInvasionLatina: 'Rejoins Invasion Latina',
-    createAccountSubtitle: 'Crée ton compte et prépare-toi à faire la fête',
+    joinInvasionLatina: 'Bienvenido al mundo de Invasion Latina',
+    createAccountSubtitle: '¡Prepárate para la fiesta!',
     fullName: 'Nom complet',
     phoneNumber: 'Numéro de téléphone',
     confirmPassword: 'Confirmer le mot de passe',
