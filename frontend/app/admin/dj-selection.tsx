@@ -134,8 +134,9 @@ export default function DJSelectionScreen() {
     });
   };
 
-  const residentDjs = djs.filter(dj => dj.type === 'dj');
-  const mcs = djs.filter(dj => dj.type === 'mc');
+  // Filter DJs vs MCs - check by name prefix or bio content
+  const residentDjs = djs.filter(dj => !dj.name.startsWith('MC ') && !dj.bio?.includes('MC'));
+  const mcs = djs.filter(dj => dj.name.startsWith('MC ') || dj.bio?.includes('MC'));
 
   if (loading) {
     return (
