@@ -1343,10 +1343,33 @@ async def get_my_loyalty_points(
         select(func.count()).select_from(LoyaltyCheckin).where(LoyaltyCheckin.user_id == current_user.id)
     )).scalar()
     
+    # Get recent check-ins with event info
+    result = await db.execute(
+        select(LoyaltyCheckin)
+        .where(LoyaltyCheckin.user_id == current_user.id)
+        .order_by(LoyaltyCheckin.checked_in_at.desc())
+        .limit(10)
+    )
+    checkins = result.scalars().all()
+    
+    recent_check_ins = []
+    for checkin in checkins:
+        # Get event name
+        event_result = await db.execute(select(Event).where(Event.id == checkin.event_id))
+        event = event_result.scalar_one_or_none()
+        
+        recent_check_ins.append({
+            "event_name": event.name if event else "Événement",
+            "points": checkin.points_earned or 5,
+            "date": checkin.checked_in_at.isoformat() if checkin.checked_in_at else None
+        })
+    
     return {
         "loyalty_points": current_user.loyalty_points or 0,
+        "points": current_user.loyalty_points or 0,
         "check_ins_count": checkins_count,
-        "progress_to_free_entry": min((current_user.loyalty_points or 0) / 25 * 100, 100)
+        "progress_to_free_entry": min((current_user.loyalty_points or 0) / 25 * 100, 100),
+        "recent_check_ins": recent_check_ins
     }
 
 @app.get("/api/loyalty/free-entry/check")
