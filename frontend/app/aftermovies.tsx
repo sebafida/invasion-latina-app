@@ -139,7 +139,7 @@ export default function AftermoviesScreen() {
 
         {/* All Videos */}
         <View style={styles.allVideosSection}>
-          <Text style={styles.sectionTitle}>📹 {t('allVideos')}</Text>
+          <Text style={styles.sectionTitle}>{t('allVideos')}</Text>
           
           {loading ? (
             <View style={styles.loadingContainer}>
