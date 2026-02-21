@@ -200,6 +200,7 @@ export default function ContentManagerScreen() {
         venue_name: eventVenue,
         xceed_ticket_url: eventXceedUrl,
         banner_image: eventBannerUrl,
+        ticket_price: eventTicketPrice ? parseFloat(eventTicketPrice) : null,
       });
       Alert.alert('Succès', 'Événement créé avec succès!');
       resetEventForm();
@@ -229,6 +230,7 @@ export default function ContentManagerScreen() {
         venue_name: eventVenue,
         xceed_ticket_url: eventXceedUrl,
         banner_image: eventBannerUrl,
+        ticket_price: eventTicketPrice ? parseFloat(eventTicketPrice) : null,
       });
       Alert.alert('Succès', 'Événement mis à jour avec succès!');
       resetEventForm();
@@ -250,6 +252,7 @@ export default function ContentManagerScreen() {
     setEventVenue('Mirano Continental');
     setEventXceedUrl('');
     setEventBannerUrl('');
+    setEventTicketPrice('');
   };
 
   const startEditEvent = (event: Event) => {
