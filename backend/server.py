@@ -1968,6 +1968,7 @@ class AdminEventUpdate(BaseModel):
     lineup: Optional[List[Dict[str, str]]] = None
     ticket_categories: Optional[List[Dict[str, Any]]] = None
     status: Optional[str] = None
+    ticket_price: Optional[float] = None
 
 @app.put("/api/admin/events/{event_id}")
 async def admin_update_event(
@@ -2003,6 +2004,24 @@ async def admin_update_event(
         event.ticket_categories = data.ticket_categories
     if data.status is not None:
         event.status = data.status
+    
+    # Update ticket price in ticket_categories
+    if data.ticket_price is not None:
+        current_categories = event.ticket_categories or []
+        if current_categories:
+            current_categories[0]["price"] = data.ticket_price
+            event.ticket_categories = current_categories
+        else:
+            event.ticket_categories = [
+                {
+                    "category": "standard",
+                    "name": "Entrée Standard",
+                    "price": data.ticket_price,
+                    "total_seats": 500,
+                    "available_seats": 500,
+                    "benefits": ["Accès général", "Piste de danse"]
+                }
+            ]
     
     await db.commit()
     
