@@ -152,19 +152,27 @@ export default function HomeScreen() {
       return 'Familia';
     }
     
-    // If name is "user" or starts with "user" (Apple Sign In default), try to extract real name
     const name = user.name || '';
     
-    // Check if it's a default Apple Sign In name (starts with random characters or "user")
-    if (!name || name.toLowerCase() === 'user' || name.toLowerCase().startsWith('user')) {
-      // Try to get first name from email
+    // Check if it's a default/placeholder name
+    const isPlaceholder = !name || 
+      name.toLowerCase() === 'user' || 
+      name.toLowerCase().startsWith('user') ||
+      name === 'Nuevo Miembro' ||
+      /^[a-f0-9-]{20,}$/i.test(name); // UUID-like strings
+    
+    if (isPlaceholder) {
+      // Try to get name from email
       const email = user.email || '';
       if (email && !email.includes('privaterelay.appleid.com')) {
         const emailName = email.split('@')[0];
-        // Capitalize first letter
-        return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+        // Remove numbers and special chars, capitalize
+        const cleanName = emailName.replace(/[0-9._-]/g, ' ').trim();
+        if (cleanName.length > 0) {
+          return cleanName.charAt(0).toUpperCase() + cleanName.slice(1).split(' ')[0];
+        }
       }
-      return 'Familia';
+      return 'Amigo'; // "Friend" in Spanish - friendlier than "Familia"
     }
     
     // Get first name only (split by space and take first part)
