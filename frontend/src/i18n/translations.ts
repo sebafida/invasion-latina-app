@@ -822,7 +822,7 @@ export const translations: Record<Language, Translations> = {
     getStarted: 'Commencer',
     nextEventBadge: 'Prochain Event',
     alreadyHaveAccount: 'Déjà un compte?',
-    sinceYears: 'Depuis 2009 • 16 Ans de Passion Latine',
+    sinceYears: 'Chaussée de Louvain 38, 1210 Bruxelles',
     exploreWithoutAccount: 'Explorer sans compte',
 
     // Login Required Modal
@@ -1267,7 +1267,7 @@ export const translations: Record<Language, Translations> = {
     getStarted: 'Get Started',
     nextEventBadge: 'Next Event',
     alreadyHaveAccount: 'Already have an account?',
-    sinceYears: 'Since 2009 • 16 Years of Latin Passion',
+    sinceYears: 'Chaussée de Louvain 38, 1210 Brussels',
     exploreWithoutAccount: 'Explore without account',
 
     // Login Required Modal
@@ -1712,7 +1712,7 @@ export const translations: Record<Language, Translations> = {
     getStarted: 'Empezar',
     nextEventBadge: 'Próximo Evento',
     alreadyHaveAccount: '¿Ya tienes cuenta?',
-    sinceYears: 'Desde 2009 • 16 Años de Pasión Latina',
+    sinceYears: 'Chaussée de Louvain 38, 1210 Bruselas',
     exploreWithoutAccount: 'Explorar sin cuenta',
 
     // Login Required Modal
@@ -2152,7 +2152,7 @@ export const translations: Record<Language, Translations> = {
     getStarted: 'Beginnen',
     nextEventBadge: 'Volgend Evenement',
     alreadyHaveAccount: 'Heb je al een account?',
-    sinceYears: 'Sinds 2009 • 16 Jaar Latijnse Passie',
+    sinceYears: 'Chaussée de Louvain 38, 1210 Brussel',
     exploreWithoutAccount: 'Verkennen zonder account',
 
     // Login Required Modal
