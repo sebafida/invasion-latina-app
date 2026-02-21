@@ -309,6 +309,111 @@ export default function ContentManagerScreen() {
     );
   };
 
+  // Delete functions for photos and aftermovies
+  const handleDeletePhoto = (photoId: string) => {
+    Alert.alert(
+      'Supprimer la photo',
+      'Êtes-vous sûr de vouloir supprimer cette photo ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await api.delete(`/admin/photos/${photoId}`);
+              Alert.alert('Succès', 'Photo supprimée');
+              loadData();
+            } catch (error) {
+              Alert.alert('Erreur', 'Impossible de supprimer la photo');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleClearGallery = (eventId: string, eventName: string) => {
+    Alert.alert(
+      'Vider la galerie',
+      `Supprimer toutes les photos de "${eventName}" ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Tout supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await api.delete(`/admin/gallery/${eventId}/clear`);
+              Alert.alert('Succès', 'Galerie vidée');
+              loadData();
+            } catch (error) {
+              Alert.alert('Erreur', 'Impossible de vider la galerie');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleDeleteAftermovie = (aftermovieId: string) => {
+    Alert.alert(
+      'Supprimer l\'aftermovie',
+      'Êtes-vous sûr de vouloir supprimer cet aftermovie ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await api.delete(`/admin/aftermovies/${aftermovieId}`);
+              Alert.alert('Succès', 'Aftermovie supprimé');
+              loadData();
+            } catch (error) {
+              Alert.alert('Erreur', 'Impossible de supprimer l\'aftermovie');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleClearAllAftermovies = () => {
+    Alert.alert(
+      'Supprimer tous les aftermovies',
+      'Êtes-vous sûr de vouloir supprimer TOUS les aftermovies ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Tout supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await api.delete('/admin/aftermovies/clear-all');
+              Alert.alert('Succès', 'Tous les aftermovies supprimés');
+              loadData();
+            } catch (error) {
+              Alert.alert('Erreur', 'Impossible de supprimer les aftermovies');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   // Image picker functions - with Cloudinary upload
   const CLOUDINARY_CLOUD_NAME = 'dpj64f0zp';
   const CLOUDINARY_UPLOAD_PRESET = 'unsigned_preset';
