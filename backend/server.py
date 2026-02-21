@@ -2146,11 +2146,22 @@ async def toggle_qr_status(
 
 class VIPBookCreate(BaseModel):
     event_id: str
-    name: str
-    email: str
-    phone: str
-    guests: int = 1
+    # Support both naming conventions
+    name: Optional[str] = None
+    customer_name: Optional[str] = None
+    email: Optional[str] = None
+    customer_email: Optional[str] = None
+    phone: Optional[str] = None
+    customer_phone: Optional[str] = None
+    guests: Optional[int] = None
+    guest_count: Optional[int] = None
     message: Optional[str] = None
+    special_requests: Optional[str] = None
+    # Additional fields from frontend
+    zone: Optional[str] = None
+    package: Optional[str] = None
+    bottle_preferences: Optional[str] = None
+    total_price: Optional[float] = None
 
 @app.post("/api/vip/book")
 async def book_vip_table(
@@ -2165,14 +2176,37 @@ async def book_vip_table(
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     
+    # Get values with fallbacks for both naming conventions
+    name = data.name or data.customer_name or current_user.name
+    email = data.email or data.customer_email or current_user.email
+    phone = data.phone or data.customer_phone or ""
+    guests = data.guests or data.guest_count or 1
+    
+    # Build message from various fields
+    message_parts = []
+    if data.zone:
+        message_parts.append(f"Zone: {data.zone}")
+    if data.package:
+        message_parts.append(f"Package: {data.package}")
+    if data.bottle_preferences:
+        message_parts.append(f"Bouteilles: {data.bottle_preferences}")
+    if data.special_requests:
+        message_parts.append(f"Demandes spéciales: {data.special_requests}")
+    if data.message:
+        message_parts.append(data.message)
+    if data.total_price:
+        message_parts.append(f"Prix total: {data.total_price}€")
+    
+    message = "\n".join(message_parts) if message_parts else None
+    
     booking = VIPBooking(
         user_id=current_user.id,
         event_id=data.event_id,
-        name=data.name,
-        email=data.email,
-        phone=data.phone,
-        guests=data.guests,
-        message=data.message,
+        name=name,
+        email=email,
+        phone=phone,
+        guests=guests,
+        message=message,
         status="pending"
     )
     
