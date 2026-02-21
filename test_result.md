@@ -323,7 +323,7 @@ agent_communication:
       - ✅ All deletion endpoints properly require admin authentication
       
       SYSTEM VALIDATION:
-      - ✅ Backend URL: https://feature-batch-test.preview.emergentagent.com
+      - ✅ Backend URL: https://postgres-shift-3.preview.emergentagent.com
       - ✅ All endpoints return success (200) status codes
       - ✅ Response messages in French as expected
       - ✅ Database operations confirmed (data actually deleted)
