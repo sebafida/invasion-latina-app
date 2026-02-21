@@ -504,6 +504,63 @@ export default function ContentManagerScreen() {
     }
   };
 
+  // Sélection multiple de photos
+  const pickMultiplePhotos = async () => {
+    if (!selectedEventId) {
+      Alert.alert('Erreur', 'Veuillez d\'abord sélectionner un événement');
+      return;
+    }
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission requise', 'Nous avons besoin d\'accéder à votre galerie.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      quality: 0.7,
+      selectionLimit: 10,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      setLoading(true);
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const asset of result.assets) {
+        try {
+          const cloudinaryUrl = await uploadToCloudinary(asset.uri);
+          if (cloudinaryUrl) {
+            await api.post('/admin/media/photos', {
+              url: cloudinaryUrl,
+              event_id: selectedEventId,
+            });
+            successCount++;
+          } else {
+            failCount++;
+          }
+        } catch (error) {
+          failCount++;
+        }
+      }
+
+      setLoading(false);
+      
+      if (successCount > 0) {
+        Alert.alert(
+          'Upload terminé', 
+          `${successCount} photo(s) ajoutée(s) avec succès${failCount > 0 ? `, ${failCount} échec(s)` : ''}`
+        );
+        loadData();
+      } else {
+        Alert.alert('Erreur', 'Impossible d\'uploader les photos');
+      }
+    }
+  };
+
   const pickWelcomeFlyer = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
