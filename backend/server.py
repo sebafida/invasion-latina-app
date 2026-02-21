@@ -2233,13 +2233,26 @@ async def get_all_vip_bookings(
             "event_id": booking.event_id,
             "event_name": event.name if event else "Unknown Event",
             "event_date": event.event_date.isoformat() if event and event.event_date else None,
+            # Customer info - use both naming conventions
             "name": booking.name,
+            "customer_name": booking.name,
             "email": booking.email,
+            "customer_email": booking.email,
             "phone": booking.phone,
+            "customer_phone": booking.phone,
             "guests": booking.guests,
+            "guest_count": booking.guests,
+            # VIP details
+            "zone": booking.zone or "Non spécifié",
+            "package": booking.package or "Standard",
+            "total_price": booking.total_price or 0,
+            "bottle_preferences": booking.bottle_preferences,
+            "special_requests": booking.special_requests or booking.message,
             "message": booking.message,
+            # Status
             "status": booking.status,
-            "submitted_at": booking.submitted_at.isoformat() if booking.submitted_at else None
+            "submitted_at": booking.submitted_at.isoformat() if booking.submitted_at else None,
+            "confirmed_at": booking.confirmed_at.isoformat() if booking.confirmed_at else None
         })
     
     return booking_list
