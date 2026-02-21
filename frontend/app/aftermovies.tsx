@@ -96,8 +96,7 @@ export default function AftermoviesScreen() {
             <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <Text style={styles.title}>🎬 {t('aftermoviesTitle')}</Text>
-            <Text style={styles.subtitle}>{t('rewatchBestParties')}</Text>
+            <Text style={styles.title}>{t('aftermoviesTitle')}</Text>
           </View>
         </View>
 
