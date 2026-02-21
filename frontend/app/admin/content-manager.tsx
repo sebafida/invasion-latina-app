@@ -964,8 +964,21 @@ export default function ContentManagerScreen() {
         Ajoutez des vidéos récapitulatives de vos événements
       </Text>
 
+      {/* Important info box about video hosting */}
+      <View style={[styles.infoBox, { marginBottom: 20, borderLeftColor: theme.colors.warning }]}>
+        <Ionicons name="videocam" size={20} color={theme.colors.warning} />
+        <Text style={styles.infoText}>
+          ⚠️ <Text style={{ fontWeight: 'bold' }}>Les vidéos doivent être hébergées sur YouTube ou Vimeo.</Text>{'\n\n'}
+          L'upload direct de vidéos n'est pas possible car les fichiers vidéo sont trop volumineux.{'\n\n'}
+          <Text style={{ fontWeight: 'bold' }}>Comment faire :</Text>{'\n'}
+          1. Uploadez votre aftermovie sur YouTube (public ou non répertorié){'\n'}
+          2. Copiez le lien de la vidéo{'\n'}
+          3. Collez-le ci-dessous
+        </Text>
+      </View>
+
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Titre de l'Aftermovie</Text>
+        <Text style={styles.inputLabel}>Titre de l'Aftermovie *</Text>
         <TextInput
           style={styles.input}
           placeholder="Invasion Latina - Amazonia Edition"
@@ -976,7 +989,7 @@ export default function ContentManagerScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>URL de la Vidéo (YouTube, Vimeo, etc.)</Text>
+        <Text style={styles.inputLabel}>URL de la Vidéo YouTube/Vimeo *</Text>
         <TextInput
           style={styles.input}
           placeholder="https://youtube.com/watch?v=xxxxx"
@@ -985,6 +998,9 @@ export default function ContentManagerScreen() {
           onChangeText={setNewAftermovieUrl}
           autoCapitalize="none"
         />
+        <Text style={{ fontSize: 12, color: theme.colors.textMuted, marginTop: 4 }}>
+          Exemples : https://youtube.com/watch?v=xxx ou https://vimeo.com/xxx
+        </Text>
       </View>
 
       <View style={styles.inputGroup}>
@@ -997,12 +1013,15 @@ export default function ContentManagerScreen() {
           onChangeText={setNewAftermovieThumb}
           autoCapitalize="none"
         />
+        <Text style={{ fontSize: 12, color: theme.colors.textMuted, marginTop: 4 }}>
+          Si vide, une miniature par défaut sera utilisée
+        </Text>
       </View>
 
       <TouchableOpacity
-        style={styles.primaryButton}
+        style={[styles.primaryButton, (!newAftermovieName || !newAftermovieUrl) && { opacity: 0.5 }]}
         onPress={handleAddAftermovie}
-        disabled={loading}
+        disabled={loading || !newAftermovieName || !newAftermovieUrl}
       >
         {loading ? (
           <ActivityIndicator color="white" />
@@ -1018,7 +1037,7 @@ export default function ContentManagerScreen() {
       {aftermovies.length > 0 && (
         <View style={styles.existingSection}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <Text style={styles.existingSectionTitle}>Aftermovies existants</Text>
+            <Text style={styles.existingSectionTitle}>Aftermovies existants ({aftermovies.length})</Text>
             <TouchableOpacity onPress={handleClearAllAftermovies}>
               <Text style={{ color: '#FF3B30', fontSize: 14 }}>Tout supprimer</Text>
             </TouchableOpacity>
