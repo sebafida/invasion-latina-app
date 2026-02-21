@@ -1716,8 +1716,9 @@ async def get_aftermovies(db: AsyncSession = Depends(get_db)):
 @app.get("/api/welcome-content")
 async def get_welcome_content(db: AsyncSession = Depends(get_db)):
     """Get welcome screen content"""
+    # First check for custom welcome content
     result = await db.execute(
-        select(AppSettings).where(AppSettings.type == "welcome_content")
+        select(AppSettings).where(AppSettings.id == "welcome")
     )
     content = result.scalar_one_or_none()
     
@@ -1726,6 +1727,9 @@ async def get_welcome_content(db: AsyncSession = Depends(get_db)):
     
     # Return default welcome content
     return {
+        "flyer_url": "",
+        "tagline": "The Biggest Latino-Reggaeton Party in Belgium",
+        "venue_name": "Mirano Continental, Brussels",
         "en": {
             "title": "Welcome to Invasion Latina",
             "subtitle": "The biggest Latino-Reggaeton party in Belgium!"
