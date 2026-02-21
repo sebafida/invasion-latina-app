@@ -50,13 +50,22 @@ export default function WelcomeScreen() {
     loadWelcomeContent();
   }, []);
 
-  const loadWelcomeContent = async () => {
+  const loadWelcomeContent = async (retryCount = 0) => {
     try {
       setIsLoadingContent(true);
-      const response = await api.get('/welcome-content');
+      // Add cache-busting parameter to avoid stale data
+      const response = await api.get(`/welcome-content?t=${Date.now()}`, { timeout: 15000 });
       setContent(response.data);
-    } catch (error) {
-      console.log('Using default welcome content');
+      console.log('Welcome content loaded successfully');
+    } catch (error: any) {
+      console.log('Error loading welcome content:', error.message);
+      // Retry up to 2 times with increasing delay
+      if (retryCount < 2) {
+        console.log(`Retrying... attempt ${retryCount + 2}`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        return loadWelcomeContent(retryCount + 1);
+      }
+      console.log('Using default welcome content after retries');
       setContent({}); // Use empty object to trigger default flyer
     } finally {
       setIsLoadingContent(false);
