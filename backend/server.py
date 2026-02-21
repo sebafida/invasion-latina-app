@@ -722,56 +722,60 @@ async def request_song(
     current_user: User = Depends(get_current_user_supabase)
 ):
     """Request a song"""
-    # Check if song requests are enabled
+    # Check if user is admin/DJ - they bypass all restrictions
+    is_admin = current_user.role in ["admin", "dj"]
+    
+    # Check if song requests are enabled (admins bypass this)
     result = await db.execute(select(AppSettings).where(AppSettings.id == "global"))
     settings = result.scalar_one_or_none()
     
-    if not settings or not settings.requests_enabled:
+    if not is_admin and (not settings or not settings.requests_enabled):
         raise HTTPException(
             status_code=403, 
             detail="Les demandes de chansons sont désactivées pour le moment. Revenez pendant l'événement!"
         )
     
-    # Geolocation check
-    MIRANO_LAT = 50.8389
-    MIRANO_LNG = 4.3660
-    MAX_DISTANCE_METERS = 40
-    
-    user_lat = song_data.get("latitude")
-    user_lng = song_data.get("longitude")
-    
-    if user_lat and user_lng:
-        try:
-            import math
-            user_lat = float(user_lat)
-            user_lng = float(user_lng)
-            
-            R = 6371000
-            lat1, lat2 = math.radians(MIRANO_LAT), math.radians(user_lat)
-            dlat = math.radians(user_lat - MIRANO_LAT)
-            dlng = math.radians(user_lng - MIRANO_LNG)
-            
-            a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng/2)**2
-            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-            distance = R * c
-            
-            if distance > MAX_DISTANCE_METERS:
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Vous devez être au Mirano Continental pour demander une chanson (vous êtes à {int(distance)}m)"
-                )
-        except (ValueError, TypeError):
-            pass
-    else:
-        raise HTTPException(status_code=403, detail="Activez votre localisation pour demander une chanson")
-    
-    # Check time
-    current_hour = datetime.now().hour
-    if not (current_hour >= 23 or current_hour < 5):
-        raise HTTPException(
-            status_code=403,
-            detail="Les demandes de chansons sont disponibles uniquement entre 23h et 5h"
-        )
+    # Geolocation check (admins bypass this)
+    if not is_admin:
+        MIRANO_LAT = 50.8389
+        MIRANO_LNG = 4.3660
+        MAX_DISTANCE_METERS = 40
+        
+        user_lat = song_data.get("latitude")
+        user_lng = song_data.get("longitude")
+        
+        if user_lat and user_lng:
+            try:
+                import math
+                user_lat = float(user_lat)
+                user_lng = float(user_lng)
+                
+                R = 6371000
+                lat1, lat2 = math.radians(MIRANO_LAT), math.radians(user_lat)
+                dlat = math.radians(user_lat - MIRANO_LAT)
+                dlng = math.radians(user_lng - MIRANO_LNG)
+                
+                a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng/2)**2
+                c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+                distance = R * c
+                
+                if distance > MAX_DISTANCE_METERS:
+                    raise HTTPException(
+                        status_code=403,
+                        detail=f"Vous devez être au Mirano Continental pour demander une chanson (vous êtes à {int(distance)}m)"
+                    )
+            except (ValueError, TypeError):
+                pass
+        else:
+            raise HTTPException(status_code=403, detail="Activez votre localisation pour demander une chanson")
+        
+        # Check time (admins bypass this)
+        current_hour = datetime.now().hour
+        if not (current_hour >= 23 or current_hour < 5):
+            raise HTTPException(
+                status_code=403,
+                detail="Les demandes de chansons sont disponibles uniquement entre 23h et 5h"
+            )
     
     # Validate required fields
     if not song_data.get("song_title") or not song_data.get("artist_name"):
