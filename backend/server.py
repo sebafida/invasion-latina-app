@@ -1910,6 +1910,7 @@ class AdminEventCreate(BaseModel):
     banner_image: Optional[str] = None
     lineup: Optional[List[Dict[str, str]]] = []
     ticket_categories: Optional[List[Dict[str, Any]]] = []
+    ticket_price: Optional[float] = None
 
 @app.post("/api/admin/events")
 async def admin_create_event(
@@ -1920,6 +1921,23 @@ async def admin_create_event(
     """Create a new event (Admin only)"""
     event_date = datetime.fromisoformat(data.event_date.replace('Z', '+00:00'))
     
+    # Build ticket categories with custom price
+    ticket_categories = data.ticket_categories or []
+    if data.ticket_price and not ticket_categories:
+        ticket_categories = [
+            {
+                "category": "standard",
+                "name": "Entrée Standard",
+                "price": data.ticket_price,
+                "total_seats": 500,
+                "available_seats": 500,
+                "benefits": ["Accès général", "Piste de danse"]
+            }
+        ]
+    elif data.ticket_price and ticket_categories:
+        # Update the first category's price
+        ticket_categories[0]["price"] = data.ticket_price
+    
     event = Event(
         name=data.name,
         description=data.description,
@@ -1929,7 +1947,7 @@ async def admin_create_event(
         xceed_ticket_url=data.xceed_ticket_url,
         banner_image=data.banner_image,
         lineup=data.lineup or [],
-        ticket_categories=data.ticket_categories or [],
+        ticket_categories=ticket_categories,
         status="upcoming"
     )
     
