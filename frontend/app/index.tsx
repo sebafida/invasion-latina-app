@@ -43,13 +43,32 @@ interface WelcomeContent {
 export default function WelcomeScreen() {
   const router = useRouter();
   const { t, language, setLanguage } = useLanguage();
-  const { logout } = useAuth();
+  const { logout, loadUser } = useAuth();
   const [content, setContent] = useState<WelcomeContent | null>(null);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [isLoadingContent, setIsLoadingContent] = useState(true);
+  const appState = useRef(AppState.currentState);
 
+  // Load content on mount AND when app comes back to foreground
   useEffect(() => {
     loadWelcomeContent();
+    
+    // Listen for app state changes (background -> foreground)
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        console.log('App came to foreground - reloading data...');
+        // Force reload fresh data when app comes back
+        setContent(null);
+        loadWelcomeContent();
+        // Also re-verify auth
+        loadUser();
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   const loadWelcomeContent = async (retryCount = 0) => {
