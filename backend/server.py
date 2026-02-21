@@ -304,6 +304,29 @@ async def init_app_settings():
             await db.commit()
             logger.info("✅ Created default app settings")
 
+async def create_default_djs():
+    """Create default DJs for Invasion Latina"""
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(func.count()).select_from(DJ))
+        dj_count = result.scalar()
+        
+        if dj_count == 0:
+            default_djs = [
+                DJ(name="DJ GIZMO", bio="Resident DJ - Reggaeton & Latin Urban", is_resident=True, order=1),
+                DJ(name="DJ DNK", bio="Resident DJ - Latin House & Dembow", is_resident=True, order=2),
+                DJ(name="DJ CRUZ", bio="Resident DJ - Bachata & Salsa", is_resident=True, order=3),
+                DJ(name="DJ DANIEL MURILLO", bio="Guest DJ - Urban Latin", is_resident=False, order=4),
+                DJ(name="DJ SUNCEE", bio="Guest DJ - Reggaeton Classics", is_resident=False, order=5),
+                DJ(name="DJ SAMO", bio="Guest DJ - Latin Trap", is_resident=False, order=6),
+                DJ(name="DJ MABOY", bio="Guest DJ - Latin Pop", is_resident=False, order=7),
+                DJ(name="MC VELASQUEZ", bio="Official MC - Hype Master", is_resident=True, order=8),
+            ]
+            
+            for dj in default_djs:
+                db.add(dj)
+            await db.commit()
+            logger.info(f"✅ Created {len(default_djs)} default DJs")
+
 # ============ ROOT & HEALTH ENDPOINTS ============
 
 @app.get("/")
