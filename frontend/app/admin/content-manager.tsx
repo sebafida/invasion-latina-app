@@ -905,6 +905,18 @@ export default function ContentManagerScreen() {
           </View>
 
           <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>💰 Prix du billet (€)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="20"
+              placeholderTextColor={theme.colors.textMuted}
+              value={eventTicketPrice}
+              onChangeText={setEventTicketPrice}
+              keyboardType="numeric"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>📸 Flyer de l'événement</Text>
             
             {/* Upload Button */}
