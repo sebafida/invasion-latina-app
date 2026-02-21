@@ -162,9 +162,16 @@ class VIPBooking(Base):
     
     name = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False)
-    phone = Column(String(50), nullable=False)
+    phone = Column(String(50), nullable=True)
     guests = Column(Integer, default=1)
     message = Column(Text, nullable=True)
+    
+    # Additional fields for VIP booking details
+    zone = Column(String(100), nullable=True)
+    package = Column(String(100), nullable=True)
+    total_price = Column(Float, nullable=True)
+    bottle_preferences = Column(Text, nullable=True)
+    special_requests = Column(Text, nullable=True)
     
     status = Column(String(50), default='pending', index=True)
     admin_notes = Column(Text, nullable=True)
