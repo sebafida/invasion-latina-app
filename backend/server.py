@@ -139,6 +139,9 @@ async def lifespan(app: FastAPI):
     # Initialize app settings
     await init_app_settings()
     
+    # Create default DJs
+    await create_default_djs()
+    
     yield
     
     logger.info("👋 Shutting down Invasion Latina API...")
