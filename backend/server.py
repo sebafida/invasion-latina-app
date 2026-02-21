@@ -1709,3 +1709,37 @@ async def get_aftermovies(db: AsyncSession = Depends(get_db)):
         }
         for video in videos
     ]
+
+
+# ============ WELCOME CONTENT ============
+
+@app.get("/api/welcome-content")
+async def get_welcome_content(db: AsyncSession = Depends(get_db)):
+    """Get welcome screen content"""
+    result = await db.execute(
+        select(AppSettings).where(AppSettings.type == "welcome_content")
+    )
+    content = result.scalar_one_or_none()
+    
+    if content and content.welcome_content:
+        return content.welcome_content
+    
+    # Return default welcome content
+    return {
+        "en": {
+            "title": "Welcome to Invasion Latina",
+            "subtitle": "The biggest Latino-Reggaeton party in Belgium!"
+        },
+        "fr": {
+            "title": "Bienvenue à Invasion Latina",
+            "subtitle": "La plus grande fête Latino-Reggaeton de Belgique!"
+        },
+        "es": {
+            "title": "Bienvenido a Invasion Latina",
+            "subtitle": "¡La fiesta Latino-Reggaeton más grande de Bélgica!"
+        },
+        "nl": {
+            "title": "Welkom bij Invasion Latina",
+            "subtitle": "Het grootste Latino-Reggaeton feest in België!"
+        }
+    }
