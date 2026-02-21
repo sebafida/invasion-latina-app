@@ -2449,17 +2449,21 @@ async def get_media_galleries(db: AsyncSession = Depends(get_db)):
             select(func.count()).select_from(Photo).where(Photo.event_id == event.id)
         )).scalar()
         
-        cover_result = await db.execute(
-            select(Photo).where(Photo.event_id == event.id).limit(1)
-        )
-        cover_photo = cover_result.scalar_one_or_none()
+        # Use banner_image as cover, fallback to first photo if available
+        cover_image = event.banner_image
+        if not cover_image:
+            cover_result = await db.execute(
+                select(Photo).where(Photo.event_id == event.id).limit(1)
+            )
+            cover_photo = cover_result.scalar_one_or_none()
+            cover_image = cover_photo.url if cover_photo else None
         
         galleries.append({
             "id": event.id,
             "name": event.name,
             "event_date": event.event_date.isoformat() if event.event_date else None,
             "photo_count": photo_count,
-            "cover_image": cover_photo.url if cover_photo else None
+            "cover_image": cover_image
         })
     
     return galleries
