@@ -100,6 +100,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loadUser = async () => {
     try {
       console.log('loadUser: Checking for stored token...');
+      
+      // Check if we need to clear old tokens (after database migration)
+      const AUTH_VERSION = 'supabase_v1'; // Change this to force re-login
+      const storedAuthVersion = await AsyncStorage.getItem('auth_version');
+      
+      if (storedAuthVersion !== AUTH_VERSION) {
+        console.log('loadUser: Auth version changed - clearing old token');
+        await AsyncStorage.removeItem('auth_token');
+        await AsyncStorage.setItem('auth_version', AUTH_VERSION);
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+      
       const storedToken = await AsyncStorage.getItem('auth_token');
       
       if (!storedToken) {
