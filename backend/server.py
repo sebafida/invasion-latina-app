@@ -2867,3 +2867,186 @@ async def validate_free_entry(
         "user_name": voucher.user_name,
         "user_email": voucher.user_email
     }
+
+
+# ============ ADMIN PHOTO/GALLERY MANAGEMENT ============
+
+@app.delete("/api/admin/photos/{photo_id}")
+async def delete_photo(
+    photo_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Delete a photo (Admin only)"""
+    result = await db.execute(select(Photo).where(Photo.id == photo_id))
+    photo = result.scalar_one_or_none()
+    
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    await db.delete(photo)
+    await db.commit()
+    
+    return {"success": True, "message": "Photo supprimée"}
+
+@app.delete("/api/admin/gallery/{event_id}/clear")
+async def clear_event_gallery(
+    event_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Delete all photos from an event gallery (Admin only)"""
+    result = await db.execute(delete(Photo).where(Photo.event_id == event_id))
+    await db.commit()
+    
+    return {"success": True, "message": "Galerie vidée"}
+
+@app.delete("/api/admin/aftermovies/{aftermovie_id}")
+async def delete_aftermovie(
+    aftermovie_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Delete an aftermovie (Admin only)"""
+    result = await db.execute(select(Aftermovie).where(Aftermovie.id == aftermovie_id))
+    aftermovie = result.scalar_one_or_none()
+    
+    if not aftermovie:
+        raise HTTPException(status_code=404, detail="Aftermovie not found")
+    
+    await db.delete(aftermovie)
+    await db.commit()
+    
+    return {"success": True, "message": "Aftermovie supprimé"}
+
+@app.delete("/api/admin/aftermovies/clear-all")
+async def clear_all_aftermovies(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Delete all aftermovies (Admin only)"""
+    await db.execute(delete(Aftermovie))
+    await db.commit()
+    
+    return {"success": True, "message": "Tous les aftermovies supprimés"}
+
+# ============ ADMIN DJ MANAGEMENT ============
+
+class DJCreate(BaseModel):
+    name: str
+    bio: Optional[str] = None
+    photo_url: Optional[str] = None
+    instagram_url: Optional[str] = None
+    soundcloud_url: Optional[str] = None
+    spotify_url: Optional[str] = None
+    is_resident: bool = False
+
+@app.post("/api/admin/djs")
+async def create_dj(
+    data: DJCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Create a new DJ (Admin only)"""
+    # Get max order
+    result = await db.execute(select(func.max(DJ.order)))
+    max_order = result.scalar() or 0
+    
+    dj = DJ(
+        name=data.name,
+        bio=data.bio,
+        photo_url=data.photo_url,
+        instagram_url=data.instagram_url,
+        soundcloud_url=data.soundcloud_url,
+        spotify_url=data.spotify_url,
+        is_resident=data.is_resident,
+        order=max_order + 1
+    )
+    
+    db.add(dj)
+    await db.commit()
+    await db.refresh(dj)
+    
+    return {"success": True, "dj_id": dj.id, "message": f"DJ {data.name} ajouté"}
+
+@app.put("/api/admin/djs/{dj_id}")
+async def update_dj(
+    dj_id: str,
+    data: DJCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Update a DJ (Admin only)"""
+    result = await db.execute(select(DJ).where(DJ.id == dj_id))
+    dj = result.scalar_one_or_none()
+    
+    if not dj:
+        raise HTTPException(status_code=404, detail="DJ not found")
+    
+    dj.name = data.name
+    dj.bio = data.bio
+    dj.photo_url = data.photo_url
+    dj.instagram_url = data.instagram_url
+    dj.soundcloud_url = data.soundcloud_url
+    dj.spotify_url = data.spotify_url
+    dj.is_resident = data.is_resident
+    
+    await db.commit()
+    
+    return {"success": True, "message": f"DJ {data.name} mis à jour"}
+
+@app.delete("/api/admin/djs/{dj_id}")
+async def delete_dj(
+    dj_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Delete a DJ (Admin only)"""
+    result = await db.execute(select(DJ).where(DJ.id == dj_id))
+    dj = result.scalar_one_or_none()
+    
+    if not dj:
+        raise HTTPException(status_code=404, detail="DJ not found")
+    
+    await db.delete(dj)
+    await db.commit()
+    
+    return {"success": True, "message": "DJ supprimé"}
+
+# ============ MULTI-PHOTO UPLOAD ============
+
+class MultiPhotoUpload(BaseModel):
+    event_id: str
+    photo_urls: List[str]
+
+@app.post("/api/admin/media/photos/bulk")
+async def bulk_upload_photos(
+    data: MultiPhotoUpload,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Upload multiple photos at once (Admin only)"""
+    # Verify event exists
+    result = await db.execute(select(Event).where(Event.id == data.event_id))
+    event = result.scalar_one_or_none()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    photos_added = []
+    for url in data.photo_urls:
+        photo = Photo(
+            event_id=data.event_id,
+            url=url,
+            thumbnail_url=url,
+            uploaded_by=current_user.id
+        )
+        db.add(photo)
+        photos_added.append(photo)
+    
+    await db.commit()
+    
+    return {
+        "success": True,
+        "message": f"{len(photos_added)} photos ajoutées",
+        "count": len(photos_added)
+    }
