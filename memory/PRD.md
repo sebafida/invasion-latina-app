@@ -160,6 +160,7 @@ EXPO_PUBLIC_BACKEND_URL=https://...
 ### P1 (High Priority)
 - [x] **RÉSOLU** - Gestion du nom pour Apple Sign-In (bouton "Ajouter votre prénom" + endpoint `/api/user/profile`)
 - [x] **RÉSOLU** - Notifications activées par défaut à l'inscription (register + social login)
+- [x] **RÉSOLU** - Espacement des boutons dans le profil uniformisé
 - [ ] Full regression testing after migration
 - [ ] Data migration script (if needed)
 
