@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
@@ -96,6 +97,9 @@ export default function LoginScreen() {
       });
       
       if (result.data.access_token) {
+        // BUG 3 FIX: Save auth_version after Google login
+        await AsyncStorage.setItem('auth_token', result.data.access_token);
+        await AsyncStorage.setItem('auth_version', 'supabase_v3');
         setToken(result.data.access_token);
         setUser(result.data);
         router.replace('/(tabs)/home');

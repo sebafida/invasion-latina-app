@@ -88,10 +88,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const { access_token, user_id } = response.data;
       await AsyncStorage.setItem('auth_token', access_token);
+      await AsyncStorage.setItem('auth_version', 'supabase_v3'); // BUG 3 FIX
       
       setTokenState(access_token);
       setUserState({ id: user_id, email, name, role: 'user', loyalty_points: 0, badges: [] });
       setIsAuthenticated(true);
+      console.log('Registration successful!');
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || 'Registration failed');
     } finally {
