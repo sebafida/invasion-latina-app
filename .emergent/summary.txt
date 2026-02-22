@@ -1,169 +1,140 @@
 <analysis>**original_problem_statement:**
-L'application de l'utilisateur était instable car son backend fonctionnait sur un serveur de développement temporaire. L'objectif initial était de migrer le backend vers Railway et MongoDB Atlas. L'utilisateur a ensuite demandé une migration complète de la base de données de MongoDB vers **Supabase (PostgreSQL)** en raison de problèmes de connexion perçus avec le mode veille de MongoDB Atlas et de la complexité de la logique Face ID, qui a été supprimée.
+L'utilisateur finalise son application avant de la soumettre à l'App Store, mais est confronté à plusieurs problèmes persistants, principalement un bug de stabilité majeur. Après une période d'inactivité, l'application affiche un ancien flyer d'événement et empêche la connexion, obligeant l'utilisateur à désinstaller et réinstaller l'application. Ce problème est la priorité absolue à résoudre.
 
-Au cours de cette session, le backend a été entièrement reconstruit pour utiliser Supabase. Après de nombreux tests et corrections de bugs dans l'environnement de prévisualisation, l'utilisateur a déployé avec succès le nouveau backend Supabase sur son environnement de production Railway. La prochaine étape cruciale est de tester de manière approfondie l'application en direct via TestFlight.
+De plus, l'utilisateur a demandé plusieurs améliorations de l'interface utilisateur et de l'expérience utilisateur :
+1.  Corriger l'affichage du nom pour les utilisateurs se connectant via Apple Sign-In, qui affiche actuellement des noms génériques comme Amigo ou user123....
+2.  Uniformiser l'espacement entre les boutons dans l'écran de profil.
+3.  S'assurer que toutes les notifications sont activées par défaut pour les nouveaux utilisateurs.
 
 **PRODUCT REQUIREMENTS (Current Focus):**
-1.  **[P0]** Migrer le backend de MongoDB à Supabase. (**Déployé, en attente de test utilisateur**)
-2.  **[P1]** Tester les fonctionnalités de QR Code après la migration.
-3.  **[P1]** Tester le panneau d'administration qui liste les utilisateurs.
-4.  **[P2]** Implémenter les notifications push pour les rappels d'événements et le statut des demandes de chansons.
-5.  **[P2]** Ajouter des notifications push pour la confirmation des réservations VIP.
-6.  **[P2]** Permettre à l'administrateur de supprimer des photos/aftermovies et de faire des sélections multiples de photos.
+1.  **[P0]** Résoudre définitivement le problème de stabilité de la connexion et d'affichage de l'ancien flyer après une période d'inactivité.
+2.  **[P1]** Implémenter une solution pour la gestion du nom des utilisateurs Apple Sign-In.
+3.  **[P1]** Corriger les espacements dans l'interface du profil utilisateur.
+4.  **[P1]** Assurer que les notifications sont activées par défaut à l'inscription.
+5.  **[P2]** Compléter l'interface d'administration pour la gestion des médias (suppression de photos individuelles).
 
 **User's preferred language**: French. The next agent MUST respond in French.
 
 **what currently exists?**
-L'application dispose d'un frontend React Native/Expo et d'un backend FastAPI. Le backend a été entièrement migré pour utiliser une base de données Supabase (PostgreSQL) et a été déployé par l'utilisateur sur Railway. L'ancien code et la base de données MongoDB sont conservés en tant que solution de secours (). De nombreuses nouvelles fonctionnalités et corrections ont été implémentées mais nécessitent une vérification complète de l'utilisateur sur TestFlight.
+L'application dispose d'un frontend React Native/Expo et d'un backend FastAPI utilisant une base de données Supabase (PostgreSQL), déployé sur Railway. Le backend est stable. Le principal problème réside dans la gestion de l'état du frontend, de la mise en cache et du token d'authentification sur iOS, ce qui cause des problèmes de connexion et d'affichage de données obsolètes lorsque l'application sort de veille. De multiples correctifs ont été appliqués, notamment l'ajout de listeners  pour rafraîchir les données et l'amélioration de la gestion des erreurs API.
 
 **Last working item**:
-- Last item agent was working: L'agent a préparé tous les fichiers et instructions nécessaires pour que l'utilisateur puisse déployer le nouveau backend Supabase sur Railway. L'utilisateur a confirmé avoir effectué la configuration et le déploiement. L'agent a ensuite réveillé l'ancienne base de données MongoDB de production pour assurer le fonctionnement de l'application TestFlight existante pendant la transition.
-- Status: **USER VERIFICATION PENDING**
-- Agent Testing Done: Y (Tous les endpoints ont été testés avec succès via curl dans l'environnement de prévisualisation)
-- Which testing method agent to use? L'utilisateur doit effectuer des tests manuels via une nouvelle version TestFlight. L'agent doit le guider et utiliser  ou l'outil de capture d'écran pour diagnostiquer les problèmes signalés.
-- User Testing Done: N
+- Last item agent was working: L'agent a implémenté un ensemble de correctifs pour résoudre les derniers problèmes signalés par l'utilisateur : le nom pour Apple Sign-In, l'espacement dans le profil, et l'activation des notifications par défaut. La solution pour le nom Apple (Option B) consiste à n'afficher que Bienvenue sur l'écran d'accueil et à ajouter un bouton Ajouter votre prénom dans le profil, avec un endpoint backend pour sauvegarder la modification.
+- Status: **IN PROGRESS**
+- Agent Testing Done: N
+- Which testing method agent to use? L'utilisateur doit effectuer des tests manuels via une nouvelle version TestFlight (build 43+). L'agent doit le guider.
+- User Testing Done: Y (L'utilisateur a testé la build 43 et a signalé que les problèmes de nom et d'espacement persistaient, indiquant que les derniers correctifs n'avaient pas été inclus dans cette build).
 
 **All Pending/In progress Issue list**:
-- Issue 1: L'application de production sur Supabase n'est pas testée (P0)
-- Issue 2: L'interface utilisateur pour les nouvelles fonctionnalités d'administration est incomplète (P1)
-- Issue 3: Le warning de version de  persiste (P2)
+- Issue 1: Problème de stabilité de la connexion et d'affichage de l'ancien flyer (P0)
+- Issue 2: L'affichage du nom pour Apple Sign-In est incorrect (P1)
+- Issue 3: Espacement incohérent des boutons dans le profil utilisateur (P1)
+- Issue 4: Notifications non activées par défaut à la création du compte (P1)
 
 **Issues Detail**:
-- **Issue 1: L'application de production sur Supabase n'est pas testée**
-    - **Attempted fixes**: Le code a été entièrement migré et largement testé dans l'environnement de prévisualisation. Le déploiement en production est terminé.
+- **Issue 1: Problème de stabilité de la connexion et d'affichage de l'ancien flyer**
+    - **Attempted fixes**: De nombreuses solutions ont été tentées : migration vers Supabase,  pour forcer la déconnexion, remplacement de l'asset du flyer, ajout de listeners  pour rafraîchir les données, amélioration de la gestion des erreurs API (distinction entre erreurs 401 et erreurs réseau), ajout de logique de retry, et mise en cache des données utilisateur. La dernière tentative visait à rendre la gestion des erreurs réseau plus robuste.
     - **Next debug checklist**:
-        1.  Guider l'utilisateur pour créer une nouvelle build TestFlight.
-        2.  Lui demander de tester systématiquement toutes les fonctionnalités de l'application.
-        3.  Recueillir les retours et corriger les bugs éventuels.
-    - **Why fix this issue and what will be achieved with the fix?**: C'est la priorité absolue. Cela validera que la migration vers Supabase est un succès et que l'application est stable en production.
-    - **Status**: USER VERIFICATION PENDING
-    - **Is recurring issue?**: N
-    - **Should Test frontend/backend/both after fix?**: Both (par l'utilisateur).
+        1.  S'assurer que le dernier  (qui ne déconnecte que sur erreur 401) et les autres correctifs ont bien été poussés sur GitHub avant que l'utilisateur ne lance un nouveau build.
+        2.  Guider l'utilisateur pour créer une nouvelle build (ex: 42 ou supérieure) en s'assurant qu'il a bien fait .
+        3.  L'utilisateur doit tester en laissant l'app en arrière-plan pendant plusieurs heures avant de la rouvrir.
+        4.  Si le problème persiste, le focus doit rester sur la gestion d'état du frontend au retour de l'application (, , ).
+    - **Why fix this issue and what will be achieved with the fix?**: C'est le bug le plus critique qui empêche la soumission de l'application à l'App Store. Sa résolution rendra l'application fiable.
+    - **Status**: IN PROGRESS
+    - **Is recurring issue?**: Y
+    - **Should Test frontend/backend/both after fix?**: Frontend (via TestFlight).
     - **Blocked on other issue**: None.
 
-- **Issue 2: L'interface utilisateur pour les nouvelles fonctionnalités d'administration est incomplète**
-    - **Attempted fixes**: Les endpoints backend pour la suppression de photos/aftermovies et l'upload de photos multiples ont été créés. Des boutons pour vider la galerie et supprimer des aftermovies ont été ajoutés.
+- **Issue 2, 3 & 4: Problèmes UI/UX (Nom Apple, espacement, notifications)**
+    - **Attempted fixes**: L'agent a écrit le code pour : 1) Ajouter un bouton Modifier mon nom pour les utilisateurs Apple. 2) Uniformiser les marges des boutons du profil. 3) Activer les notifications à la création de l'utilisateur dans le backend.
     - **Next debug checklist**:
-        1.  Implémenter des boutons de suppression sur chaque photo individuelle dans .
-        2.  Implémenter une interface de sélection multiple de photos.
-    - **Why fix this issue and what will be achieved with the fix?**: Pour fournir à l'administrateur le contrôle total sur le contenu multimédia, comme demandé.
-    - **Status**: NOT STARTED
-    - **Is recurring issue?**: N
-    - **Should Test frontend/backend/both after fix?**: Frontend.
-    - **Blocked on other issue**: Issue 1 (les tests de base priment).
-
-- **Issue 3: Le warning de version de  persiste**
-    - **Attempted fixes**: None.
-    - **Next debug checklist**: Dans , changer la version de  en .
-    - **Why fix this issue and what will be achieved with the fix?**: Pour nettoyer les logs de production.
-    - **Status**: NOT STARTED
+        1.  L'utilisateur a signalé que ces problèmes n'étaient pas corrigés dans le build 43. Il est quasi certain que les modifications n'ont pas été incluses.
+        2.  S'assurer que le code est sauvegardé sur GitHub, puis guider l'utilisateur pour créer un nouveau build (ex: 42 ou supérieur).
+        3.  Vérifier les fichiers ,  et .
+    - **Why fix this issue and what will be achieved with the fix?**: Améliore la finition et l'expérience utilisateur avant le lancement.
+    - **Status**: IN PROGRESS
     - **Is recurring issue?**: Y
-    - **Should Test frontend/backend/both after fix?**: Backend.
+    - **Should Test frontend/backend/both after fix?**: Both.
     - **Blocked on other issue**: None.
 
 **In progress Task List**:
-- **Task 1: Guider l'utilisateur dans les tests post-déploiement (P0)**
-    - **Where to resume**: L'utilisateur a déployé sur Railway. La prochaine étape est de le guider pour créer une build TestFlight et tester systématiquement chaque fonctionnalité.
-    - **What will be achieved with this?**: Confirmer que la migration vers Supabase est stable et fonctionnelle en production.
-    - **Status**: NOT STARTED
+- **Task 1: Finaliser et tester les correctifs de stabilité et d'UI (P0)**
+    - **Where to resume**: L'agent a terminé une série de correctifs majeurs pour la stabilité et l'UI. La prochaine étape est de guider l'utilisateur pour sauvegarder ces changements sur GitHub, puis de créer une nouvelle build TestFlight (ex: build 42) et de la tester de manière approfondie.
+    - **What will be achieved with this?**: Une application stable, fonctionnelle et visuellement correcte, prête à être soumise à l'App Store.
+    - **Status**: IN PROGRESS
     - **Should Test frontend/backend/both after fix?**: Both (via les tests de l'utilisateur).
-    - **Blocked on something**: Action de l'utilisateur (créer et tester la build TestFlight).
+    - **Blocked on something**: Action de l'utilisateur (sauvegarder sur GitHub, créer la build, tester).
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **P1: Implémenter l'UI pour les fonctionnalités d'administration:**
+    - **P1: Implémenter l'UI pour la gestion des médias par l'admin:**
         - Ajouter des boutons de suppression pour les photos individuelles dans .
-        - Implémenter une interface de sélection multiple de photos dans .
-    - **P1: Implémenter les notifications de réservation VIP:**
-        - Ajouter la logique backend pour envoyer une notification push lorsqu'un admin confirme une réservation.
-        - Gérer la réception de cette notification côté frontend.
 - **Future Tasks**:
     - **P2:** Implémenter les notifications push pour les rappels d'événements et le statut des demandes de chansons.
+    - **P2:** Implémenter les notifications push pour la confirmation des réservations VIP.
+    - **P2:** Corriger l'avertissement de version de  dans .
     - Générer et soumettre une build Bêta Android pour le Google Play Store.
 
 **Completed work in this session**
-- **Migration complète du backend vers Supabase:** Création du schéma PostgreSQL avec Alembic, des modèles SQLAlchemy, de la logique de connexion et réécriture complète de tous les endpoints dans .
-- **Correction de bugs et complétion de fonctionnalités:** Ajout d'environ 30 endpoints manquants, correction de crashs (réservation VIP), de bugs d'affichage (DJs, prix , onglet Tickets vide) et de logique métier (bypass de la géolocalisation pour les admins).
-- **Nouvelles fonctionnalités d'administration (backend):** Création des endpoints pour la suppression de médias (photos, aftermovies), la gestion des DJs et l'upload de photos en masse.
-- **Améliorations de l'interface utilisateur:** Ajout d'un champ pour le prix du billet, de boutons de suppression pour les aftermovies et de nettoyage de l'interface de l'écran Aftermovies.
-- **Préparation au déploiement et support:** Création d'un guide de déploiement () et aide à l'utilisateur pour déployer sur Railway, tout en maintenant son ancienne application TestFlight fonctionnelle.
-
-**Earlier issues found/mentioned but not fixed**
-- **Issue 1: UI de sélection multiple de photos:** Demandée par l'utilisateur. Le backend est prêt, mais l'interface frontend n'a pas été implémentée.
-- **Issue 2: Notifications de confirmation de réservation VIP:** Demandées par l'utilisateur, mais non commencées.
-- **Issue 3: UI de suppression de photos individuelles:** Demandée par l'utilisateur. Le backend est prêt, mais l'UI frontend n'a pas été implémentée (seul un bouton vider la galerie a été ajouté).
+- **Débogage intensif de la stabilité de l'application**: Plusieurs cycles de correctifs sur la gestion du token, l'état de l'application au retour du background (), les erreurs réseau et les timeouts.
+- **Remplacement de l'asset du flyer par défaut**: Le fichier  a été remplacé par le nouveau visuel pour éviter d'afficher l'ancien.
+- **Améliorations UI/UX**:
+    - **Nom Apple Sign-In**: Implémentation d'un flux pour ajouter un nom via un bouton Modifier mon nom et un nouvel endpoint backend ().
+    - **Espacement Profil**: Réajustement des marges CSS pour les boutons.
+    - **Texte d'accueil**: Modification de la baseline pour afficher l'adresse du Mirano.
+- **Correctifs Backend**:
+    - Activation des notifications par défaut lors de la création d'un utilisateur.
+    - Correction d'un crash  et amélioration de la gestion des erreurs d'authentification.
+    - Suppression de la dépendance  pour corriger les builds Railway.
 
 **Code Architecture**
 
 
-**Key Technical Concepts**
-- **Migration de Base de Données:** Passage de MongoDB (NoSQL) à Supabase/PostgreSQL (SQL).
-- **ORM et Migrations:** Utilisation de SQLAlchemy pour l'ORM et d'Alembic pour gérer les évolutions du schéma.
-- **Stratégie de Déploiement:** Implémentation d'un backend parallèle () avec un mécanisme de rollback () pour un déploiement sécurisé sur Railway.
-
-**key DB schema**
-- Les tables ont été créées via Alembic à partir de . Les tables clés incluent , , , , , etc.
-
-**changes in tech stack**
-- **Base de données:** MongoDB → Supabase (PostgreSQL)
-- **Bibliothèques Backend:**  → , , , 
-
 **All files of reference**
--  (Le nouveau fichier backend principal)
--  (Définit le nouveau schéma de la base de données)
--  (Fortement modifié pour les nouvelles fonctionnalités)
--  (Guide de déploiement pour l'utilisateur)
-
-**Critical Info for New Agent**
-- **La priorité absolue est de guider l'utilisateur dans les tests de l'application déployée sur TestFlight.** Le backend Supabase est en production mais n'a pas été validé sur un appareil réel.
-- Un retour en arrière vers MongoDB est possible et simple. Le code est dans . C'est une sécurité si des problèmes majeurs sont découverts.
-- Plusieurs fonctionnalités backend (suppression de médias, upload multiple) n'ont pas encore d'interface utilisateur correspondante. Ce sont les prochaines tâches de développement.
-- **Toute la communication avec l'utilisateur doit se faire en français.**
-- L'utilisateur gère ses propres builds TestFlight. Il faudra le guider à travers le processus (, An Expo user account is required to proceed.
-
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username, etc.).
-
-**documents and test reports created in this job**
+- 
+- 
+- 
+- 
+- 
 - 
 
+**Critical Info for New Agent**
+- **LA PRIORITÉ ABSOLUE est de résoudre le bug de stabilité.** L'utilisateur est bloqué et ne peut pas soumettre son application. Le problème est lié à la gestion de l'état du frontend sur iOS au retour de l'application, et non à un cold start du backend. Les derniers correctifs dans  (ne déconnecter que sur 401) sont cruciaux.
+- **Workflow avec l'utilisateur :** L'agent fait des modifications -> L'agent demande à l'utilisateur de cliquer sur Save to Github -> L'utilisateur lance les commandes An Expo user account is required to proceed.
+
+Log in to EAS with email or username (exit and run eas login --help to see other login options)
+Input is required, but stdin is not readable. Failed to display prompt: Email or username sur son Mac -> L'utilisateur teste sur TestFlight. Il faut s'assurer que le Save to Github est bien fait avant chaque build.
+- **Toute la communication doit se faire en français.**
+
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Demande s'il est possible de revenir à MongoDB si la migration Supabase pose problème. **Statut : Répondu.**
-2.  **User:** Demande de préparer le déploiement sur Railway. **Statut : Terminé.**
-3.  **User:** Demande si Firebase est équivalent à Supabase. **Statut : Répondu.**
-4.  **User:** Demande si Supabase est aussi bon que Firebase. **Statut : Répondu.**
-5.  **User:** Demande où exécuter la commande  pour créer l'admin. **Statut : Répondu.**
-6.  **User:** Confirme que le déploiement sur Railway a été lancé. **Statut : Pris en compte.**
-7.  **User:** Signale que l'app TestFlight (MongoDB) ne fonctionne plus et demande de réveiller la base de données. **Statut : Terminé.**
-8.  **User:** Clarifie qu'il veut continuer sur Supabase ici, mais a besoin que le MongoDB de production soit actif pour TestFlight. **Statut : Terminé.**
-9.  **User:** Fournit l'URL de Railway. **Statut : Pris en compte.**
-10. **User:** Signale que TestFlight ne fonctionne toujours pas et redemande si un rollback est possible. **Statut : Répondu.**
+1.  **User:** Signale que même avec la version 43, les problèmes de connexion et d'interface (nom Apple, espacements) persistent.
+2.  **User:** Demande une solution pour le nom Apple, suggère de ne rien afficher. L'agent propose d'ajouter un bouton Modifier mon nom.
+3.  **User:** Signale à nouveau les problèmes de nom, d'espacement et de notifications non activées par défaut.
+4.  **User:** Demande à l'agent de s'assurer que le problème de connexion ne se reproduira plus, même après des heures.
+5.  **User:** Signale que l'application est instable, qu'elle fonctionne puis s'arrête de fonctionner.
+6.  **User:** Demande si le changement de flyer dans l'admin ne recréera pas le bug.
+7.  **User:** Demande de créer la build 40 (car la 39 est déjà utilisée).
+8.  **User:** Demande si le problème est censé être résolu ou s'il est résolu.
+9.  **User:** Explique en détail via vidéo le problème : l'ancien flyer s'affiche et la connexion échoue.
+10. **User:** Demande une vérification complète avant de soumettre la version finale à Apple.
 
 **Project Health Check:**
-- **Broken**: L'application est dans une phase critique post-déploiement. Le backend Supabase est en ligne sur Railway mais n'a pas été vérifié par l'utilisateur via TestFlight. Le risque de bugs non découverts est élevé.
-- **Mocked**: Le service Stripe reste en mode mock.
+- **Broken**: L'application est instable en raison d'un bug critique et récurrent de gestion de l'état du frontend, ce qui empêche son déploiement final.
 
 **3rd Party Integrations**
 - **Railway** (Hébergement Backend)
 - **Supabase** (Base de données principale - PostgreSQL)
-- **MongoDB Atlas** (Ancienne base de données - disponible pour rollback)
-- Cloudinary (Gestion d'images)
-- Expo Application Services (EAS)
-- Apple & Google Sign-In
+- **Cloudinary** (Gestion d'images)
+- **Expo Application Services (EAS)**
+- **Apple & Google Sign-In**
 
 **Testing status**
 - Testing agent used after significant changes: NO
 - Troubleshoot agent used after agent stuck in loop: NO
 - Test files created: None
-- Known regressions: Aucun de connu depuis les dernières corrections, mais l'application entière est une régression potentielle jusqu'à ce qu'elle soit testée sur TestFlight.
+- Known regressions: Le bug de stabilité est une régression connue et récurrente.
 
 **Credentials to test flow:**
 - **Admin Email**: 
 - **Admin Password**: 
-- **Supabase Connection String**: Disponible dans  (variable ).
-
-**What agent forgot to execute**
-- L'interface utilisateur pour la suppression de photos *individuelles* n'a pas été implémentée (seul un bouton vider la galerie a été ajouté).
-- L'interface pour la sélection multiple de photos n'a pas été implémentée.
-- La fonctionnalité de notifications push pour la confirmation des réservations VIP n'a pas été commencée.
-- Le warning de la version de  n'a pas été corrigé (basse priorité).</analysis>
+- **Supabase Connection String**: Disponible dans  (variable ).</analysis>

@@ -323,7 +323,7 @@ agent_communication:
       - ✅ All deletion endpoints properly require admin authentication
       
       SYSTEM VALIDATION:
-      - ✅ Backend URL: https://rail-deploy-1.preview.emergentagent.com
+      - ✅ Backend URL: https://profile-ui-refresh.preview.emergentagent.com
       - ✅ All endpoints return success (200) status codes
       - ✅ Response messages in French as expected
       - ✅ Database operations confirmed (data actually deleted)
