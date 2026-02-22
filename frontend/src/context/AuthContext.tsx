@@ -113,6 +113,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const loadUser = async () => {
+    // BUG 4 FIX: Skip loadUser if currently authenticating (social login in progress)
+    if (isAuthenticating) {
+      console.log('loadUser: Skipped - authentication in progress');
+      return;
+    }
+    
     try {
       console.log('loadUser: Checking for stored token...');
       
