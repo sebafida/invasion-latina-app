@@ -1,5 +1,5 @@
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 from fastapi import HTTPException, Security, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -12,7 +12,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# 1.6 - bcrypt rounds explicites pour plus de sécurité
+pwd_context = CryptContext(schemes=["bcrypt"], bcrypt__rounds=12, deprecated="auto")
 security = HTTPBearer()
 
 def hash_password(password: str) -> str:
@@ -27,10 +28,11 @@ def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     """Create JWT access token"""
     to_encode = data.copy()
     
+    # 1.5 - datetime.now(timezone.utc) au lieu de datetime.utcnow() (déprécié)
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(days=30)
+        expire = datetime.now(timezone.utc) + timedelta(days=30)
     
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm="HS256")
