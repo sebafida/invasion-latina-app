@@ -101,6 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     await AsyncStorage.removeItem('auth_token');
+    await AsyncStorage.removeItem('cached_user_data');
     setUserState(null);
     setTokenState(null);
     setIsAuthenticated(false);
