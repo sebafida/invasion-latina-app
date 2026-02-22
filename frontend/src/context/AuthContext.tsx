@@ -103,7 +103,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setTokenState(access_token);
       setUserState({ id: user_id, email, name, role: 'user', loyalty_points: 0, badges: [] });
       setIsAuthenticated(true);
-      console.log('Registration successful!');
+      logger.log('Registration successful!');
+      
+      // 2.2 - Activer les notifications push après register
+      registerForPushNotifications().catch(err => {
+        logger.error('Push notification registration failed:', err);
+      });
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || 'Registration failed');
     } finally {
