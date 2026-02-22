@@ -345,6 +345,11 @@ async def root():
         "warning": "Using mock keys" if is_using_mock_keys() else None
     }
 
+@app.get("/api/ping")
+async def ping():
+    """Lightweight ping endpoint - NO database, NO auth - for keep-alive/warmup"""
+    return {"pong": True, "ts": datetime.now(timezone.utc).isoformat()}
+
 @app.get("/api/health")
 async def health_check(db: AsyncSession = Depends(get_db)):
     """Health check"""
