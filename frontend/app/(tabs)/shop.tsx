@@ -192,15 +192,23 @@ export default function VIPBookingScreen() {
       return;
     }
 
+    // 2.5 - Validation parseInt
+    const guests = parseInt(guestCount);
+    if (isNaN(guests) || guests < 1 || guests > 20) {
+      Alert.alert(t('error'), t('invalidGuestCount'));
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
-      console.log('Sending booking request...');
+      logger.log('Sending booking request...');
 
       const bookingData = {
         event_id: selectedEvent,
         zone: selectedRoom,
         package: selectedPackage,
-        guest_count: parseInt(guestCount),
+        guest_count: guests,
         bottle_preferences: bottlePreferences.trim(),
         special_requests: specialRequests.trim(),
         total_price: packageDetails.price,
@@ -209,9 +217,9 @@ export default function VIPBookingScreen() {
         customer_phone: customerPhone.trim(),
       };
 
-      console.log('Booking data:', bookingData);
+      logger.log('Booking data:', bookingData);
       const response = await api.post('/vip/book', bookingData);
-      console.log('Booking response:', response.data);
+      logger.log('Booking response:', response.data);
 
       // Show success modal
       setShowSuccessModal(true);
@@ -225,7 +233,7 @@ export default function VIPBookingScreen() {
       setGuestCount('6');
       
     } catch (error: any) {
-      console.error('Booking error:', error);
+      logger.error('Booking error:', error);
       const message = error.response?.data?.detail || t('bookingError');
       Alert.alert(t('error'), message);
     } finally {
