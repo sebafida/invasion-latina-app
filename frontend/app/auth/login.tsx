@@ -114,6 +114,7 @@ export default function LoginScreen() {
 
   const handleAppleSignIn = async (retryCount = 0) => {
     try {
+      setIsAuthenticating(true); // BUG 4 FIX: Prevent race condition
       setSocialLoading('apple');
       
       const credential = await AppleAuthentication.signInAsync({
@@ -180,6 +181,7 @@ export default function LoginScreen() {
       Alert.alert(t('error'), t('appleSignInFailed') || 'Apple sign in failed. Please try again or use email login.');
     } finally {
       setSocialLoading(null);
+      setIsAuthenticating(false); // BUG 4 FIX: Reset flag
     }
   };
   
