@@ -16,8 +16,11 @@ function AppContent() {
 
   // Listen for app state changes (background -> foreground)
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+    const subscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        // Warmup backend first (wake up Supabase connection)
+        await warmupBackend();
+        
         // BUG 4 FIX: Only re-verify auth if not currently authenticating (social login)
         if (!isAuthenticating) {
           logger.log('App came to foreground - re-verifying auth...');
