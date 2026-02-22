@@ -201,8 +201,7 @@ export default function HomeScreen() {
       <View style={styles.content}>
         {/* Hero Section */}
         <View style={styles.hero}>
-          <Text style={styles.greeting}>{t('welcome')},</Text>
-          <Text style={styles.userName}>{getDisplayName()}!</Text>
+          <Text style={styles.userName}>{getWelcomeMessage()}</Text>
           
           <View style={styles.pointsCard}>
             <Text style={styles.pointsText}>
