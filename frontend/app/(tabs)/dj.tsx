@@ -134,6 +134,9 @@ export default function DJRequestsScreen() {
 
   const handleVote = async (requestId: string) => {
     try {
+      // 4.2 - Haptic feedback sur les votes
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
       await api.post(`/dj/vote/${requestId}`);
       Alert.alert(t('success'), t('voteRegistered'));
       loadRequests();
@@ -158,7 +161,7 @@ export default function DJRequestsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Requests</Text>
+            <Text style={styles.title}>{t('requests')}</Text>
           </View>
         </View>
 
