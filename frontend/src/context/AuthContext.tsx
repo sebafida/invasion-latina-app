@@ -62,7 +62,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         badges: badges || [] 
       });
       setIsAuthenticated(true);
-      console.log('Login successful!');
+      logger.log('Login successful!');
+      
+      // 2.2 - Activer les notifications push après login
+      registerForPushNotifications().catch(err => {
+        logger.error('Push notification registration failed:', err);
+      });
     } catch (error: any) {
       console.error('Login error:', error);
       
