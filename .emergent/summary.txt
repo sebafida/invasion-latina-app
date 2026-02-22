@@ -2,139 +2,219 @@
 L'utilisateur finalise son application avant de la soumettre à l'App Store, mais est confronté à plusieurs problèmes persistants, principalement un bug de stabilité majeur. Après une période d'inactivité, l'application affiche un ancien flyer d'événement et empêche la connexion, obligeant l'utilisateur à désinstaller et réinstaller l'application. Ce problème est la priorité absolue à résoudre.
 
 De plus, l'utilisateur a demandé plusieurs améliorations de l'interface utilisateur et de l'expérience utilisateur :
-1.  Corriger l'affichage du nom pour les utilisateurs se connectant via Apple Sign-In, qui affiche actuellement des noms génériques comme Amigo ou user123....
+1.  Corriger l'affichage du nom pour les utilisateurs se connectant via Apple Sign-In.
 2.  Uniformiser l'espacement entre les boutons dans l'écran de profil.
 3.  S'assurer que toutes les notifications sont activées par défaut pour les nouveaux utilisateurs.
 
+Par la suite, l'utilisateur a fourni un audit de code très détaillé (provenant d'une source externe nommée Claude) avec une longue liste de corrections de sécurité, de performance et de stabilité à appliquer, qui est devenu l'objectif principal de la session.
+
 **PRODUCT REQUIREMENTS (Current Focus):**
-1.  **[P0]** Résoudre définitivement le problème de stabilité de la connexion et d'affichage de l'ancien flyer après une période d'inactivité.
-2.  **[P1]** Implémenter une solution pour la gestion du nom des utilisateurs Apple Sign-In.
-3.  **[P1]** Corriger les espacements dans l'interface du profil utilisateur.
-4.  **[P1]** Assurer que les notifications sont activées par défaut à l'inscription.
-5.  **[P2]** Compléter l'interface d'administration pour la gestion des médias (suppression de photos individuelles).
+1.  **[P0 - CRITICAL]** Résoudre définitivement le problème de stabilité de la connexion après une période d'inactivité.
+2.  **[P1]** Implémenter toutes les corrections de sécurité et de performance critiques de l'audit pour préparer une mise à l'échelle à 20 000 utilisateurs.
+3.  **[P2]** Compléter l'interface d'administration pour la gestion des médias (suppression de photos individuelles).
 
 **User's preferred language**: French. The next agent MUST respond in French.
 
 **what currently exists?**
-L'application dispose d'un frontend React Native/Expo et d'un backend FastAPI utilisant une base de données Supabase (PostgreSQL), déployé sur Railway. Le backend est stable. Le principal problème réside dans la gestion de l'état du frontend, de la mise en cache et du token d'authentification sur iOS, ce qui cause des problèmes de connexion et d'affichage de données obsolètes lorsque l'application sort de veille. De multiples correctifs ont été appliqués, notamment l'ajout de listeners  pour rafraîchir les données et l'amélioration de la gestion des erreurs API.
+L'application dispose d'un frontend React Native/Expo et d'un backend FastAPI utilisant Supabase (PostgreSQL), déployé sur Railway. Le backend et le frontend ont subi une refonte majeure basée sur un audit de code externe pour améliorer la sécurité, la performance et la stabilité. Les correctifs incluent la gestion des mots de passe, le rate-limiting, la validation Pydantic, l'augmentation du pool de connexions DB côté backend, et une logique complexe de warmup et de retry côté frontend pour gérer les cold starts du serveur. Les services Supabase et Railway ont été déplacés dans la même région (Europe) pour réduire la latence.
 
 **Last working item**:
-- Last item agent was working: L'agent a implémenté un ensemble de correctifs pour résoudre les derniers problèmes signalés par l'utilisateur : le nom pour Apple Sign-In, l'espacement dans le profil, et l'activation des notifications par défaut. La solution pour le nom Apple (Option B) consiste à n'afficher que Bienvenue sur l'écran d'accueil et à ajouter un bouton Ajouter votre prénom dans le profil, avec un endpoint backend pour sauvegarder la modification.
-- Status: **IN PROGRESS**
+- Last item agent was working: Débogage du bug de connexion persistant après inactivité (build 50). L'utilisateur a signalé que malgré une série massive de correctifs, le problème de connexion persiste après environ une heure d'inactivité. De plus, un nouveau symptôme est apparu : l'application prend 5 secondes pour s'ouvrir, ce qui est probablement dû à la fonction de warmup du backend qui a été implémentée. Le travail précédent consistait à aider l'utilisateur à résoudre des problèmes de build locaux (corruption de , conflits npm <command>
+
+Usage:
+
+npm install        install all the dependencies in your project
+npm install <foo>  add the <foo> dependency to your project
+npm test           run this project's tests
+npm run <foo>      run the script named <foo>
+npm <command> -h   quick help on <command>
+npm -l             display usage info for all commands
+npm help <term>    search for help on <term>
+npm help npm       more involved overview
+
+All commands:
+
+    access, adduser, audit, bugs, cache, ci, completion,
+    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
+    edit, exec, explain, explore, find-dupes, fund, get, help,
+    help-search, hook, init, install, install-ci-test,
+    install-test, link, ll, login, logout, ls, org, outdated,
+    owner, pack, ping, pkg, prefix, profile, prune, publish,
+    query, rebuild, repo, restart, root, run-script, sbom,
+    search, set, shrinkwrap, star, stars, start, stop, team,
+    test, token, uninstall, unpublish, unstar, update, version,
+    view, whoami
+
+Specify configs in the ini-formatted file:
+    /root/.npmrc
+or on the command line via: npm <command> --key=value
+
+More configuration info: npm help config
+Configuration fields: npm help 7 config
+
+npm@10.8.2 /usr/lib/node_modules/npm/yarn install v1.22.22
+[1/4] Resolving packages...
+success Already up-to-date.
+Done in 0.62s.) avant de générer la build 50 qui a échoué aux tests de l'utilisateur.
+- Status: **BLOCKED**
 - Agent Testing Done: N
-- Which testing method agent to use? L'utilisateur doit effectuer des tests manuels via une nouvelle version TestFlight (build 43+). L'agent doit le guider.
-- User Testing Done: Y (L'utilisateur a testé la build 43 et a signalé que les problèmes de nom et d'espacement persistaient, indiquant que les derniers correctifs n'avaient pas été inclus dans cette build).
+- Which testing method agent to use? L'utilisateur effectue des tests manuels via TestFlight. Le prochain agent doit diagnostiquer l'échec en analysant les logs backend et le code frontend. Il peut utiliser  pour tester les endpoints.
+- User Testing Done: Y (L'utilisateur a testé la build 50 et confirmé que le problème principal persiste).
 
 **All Pending/In progress Issue list**:
-- Issue 1: Problème de stabilité de la connexion et d'affichage de l'ancien flyer (P0)
-- Issue 2: L'affichage du nom pour Apple Sign-In est incorrect (P1)
-- Issue 3: Espacement incohérent des boutons dans le profil utilisateur (P1)
-- Issue 4: Notifications non activées par défaut à la création du compte (P1)
+- Issue 1: L'application ne parvient pas à se reconnecter après une période d'inactivité (P0 - CRITICAL)
 
 **Issues Detail**:
-- **Issue 1: Problème de stabilité de la connexion et d'affichage de l'ancien flyer**
-    - **Attempted fixes**: De nombreuses solutions ont été tentées : migration vers Supabase,  pour forcer la déconnexion, remplacement de l'asset du flyer, ajout de listeners  pour rafraîchir les données, amélioration de la gestion des erreurs API (distinction entre erreurs 401 et erreurs réseau), ajout de logique de retry, et mise en cache des données utilisateur. La dernière tentative visait à rendre la gestion des erreurs réseau plus robuste.
+- **Issue 1: L'application ne parvient pas à se reconnecter après une période d'inactivité**
+    - **Attempted fixes**: Une refonte complète de la logique d'authentification et de gestion des erreurs a été effectuée sur la base d'un audit externe :
+        1.  **Backend ()**: Modifié pour retourner un  en cas d'erreur de base de données, au lieu d'un . C'était la correction la plus critique pour éviter que des problèmes de serveur temporaires ne provoquent une déconnexion permanente.
+        2.  **Frontend ()**: L'intercepteur  a été modifié pour ne plus supprimer le token d'authentification en cas d'erreur 401, laissant cette responsabilité au contexte d'authentification.
+        3.  **Frontend ()**: La logique de  a été renforcée pour ne supprimer le token que sur une erreur 401 avérée, et pour traiter les erreurs 503 et les erreurs réseau comme des problèmes temporaires, en utilisant les données utilisateur mises en cache. Le timeout de l'appel a été augmenté à 20 secondes.
+        4.  **Frontend (Cold Start)**: Une fonction  a été créée dans  et est appelée depuis  au retour de l'application en premier plan pour réveiller le serveur. La dernière version de cette fonction utilise un endpoint  qui ne touche pas la base de données. C'est probablement la cause du temps de démarrage de 5 secondes.
+        5.  **Frontend ()**: Un écouteur  en double qui appelait  a été supprimé pour éviter les race conditions.
     - **Next debug checklist**:
-        1.  S'assurer que le dernier  (qui ne déconnecte que sur erreur 401) et les autres correctifs ont bien été poussés sur GitHub avant que l'utilisateur ne lance un nouveau build.
-        2.  Guider l'utilisateur pour créer une nouvelle build (ex: 42 ou supérieure) en s'assurant qu'il a bien fait .
-        3.  L'utilisateur doit tester en laissant l'app en arrière-plan pendant plusieurs heures avant de la rouvrir.
-        4.  Si le problème persiste, le focus doit rester sur la gestion d'état du frontend au retour de l'application (, , ).
-    - **Why fix this issue and what will be achieved with the fix?**: C'est le bug le plus critique qui empêche la soumission de l'application à l'App Store. Sa résolution rendra l'application fiable.
-    - **Status**: IN PROGRESS
-    - **Is recurring issue?**: Y
-    - **Should Test frontend/backend/both after fix?**: Frontend (via TestFlight).
-    - **Blocked on other issue**: None.
-
-- **Issue 2, 3 & 4: Problèmes UI/UX (Nom Apple, espacement, notifications)**
-    - **Attempted fixes**: L'agent a écrit le code pour : 1) Ajouter un bouton Modifier mon nom pour les utilisateurs Apple. 2) Uniformiser les marges des boutons du profil. 3) Activer les notifications à la création de l'utilisateur dans le backend.
-    - **Next debug checklist**:
-        1.  L'utilisateur a signalé que ces problèmes n'étaient pas corrigés dans le build 43. Il est quasi certain que les modifications n'ont pas été incluses.
-        2.  S'assurer que le code est sauvegardé sur GitHub, puis guider l'utilisateur pour créer un nouveau build (ex: 42 ou supérieur).
-        3.  Vérifier les fichiers ,  et .
-    - **Why fix this issue and what will be achieved with the fix?**: Améliore la finition et l'expérience utilisateur avant le lancement.
+        1.  **Analyser la cause du démarrage lent (5s)** : La fonction  dans  est la cause la plus probable. Vérifier les logs Railway pour voir combien de temps l'appel à  prend réellement. Le warmup est peut-être trop agressif ou la réponse du backend est toujours trop lente.
+        2.  **Diagnostiquer l'échec de connexion** : Le bug persiste. Il faut déterminer ce qui se passe exactement. Quand l'utilisateur signale le bug, vérifier immédiatement les logs du backend sur Railway pour voir si l'appel à  résulte en un 401, 503, un timeout, ou autre chose.
+        3.  **Valider les correctifs** : Le problème peut se situer dans l'interaction complexe des correctifs. Revoir la logique dans , , et . Est-ce que le token est toujours supprimé à tort ? Est-ce que l'état  est correctement géré en cas d'échec du  sans données en cache ?
+    - **Why fix this issue and what will be achieved with the fix?**: C'est le bug le plus critique qui empêche la soumission de l'application à l'App Store. Sa résolution rendra l'application fiable pour les utilisateurs.
     - **Status**: IN PROGRESS
     - **Is recurring issue?**: Y
     - **Should Test frontend/backend/both after fix?**: Both.
     - **Blocked on other issue**: None.
 
 **In progress Task List**:
-- **Task 1: Finaliser et tester les correctifs de stabilité et d'UI (P0)**
-    - **Where to resume**: L'agent a terminé une série de correctifs majeurs pour la stabilité et l'UI. La prochaine étape est de guider l'utilisateur pour sauvegarder ces changements sur GitHub, puis de créer une nouvelle build TestFlight (ex: build 42) et de la tester de manière approfondie.
-    - **What will be achieved with this?**: Une application stable, fonctionnelle et visuellement correcte, prête à être soumise à l'App Store.
+- **Task 1: Finir d'appliquer l'audit de code Claude (P2)**
+    - **Where to resume**: De nombreux points de l'audit ont été mis en œuvre (sécurité, bugs critiques). Cependant, plusieurs tâches de performance et de finition restent à faire, comme la correction des requêtes N+1 et l'ajout de la pagination sur le backend, et l'amélioration des empty states sur le frontend.
+    - **What will be achieved with this?**: Une application plus performante, scalable et avec une meilleure expérience utilisateur.
     - **Status**: IN PROGRESS
-    - **Should Test frontend/backend/both after fix?**: Both (via les tests de l'utilisateur).
-    - **Blocked on something**: Action de l'utilisateur (sauvegarder sur GitHub, créer la build, tester).
+    - **Should Test frontend/backend/both after fix?**: Both.
+    - **Blocked on something**: Le bug de connexion critique (Issue 1) doit être résolu en priorité.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **P1: Implémenter l'UI pour la gestion des médias par l'admin:**
-        - Ajouter des boutons de suppression pour les photos individuelles dans .
+    - **P1:** Résoudre les problèmes de performance backend identifiés dans l'audit :
+        - Corriger les requêtes N+1 dans  en utilisant des  ou .
+        - Ajouter la pagination à tous les endpoints de liste (, , etc.).
+    - **P1:** Améliorer l'expérience utilisateur sur le frontend :
+        - Ajouter des empty states et des messages d'erreur clairs sur tous les écrans.
 - **Future Tasks**:
-    - **P2:** Implémenter les notifications push pour les rappels d'événements et le statut des demandes de chansons.
-    - **P2:** Implémenter les notifications push pour la confirmation des réservations VIP.
+    - **P2:** Implémenter l'UI pour la gestion des médias par l'admin ().
+    - **P2:** Compléter l'implémentation des notifications push pour les rappels et les réservations VIP.
     - **P2:** Corriger l'avertissement de version de  dans .
-    - Générer et soumettre une build Bêta Android pour le Google Play Store.
+    - **P2:** Générer et soumettre une build Bêta Android pour le Google Play Store.
 
 **Completed work in this session**
-- **Débogage intensif de la stabilité de l'application**: Plusieurs cycles de correctifs sur la gestion du token, l'état de l'application au retour du background (), les erreurs réseau et les timeouts.
-- **Remplacement de l'asset du flyer par défaut**: Le fichier  a été remplacé par le nouveau visuel pour éviter d'afficher l'ancien.
-- **Améliorations UI/UX**:
-    - **Nom Apple Sign-In**: Implémentation d'un flux pour ajouter un nom via un bouton Modifier mon nom et un nouvel endpoint backend ().
-    - **Espacement Profil**: Réajustement des marges CSS pour les boutons.
-    - **Texte d'accueil**: Modification de la baseline pour afficher l'adresse du Mirano.
-- **Correctifs Backend**:
-    - Activation des notifications par défaut lors de la création d'un utilisateur.
-    - Correction d'un crash  et amélioration de la gestion des erreurs d'authentification.
-    - Suppression de la dépendance  pour corriger les builds Railway.
+- **Refonte majeure de la sécurité et de la stabilité basée sur un audit externe:**
+    - **Backend:** Sécurisation des mots de passe admin, ajout de rate-limiting (), validation des clés d'environnement en production, augmentation du pool de connexions DB, remplacement de  par une version timezone-aware, et **modification critique de  pour retourner 503 (erreur serveur) au lieu de 401 (erreur d'auth) en cas de problème de base de données**.
+    - **Frontend:** Refonte de la logique de gestion des erreurs dans  (l'intercepteur ne supprime plus le token) et  (gestion fine des erreurs 401 vs 503/réseau), suppression d'un double appel à , et implémentation d'un système de warmup pour contrer les cold starts.
+    - **Infrastructure:** Le service Railway a été déplacé en Europe pour être dans la même région que la base de données Supabase. Les variables  et  ont été ajoutées aux variables d'environnement de Railway.
+    - **Débogage du build local:** Aide à l'utilisateur pour résoudre des problèmes de  corrompu, de conflits npm <command>
+
+Usage:
+
+npm install        install all the dependencies in your project
+npm install <foo>  add the <foo> dependency to your project
+npm test           run this project's tests
+npm run <foo>      run the script named <foo>
+npm <command> -h   quick help on <command>
+npm -l             display usage info for all commands
+npm help <term>    search for help on <term>
+npm help npm       more involved overview
+
+All commands:
+
+    access, adduser, audit, bugs, cache, ci, completion,
+    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
+    edit, exec, explain, explore, find-dupes, fund, get, help,
+    help-search, hook, init, install, install-ci-test,
+    install-test, link, ll, login, logout, ls, org, outdated,
+    owner, pack, ping, pkg, prefix, profile, prune, publish,
+    query, rebuild, repo, restart, root, run-script, sbom,
+    search, set, shrinkwrap, star, stars, start, stop, team,
+    test, token, uninstall, unpublish, unstar, update, version,
+    view, whoami
+
+Specify configs in the ini-formatted file:
+    /root/.npmrc
+or on the command line via: npm <command> --key=value
+
+More configuration info: npm help config
+Configuration fields: npm help 7 config
+
+npm@10.8.2 /usr/lib/node_modules/npm/yarn install v1.22.22
+[1/4] Resolving packages...
+success Already up-to-date.
+Done in 0.59s. et de cache  sur sa machine locale.
 
 **Code Architecture**
 
 
 **All files of reference**
-- 
-- 
-- 
-- 
-- 
-- 
+- **Fichiers critiques pour le bug actuel :**
+    - 
+    - 
+    - 
+    - 
+- **Autres fichiers importants modifiés :**
+    - 
+    - 
+    - 
 
 **Critical Info for New Agent**
-- **LA PRIORITÉ ABSOLUE est de résoudre le bug de stabilité.** L'utilisateur est bloqué et ne peut pas soumettre son application. Le problème est lié à la gestion de l'état du frontend sur iOS au retour de l'application, et non à un cold start du backend. Les derniers correctifs dans  (ne déconnecter que sur 401) sont cruciaux.
-- **Workflow avec l'utilisateur :** L'agent fait des modifications -> L'agent demande à l'utilisateur de cliquer sur Save to Github -> L'utilisateur lance les commandes An Expo user account is required to proceed.
-
-Log in to EAS with email or username (exit and run eas login --help to see other login options)
-Input is required, but stdin is not readable. Failed to display prompt: Email or username sur son Mac -> L'utilisateur teste sur TestFlight. Il faut s'assurer que le Save to Github est bien fait avant chaque build.
-- **Toute la communication doit se faire en français.**
+- **LE BUG DE CONNEXION N'EST PAS RÉSOLU.** Malgré des efforts considérables et la mise en œuvre de dizaines de correctifs provenant d'un audit externe, le problème fondamental persiste. L'utilisateur est frustré, et c'est la priorité absolue.
+- Le nouveau temps de chargement de 5 secondes au démarrage est un effet secondaire de la fonction . Cela indique que le backend est toujours lent à répondre au premier appel, même après avoir déplacé les services dans la même région géographique.
+- La cause la plus probable du bug est une erreur de logique dans l'interaction complexe des correctifs frontend (, , ) ou un comportement inattendu du backend malgré le correctif 503 vs 401.
+- Ne passez pas à d'autres tâches. Concentrez-vous exclusivement sur le diagnostic et la résolution de ce bug. Vous devrez travailler en étroite collaboration avec l'utilisateur pour obtenir les logs du backend au moment où l'erreur se produit sur son téléphone.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Signale que même avec la version 43, les problèmes de connexion et d'interface (nom Apple, espacements) persistent.
-2.  **User:** Demande une solution pour le nom Apple, suggère de ne rien afficher. L'agent propose d'ajouter un bouton Modifier mon nom.
-3.  **User:** Signale à nouveau les problèmes de nom, d'espacement et de notifications non activées par défaut.
-4.  **User:** Demande à l'agent de s'assurer que le problème de connexion ne se reproduira plus, même après des heures.
-5.  **User:** Signale que l'application est instable, qu'elle fonctionne puis s'arrête de fonctionner.
-6.  **User:** Demande si le changement de flyer dans l'admin ne recréera pas le bug.
-7.  **User:** Demande de créer la build 40 (car la 39 est déjà utilisée).
-8.  **User:** Demande si le problème est censé être résolu ou s'il est résolu.
-9.  **User:** Explique en détail via vidéo le problème : l'ancien flyer s'affiche et la connexion échoue.
-10. **User:** Demande une vérification complète avant de soumettre la version finale à Apple.
+1.  **User (Build 50):** Reports the login problem persists after an hour of inactivity, and the app is now slow to open (5-second spinner).
+2.  **User:** Asks for the submit command.
+3.  **User:** Confirms the yarn install v1.22.22
+[1/4] Resolving packages...
+success Already up-to-date.
+Done in 0.71s. worked and asks what the problem was.
+4.  **User:** Reports the terminal seems stuck on .
+5.  **User:** Asks to restart the entire terminal process from scratch due to being stuck.
+6.  **User:** Reports being stuck on 
+added 6 packages, removed 6 packages, changed 1 package, and audited 998 packages in 8s
+
+189 packages are looking for funding
+  run `npm fund` for details
+
+35 vulnerabilities (1 moderate, 34 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details..
+7.  **User:** Asks if the slow install is related to changing the Railway/Supabase region.
+8.  **User:** Reports the build is stuck on Compressing project files and asks if it's related to the backend.
+9.  **User:** After a long back and forth, agrees to follow a full cleanup command for his local environment.
+10. **User:** Provides the detailed audit from Claude and asks the agent to implement all changes, especially the critical ones, after moving Railway to Europe.
 
 **Project Health Check:**
-- **Broken**: L'application est instable en raison d'un bug critique et récurrent de gestion de l'état du frontend, ce qui empêche son déploiement final.
+- **Broken**: L'application est toujours instable à cause d'un bug de connexion critique et récurrent, ce qui la rend inutilisable après une période d'inactivité et bloque sa soumission à l'App Store.
 
 **3rd Party Integrations**
 - **Railway** (Hébergement Backend)
 - **Supabase** (Base de données principale - PostgreSQL)
 - **Cloudinary** (Gestion d'images)
-- **Expo Application Services (EAS)**
+- **Expo Application Services (EAS)** (Build et soumission)
 - **Apple & Google Sign-In**
 
 **Testing status**
 - Testing agent used after significant changes: NO
 - Troubleshoot agent used after agent stuck in loop: NO
 - Test files created: None
-- Known regressions: Le bug de stabilité est une régression connue et récurrente.
+- Known regressions: The main login bug is a persistent regression. The new 5-second app startup time is a new performance regression introduced by the attempted fixes.
 
 **Credentials to test flow:**
 - **Admin Email**: 
-- **Admin Password**: 
+- **Admin Password**: Configuré via la variable d'environnement  sur Railway. La valeur par défaut est .
 - **Supabase Connection String**: Disponible dans  (variable ).</analysis>
