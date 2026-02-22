@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import logger from './logger';
 
 // Get backend URL from environment
 // Try multiple sources for the backend URL
@@ -21,16 +22,27 @@ const getBackendUrl = () => {
 
 const BACKEND_URL = getBackendUrl();
 
-console.log('API Config - Backend URL:', BACKEND_URL);
+logger.log('API Config - Backend URL:', BACKEND_URL);
 
 // Create axios instance
 export const api = axios.create({
   baseURL: `${BACKEND_URL}/api`,
-  timeout: 30000, // 30 secondes au lieu de 10
+  timeout: 30000, // 30 secondes
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// Warm-up function to wake up the backend/database
+export const warmupBackend = async () => {
+  try {
+    logger.log('API: Warming up backend...');
+    await axios.get(`${BACKEND_URL}/api/health`, { timeout: 10000 });
+    logger.log('API: Backend is warm');
+  } catch (error) {
+    logger.log('API: Warmup failed, but continuing...');
+  }
+};
 
 // Add auth token to requests
 api.interceptors.request.use(
@@ -46,19 +58,29 @@ api.interceptors.request.use(
   }
 );
 
-// Handle response errors
+// Handle response errors with retry logic
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    const originalRequest = error.config;
+    
+    // Retry once on timeout or network error (backend might be waking up)
+    if (!error.response && !originalRequest._retry) {
+      originalRequest._retry = true;
+      logger.log('API: Retrying request after network error...');
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s
+      return api(originalRequest);
+    }
+    
     // Only clear auth on 401 (invalid/expired token)
     // NOT on network errors or timeouts
     if (error.response?.status === 401) {
-      console.log('API: Token invalid (401) - clearing auth data');
+      logger.log('API: Token invalid (401) - clearing auth data');
       await AsyncStorage.removeItem('auth_token');
       // Don't remove auth_version here - let loadUser handle it
     } else if (!error.response) {
       // Network error or timeout
-      console.log('API: Network error or timeout -', error.message);
+      logger.log('API: Network error or timeout -', error.message);
     }
     return Promise.reject(error);
   }
