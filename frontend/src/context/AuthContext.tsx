@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../config/api';
 
@@ -16,12 +16,14 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isAuthenticating: boolean; // BUG 4 FIX: Flag to prevent race condition
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, phone?: string, acceptMarketing?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
+  setIsAuthenticating: (value: boolean) => void; // BUG 4 FIX
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
