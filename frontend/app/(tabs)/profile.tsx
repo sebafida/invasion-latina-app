@@ -1443,6 +1443,59 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
   },
   
+  // Edit Name Button and Modal styles
+  editNameButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary + '20',
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.borderRadius.lg,
+    gap: theme.spacing.sm,
+  },
+  editNameButtonText: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.medium,
+  },
+  editNameModalContent: {
+    backgroundColor: theme.colors.cardBackground,
+    marginHorizontal: theme.spacing.xl,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.xl,
+  },
+  editNameModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.lg,
+  },
+  editNameModalTitle: {
+    fontSize: theme.fontSize.xl,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+  },
+  editNameInput: {
+    backgroundColor: theme.colors.elevated,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.lg,
+  },
+  saveNameButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+  },
+  saveNameButtonText: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: 'white',
+  },
+  
   // Scan QR Button styles
   scanQRButton: {
     flexDirection: 'row',
