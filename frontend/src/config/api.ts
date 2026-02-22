@@ -33,15 +33,33 @@ export const api = axios.create({
   },
 });
 
-// Warm-up function to wake up the backend/database
-export const warmupBackend = async () => {
-  try {
-    logger.log('API: Warming up backend...');
-    await axios.get(`${BACKEND_URL}/api/health`, { timeout: 10000 });
-    logger.log('API: Backend is warm');
-  } catch (error) {
-    logger.log('API: Warmup failed, but continuing...');
+// ============ WARMUP BACKEND (Cold Start Fix) ============
+let lastWarmupTime = 0;
+const WARMUP_COOLDOWN = 30000; // Don't warmup more than once per 30 seconds
+
+export const warmupBackend = async (): Promise<boolean> => {
+  const now = Date.now();
+  if (now - lastWarmupTime < WARMUP_COOLDOWN) {
+    console.log('Warmup: Skipped (warmed up recently)');
+    return true;
   }
+
+  console.log('Warmup: Waking up backend...');
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await axios.get(`${BACKEND_URL}/api/health`, { timeout: 15000 });
+      lastWarmupTime = Date.now();
+      console.log(`Warmup: Backend ready (attempt ${attempt})`);
+      return true;
+    } catch (error: any) {
+      console.log(`Warmup: Attempt ${attempt}/3 failed -`, error.message);
+      if (attempt < 3) {
+        await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+      }
+    }
+  }
+  console.log('Warmup: Backend not responding after 3 attempts');
+  return false;
 };
 
 // Add auth token to requests
