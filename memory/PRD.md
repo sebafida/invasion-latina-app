@@ -148,15 +148,20 @@ EXPO_PUBLIC_BACKEND_URL=https://...
 ## Backlog
 
 ### P0 (Critical)
+- [x] **RÉSOLU** - Bug de stabilité de connexion après période d'inactivité (5 bugs auth corrigés)
 - [ ] When user decides: Switch production to Supabase backend
 
 ### P1 (High Priority)
+- [x] **RÉSOLU** - Gestion du nom pour Apple Sign-In (bouton "Ajouter votre prénom" + endpoint `/api/user/profile`)
+- [x] **RÉSOLU** - Notifications activées par défaut à l'inscription (register + social login)
 - [ ] Full regression testing after migration
 - [ ] Data migration script (if needed)
 
 ### P2 (Medium Priority)
+- [ ] UI admin pour suppression de photos individuelles (`content-manager.tsx`)
 - [ ] Push notifications for event reminders
 - [ ] Push notifications for song request status
+- [ ] Push notifications for VIP booking confirmation
 - [ ] Android Beta build
 
 ### P3 (Low Priority)
