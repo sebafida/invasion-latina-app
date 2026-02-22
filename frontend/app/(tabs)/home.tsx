@@ -154,15 +154,16 @@ export default function HomeScreen() {
     
     const name = user.name || '';
     
-    // Check if it's a default/placeholder name
+    // Check if it's a default/placeholder name (Apple Sign In users)
     const isPlaceholder = !name || 
       name.toLowerCase() === 'user' || 
       name.toLowerCase().startsWith('user') ||
       name === 'Nuevo Miembro' ||
+      name === 'Amigo' ||
       /^[a-f0-9-]{20,}$/i.test(name); // UUID-like strings
     
     if (isPlaceholder) {
-      // Try to get name from email
+      // Try to get name from email (only for non-Apple users)
       const email = user.email || '';
       if (email && !email.includes('privaterelay.appleid.com')) {
         const emailName = email.split('@')[0];
@@ -172,12 +173,22 @@ export default function HomeScreen() {
           return cleanName.charAt(0).toUpperCase() + cleanName.slice(1).split(' ')[0];
         }
       }
-      return 'Amigo'; // "Friend" in Spanish - friendlier than "Familia"
+      // For Apple Sign In users, return empty string (just show "Bienvenue")
+      return '';
     }
     
     // Get first name only (split by space and take first part)
     const firstName = name.split(' ')[0];
     return firstName;
+  };
+  
+  // Get welcome message
+  const getWelcomeMessage = () => {
+    const displayName = getDisplayName();
+    if (displayName) {
+      return `${t('welcome')} ${displayName}!`;
+    }
+    return t('welcome') + '!';
   };
   
   return (
