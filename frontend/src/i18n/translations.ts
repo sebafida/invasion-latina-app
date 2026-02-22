@@ -1174,6 +1174,17 @@ export const translations: Record<Language, Translations> = {
     mustAcceptTerms: 'You must accept the terms and conditions',
     registrationFailed: 'Registration failed',
     
+    // Validation messages
+    noUpcomingEvents: 'No upcoming events',
+    noTickets: 'No tickets yet',
+    invalidGuestCount: 'Invalid guest count (1-20)',
+    invalidEmail: 'Invalid email',
+    invalidPhone: 'Invalid phone number',
+    passwordMismatch: 'Passwords do not match',
+    scanQRCode: 'Scan QR Code',
+    connectionError: 'Unable to load data. Check your connection.',
+    retry: 'Retry',
+    
     // Admin Bookings
     tableReservations: 'Table Reservations',
     pending: 'Pending',
