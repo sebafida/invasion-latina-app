@@ -1350,7 +1350,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.elevated,
     marginHorizontal: theme.spacing.xl,
     marginTop: theme.spacing.xl,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
     padding: theme.spacing.lg,
     borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
