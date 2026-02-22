@@ -108,7 +108,7 @@ export default function LoginScreen() {
     }
   };
 
-  const handleAppleSignIn = async () => {
+  const handleAppleSignIn = async (retryCount = 0) => {
     try {
       setSocialLoading('apple');
       
@@ -140,19 +140,32 @@ export default function LoginScreen() {
         }
       }
       
-      // Send to our backend
-      const result = await api.post('/auth/social', {
-        provider: 'apple',
-        id_token: credential.identityToken,
-        user_id: credential.user,
-        email: email,
-        name: userName,
-      });
-      
-      if (result.data.access_token) {
-        setToken(result.data.access_token);
-        setUser(result.data);
-        router.replace('/(tabs)/home');
+      // Send to our backend with retry logic
+      try {
+        const result = await api.post('/auth/social', {
+          provider: 'apple',
+          id_token: credential.identityToken,
+          user_id: credential.user,
+          email: email,
+          name: userName,
+        }, { timeout: 15000 });
+        
+        if (result.data.access_token) {
+          await AsyncStorage.setItem('auth_token', result.data.access_token);
+          await AsyncStorage.setItem('auth_version', 'supabase_v3');
+          setToken(result.data.access_token);
+          setUser(result.data);
+          router.replace('/(tabs)/home');
+        }
+      } catch (apiError: any) {
+        // Retry on network errors
+        if (!apiError.response && retryCount < 2) {
+          console.log(`Apple Sign In: Network error, retrying in 1 second...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          setSocialLoading(null);
+          return handleAppleSignIn(retryCount + 1);
+        }
+        throw apiError;
       }
     } catch (error: any) {
       if (error.code === 'ERR_REQUEST_CANCELED') {
