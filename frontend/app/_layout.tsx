@@ -3,7 +3,10 @@ import { View, ActivityIndicator, StyleSheet, AppState, AppStateStatus } from 'r
 import { Slot, useRouter } from 'expo-router';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { LanguageProvider } from '../src/context/LanguageContext';
+import { ErrorBoundary } from '../src/components/ErrorBoundary';
+import { OfflineBanner } from '../src/components/OfflineBanner';
 import { theme } from '../src/config/theme';
+import logger from '../src/config/logger';
 
 function AppContent() {
   const { isLoading, isAuthenticated, isAuthenticating, loadUser } = useAuth();
