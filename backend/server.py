@@ -95,10 +95,11 @@ class TicketResponse(BaseModel):
 class FirebaseTokenData(BaseModel):
     firebase_token: str
 
+# 1.7 - Validation Pydantic améliorée
 class TicketPurchase(BaseModel):
     event_id: str
     ticket_category: str
-    quantity: int = 1
+    quantity: int = Field(1, ge=1, le=100)  # Min 1, Max 100
     payment_method_id: str
 
 class EventCreate(BaseModel):
@@ -110,12 +111,13 @@ class EventCreate(BaseModel):
     lineup: List[Dict[str, str]] = []
     ticket_categories: List[Dict[str, Any]] = []
 
+# 1.7 - Validation Pydantic pour les données d'authentification sociale
 class SocialAuthData(BaseModel):
-    provider: str
-    id_token: str
-    user_id: Optional[str] = None
+    provider: str = Field(..., pattern="^(apple|google)$")  # Seulement apple ou google
+    id_token: str = Field(..., min_length=10, max_length=5000)
+    user_id: Optional[str] = Field(None, max_length=500)
     email: Optional[str] = None
-    name: Optional[str] = None
+    name: Optional[str] = Field(None, max_length=255)
 
 class DJSelectionUpdate(BaseModel):
     selected_djs: List[str]
