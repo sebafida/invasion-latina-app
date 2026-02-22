@@ -16,7 +16,7 @@ function AppContent() {
 
   // Listen for app state changes (background -> foreground)
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
         // BUG 4 FIX: Only re-verify auth if not currently authenticating (social login)
         if (!isAuthenticating) {
