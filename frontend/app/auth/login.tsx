@@ -46,7 +46,7 @@ const LANGUAGES = [
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, setUser, setToken } = useAuth();
+  const { login, setUser, setToken, setIsAuthenticating } = useAuth();
   const { t, language, setLanguage } = useLanguage();
   
   const [email, setEmail] = useState('');
