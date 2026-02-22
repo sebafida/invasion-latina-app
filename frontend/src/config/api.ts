@@ -47,9 +47,12 @@ export const warmupBackend = async (): Promise<boolean> => {
   console.log('Warmup: Waking up backend...');
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      await axios.get(`${BACKEND_URL}/api/health`, { timeout: 15000 });
+      // Use /api/ping first (no DB), then /api/health to warm up DB
+      await axios.get(`${BACKEND_URL}/api/ping`, { timeout: 10000 });
+      console.log(`Warmup: Server awake (attempt ${attempt}), warming DB...`);
+      await axios.get(`${BACKEND_URL}/api/health`, { timeout: 20000 });
       lastWarmupTime = Date.now();
-      console.log(`Warmup: Backend ready (attempt ${attempt})`);
+      console.log(`Warmup: Backend + DB ready`);
       return true;
     } catch (error: any) {
       console.log(`Warmup: Attempt ${attempt}/3 failed -`, error.message);
