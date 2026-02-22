@@ -109,6 +109,29 @@ EXPO_PUBLIC_BACKEND_URL=https://...
 
 ## Changelog
 
+### 2025-12 - Critical Auth Bug Fixes (Session 2)
+**Corrections des 5 bugs critiques d'authentification** (P0 - Stabilité connexion)
+
+#### Bugs corrigés :
+1. **BUG 1** - `AuthContext.tsx`: Ne supprime plus `auth_version` sur erreur réseau
+2. **BUG 2** - `api.ts`: L'intercepteur 401 ne supprime plus `auth_version`  
+3. **BUG 3** - Ajout de `auth_version` après login/register/social login :
+   - `AuthContext.tsx` - `register()` ligne 94
+   - `login.tsx` - `handleAppleSignIn()` ligne 155
+   - `login.tsx` - `handleGoogleSignIn()` lignes 99-100
+4. **BUG 4** - Race condition foreground/login social :
+   - Ajout du flag `isAuthenticating` dans `AuthContext`
+   - `_layout.tsx` vérifie ce flag avant d'appeler `loadUser()`
+   - `login.tsx` active/désactive ce flag pendant les logins sociaux
+5. **BUG 5** - Gestion erreur réseau améliorée :
+   - Garde le token et utilise les données en cache sur erreur réseau
+   - Ne déconnecte que sur erreur 401 (token invalide)
+
+#### Fichiers modifiés :
+- `/app/frontend/src/context/AuthContext.tsx`
+- `/app/frontend/app/auth/login.tsx`
+- `/app/frontend/app/_layout.tsx`
+
 ### 2025-02 - Supabase Migration Preparation
 - Created complete PostgreSQL schema (21 tables)
 - Implemented full backend with SQLAlchemy async
