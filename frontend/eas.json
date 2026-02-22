@@ -10,7 +10,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://stabilize-app-2.preview.emergentagent.com"
+        "EXPO_PUBLIC_BACKEND_URL": "https://invasion-latina-app-production.up.railway.app"
       }
     },
     "preview": {
@@ -19,7 +19,7 @@
         "simulator": false
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://stabilize-app-2.preview.emergentagent.com"
+        "EXPO_PUBLIC_BACKEND_URL": "https://invasion-latina-app-production.up.railway.app"
       }
     },
     "production": {
