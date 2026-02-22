@@ -50,12 +50,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Only clear auth on 401 (invalid/expired token)
+    // NOT on network errors or timeouts
     if (error.response?.status === 401) {
-      // Token expired or invalid - clear everything
-      console.log('API: Token expired or invalid - clearing auth data');
+      console.log('API: Token invalid (401) - clearing auth data');
       await AsyncStorage.removeItem('auth_token');
-      await AsyncStorage.removeItem('auth_version');
-      // The AuthContext will detect the missing token and redirect to login
+      // Don't remove auth_version here - let loadUser handle it
+    } else if (!error.response) {
+      // Network error or timeout
+      console.log('API: Network error or timeout -', error.message);
     }
     return Promise.reject(error);
   }
