@@ -422,6 +422,18 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     await db.commit()
     await db.refresh(new_user)
     
+    # Create notification preferences with all ON by default
+    notification_prefs = NotificationPreference(
+        user_id=new_user.id,
+        events=True,
+        promotions=True,
+        song_requests=True,
+        friends=True
+    )
+    db.add(notification_prefs)
+    await db.commit()
+    logger.info(f"✅ Created notification preferences for new user: {new_user.email}")
+    
     # Create access token
     access_token = create_access_token(data={"sub": new_user.id})
     
@@ -560,6 +572,18 @@ async def social_login(auth_data: SocialAuthData, db: AsyncSession = Depends(get
             db.add(user)
             await db.commit()
             await db.refresh(user)
+            
+            # Create notification preferences with all ON by default
+            notification_prefs = NotificationPreference(
+                user_id=user.id,
+                events=True,
+                promotions=True,
+                song_requests=True,
+                friends=True
+            )
+            db.add(notification_prefs)
+            await db.commit()
+            
             logger.info(f"✅ Created new user via {auth_data.provider}: {email}")
         else:
             # Update provider ID if not set
