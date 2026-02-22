@@ -361,20 +361,70 @@ export default function ProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.profileInfo}>
-            <View style={styles.avatar}>
-              <Ionicons name="person" size={40} color={theme.colors.textPrimary} />
-            </View>
-            <View>
-              <Text style={styles.name}>{getDisplayName()}</Text>
-              <Text style={styles.email}>{user?.email}</Text>
-              {user?.role === 'admin' && (
-                <View style={styles.adminBadge}>
-                  <Text style={styles.adminBadgeText}>ADMIN</Text>
+            {getDisplayName() ? (
+              <>
+                <View style={styles.avatar}>
+                  <Ionicons name="person" size={40} color={theme.colors.textPrimary} />
                 </View>
-              )}
-            </View>
+                <View>
+                  <Text style={styles.name}>{getDisplayName()}</Text>
+                  <Text style={styles.email}>{user?.email}</Text>
+                  {user?.role === 'admin' && (
+                    <View style={styles.adminBadge}>
+                      <Text style={styles.adminBadgeText}>ADMIN</Text>
+                    </View>
+                  )}
+                </View>
+              </>
+            ) : (
+              <TouchableOpacity 
+                style={styles.editNameButton}
+                onPress={() => setShowEditNameModal(true)}
+              >
+                <Ionicons name="person-add" size={24} color={theme.colors.primary} />
+                <Text style={styles.editNameButtonText}>Ajouter votre prénom</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
+
+        {/* Edit Name Modal */}
+        <Modal
+          visible={showEditNameModal}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setShowEditNameModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.editNameModalContent}>
+              <View style={styles.editNameModalHeader}>
+                <Text style={styles.editNameModalTitle}>Votre prénom</Text>
+                <TouchableOpacity onPress={() => setShowEditNameModal(false)}>
+                  <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                style={styles.editNameInput}
+                placeholder="Entrez votre prénom"
+                placeholderTextColor={theme.colors.textMuted}
+                value={newName}
+                onChangeText={setNewName}
+                autoFocus
+              />
+              <TouchableOpacity 
+                style={[styles.saveNameButton, savingName && { opacity: 0.5 }]}
+                onPress={handleSaveName}
+                disabled={savingName}
+              >
+                {savingName ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text style={styles.saveNameButtonText}>Sauvegarder</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
         {/* Loyalty Card */}
         <View style={styles.loyaltyCard}>
