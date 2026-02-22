@@ -43,7 +43,7 @@ interface WelcomeContent {
 export default function WelcomeScreen() {
   const router = useRouter();
   const { t, language, setLanguage } = useLanguage();
-  const { logout, loadUser } = useAuth();
+  const { logout } = useAuth();  // Removed loadUser - handled by _layout.tsx
   const [content, setContent] = useState<WelcomeContent | null>(null);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [isLoadingContent, setIsLoadingContent] = useState(true);
@@ -56,12 +56,11 @@ export default function WelcomeScreen() {
     // Listen for app state changes (background -> foreground)
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        console.log('App came to foreground - reloading data...');
+        console.log('Welcome: App came to foreground - reloading content...');
         // Force reload fresh data when app comes back
         setContent(null);
         loadWelcomeContent();
-        // Also re-verify auth
-        loadUser();
+        // Do NOT call loadUser() here - _layout.tsx already handles it
       }
       appState.current = nextAppState;
     });
