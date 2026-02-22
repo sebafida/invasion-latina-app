@@ -109,6 +109,34 @@ EXPO_PUBLIC_BACKEND_URL=https://...
 
 ## Changelog
 
+### 2025-12 - Audit Sécurité & Scalabilité (20 000 users)
+
+**Phase 1 - Sécurité Backend (TERMINÉ)**
+- ✅ 1.1 - Mots de passe admin sécurisés (env vars, plus de logging en clair)
+- ✅ 1.2 - Clé JWT forte via variable d'environnement
+- ✅ 1.4 - Rate limiting sur tous les endpoints auth (slowapi)
+- ✅ 1.5 - datetime.now(timezone.utc) au lieu de datetime.utcnow()
+- ✅ 1.6 - bcrypt rounds=12 pour plus de sécurité
+- ✅ 1.7 - Validation Pydantic améliorée (TicketPurchase, SocialAuthData)
+- ✅ 1.9 - Pool DB optimisé (pool_size=20, max_overflow=15, pool_pre_ping=True)
+
+**Phase 2 - Frontend (PARTIELLEMENT TERMINÉ)**
+- ✅ 2.1 - Fix memory leak setInterval DJ (useFocusEffect)
+- ✅ 2.6 - DevMode uniquement pour admin/__DEV__
+- ✅ 2.8 - OfflineBanner component créé
+- ✅ 3.3 - Logger utility créé (supprime logs en production)
+- ✅ 3.4 - ErrorBoundary component créé
+- ✅ _layout.tsx mis à jour avec ErrorBoundary + OfflineBanner
+
+**À FAIRE (Phase 2-4 restante)**
+- [ ] 2.2 - Appeler registerForPushNotifications après login
+- [ ] 2.3 - Error states sur les écrans
+- [ ] 2.4 - Empty states sur les écrans
+- [ ] 2.5 - Validation parseInt dans shop.tsx
+- [ ] 2.7 - Pagination sur les endpoints de liste
+- [ ] 3.1 - Validation email/phone dans register.tsx
+- [ ] 3.2 - Strings non traduites
+
 ### 2025-12 - Critical Auth Bug Fixes (Session 2)
 **Corrections des 5 bugs critiques d'authentification** (P0 - Stabilité connexion)
 
