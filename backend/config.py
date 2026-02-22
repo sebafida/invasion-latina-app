@@ -27,7 +27,8 @@ class Settings(BaseSettings):
     
     # Application
     app_env: str = "development"
-    secret_key: str = "invasion-latina-secret-key-change-in-production"
+    # 1.2 - Clé secrète JWT - DOIT être configurée en production
+    secret_key: str = os.environ.get("SECRET_KEY", "dev-only-secret-key-not-for-production")
     allowed_origins: str = "http://localhost:3000,exp://localhost:8081"
     
     # Venue Geofencing

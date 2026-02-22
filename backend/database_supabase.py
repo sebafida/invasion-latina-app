@@ -25,14 +25,14 @@ if not DATABASE_URL:
 # Convert to async URL (postgresql:// -> postgresql+asyncpg://)
 ASYNC_DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+asyncpg://')
 
-# Create async engine with proper pooler configuration
+# Create async engine with proper pooler configuration - 1.9 Pool optimisé pour 20k users
 engine = create_async_engine(
     ASYNC_DATABASE_URL,
-    pool_size=10,
-    max_overflow=5,
-    pool_timeout=30,
+    pool_size=20,           # Augmenté de 10 à 20
+    max_overflow=15,        # Augmenté de 5 à 15 (35 connexions max)
+    pool_timeout=60,        # Augmenté de 30 à 60 pour les pics
     pool_recycle=1800,
-    pool_pre_ping=False,
+    pool_pre_ping=True,     # Vérifie que la connexion est vivante
     echo=False,
     connect_args={
         "statement_cache_size": 0,  # CRITICAL: Required for transaction pooler
