@@ -76,6 +76,7 @@ export default function LoginScreen() {
     if (!accessToken) return;
     
     try {
+      setIsAuthenticating(true); // BUG 4 FIX: Prevent race condition
       setSocialLoading('google');
       
       // Get user info from Google
@@ -109,6 +110,7 @@ export default function LoginScreen() {
       Alert.alert(t('error'), t('googleSignInFailed') || 'Google sign in failed. Please try again.');
     } finally {
       setSocialLoading(null);
+      setIsAuthenticating(false); // BUG 4 FIX: Reset flag
     }
   };
 
