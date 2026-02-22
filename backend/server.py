@@ -415,7 +415,8 @@ async def setup_admin_account(request: Request, data: AdminSetupRequest, db: Asy
         return {"success": True, "message": "Admin account created", "email": admin_email}
 
 @app.post("/api/auth/register", response_model=UserResponse)
-async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+@limiter.limit("3/minute")
+async def register(request: Request, user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     """Register a new user"""
     # Check if user already exists
     result = await db.execute(select(User).where(User.email == user_data.email))
@@ -467,7 +468,8 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     )
 
 @app.post("/api/auth/login", response_model=UserResponse)
-async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def login(request: Request, credentials: UserLogin, db: AsyncSession = Depends(get_db)):
     """Login user"""
     result = await db.execute(select(User).where(User.email == credentials.email))
     user = result.scalar_one_or_none()
@@ -490,7 +492,8 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
     )
 
 @app.post("/api/auth/firebase-login", response_model=UserResponse)
-async def firebase_login(token_data: FirebaseTokenData, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def firebase_login(request: Request, token_data: FirebaseTokenData, db: AsyncSession = Depends(get_db)):
     """Login with Firebase token"""
     try:
         user_info = await firebase_service.verify_token(token_data.firebase_token)
@@ -532,7 +535,8 @@ async def firebase_login(token_data: FirebaseTokenData, db: AsyncSession = Depen
         raise HTTPException(status_code=401, detail="Invalid Firebase token")
 
 @app.post("/api/auth/social", response_model=UserResponse)
-async def social_login(auth_data: SocialAuthData, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def social_login(request: Request, auth_data: SocialAuthData, db: AsyncSession = Depends(get_db)):
     """Login/Register with Apple or Google"""
     try:
         email = auth_data.email
