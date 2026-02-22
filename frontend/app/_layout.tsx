@@ -6,7 +6,7 @@ import { LanguageProvider } from '../src/context/LanguageContext';
 import { theme } from '../src/config/theme';
 
 function AppContent() {
-  const { isLoading, isAuthenticated, loadUser } = useAuth();
+  const { isLoading, isAuthenticated, isAuthenticating, loadUser } = useAuth();
   const router = useRouter();
   const appState = useRef(AppState.currentState);
 
@@ -14,9 +14,13 @@ function AppContent() {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        console.log('App came to foreground - re-verifying auth...');
-        // Re-verify authentication when app comes back to foreground
-        loadUser();
+        // BUG 4 FIX: Only re-verify auth if not currently authenticating (social login)
+        if (!isAuthenticating) {
+          console.log('App came to foreground - re-verifying auth...');
+          loadUser();
+        } else {
+          console.log('App came to foreground - skipping auth check (authentication in progress)');
+        }
       }
       appState.current = nextAppState;
     });
@@ -24,7 +28,7 @@ function AppContent() {
     return () => {
       subscription.remove();
     };
-  }, [loadUser]);
+  }, [loadUser, isAuthenticating]);
 
   // When user is authenticated, go to home
   useEffect(() => {
