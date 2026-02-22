@@ -45,6 +45,20 @@ export default function RegisterScreen() {
       return;
     }
     
+    // 3.1 - Validation email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert(t('error'), t('invalidEmail'));
+      return;
+    }
+    
+    // 3.1 - Validation téléphone
+    const phoneRegex = /^[+]?[\d\s\-()]{7,15}$/;
+    if (!phoneRegex.test(phone)) {
+      Alert.alert(t('error'), t('invalidPhone'));
+      return;
+    }
+    
     if (password !== confirmPassword) {
       Alert.alert(t('error'), t('passwordsDontMatch'));
       return;
