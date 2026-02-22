@@ -170,20 +170,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error: any) {
         console.log('loadUser: Token verification failed -', error.message);
         
-        // Only clear token on 401 (invalid/expired token)
-        // For network errors, keep the token and try again later
+        // Only clear token on 401 (truly invalid/expired token)
+        // 503 = server temporarily down, network error = connectivity issue
+        // Both should keep the token for retry
         if (error.response?.status === 401) {
           console.log('loadUser: Token invalid (401) - clearing auth data');
           await AsyncStorage.removeItem('auth_token');
+          await AsyncStorage.removeItem('cached_user_data');
           setUserState(null);
           setTokenState(null);
           setIsAuthenticated(false);
         } else {
-          // Network error or timeout - KEEP token
-          console.log('loadUser: Network error - keeping token, trying recovery...');
+          // Network error, timeout, OR 503 - KEEP token and try cached data
+          console.log('loadUser: Temporary error (not 401) - keeping token');
           setTokenState(storedToken);
-          
-          // Try to get cached user data first
           const cachedUserData = await AsyncStorage.getItem('cached_user_data');
           if (cachedUserData) {
             try {
@@ -194,25 +194,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setIsAuthenticated(false);
             }
           } else {
-            // No cached data - try ONE more time after warmup (cold start recovery)
-            console.log('loadUser: No cache - attempting cold start recovery...');
-            try {
-              const { warmupBackend } = require('../config/api');
-              const isReady = await warmupBackend();
-              if (isReady) {
-                const retryResponse = await api.get('/auth/me', { timeout: 15000 });
-                setUserState(retryResponse.data);
-                setTokenState(storedToken);
-                setIsAuthenticated(true);
-                await AsyncStorage.setItem('cached_user_data', JSON.stringify(retryResponse.data));
-                console.log('loadUser: Cold start recovery SUCCESS');
-              } else {
-                setIsAuthenticated(false);
-              }
-            } catch (retryError) {
-              console.log('loadUser: Cold start recovery failed -', retryError);
-              setIsAuthenticated(false);
-            }
+            // No cache - still keep token, set not authenticated but DON'T delete token
+            // Next foreground event will retry
+            setIsAuthenticated(false);
+            console.log('loadUser: No cache available, will retry on next foreground');
           }
         }
       }
