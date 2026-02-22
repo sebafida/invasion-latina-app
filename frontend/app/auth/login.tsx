@@ -105,10 +105,16 @@ export default function LoginScreen() {
         await AsyncStorage.setItem('auth_version', 'supabase_v3');
         setToken(result.data.access_token);
         setUser(result.data);
+        
+        // 2.2 - Activer les notifications push après Google login
+        registerForPushNotifications().catch(err => {
+          logger.error('Push notification registration failed:', err);
+        });
+        
         router.replace('/(tabs)/home');
       }
     } catch (error: any) {
-      console.error('Google sign in error:', error);
+      logger.error('Google sign in error:', error);
       Alert.alert(t('error'), t('googleSignInFailed') || 'Google sign in failed. Please try again.');
     } finally {
       setSocialLoading(null);
@@ -128,7 +134,7 @@ export default function LoginScreen() {
         ],
       });
       
-      console.log('Apple credential received:', {
+      logger.log('Apple credential received:', {
         user: credential.user,
         email: credential.email,
         hasIdentityToken: !!credential.identityToken
