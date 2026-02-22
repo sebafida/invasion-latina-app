@@ -7,6 +7,7 @@ import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { OfflineBanner } from '../src/components/OfflineBanner';
 import { theme } from '../src/config/theme';
 import logger from '../src/config/logger';
+import { warmupBackend } from '../src/config/api';
 
 function AppContent() {
   const { isLoading, isAuthenticated, isAuthenticating, loadUser } = useAuth();
