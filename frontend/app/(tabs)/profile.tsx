@@ -281,7 +281,7 @@ export default function ProfileScreen() {
               <Ionicons name="person" size={40} color={theme.colors.textPrimary} />
             </View>
             <View>
-              <Text style={styles.name}>{user?.name || t('profile')}</Text>
+              <Text style={styles.name}>{getDisplayName()}</Text>
               <Text style={styles.email}>{user?.email}</Text>
               {user?.role === 'admin' && (
                 <View style={styles.adminBadge}>
