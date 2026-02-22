@@ -1571,15 +1571,18 @@ const styles = StyleSheet.create({
   usersButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.elevated,
-    padding: theme.spacing.md,
+    justifyContent: 'center',
+    backgroundColor: '#4CAF50',
     borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    gap: theme.spacing.sm,
     marginBottom: theme.spacing.sm,
   },
   usersButtonText: {
     flex: 1,
-    color: theme.colors.textPrimary,
     fontSize: theme.fontSize.md,
-    marginLeft: theme.spacing.md,
+    fontWeight: theme.fontWeight.bold,
+    color: 'white',
   },
 });
