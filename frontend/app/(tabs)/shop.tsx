@@ -18,6 +18,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
 import { LoginRequiredModal } from '../../src/components/LoginRequiredModal';
+import logger from '../../src/config/logger';
 
 const { width } = Dimensions.get('window');
 
