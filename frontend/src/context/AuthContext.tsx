@@ -140,6 +140,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUserState(response.data);
         setTokenState(storedToken);
         setIsAuthenticated(true);
+        // Cache user data for offline use
+        await AsyncStorage.setItem('cached_user_data', JSON.stringify(response.data));
         console.log('loadUser: Token valid - user authenticated');
       } catch (error: any) {
         console.log('loadUser: Token verification failed -', error.message);
