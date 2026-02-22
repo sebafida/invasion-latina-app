@@ -2081,6 +2081,17 @@ export const translations: Record<Language, Translations> = {
     mustAcceptTerms: 'Je moet de voorwaarden accepteren',
     registrationFailed: 'Registratie mislukt',
     
+    // Validation messages
+    noUpcomingEvents: 'Geen aankomende evenementen',
+    noTickets: 'Nog geen tickets',
+    invalidGuestCount: 'Ongeldig aantal gasten (1-20)',
+    invalidEmail: 'Ongeldig e-mailadres',
+    invalidPhone: 'Ongeldig telefoonnummer',
+    passwordMismatch: 'Wachtwoorden komen niet overeen',
+    scanQRCode: 'QR-code scannen',
+    connectionError: 'Kan gegevens niet laden. Controleer je verbinding.',
+    retry: 'Opnieuw proberen',
+    
     // Admin Bookings
     tableReservations: 'Tafelreserveringen',
     pending: 'In afwachting',
