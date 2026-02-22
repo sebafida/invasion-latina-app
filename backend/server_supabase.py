@@ -2556,6 +2556,39 @@ async def update_notification_preferences(
     
     return {"success": True, "message": "Preferences updated"}
 
+# ============ USER PROFILE ============
+
+class UserProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    language: Optional[str] = None
+
+@app.put("/api/user/profile")
+async def update_user_profile(
+    data: UserProfileUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_supabase)
+):
+    """Update user's profile (name, language)"""
+    if data.name is not None:
+        current_user.name = data.name.strip()
+        logger.info(f"✅ Updated user name to: {data.name}")
+    
+    if data.language is not None:
+        current_user.language = data.language
+    
+    await db.commit()
+    
+    return {
+        "success": True, 
+        "message": "Profile updated",
+        "user": {
+            "id": current_user.id,
+            "name": current_user.name,
+            "email": current_user.email,
+            "language": current_user.language
+        }
+    }
+
 # ============ MEDIA GALLERIES ============
 
 @app.get("/api/media/galleries")
