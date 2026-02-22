@@ -24,6 +24,8 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
 import { Button } from '../../src/components/Button';
 import api from '../../src/config/api';
+import { registerForPushNotifications } from '../../src/config/notifications';
+import logger from '../../src/config/logger';
 
 // Only import Google Auth on native platforms
 let useAuthRequest: any = null;
