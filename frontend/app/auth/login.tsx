@@ -164,12 +164,18 @@ export default function LoginScreen() {
           await AsyncStorage.setItem('auth_version', 'supabase_v3');
           setToken(result.data.access_token);
           setUser(result.data);
+          
+          // 2.2 - Activer les notifications push après Apple login
+          registerForPushNotifications().catch(err => {
+            logger.error('Push notification registration failed:', err);
+          });
+          
           router.replace('/(tabs)/home');
         }
       } catch (apiError: any) {
         // Retry on network errors
         if (!apiError.response && retryCount < 2) {
-          console.log(`Apple Sign In: Network error, retrying in 1 second...`);
+          logger.log(`Apple Sign In: Network error, retrying in 1 second...`);
           await new Promise(resolve => setTimeout(resolve, 1000));
           setSocialLoading(null);
           return handleAppleSignIn(retryCount + 1);
