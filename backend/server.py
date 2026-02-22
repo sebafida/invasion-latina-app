@@ -189,10 +189,12 @@ async def create_master_admin():
         existing = result.scalar_one_or_none()
         
         if not existing:
+            # 1.1 - Ne jamais utiliser de mot de passe en dur ni le logger
+            admin_password = os.environ.get("ADMIN_DEFAULT_PASSWORD", secrets.token_urlsafe(16))
             admin_user = User(
                 email=admin_email,
                 name="Master Admin",
-                hashed_password=hash_password("admin123"),
+                hashed_password=hash_password(admin_password),
                 role="admin",
                 loyalty_points=0,
                 badges=["admin"],
@@ -201,7 +203,7 @@ async def create_master_admin():
             )
             db.add(admin_user)
             await db.commit()
-            logger.info(f"✅ Created master admin: {admin_email} / admin123")
+            logger.info(f"✅ Master admin account ready: {admin_email}")
 
 async def create_sample_event():
     """Create a sample upcoming event"""
