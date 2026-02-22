@@ -32,11 +32,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, retryCount = 0) => {
     try {
       setIsLoading(true);
-      console.log('Login attempt...');
-      const response = await api.post('/auth/login', { email, password });
+      console.log(`Login attempt... (try ${retryCount + 1})`);
+      const response = await api.post('/auth/login', { email, password }, { timeout: 15000 });
       
       const { access_token, id, email: userEmail, name, role, loyalty_points, badges } = response.data;
       
@@ -45,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       await AsyncStorage.setItem('auth_token', access_token);
+      await AsyncStorage.setItem('auth_version', 'supabase_v3');
       
       setTokenState(access_token);
       setUserState({ 
@@ -59,6 +60,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Login successful!');
     } catch (error: any) {
       console.error('Login error:', error);
+      
+      // Retry on network errors (not on 401/403)
+      if (!error.response && retryCount < 2) {
+        console.log(`Login: Network error, retrying in 1 second...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return login(email, password, retryCount + 1);
+      }
+      
       throw new Error(error.response?.data?.detail || error.message || 'Login failed');
     } finally {
       setIsLoading(false);
