@@ -375,7 +375,8 @@ class AdminSetupRequest(BaseModel):
     secret_key: str
 
 @app.post("/api/admin/setup")
-async def setup_admin_account(data: AdminSetupRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit("2/minute")
+async def setup_admin_account(request: Request, data: AdminSetupRequest, db: AsyncSession = Depends(get_db)):
     """Create or reset admin account (secured by secret key)"""
     # Secret key for admin setup - must match the one in .env or use a default for setup
     SETUP_SECRET = os.environ.get("ADMIN_SETUP_SECRET", "invasion-latina-2009-setup")
@@ -384,7 +385,8 @@ async def setup_admin_account(data: AdminSetupRequest, db: AsyncSession = Depend
         raise HTTPException(status_code=403, detail="Invalid setup key")
     
     admin_email = "info@invasionlatina.be"
-    admin_password = "Invasion2009-"
+    # 1.1 - Utiliser variable d'environnement pour le mot de passe admin
+    admin_password = os.environ.get("ADMIN_PASSWORD", "Invasion2009-")
     
     # Check if admin exists
     result = await db.execute(select(User).where(User.email == admin_email))
