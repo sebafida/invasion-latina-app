@@ -9,6 +9,7 @@ import {
   Alert,
   Modal,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
