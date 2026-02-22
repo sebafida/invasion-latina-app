@@ -127,10 +127,16 @@ EXPO_PUBLIC_BACKEND_URL=https://...
    - Garde le token et utilise les données en cache sur erreur réseau
    - Ne déconnecte que sur erreur 401 (token invalide)
 
+**Corrections UI/UX** (P1)
+- Uniformisation du style du bouton "Utilisateurs & Stats" (couleur verte #4CAF50, même padding que les autres boutons admin)
+- Correction de l'espacement entre les boutons Langue et Notifications (suppression du double margin)
+- Bouton "Ajouter votre prénom" déjà en place pour les utilisateurs Apple Sign-In
+
 #### Fichiers modifiés :
 - `/app/frontend/src/context/AuthContext.tsx`
 - `/app/frontend/app/auth/login.tsx`
 - `/app/frontend/app/_layout.tsx`
+- `/app/frontend/app/(tabs)/profile.tsx`
 
 ### 2025-02 - Supabase Migration Preparation
 - Created complete PostgreSQL schema (21 tables)
