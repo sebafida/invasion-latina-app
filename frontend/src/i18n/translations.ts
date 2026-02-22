@@ -1630,6 +1630,17 @@ export const translations: Record<Language, Translations> = {
     mustAcceptTerms: 'Debes aceptar los términos y condiciones',
     registrationFailed: 'Registro fallido',
     
+    // Validation messages
+    noUpcomingEvents: 'No hay eventos próximos',
+    noTickets: 'Aún no hay entradas',
+    invalidGuestCount: 'Número de invitados no válido (1-20)',
+    invalidEmail: 'Email no válido',
+    invalidPhone: 'Número de teléfono no válido',
+    passwordMismatch: 'Las contraseñas no coinciden',
+    scanQRCode: 'Escanear código QR',
+    connectionError: 'No se pueden cargar los datos. Verifica tu conexión.',
+    retry: 'Reintentar',
+    
     // Admin Bookings
     tableReservations: 'Reservas de Mesas',
     pending: 'Pendientes',
