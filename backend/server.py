@@ -10,7 +10,8 @@ When ready to switch, rename this file to server.py
 """
 
 import os
-from fastapi import FastAPI, HTTPException, Depends, Query, Body, File, UploadFile
+import secrets
+from fastapi import FastAPI, HTTPException, Depends, Query, Body, File, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
@@ -21,6 +22,11 @@ from sqlalchemy.orm import selectinload
 import logging
 import json
 import uuid
+
+# 1.4 - Rate Limiting pour protéger contre les attaques brute force
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Import Supabase modules
 from database_supabase import get_db, init_db, close_db, AsyncSessionLocal
@@ -35,7 +41,7 @@ from models_supabase import (
 # Import existing modules
 from config import settings, is_using_mock_keys
 from models import UserCreate, UserLogin, UserBase
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from auth import (
     hash_password, verify_password, create_access_token,
     get_current_user_supabase, get_current_admin_supabase
@@ -43,6 +49,9 @@ from auth import (
 from firebase_service import firebase_service
 from stripe_service import stripe_service
 from utils import generate_ticket_code, generate_qr_data
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
 # ============ RESPONSE MODELS ============
 
