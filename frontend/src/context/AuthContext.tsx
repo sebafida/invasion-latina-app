@@ -134,13 +134,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('loadUser: Token valid - user authenticated');
       } catch (error: any) {
         console.log('loadUser: Token verification failed -', error.message);
-        // Clear token on ANY error (401, network error, timeout)
-        await AsyncStorage.removeItem('auth_token');
-        await AsyncStorage.removeItem('auth_version');
-        setUserState(null);
-        setTokenState(null);
-        setIsAuthenticated(false);
-        console.log('loadUser: Cleared auth data - redirecting to login');
+        
+        // Only clear token on 401 (invalid/expired token)
+        // For network errors, keep the token and let user retry
+        if (error.response?.status === 401) {
+          console.log('loadUser: Token invalid (401) - clearing auth data');
+          await AsyncStorage.removeItem('auth_token');
+          setUserState(null);
+          setTokenState(null);
+          setIsAuthenticated(false);
+        } else {
+          // Network error or timeout - keep token but show login
+          // This allows the user to retry without losing their session
+          console.log('loadUser: Network error - keeping token, showing login');
+          setIsAuthenticated(false);
+        }
       }
     } catch (error) {
       console.error('loadUser error:', error);
