@@ -43,19 +43,23 @@ export default function DJRequestsScreen() {
   const [loading, setLoading] = useState(false);
   const [songTitle, setSongTitle] = useState('');
   const [artistName, setArtistName] = useState('');
-  const [devMode, setDevMode] = useState(true); // Mode test activé par défaut
+  // 2.6 - Mode dev uniquement pour admins ou en développement
+  const [devMode, setDevMode] = useState(user?.role === 'admin' || __DEV__);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  useEffect(() => {
-    loadRequests();
-    
-    // Auto-refresh every 5 seconds
-    const interval = setInterval(() => {
+  // 2.1 - Fix memory leak : utiliser useFocusEffect au lieu de useEffect
+  useFocusEffect(
+    useCallback(() => {
       loadRequests();
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
+      
+      // Auto-refresh every 5 seconds uniquement quand l'écran est visible
+      const interval = setInterval(() => {
+        loadRequests();
+      }, 5000);
+      
+      return () => clearInterval(interval);
+    }, [])
+  );
 
   const loadRequests = async () => {
     try {
