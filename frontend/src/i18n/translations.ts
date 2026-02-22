@@ -265,6 +265,17 @@ export interface Translations {
   mustAcceptTerms: string;
   registrationFailed: string;
   
+  // Validation messages (2.3, 2.4, 2.5, 3.1, 3.2)
+  noUpcomingEvents: string;
+  noTickets: string;
+  invalidGuestCount: string;
+  invalidEmail: string;
+  invalidPhone: string;
+  passwordMismatch: string;
+  scanQRCode: string;
+  connectionError: string;
+  retry: string;
+  
   // Admin Bookings
   tableReservations: string;
   pending: string;
