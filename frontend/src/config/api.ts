@@ -79,29 +79,18 @@ api.interceptors.request.use(
   }
 );
 
-// Handle response errors with retry logic
+// Handle response errors - DO NOT remove token here, let AuthContext handle it
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-    
-    // Retry once on timeout or network error (backend might be waking up)
-    if (!error.response && !originalRequest._retry) {
-      originalRequest._retry = true;
-      logger.log('API: Retrying request after network error...');
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s
-      return api(originalRequest);
-    }
-    
-    // Only clear auth on 401 (invalid/expired token)
-    // NOT on network errors or timeouts
     if (error.response?.status === 401) {
-      logger.log('API: Token invalid (401) - clearing auth data');
-      await AsyncStorage.removeItem('auth_token');
-      // Don't remove auth_version here - let loadUser handle it
+      console.log('API: Received 401 - token may be invalid');
+      // Do NOT remove token here - let AuthContext.loadUser() handle it
+      // This prevents race conditions with multiple simultaneous requests
+    } else if (error.response?.status === 503) {
+      console.log('API: Server temporarily unavailable (503)');
     } else if (!error.response) {
-      // Network error or timeout
-      logger.log('API: Network error or timeout -', error.message);
+      console.log('API: Network error or timeout -', error.message);
     }
     return Promise.reject(error);
   }
