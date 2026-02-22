@@ -224,12 +224,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         token,
         isLoading,
         isAuthenticated,
+        isAuthenticating,
         login,
         register,
         logout,
         loadUser,
         setUser,
         setToken,
+        setIsAuthenticating,
       }}
     >
       {children}
