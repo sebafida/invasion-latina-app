@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../config/api';
+import { registerForPushNotifications } from '../config/notifications';
+import logger from '../config/logger';
 
 interface User {
   id: string;
