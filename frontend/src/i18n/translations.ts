@@ -718,6 +718,17 @@ export const translations: Record<Language, Translations> = {
     mustAcceptTerms: 'Vous devez accepter les conditions générales',
     registrationFailed: 'Inscription échouée',
     
+    // Validation messages
+    noUpcomingEvents: 'Aucun événement à venir',
+    noTickets: 'Pas encore de tickets',
+    invalidGuestCount: 'Nombre d\'invités invalide (1-20)',
+    invalidEmail: 'Email invalide',
+    invalidPhone: 'Numéro de téléphone invalide',
+    passwordMismatch: 'Les mots de passe ne correspondent pas',
+    scanQRCode: 'Scanner le QR Code',
+    connectionError: 'Impossible de charger les données. Vérifie ta connexion.',
+    retry: 'Réessayer',
+    
     // Admin Bookings
     tableReservations: 'Réservations Tables',
     pending: 'En attente',
