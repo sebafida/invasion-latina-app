@@ -230,7 +230,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const init = async () => {
       try {
-        const { warmupBackend } = require('../config/api');
         await warmupBackend();
       } catch (e) {
         console.log('Initial warmup failed, continuing anyway');
