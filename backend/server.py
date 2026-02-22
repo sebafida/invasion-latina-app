@@ -362,9 +362,14 @@ async def root():
         "warning": "Using mock keys" if is_using_mock_keys() else None
     }
 
+@app.get("/api/ping")
+async def ping():
+    """Quick ping endpoint (no DB) - for warmup"""
+    return {"status": "ok"}
+
 @app.get("/api/health")
 async def health_check(db: AsyncSession = Depends(get_db)):
-    """Health check"""
+    """Health check with DB verification"""
     try:
         await db.execute(select(1))
         return {"status": "healthy", "database": "connected", "type": "PostgreSQL"}
