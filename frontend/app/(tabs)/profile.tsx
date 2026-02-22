@@ -59,6 +59,41 @@ export default function ProfileScreen() {
   const [changingLanguage, setChangingLanguage] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
+  // Get display name - handles Apple Sign In placeholder names
+  const getDisplayName = () => {
+    if (!user) {
+      return t('profile');
+    }
+    
+    const name = user.name || '';
+    
+    // Check if it's a default/placeholder name
+    const isPlaceholder = !name || 
+      name.toLowerCase() === 'user' || 
+      name.toLowerCase().startsWith('user') ||
+      name === 'Nuevo Miembro' ||
+      /^[a-f0-9-]{20,}$/i.test(name); // UUID-like strings
+    
+    if (isPlaceholder) {
+      // Try to get name from email
+      const email = user.email || '';
+      if (email && !email.includes('privaterelay.appleid.com')) {
+        const emailName = email.split('@')[0];
+        // Remove numbers and special chars, capitalize
+        const cleanName = emailName.replace(/[0-9._-]/g, ' ').trim();
+        if (cleanName.length > 0) {
+          const firstName = cleanName.split(' ')[0];
+          return firstName.charAt(0).toUpperCase() + firstName.slice(1);
+        }
+      }
+      return 'Amigo'; // Friendly fallback
+    }
+    
+    // Return first name only
+    const firstName = name.split(' ')[0];
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+  };
+
   useEffect(() => {
     if (user) {
       loadLoyaltyData();
