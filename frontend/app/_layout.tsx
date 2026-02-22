@@ -18,13 +18,13 @@ function AppContent() {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        // Warmup backend first (wake up Supabase connection)
-        await warmupBackend();
-        
         // BUG 4 FIX: Only re-verify auth if not currently authenticating (social login)
         if (!isAuthenticating) {
-          logger.log('App came to foreground - re-verifying auth...');
-          loadUser();
+          logger.log('App came to foreground - warming up backend...');
+          warmupBackend().then(() => {
+            logger.log('App came to foreground - re-verifying auth...');
+            loadUser();
+          });
         } else {
           logger.log('App came to foreground - skipping auth check (authentication in progress)');
         }
