@@ -145,7 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('loadUser: Token verification failed -', error.message);
         
         // Only clear token on 401 (invalid/expired token)
-        // For network errors, keep the token and let user retry
+        // For network errors, keep the token and try again later
         if (error.response?.status === 401) {
           console.log('loadUser: Token invalid (401) - clearing auth data');
           await AsyncStorage.removeItem('auth_token');
@@ -153,10 +153,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTokenState(null);
           setIsAuthenticated(false);
         } else {
-          // Network error or timeout - keep token but show login
-          // This allows the user to retry without losing their session
-          console.log('loadUser: Network error - keeping token, showing login');
-          setIsAuthenticated(false);
+          // Network error or timeout - KEEP token AND keep user authenticated
+          // The user can continue using the app, and we'll verify again when network is back
+          console.log('loadUser: Network error - keeping token, keeping user authenticated');
+          setTokenState(storedToken);
+          // Try to get cached user data if available
+          const cachedUserData = await AsyncStorage.getItem('cached_user_data');
+          if (cachedUserData) {
+            try {
+              setUserState(JSON.parse(cachedUserData));
+              setIsAuthenticated(true);
+              console.log('loadUser: Using cached user data');
+            } catch {
+              setIsAuthenticated(false);
+            }
+          } else {
+            // No cached data, but keep token for retry
+            setIsAuthenticated(false);
+          }
         }
       }
     } catch (error) {
