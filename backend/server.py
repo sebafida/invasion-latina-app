@@ -572,6 +572,18 @@ async def social_login(auth_data: SocialAuthData, db: AsyncSession = Depends(get
             db.add(user)
             await db.commit()
             await db.refresh(user)
+            
+            # Create notification preferences with all ON by default
+            notification_prefs = NotificationPreference(
+                user_id=user.id,
+                events=True,
+                promotions=True,
+                song_requests=True,
+                friends=True
+            )
+            db.add(notification_prefs)
+            await db.commit()
+            
             logger.info(f"✅ Created new user via {auth_data.provider}: {email}")
         else:
             # Update provider ID if not set
