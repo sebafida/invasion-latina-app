@@ -47,7 +47,7 @@ const LANGUAGES = [
 ];
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, setUser } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const router = useRouter();
   const [loyaltyData, setLoyaltyData] = useState<LoyaltyData | null>(null);
@@ -58,6 +58,54 @@ export default function ProfileScreen() {
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [changingLanguage, setChangingLanguage] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showEditNameModal, setShowEditNameModal] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [savingName, setSavingName] = useState(false);
+
+  // Check if user needs to set their name (Apple Sign In users)
+  const needsNameSetup = () => {
+    if (!user) return false;
+    const name = user.name || '';
+    const email = user.email || '';
+    
+    // Check if it's an Apple Sign In user with placeholder name
+    const isAppleUser = email.includes('privaterelay.appleid.com') || user.auth_provider === 'apple';
+    const hasPlaceholderName = !name || 
+      name.toLowerCase() === 'user' || 
+      name.toLowerCase().startsWith('user') ||
+      name === 'Nuevo Miembro' ||
+      name === 'Amigo' ||
+      /^[a-f0-9-]{20,}$/i.test(name);
+    
+    return isAppleUser && hasPlaceholderName;
+  };
+
+  // Save new name
+  const handleSaveName = async () => {
+    if (!newName.trim()) {
+      Alert.alert('Erreur', 'Veuillez entrer un nom');
+      return;
+    }
+    
+    try {
+      setSavingName(true);
+      await api.put('/user/profile', { name: newName.trim() });
+      
+      // Update local user state
+      if (user) {
+        setUser({ ...user, name: newName.trim() });
+      }
+      
+      setShowEditNameModal(false);
+      setNewName('');
+      Alert.alert('Succès', 'Votre nom a été mis à jour');
+    } catch (error) {
+      console.error('Error saving name:', error);
+      Alert.alert('Erreur', 'Impossible de sauvegarder le nom');
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   // Get display name - handles Apple Sign In placeholder names
   const getDisplayName = () => {
@@ -72,6 +120,7 @@ export default function ProfileScreen() {
       name.toLowerCase() === 'user' || 
       name.toLowerCase().startsWith('user') ||
       name === 'Nuevo Miembro' ||
+      name === 'Amigo' ||
       /^[a-f0-9-]{20,}$/i.test(name); // UUID-like strings
     
     if (isPlaceholder) {
@@ -86,7 +135,7 @@ export default function ProfileScreen() {
           return firstName.charAt(0).toUpperCase() + firstName.slice(1);
         }
       }
-      return 'Amigo'; // Friendly fallback
+      return null; // Return null for Apple users without name
     }
     
     // Return first name only
