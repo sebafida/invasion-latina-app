@@ -2564,6 +2564,7 @@ async def get_all_vip_bookings(
 
 class VIPBookingStatusUpdate(BaseModel):
     status: str
+    rejection_reason: Optional[str] = None
 
 @app.put("/api/admin/vip-bookings/{booking_id}")
 async def update_vip_booking_status(
@@ -2584,6 +2585,8 @@ async def update_vip_booking_status(
         booking.confirmed_at = datetime.now(timezone.utc)
     elif data.status == "rejected":
         booking.rejected_at = datetime.now(timezone.utc)
+        if data.rejection_reason:
+            booking.rejection_reason = data.rejection_reason
     
     await db.commit()
     
@@ -2599,11 +2602,12 @@ async def update_vip_booking_status(
                     db=db
                 )
             elif data.status == "rejected":
+                reason_text = data.rejection_reason or "Non disponible"
                 await send_push_notification_to_user(
                     user_id=booking.user_id,
-                    title="Réservation VIP",
-                    body="Votre demande de table VIP n'a pas pu être acceptée. Contactez-nous pour plus d'infos.",
-                    data={"type": "vip_booking_rejected", "booking_id": booking_id},
+                    title="Réservation VIP refusée",
+                    body=f"Votre demande de table VIP n'a pas pu être acceptée. Raison: {reason_text}",
+                    data={"type": "vip_booking_rejected", "booking_id": booking_id, "reason": reason_text},
                     db=db
                 )
         except Exception as e:
