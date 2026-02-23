@@ -197,27 +197,33 @@ export default function HomeScreen() {
   };
   
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={loading} onRefresh={loadNextEvent} tintColor={theme.colors.primary} />
-      }
-    >
-      <View style={styles.content}>
-        {/* Hero Section */}
-        <View style={styles.hero}>
-          <Text style={styles.userName}>{getWelcomeMessage()}</Text>
-          
-          <View style={styles.pointsCard}>
-            <Text style={styles.pointsText}>
-              {user?.loyalty_points || 0} {t('points')}
-            </Text>
+    <View style={{ flex: 1 }}>
+      <Animated.ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={loadNextEvent} tintColor={theme.colors.primary} />
+        }
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
+      >
+        <View style={styles.content}>
+          {/* Hero Section */}
+          <View style={styles.hero}>
+            <Text style={styles.userName}>{getWelcomeMessage()}</Text>
+            
+            <View style={styles.pointsCard}>
+              <Text style={styles.pointsText}>
+                {user?.loyalty_points || 0} {t('points')}
+              </Text>
+            </View>
           </View>
-        </View>
-        
-        {/* Countdown Section */}
-        {nextEvent && (
-          <View style={styles.eventSection}>
+          
+          {/* Countdown Section */}
+          {nextEvent && (
+            <View style={styles.eventSection}>
             <View style={styles.eventHeader}>
               <Text style={styles.sectionTitle}>{t('nextEvent')}</Text>
             </View>
