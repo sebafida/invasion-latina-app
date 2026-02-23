@@ -2516,28 +2516,32 @@ async def update_vip_booking_status(
     booking.status = data.status
     if data.status == "confirmed":
         booking.confirmed_at = datetime.now(timezone.utc)
-        # Send notification to user that their VIP booking was confirmed
-        if booking.user_id:
-            await send_push_notification_to_user(
-                user_id=booking.user_id,
-                title="🎉 Réservation VIP confirmée !",
-                body=f"Votre table pour {booking.guest_count} personnes est confirmée !",
-                data={"type": "vip_booking_confirmed", "booking_id": booking_id},
-                db=db
-            )
     elif data.status == "rejected":
         booking.rejected_at = datetime.now(timezone.utc)
-        # Send notification to user that their VIP booking was rejected
-        if booking.user_id:
-            await send_push_notification_to_user(
-                user_id=booking.user_id,
-                title="Réservation VIP",
-                body="Votre demande de table VIP n'a pas pu être acceptée. Contactez-nous pour plus d'infos.",
-                data={"type": "vip_booking_rejected", "booking_id": booking_id},
-                db=db
-            )
     
     await db.commit()
+    
+    # Send notification after commit (non-blocking)
+    if booking.user_id:
+        try:
+            if data.status == "confirmed":
+                await send_push_notification_to_user(
+                    user_id=booking.user_id,
+                    title="🎉 Réservation VIP confirmée !",
+                    body=f"Votre table pour {booking.guest_count} personnes est confirmée !",
+                    data={"type": "vip_booking_confirmed", "booking_id": booking_id},
+                    db=db
+                )
+            elif data.status == "rejected":
+                await send_push_notification_to_user(
+                    user_id=booking.user_id,
+                    title="Réservation VIP",
+                    body="Votre demande de table VIP n'a pas pu être acceptée. Contactez-nous pour plus d'infos.",
+                    data={"type": "vip_booking_rejected", "booking_id": booking_id},
+                    db=db
+                )
+        except Exception as e:
+            logger.error(f"Failed to send VIP booking notification: {e}")
     
     return {"success": True, "message": f"Booking status updated to {data.status}"}
 
