@@ -2874,28 +2874,77 @@ async def get_all_dj_requests(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_admin_supabase)
 ):
-    """Get all song requests for admin/DJ"""
-    result = await db.execute(
-        select(SongRequest).order_by(SongRequest.requested_at.desc()).limit(200)
-    )
-    requests = result.scalars().all()
+    """Get events with their song request stats for DJ dashboard"""
+    # Get all events
+    events_result = await db.execute(select(Event).order_by(Event.event_date.desc()))
+    events = events_result.scalars().all()
     
-    return [
-        {
-            "id": req.id,
-            "song_title": req.song_title,
-            "artist_name": req.artist_name,
-            "user_name": req.user_name,
-            "votes": req.votes,
-            "times_requested": req.times_requested or 1,
-            "requested_at": req.requested_at.isoformat() if req.requested_at else None,
-            "status": req.status,
-            "rejection_reason": req.rejection_reason,
-            "rejection_label": req.rejection_label,
-            "event_id": req.event_id
-        }
-        for req in requests
-    ]
+    event_stats = []
+    for event in events:
+        # Count requests by status for this event
+        pending_count = (await db.execute(
+            select(func.count()).select_from(SongRequest)
+            .where(SongRequest.event_id == event.id)
+            .where(SongRequest.status == 'pending')
+        )).scalar() or 0
+        
+        played_count = (await db.execute(
+            select(func.count()).select_from(SongRequest)
+            .where(SongRequest.event_id == event.id)
+            .where(SongRequest.status == 'played')
+        )).scalar() or 0
+        
+        rejected_count = (await db.execute(
+            select(func.count()).select_from(SongRequest)
+            .where(SongRequest.event_id == event.id)
+            .where(SongRequest.status == 'rejected')
+        )).scalar() or 0
+        
+        total = pending_count + played_count + rejected_count
+        
+        event_stats.append({
+            "id": event.id,
+            "name": event.name,
+            "date": event.event_date.isoformat() if event.event_date else None,
+            "pending": pending_count,
+            "played": played_count,
+            "rejected": rejected_count,
+            "total": total
+        })
+    
+    # Also add a "default_event" for requests without event_id
+    default_pending = (await db.execute(
+        select(func.count()).select_from(SongRequest)
+        .where(SongRequest.event_id == None)
+        .where(SongRequest.status == 'pending')
+    )).scalar() or 0
+    
+    default_played = (await db.execute(
+        select(func.count()).select_from(SongRequest)
+        .where(SongRequest.event_id == None)
+        .where(SongRequest.status == 'played')
+    )).scalar() or 0
+    
+    default_rejected = (await db.execute(
+        select(func.count()).select_from(SongRequest)
+        .where(SongRequest.event_id == None)
+        .where(SongRequest.status == 'rejected')
+    )).scalar() or 0
+    
+    default_total = default_pending + default_played + default_rejected
+    
+    if default_total > 0:
+        event_stats.insert(0, {
+            "id": "default_event",
+            "name": "Événement actuel",
+            "date": None,
+            "pending": default_pending,
+            "played": default_played,
+            "rejected": default_rejected,
+            "total": default_total
+        })
+    
+    return event_stats
 
 @app.delete("/api/dj/requests/{request_id}")
 async def delete_song_request(
