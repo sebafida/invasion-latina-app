@@ -496,6 +496,83 @@ Merci et à bientôt! 🔥`;
           </View>
         </View>
       </Modal>
+
+      {/* Reject Booking Modal with Reasons */}
+      <Modal
+        visible={showRejectModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowRejectModal(false)}
+      >
+        <View style={styles.rejectModalOverlay}>
+          <View style={styles.rejectModalContent}>
+            <View style={styles.rejectModalHeader}>
+              <Text style={styles.rejectModalTitle}>Refuser la réservation</Text>
+              <TouchableOpacity onPress={() => setShowRejectModal(false)}>
+                <Ionicons name="close" size={28} color={theme.colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            {rejectTarget && (
+              <View style={styles.rejectTargetInfo}>
+                <Text style={styles.rejectTargetName}>{rejectTarget.name}</Text>
+                <Text style={styles.rejectTargetSubtitle}>Choisissez la raison du refus</Text>
+              </View>
+            )}
+
+            <ScrollView style={styles.reasonsList}>
+              {REJECT_REASONS.map((reason) => (
+                reason.value === 'custom' ? (
+                  <View key={reason.value} style={styles.customReasonContainer}>
+                    <View style={styles.reasonOption}>
+                      <View style={styles.reasonIconContainer}>
+                        <Ionicons name={reason.icon as any} size={24} color={theme.colors.primary} />
+                      </View>
+                      <Text style={styles.reasonText}>{reason.label}</Text>
+                    </View>
+                    <TextInput
+                      style={styles.customReasonInput}
+                      placeholder="Écrivez votre raison..."
+                      placeholderTextColor={theme.colors.textMuted}
+                      value={customRejectReason}
+                      onChangeText={setCustomRejectReason}
+                      multiline
+                    />
+                    {customRejectReason.length > 0 && (
+                      <TouchableOpacity
+                        style={styles.sendCustomReasonBtn}
+                        onPress={() => confirmReject(reason)}
+                      >
+                        <Text style={styles.sendCustomReasonText}>Envoyer</Text>
+                        <Ionicons name="send" size={18} color="white" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    key={reason.value}
+                    style={styles.reasonOption}
+                    onPress={() => confirmReject(reason)}
+                  >
+                    <View style={styles.reasonIconContainer}>
+                      <Ionicons name={reason.icon as any} size={24} color={theme.colors.error} />
+                    </View>
+                    <Text style={styles.reasonText}>{reason.label}</Text>
+                    <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
+                  </TouchableOpacity>
+                )
+              ))}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={styles.rejectCancelButton}
+              onPress={() => setShowRejectModal(false)}
+            >
+              <Text style={styles.rejectCancelButtonText}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
