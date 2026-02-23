@@ -16,6 +16,7 @@ import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
+import { WhatsAppButton } from '../../src/components/WhatsAppButton';
 
 const { width } = Dimensions.get('window');
 
