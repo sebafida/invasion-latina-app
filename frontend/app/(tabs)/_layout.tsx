@@ -135,10 +135,6 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
-    
-    {/* WhatsApp Floating Button - visible on all tabs */}
-    <WhatsAppButton />
-    </View>
   );
 }
 
