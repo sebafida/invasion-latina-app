@@ -50,6 +50,19 @@ export default function BookingsAdminScreen() {
   const [showClearAllModal, setShowClearAllModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<{ id: string; name: string } | null>(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectTarget, setRejectTarget] = useState<{ id: string; name: string } | null>(null);
+  const [customRejectReason, setCustomRejectReason] = useState('');
+
+  // Reject reasons for VIP bookings
+  const REJECT_REASONS = [
+    { value: 'fully_booked', label: 'Complet pour cette date', icon: 'calendar-outline' },
+    { value: 'zone_unavailable', label: 'Zone demandée non disponible', icon: 'location-outline' },
+    { value: 'minimum_guests', label: 'Nombre de personnes insuffisant', icon: 'people-outline' },
+    { value: 'date_changed', label: 'Date de l\'événement modifiée', icon: 'time-outline' },
+    { value: 'event_cancelled', label: 'Événement annulé', icon: 'close-circle-outline' },
+    { value: 'custom', label: 'Autre raison...', icon: 'create-outline' },
+  ];
 
   useEffect(() => {
     if (user?.role !== 'admin') {
