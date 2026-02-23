@@ -364,7 +364,7 @@ Merci et à bientôt! 🔥`;
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.cancelButton}
-                      onPress={() => handleCancelBooking(booking.id, booking.customer_name)}
+                      onPress={() => handleRejectBooking(booking.id, booking.customer_name)}
                     >
                       <Ionicons name="close" size={20} color="white" />
                     </TouchableOpacity>
@@ -375,7 +375,7 @@ Merci et à bientôt! 🔥`;
                 {booking.status === 'confirmed' && (
                   <TouchableOpacity
                     style={styles.cancelButton}
-                    onPress={() => handleCancelBooking(booking.id, booking.customer_name)}
+                    onPress={() => handleRejectBooking(booking.id, booking.customer_name)}
                   >
                     <Ionicons name="close" size={20} color="white" />
                   </TouchableOpacity>
