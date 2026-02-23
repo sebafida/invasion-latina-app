@@ -795,7 +795,11 @@ export default function ProfileScreen() {
         visible={showLoginModal}
         onClose={() => setShowLoginModal(false)}
       />
-    </ScrollView>
+    </Animated.ScrollView>
+    
+    {/* WhatsApp Floating Button */}
+    <WhatsAppButton scrollY={scrollY} />
+    </View>
   );
 }
 
