@@ -997,6 +997,10 @@ export default function ContentManagerScreen() {
           value={newAftermovieUrl}
           onChangeText={setNewAftermovieUrl}
           autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="url"
+          textContentType="URL"
+          contextMenuHidden={false}
         />
         <Text style={{ fontSize: 12, color: theme.colors.textMuted, marginTop: 4 }}>
           Exemples : https://youtube.com/watch?v=xxx ou https://vimeo.com/xxx
