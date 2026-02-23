@@ -3115,6 +3115,56 @@ async def delete_song_request(
     
     return {"success": True, "message": "Request deleted"}
 
+# ============ ADMIN NOTIFICATIONS ============
+
+class BroadcastNotificationRequest(BaseModel):
+    title: str
+    body: str
+    notification_type: Optional[str] = None  # "new_events", "promotions", or None for all
+
+@app.post("/api/admin/notifications/broadcast")
+async def broadcast_notification(
+    data: BroadcastNotificationRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Send a push notification to all users"""
+    sent_count = await send_push_notification_to_all(
+        title=data.title,
+        body=data.body,
+        data={"type": "broadcast", "notification_type": data.notification_type},
+        db=db,
+        notification_type=data.notification_type
+    )
+    
+    return {
+        "success": True,
+        "message": f"Notification envoyée à {sent_count} utilisateurs",
+        "sent_count": sent_count
+    }
+
+@app.get("/api/admin/notifications/stats")
+async def get_notification_stats(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_admin_supabase)
+):
+    """Get statistics about push notification tokens"""
+    # Total users
+    total_users = (await db.execute(select(func.count()).select_from(User))).scalar() or 0
+    
+    # Users with push tokens
+    users_with_tokens = (await db.execute(
+        select(func.count()).select_from(User)
+        .where(User.push_token != None)
+        .where(User.push_token != "")
+    )).scalar() or 0
+    
+    return {
+        "total_users": total_users,
+        "users_with_push_tokens": users_with_tokens,
+        "coverage_percentage": round((users_with_tokens / total_users * 100) if total_users > 0 else 0, 1)
+    }
+
 # ============ ADMIN SETTINGS ADDITIONAL ============
 
 @app.post("/api/admin/settings/start-event")
