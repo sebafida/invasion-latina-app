@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.invasionlatina.app",
-      "buildNumber": "55",
+      "buildNumber": "56",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Pour activer les requêtes DJ quand tu es à la soirée",
