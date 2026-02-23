@@ -1370,9 +1370,22 @@ export const translations: Record<Language, Translations> = {
     invasionCoinsNotifDesc: 'When you earn points',
     djUpdates: 'DJ news',
     djUpdatesDesc: 'New DJs and line-ups',
+    songRequestResponses: 'Song request responses',
+    songRequestResponsesDesc: 'When the DJ responds to your request',
+    vipRequestResponses: 'VIP booking responses',
+    vipRequestResponsesDesc: 'When we respond to your table reservation',
     newsletterEmail: 'Email newsletter',
     newsletterEmailDesc: 'Monthly news by email',
     notificationPrivacyNotice: 'Your preferences are saved and respected. You can change them at any time. See our privacy policy for more information.',
+    
+    // Response notifications
+    songRequestAnswered: 'Response to your song request',
+    songRequestAccepted: 'Your song has been accepted!',
+    songRequestRejected: 'Your song request has been rejected',
+    vipRequestAnswered: 'Response to your VIP booking',
+    vipRequestAccepted: 'Your VIP booking has been confirmed!',
+    vipRequestRejected: 'Your VIP booking has been rejected',
+    rejectionReason: 'Reason',
   },
   
   es: {
