@@ -47,9 +47,16 @@ export default function TicketsScreen() {
     try {
       setLoading(true);
       const response = await api.get('/events');
-      // Filter only upcoming events
-      const upcomingEvents = response.data.filter((e: Event) => 
-        e.status === 'upcoming' || e.status === 'published'
+      // Filter events that are in the future or have upcoming/published status
+      const now = new Date();
+      const upcomingEvents = response.data.filter((e: Event) => {
+        const eventDate = new Date(e.event_date);
+        // Show event if it's in the future OR has upcoming/published status
+        return eventDate > now || e.status === 'upcoming' || e.status === 'published';
+      });
+      // Sort by date, closest first
+      upcomingEvents.sort((a: Event, b: Event) => 
+        new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
       );
       setEvents(upcomingEvents);
     } catch (error) {
