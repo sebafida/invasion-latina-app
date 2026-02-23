@@ -124,7 +124,7 @@ export default function AftermoviesScreen() {
               activeOpacity={0.8}
             >
               <Image
-                source={{ uri: videos[0].thumbnail_url }}
+                source={{ uri: videos[0].thumbnail_url || 'https://via.placeholder.com/800x450?text=Video' }}
                 style={styles.featuredImage}
                 resizeMode="cover"
               />
@@ -134,15 +134,15 @@ export default function AftermoviesScreen() {
                 </View>
               </View>
               <View style={styles.featuredInfo}>
-                <Text style={styles.featuredTitle}>{videos[0].title}</Text>
+                <Text style={styles.featuredTitle}>{videos[0].title || 'Aftermovie'}</Text>
                 <View style={styles.featuredMeta}>
-                  {videos[0].views !== undefined && (
+                  {videos[0].views !== undefined && videos[0].views > 0 && (
                     <View style={styles.metaItem}>
                       <Ionicons name="eye" size={14} color={theme.colors.textSecondary} />
                       <Text style={styles.metaText}>{formatViews(videos[0].views)} {t('views')}</Text>
                     </View>
                   )}
-                  {videos[0].duration && (
+                  {videos[0].duration && videos[0].duration !== '--:--' && (
                     <View style={styles.metaItem}>
                       <Ionicons name="time" size={14} color={theme.colors.textSecondary} />
                       <Text style={styles.metaText}>{videos[0].duration}</Text>
