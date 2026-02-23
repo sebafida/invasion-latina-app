@@ -1056,21 +1056,8 @@ export default function ContentManagerScreen() {
     <View style={styles.tabContent}>
       <Text style={styles.sectionTitle}>🎬 Ajouter un Aftermovie</Text>
       <Text style={styles.helpText}>
-        Ajoutez des vidéos récapitulatives de vos événements
+        Ajoutez des vidéos YouTube/Vimeo de vos événements
       </Text>
-
-      {/* Important info box about video hosting */}
-      <View style={[styles.infoBox, { marginBottom: 20, borderLeftColor: theme.colors.warning }]}>
-        <Ionicons name="videocam" size={20} color={theme.colors.warning} />
-        <Text style={styles.infoText}>
-          ⚠️ <Text style={{ fontWeight: 'bold' }}>Les vidéos doivent être hébergées sur YouTube ou Vimeo.</Text>{'\n\n'}
-          L'upload direct de vidéos n'est pas possible car les fichiers vidéo sont trop volumineux.{'\n\n'}
-          <Text style={{ fontWeight: 'bold' }}>Comment faire :</Text>{'\n'}
-          1. Uploadez votre aftermovie sur YouTube (public ou non répertorié){'\n'}
-          2. Copiez le lien de la vidéo{'\n'}
-          3. Collez-le ci-dessous
-        </Text>
-      </View>
 
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>Titre de l'Aftermovie *</Text>
@@ -1086,7 +1073,7 @@ export default function ContentManagerScreen() {
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>URL de la Vidéo YouTube/Vimeo *</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { marginBottom: 8 }]}
           placeholder="https://youtube.com/watch?v=xxxxx"
           placeholderTextColor={theme.colors.textMuted}
           value={newAftermovieUrl}
@@ -1095,11 +1082,7 @@ export default function ContentManagerScreen() {
           autoCorrect={false}
           keyboardType="url"
           textContentType="URL"
-          contextMenuHidden={false}
         />
-        <Text style={{ fontSize: 12, color: theme.colors.textMuted, marginTop: 4 }}>
-          Exemples : https://youtube.com/watch?v=xxx ou https://vimeo.com/xxx
-        </Text>
       </View>
 
       <View style={styles.inputGroup}>
@@ -1112,9 +1095,6 @@ export default function ContentManagerScreen() {
           onChangeText={setNewAftermovieThumb}
           autoCapitalize="none"
         />
-        <Text style={{ fontSize: 12, color: theme.colors.textMuted, marginTop: 4 }}>
-          Si vide, une miniature par défaut sera utilisée
-        </Text>
       </View>
 
       <TouchableOpacity
@@ -1131,6 +1111,14 @@ export default function ContentManagerScreen() {
           </>
         )}
       </TouchableOpacity>
+
+      {/* Info box moved to bottom */}
+      <View style={[styles.infoBox, { marginTop: 20, borderLeftColor: theme.colors.warning }]}>
+        <Ionicons name="information-circle" size={20} color={theme.colors.warning} />
+        <Text style={[styles.infoText, { fontSize: 12 }]}>
+          💡 Les vidéos doivent être hébergées sur YouTube ou Vimeo. Copiez le lien et collez-le ci-dessus.
+        </Text>
+      </View>
 
       {/* Existing Aftermovies */}
       {aftermovies.length > 0 && (
