@@ -824,6 +824,63 @@ export default function ContentManagerScreen() {
     </View>
   );
 
+  // State for gallery photos
+  const [galleryPhotos, setGalleryPhotos] = useState<any[]>([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
+
+  // Load gallery photos when event is selected
+  const loadGalleryPhotos = async (eventId: string) => {
+    if (!eventId) return;
+    try {
+      setLoadingPhotos(true);
+      const response = await api.get(`/media/gallery/${eventId}`);
+      setGalleryPhotos(response.data.photos || []);
+    } catch (error) {
+      console.error('Failed to load gallery photos:', error);
+      setGalleryPhotos([]);
+    } finally {
+      setLoadingPhotos(false);
+    }
+  };
+
+  // Delete individual photo
+  const handleDeletePhoto = async (photoId: string) => {
+    Alert.alert(
+      'Supprimer la photo',
+      'Êtes-vous sûr de vouloir supprimer cette photo ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await api.delete(`/media/photos/${photoId}`);
+              // Reload photos
+              if (selectedEventId) {
+                await loadGalleryPhotos(selectedEventId);
+              }
+              Alert.alert('Succès', 'Photo supprimée !');
+            } catch (error) {
+              console.error('Failed to delete photo:', error);
+              Alert.alert('Erreur', 'Impossible de supprimer la photo');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // Effect to load photos when event changes
+  useEffect(() => {
+    if (selectedEventId) {
+      loadGalleryPhotos(selectedEventId);
+    }
+  }, [selectedEventId]);
+
   const renderPhotosTab = () => (
     <View style={styles.tabContent}>
       <Text style={styles.sectionTitle}>📷 Ajouter des Photos</Text>
