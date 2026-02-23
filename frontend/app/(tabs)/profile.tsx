@@ -380,7 +380,9 @@ export default function ProfileScreen() {
                   </View>
                   <View>
                   <Text style={styles.name}>{getDisplayName()}</Text>
-                  <Text style={styles.email}>{user?.email}</Text>
+                  {user?.email && !user.email.includes('privaterelay.appleid.com') && !user.email.includes('@appleid.com') && (
+                    <Text style={styles.email}>{user.email}</Text>
+                  )}
                   {user?.role === 'admin' && (
                     <View style={styles.adminBadge}>
                       <Text style={styles.adminBadgeText}>ADMIN</Text>
