@@ -901,9 +901,22 @@ export const translations: Record<Language, Translations> = {
     invasionCoinsNotifDesc: 'Quand vous gagnez des points',
     djUpdates: 'Actualités DJs',
     djUpdatesDesc: 'Nouveaux DJs et line-ups',
+    songRequestResponses: 'Réponses demandes de chansons',
+    songRequestResponsesDesc: 'Quand le DJ répond à votre demande',
+    vipRequestResponses: 'Réponses réservations VIP',
+    vipRequestResponsesDesc: 'Quand on répond à votre réservation de table',
     newsletterEmail: 'Newsletter par email',
     newsletterEmailDesc: 'Actualités mensuelles par email',
     notificationPrivacyNotice: 'Vos préférences sont sauvegardées et respectées. Vous pouvez les modifier à tout moment. Consultez notre politique de confidentialité pour plus d\'informations.',
+    
+    // Response notifications
+    songRequestAnswered: 'Réponse à votre demande de chanson',
+    songRequestAccepted: 'Votre chanson a été acceptée !',
+    songRequestRejected: 'Votre demande de chanson a été refusée',
+    vipRequestAnswered: 'Réponse à votre réservation VIP',
+    vipRequestAccepted: 'Votre réservation VIP a été confirmée !',
+    vipRequestRejected: 'Votre réservation VIP a été refusée',
+    rejectionReason: 'Raison',
   },
   
   en: {
