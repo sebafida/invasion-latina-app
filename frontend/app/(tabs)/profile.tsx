@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Modal,
   ActivityIndicator,
   TextInput,
+  Animated,
 } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
@@ -20,6 +21,7 @@ import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
 import { LoginRequiredModal } from '../../src/components/LoginRequiredModal';
 import { registerForPushNotifications } from '../../src/config/notifications';
+import { WhatsAppButton } from '../../src/components/WhatsAppButton';
 
 interface LoyaltyData {
   points: number;
