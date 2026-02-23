@@ -1834,9 +1834,22 @@ export const translations: Record<Language, Translations> = {
     invasionCoinsNotifDesc: 'Cuando ganas puntos',
     djUpdates: 'Noticias de DJs',
     djUpdatesDesc: 'Nuevos DJs y line-ups',
+    songRequestResponses: 'Respuestas a solicitudes de canciones',
+    songRequestResponsesDesc: 'Cuando el DJ responde a tu solicitud',
+    vipRequestResponses: 'Respuestas a reservas VIP',
+    vipRequestResponsesDesc: 'Cuando respondemos a tu reserva de mesa',
     newsletterEmail: 'Newsletter por email',
     newsletterEmailDesc: 'Noticias mensuales por email',
     notificationPrivacyNotice: 'Tus preferencias se guardan y respetan. Puedes cambiarlas en cualquier momento. Consulta nuestra política de privacidad para más información.',
+    
+    // Response notifications
+    songRequestAnswered: 'Respuesta a tu solicitud de canción',
+    songRequestAccepted: '¡Tu canción ha sido aceptada!',
+    songRequestRejected: 'Tu solicitud de canción ha sido rechazada',
+    vipRequestAnswered: 'Respuesta a tu reserva VIP',
+    vipRequestAccepted: '¡Tu reserva VIP ha sido confirmada!',
+    vipRequestRejected: 'Tu reserva VIP ha sido rechazada',
+    rejectionReason: 'Razón',
   },
   
   nl: {
