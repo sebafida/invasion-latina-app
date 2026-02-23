@@ -136,14 +136,18 @@ export default function AftermoviesScreen() {
               <View style={styles.featuredInfo}>
                 <Text style={styles.featuredTitle}>{videos[0].title}</Text>
                 <View style={styles.featuredMeta}>
-                  <View style={styles.metaItem}>
-                    <Ionicons name="eye" size={14} color={theme.colors.textSecondary} />
-                    <Text style={styles.metaText}>{formatViews(videos[0].views)} {t('views')}</Text>
-                  </View>
-                  <View style={styles.metaItem}>
-                    <Ionicons name="time" size={14} color={theme.colors.textSecondary} />
-                    <Text style={styles.metaText}>{videos[0].duration}</Text>
-                  </View>
+                  {videos[0].views !== undefined && (
+                    <View style={styles.metaItem}>
+                      <Ionicons name="eye" size={14} color={theme.colors.textSecondary} />
+                      <Text style={styles.metaText}>{formatViews(videos[0].views)} {t('views')}</Text>
+                    </View>
+                  )}
+                  {videos[0].duration && (
+                    <View style={styles.metaItem}>
+                      <Ionicons name="time" size={14} color={theme.colors.textSecondary} />
+                      <Text style={styles.metaText}>{videos[0].duration}</Text>
+                    </View>
+                  )}
                 </View>
               </View>
             </TouchableOpacity>
