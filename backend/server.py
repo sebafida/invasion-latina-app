@@ -2699,10 +2699,10 @@ async def update_user_profile(
 
 @app.get("/api/media/galleries")
 async def get_media_galleries(db: AsyncSession = Depends(get_db)):
-    """Get all event galleries"""
+    """Get all event galleries (shows all events that have photos or gallery_visible)"""
+    # Get all events ordered by date
     result = await db.execute(
         select(Event)
-        .where(Event.gallery_visible == True)
         .order_by(Event.event_date.desc())
     )
     events = result.scalars().all()
@@ -2711,7 +2711,11 @@ async def get_media_galleries(db: AsyncSession = Depends(get_db)):
     for event in events:
         photo_count = (await db.execute(
             select(func.count()).select_from(Photo).where(Photo.event_id == event.id)
-        )).scalar()
+        )).scalar() or 0
+        
+        # Show event if gallery_visible OR if it has photos
+        if not event.gallery_visible and photo_count == 0:
+            continue
         
         # Use banner_image as cover, fallback to first photo if available
         cover_image = event.banner_image
