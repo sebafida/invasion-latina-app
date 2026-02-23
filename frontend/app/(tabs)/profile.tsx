@@ -353,26 +353,32 @@ export default function ProfileScreen() {
 
   // Logged-in user view
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl
-          refreshing={loading}
-          onRefresh={loadLoyaltyData}
-          tintColor={theme.colors.primary}
-        />
-      }
-    >
-      <View style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.profileInfo}>
-            {getDisplayName() ? (
-              <>
-                <View style={styles.avatar}>
-                  <Ionicons name="person" size={40} color={theme.colors.textPrimary} />
-                </View>
-                <View>
+    <View style={{ flex: 1 }}>
+      <Animated.ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={loadLoyaltyData}
+            tintColor={theme.colors.primary}
+          />
+        }
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
+      >
+        <View style={styles.content}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.profileInfo}>
+              {getDisplayName() ? (
+                <>
+                  <View style={styles.avatar}>
+                    <Ionicons name="person" size={40} color={theme.colors.textPrimary} />
+                  </View>
+                  <View>
                   <Text style={styles.name}>{getDisplayName()}</Text>
                   <Text style={styles.email}>{user?.email}</Text>
                   {user?.role === 'admin' && (
