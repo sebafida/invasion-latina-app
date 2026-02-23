@@ -1320,48 +1320,58 @@ export default function ContentManagerScreen() {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Gestion du Contenu</Text>
-        <View style={styles.backButton} />
-      </View>
-
-      {/* Tabs */}
-      <View style={styles.tabsContainer}>
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-            onPress={() => setActiveTab(tab.key)}
-          >
-            <Ionicons
-              name={tab.icon as any}
-              size={20}
-              color={activeTab === tab.key ? theme.colors.primary : theme.colors.textMuted}
-            />
-            <Text style={[
-              styles.tabLabel,
-              activeTab === tab.key && styles.tabLabelActive
-            ]}>
-              {tab.label}
-            </Text>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={0}
+    >
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
-        ))}
-      </View>
+          <Text style={styles.headerTitle}>Gestion du Contenu</Text>
+          <View style={styles.backButton} />
+        </View>
 
-      {/* Content */}
-      <ScrollView style={styles.content}>
-        {activeTab === 'welcome' && renderWelcomeTab()}
-        {activeTab === 'flyer' && renderFlyerTab()}
-        {activeTab === 'photos' && renderPhotosTab()}
-        {activeTab === 'aftermovies' && renderAftermoviesTab()}
-        {activeTab === 'events' && renderEventsTab()}
-      </ScrollView>
-    </View>
+        {/* Tabs */}
+        <View style={styles.tabsContainer}>
+          {tabs.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+              onPress={() => setActiveTab(tab.key)}
+            >
+              <Ionicons
+                name={tab.icon as any}
+                size={20}
+                color={activeTab === tab.key ? theme.colors.primary : theme.colors.textMuted}
+              />
+              <Text style={[
+                styles.tabLabel,
+                activeTab === tab.key && styles.tabLabelActive
+              ]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Content */}
+        <ScrollView 
+          style={styles.content}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
+          {activeTab === 'welcome' && renderWelcomeTab()}
+          {activeTab === 'flyer' && renderFlyerTab()}
+          {activeTab === 'photos' && renderPhotosTab()}
+          {activeTab === 'aftermovies' && renderAftermoviesTab()}
+          {activeTab === 'events' && renderEventsTab()}
+        </ScrollView>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
