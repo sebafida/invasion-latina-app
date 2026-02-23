@@ -406,6 +406,15 @@ export interface Translations {
   alreadyHaveAccountLogin: string;
   continueBrowsing: string;
   
+  // Response notifications
+  songRequestAnswered: string;
+  songRequestAccepted: string;
+  songRequestRejected: string;
+  vipRequestAnswered: string;
+  vipRequestAccepted: string;
+  vipRequestRejected: string;
+  rejectionReason: string;
+  
   // Notification Preferences
   notificationPreferences: string;
   chooseWhatToReceive: string;
@@ -431,6 +440,10 @@ export interface Translations {
   invasionCoinsNotifDesc: string;
   djUpdates: string;
   djUpdatesDesc: string;
+  songRequestResponses: string;
+  songRequestResponsesDesc: string;
+  vipRequestResponses: string;
+  vipRequestResponsesDesc: string;
   newsletterEmail: string;
   newsletterEmailDesc: string;
   notificationPrivacyNotice: string;
