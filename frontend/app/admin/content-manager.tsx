@@ -826,6 +826,9 @@ export default function ContentManagerScreen() {
     </View>
   );
 
+  // Ref for scrollview
+  const scrollViewRef = useRef<ScrollView>(null);
+
   // State for gallery photos
   const [galleryPhotos, setGalleryPhotos] = useState<any[]>([]);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
