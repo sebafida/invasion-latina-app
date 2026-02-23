@@ -4,6 +4,7 @@ import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../src/config/theme';
+import { WhatsAppButton } from '../../src/components/WhatsAppButton';
 
 // Back button component for non-home tabs
 const BackToHomeButton = () => {
@@ -22,7 +23,8 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   
   return (
-    <Tabs
+    <View style={{ flex: 1 }}>
+      <Tabs
       screenOptions={{
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textMuted,
