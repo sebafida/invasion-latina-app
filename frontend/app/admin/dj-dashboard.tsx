@@ -103,6 +103,10 @@ export default function DJDashboardScreen() {
     try {
       const response = await api.get('/dj/admin/all-requests');
       setEvents(response.data);
+      // Auto-select first event if none selected
+      if (response.data.length > 0 && !selectedEvent) {
+        setSelectedEvent(response.data[0].id);
+      }
     } catch (error) {
       console.error('Failed to load events:', error);
     }
