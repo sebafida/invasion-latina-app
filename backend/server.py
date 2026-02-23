@@ -1467,6 +1467,7 @@ async def get_djs(db: AsyncSession = Depends(get_db)):
         {
             "id": dj.id,
             "name": dj.name,
+            "type": "mc" if "MC" in dj.name.upper() else "dj",
             "bio": dj.bio,
             "photo_url": dj.photo_url,
             "instagram_url": dj.instagram_url,
