@@ -130,11 +130,17 @@ export default function DJsScreen() {
       // Then get all DJs
       const response = await api.get('/djs');
       if (response.data && response.data.length > 0) {
-        // Map the DJs and mark which ones are selected for the event
-        const djsWithSelection = response.data.map((dj: any) => ({
-          ...dj,
-          is_selected: selectedDjIds.includes(dj.id) || selectedDjIds.includes(String(dj.id))
-        }));
+        // Map the DJs and merge with DEFAULT_DJS data for instagram_url
+        const djsWithSelection = response.data.map((dj: any) => {
+          // Find matching default DJ to get instagram_url
+          const defaultDj = DEFAULT_DJS.find(d => d.name.toUpperCase() === dj.name.toUpperCase());
+          return {
+            ...dj,
+            // Use API instagram_url if available, otherwise use default
+            instagram_url: dj.instagram_url || (defaultDj?.instagram_url || null),
+            is_selected: selectedDjIds.includes(dj.id) || selectedDjIds.includes(String(dj.id))
+          };
+        });
         // Sort to put selected DJs first
         djsWithSelection.sort((a: any, b: any) => (b.is_selected ? 1 : 0) - (a.is_selected ? 1 : 0));
         setDjs(djsWithSelection);
