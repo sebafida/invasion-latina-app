@@ -93,6 +93,67 @@ async def send_push_notification_to_user(user_id: str, title: str, body: str, da
     except Exception as e:
         logger.error(f"Error sending push notification to user {user_id}: {e}")
 
+async def send_push_notification_to_all(title: str, body: str, data: dict = None, db: AsyncSession = None, notification_type: str = None):
+    """Send push notification to all users with valid push tokens"""
+    if not db:
+        return 0
+    
+    try:
+        # Get all users with push tokens
+        result = await db.execute(
+            select(User).where(User.push_token != None).where(User.push_token != "")
+        )
+        users = result.scalars().all()
+        
+        # Filter by notification preferences if specified
+        valid_users = []
+        for user in users:
+            if not user.push_token or not user.push_token.startswith("ExponentPushToken"):
+                continue
+            
+            # Check notification preferences
+            prefs = user.notification_preferences or {}
+            if notification_type == "new_events" and not prefs.get("new_events", True):
+                continue
+            if notification_type == "promotions" and not prefs.get("promotions", True):
+                continue
+            
+            valid_users.append(user)
+        
+        if not valid_users:
+            logger.info("No users with valid push tokens to notify")
+            return 0
+        
+        # Prepare messages (batch of 100 max per request to Expo)
+        messages = []
+        for user in valid_users:
+            messages.append({
+                "to": user.push_token,
+                "sound": "default",
+                "title": title,
+                "body": body,
+                "data": data or {}
+            })
+        
+        # Send in batches of 100
+        sent_count = 0
+        async with httpx.AsyncClient() as client:
+            for i in range(0, len(messages), 100):
+                batch = messages[i:i+100]
+                response = await client.post(
+                    "https://exp.host/--/api/v2/push/send",
+                    json=batch,
+                    headers={"Content-Type": "application/json"}
+                )
+                if response.status_code == 200:
+                    sent_count += len(batch)
+                logger.info(f"Push notification batch sent: {len(batch)} messages, status: {response.status_code}")
+        
+        return sent_count
+    except Exception as e:
+        logger.error(f"Error sending push notifications to all: {e}")
+        return 0
+
 # ============ RESPONSE MODELS ============
 
 class UserResponse(BaseModel):
