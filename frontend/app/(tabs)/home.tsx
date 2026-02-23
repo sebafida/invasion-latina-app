@@ -403,7 +403,11 @@ export default function HomeScreen() {
           </View>
         </View>
       </View>
-    </ScrollView>
+    </Animated.ScrollView>
+    
+    {/* WhatsApp Floating Button */}
+    <WhatsAppButton scrollY={scrollY} />
+    </View>
   );
 }
 
