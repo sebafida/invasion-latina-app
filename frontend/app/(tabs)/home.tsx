@@ -55,6 +55,9 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   
+  // Scroll tracking for WhatsApp button
+  const scrollY = useRef(new Animated.Value(0)).current;
+  
   useEffect(() => {
     loadNextEvent();
   }, []);
