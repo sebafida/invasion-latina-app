@@ -1126,9 +1126,28 @@ async def update_song_request(
     
     if status == "played":
         request.played_at = datetime.now(timezone.utc)
+        # Send notification to user that their song was accepted
+        if request.user_id:
+            await send_push_notification_to_user(
+                user_id=request.user_id,
+                title="🎵 Votre chanson a été acceptée !",
+                body=f"'{request.song_title}' par {request.artist_name} va être jouée !",
+                data={"type": "song_request_accepted", "request_id": request_id},
+                db=db
+            )
     elif status == "rejected":
         request.rejection_reason = update_data.get("rejection_reason")
         request.rejection_label = update_data.get("rejection_label")
+        # Send notification to user that their song was rejected
+        if request.user_id:
+            reason = request.rejection_label or request.rejection_reason or "Non disponible"
+            await send_push_notification_to_user(
+                user_id=request.user_id,
+                title="🎵 Réponse à votre demande",
+                body=f"'{request.song_title}' - {reason}",
+                data={"type": "song_request_rejected", "request_id": request_id, "reason": reason},
+                db=db
+            )
     
     await db.commit()
     return {"message": f"Request {status} successfully"}
