@@ -64,6 +64,9 @@ export default function ProfileScreen() {
   const [showEditNameModal, setShowEditNameModal] = useState(false);
   const [newName, setNewName] = useState('');
   const [savingName, setSavingName] = useState(false);
+  
+  // Scroll tracking for WhatsApp button
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   // Check if user needs to set their name (Apple Sign In users)
   const needsNameSetup = () => {
