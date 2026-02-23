@@ -132,22 +132,31 @@ export default function DJsScreen() {
       if (response.data && response.data.length > 0) {
         // Map the DJs and merge with DEFAULT_DJS data for instagram_url
         const djsWithSelection = response.data.map((dj: any) => {
-          // Find matching default DJ to get instagram_url
-          const defaultDj = DEFAULT_DJS.find(d => d.name.toUpperCase() === dj.name.toUpperCase());
+          // Find matching default DJ to get instagram_url (case insensitive)
+          const defaultDj = DEFAULT_DJS.find(d => 
+            d.name.toUpperCase().trim() === dj.name.toUpperCase().trim()
+          );
+          
+          // Get instagram_url from default if not in API response
+          const instagramUrl = dj.instagram_url || defaultDj?.instagram_url || null;
+          
           return {
             ...dj,
-            // Use API instagram_url if available, otherwise use default
-            instagram_url: dj.instagram_url || (defaultDj?.instagram_url || null),
+            instagram_url: instagramUrl,
             is_selected: selectedDjIds.includes(dj.id) || selectedDjIds.includes(String(dj.id))
           };
         });
         // Sort to put selected DJs first
         djsWithSelection.sort((a: any, b: any) => (b.is_selected ? 1 : 0) - (a.is_selected ? 1 : 0));
         setDjs(djsWithSelection);
+      } else {
+        // Keep default data if no DJs from API
+        setDjs(DEFAULT_DJS);
       }
     } catch (error) {
       console.log('Using default DJs data');
       // Keep default data if API fails
+      setDjs(DEFAULT_DJS);
     } finally {
       setLoading(false);
     }
