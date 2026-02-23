@@ -2593,20 +2593,38 @@ async def update_vip_booking_status(
     # Send notification after commit (non-blocking)
     if booking.user_id:
         try:
+            # Determine if it's a VIP zone or regular table
+            zone_lower = (booking.zone or "").lower()
+            is_vip = "vip" in zone_lower
+            
             if data.status == "confirmed":
+                if is_vip:
+                    title = "🎉 Réservation VIP confirmée !"
+                    body = f"Votre table VIP pour {booking.guest_count} personnes est confirmée !"
+                else:
+                    title = "🎉 Réservation de table confirmée !"
+                    body = f"Votre table pour {booking.guest_count} personnes est confirmée !"
+                
                 await send_push_notification_to_user(
                     user_id=booking.user_id,
-                    title="🎉 Réservation VIP confirmée !",
-                    body=f"Votre table pour {booking.guest_count} personnes est confirmée !",
+                    title=title,
+                    body=body,
                     data={"type": "vip_booking_confirmed", "booking_id": booking_id},
                     db=db
                 )
             elif data.status == "rejected":
                 reason_text = data.rejection_reason or "Non disponible"
+                if is_vip:
+                    title = "Réservation VIP refusée"
+                    body = f"Votre demande de table VIP n'a pas pu être acceptée. Raison: {reason_text}"
+                else:
+                    title = "Réservation de table refusée"
+                    body = f"Votre demande de table n'a pas pu être acceptée. Raison: {reason_text}"
+                
                 await send_push_notification_to_user(
                     user_id=booking.user_id,
-                    title="Réservation VIP refusée",
-                    body=f"Votre demande de table VIP n'a pas pu être acceptée. Raison: {reason_text}",
+                    title=title,
+                    body=body,
                     data={"type": "vip_booking_rejected", "booking_id": booking_id, "reason": reason_text},
                     db=db
                 )
