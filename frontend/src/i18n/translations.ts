@@ -2298,9 +2298,22 @@ export const translations: Record<Language, Translations> = {
     invasionCoinsNotifDesc: 'Wanneer je punten verdient',
     djUpdates: 'DJ nieuws',
     djUpdatesDesc: 'Nieuwe DJs en line-ups',
+    songRequestResponses: 'Reacties op muziekverzoeken',
+    songRequestResponsesDesc: 'Wanneer de DJ op je verzoek reageert',
+    vipRequestResponses: 'Reacties op VIP reserveringen',
+    vipRequestResponsesDesc: 'Wanneer we reageren op je tafelreservering',
     newsletterEmail: 'E-mail nieuwsbrief',
     newsletterEmailDesc: 'Maandelijks nieuws per e-mail',
     notificationPrivacyNotice: 'Je voorkeuren worden opgeslagen en gerespecteerd. Je kunt ze op elk moment wijzigen. Zie ons privacybeleid voor meer informatie.',
+    
+    // Response notifications
+    songRequestAnswered: 'Reactie op je muziekverzoek',
+    songRequestAccepted: 'Je nummer is geaccepteerd!',
+    songRequestRejected: 'Je muziekverzoek is afgewezen',
+    vipRequestAnswered: 'Reactie op je VIP reservering',
+    vipRequestAccepted: 'Je VIP reservering is bevestigd!',
+    vipRequestRejected: 'Je VIP reservering is afgewezen',
+    rejectionReason: 'Reden',
   },
 };
 
