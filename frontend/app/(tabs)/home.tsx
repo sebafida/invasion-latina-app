@@ -393,6 +393,9 @@ export default function HomeScreen() {
           </View>
         </View>
       </View>
+      
+      {/* WhatsApp Floating Button */}
+      <WhatsAppButton />
     </ScrollView>
   );
 }
