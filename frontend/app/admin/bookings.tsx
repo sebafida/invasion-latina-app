@@ -160,6 +160,31 @@ export default function BookingsAdminScreen() {
     setShowCancelModal(true);
   };
 
+  const handleRejectBooking = (bookingId: string, customerName: string) => {
+    setRejectTarget({ id: bookingId, name: customerName });
+    setCustomRejectReason('');
+    setShowRejectModal(true);
+  };
+
+  const confirmReject = async (reason: { value: string; label: string }) => {
+    if (!rejectTarget) return;
+    
+    try {
+      const rejectionReason = reason.value === 'custom' ? customRejectReason : reason.label;
+      await api.put(`/admin/vip-bookings/${rejectTarget.id}`, { 
+        status: 'rejected',
+        rejection_reason: rejectionReason 
+      });
+      Alert.alert('Refusé', `La réservation de "${rejectTarget.name}" a été refusée`);
+      setShowRejectModal(false);
+      setRejectTarget(null);
+      setCustomRejectReason('');
+      loadBookings();
+    } catch (error) {
+      Alert.alert(t('error'), t('connectionError'));
+    }
+  };
+
   const openWhatsApp = (booking: Booking) => {
     const message = `Bonjour ${booking.customer_name}! 🎉
 
