@@ -65,8 +65,21 @@ export default function AftermoviesScreen() {
     }
   };
 
-  const openVideo = (video: Aftermovie) => {
-    Linking.openURL(video.video_url);
+  const openVideo = async (video: Aftermovie) => {
+    if (!video.video_url) {
+      return; // No video URL
+    }
+    
+    try {
+      const canOpen = await Linking.canOpenURL(video.video_url);
+      if (canOpen) {
+        await Linking.openURL(video.video_url);
+      } else {
+        console.error('Cannot open URL:', video.video_url);
+      }
+    } catch (error) {
+      console.error('Error opening video:', error);
+    }
   };
 
   const formatViews = (views: number) => {
