@@ -1428,7 +1428,10 @@ export default function ContentManagerScreen() {
             <TouchableOpacity
               key={tab.key}
               style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-              onPress={() => setActiveTab(tab.key)}
+              onPress={() => {
+                Keyboard.dismiss();
+                setActiveTab(tab.key);
+              }}
             >
               <Ionicons
                 name={tab.icon as any}
@@ -1447,9 +1450,11 @@ export default function ContentManagerScreen() {
 
         {/* Content */}
         <ScrollView 
+          ref={scrollViewRef}
           style={styles.content}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingBottom: 100 }}
+          keyboardDismissMode="interactive"
+          contentContainerStyle={{ paddingBottom: 350 }}
         >
           {activeTab === 'welcome' && renderWelcomeTab()}
           {activeTab === 'flyer' && renderFlyerTab()}
