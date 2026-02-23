@@ -1012,6 +1012,43 @@ export default function ContentManagerScreen() {
           💡 Conseil : Utilisez "Sélectionner PLUSIEURS photos" pour gagner du temps !
         </Text>
       </View>
+
+      {/* Current Gallery Photos */}
+      {selectedEventId && (
+        <View style={{ marginTop: 20 }}>
+          <Text style={styles.sectionTitle}>📸 Photos actuelles ({galleryPhotos.length})</Text>
+          {loadingPhotos ? (
+            <ActivityIndicator color={theme.colors.primary} />
+          ) : galleryPhotos.length === 0 ? (
+            <Text style={styles.helpText}>Aucune photo dans cette galerie</Text>
+          ) : (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
+              {galleryPhotos.map((photo) => (
+                <View key={photo.id} style={{ width: '30%', aspectRatio: 1, position: 'relative' }}>
+                  <Image
+                    source={{ uri: photo.url }}
+                    style={{ width: '100%', height: '100%', borderRadius: 8 }}
+                    resizeMode="cover"
+                  />
+                  <TouchableOpacity
+                    style={{
+                      position: 'absolute',
+                      top: 5,
+                      right: 5,
+                      backgroundColor: 'rgba(255,0,0,0.8)',
+                      borderRadius: 12,
+                      padding: 4,
+                    }}
+                    onPress={() => handleDeletePhoto(photo.id)}
+                  >
+                    <Ionicons name="trash" size={16} color="white" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
     </View>
   );
 
