@@ -312,33 +312,7 @@ export default function ContentManagerScreen() {
     );
   };
 
-  // Delete functions for photos and aftermovies
-  const handleDeletePhoto = (photoId: string) => {
-    Alert.alert(
-      'Supprimer la photo',
-      'Êtes-vous sûr de vouloir supprimer cette photo ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setLoading(true);
-              await api.delete(`/admin/photos/${photoId}`);
-              Alert.alert('Succès', 'Photo supprimée');
-              loadData();
-            } catch (error) {
-              Alert.alert('Erreur', 'Impossible de supprimer la photo');
-            } finally {
-              setLoading(false);
-            }
-          }
-        }
-      ]
-    );
-  };
-
+  // Clear gallery function
   const handleClearGallery = (eventId: string, eventName: string) => {
     Alert.alert(
       'Vider la galerie',
