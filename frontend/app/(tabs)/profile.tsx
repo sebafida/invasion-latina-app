@@ -619,6 +619,15 @@ export default function ProfileScreen() {
               <Text style={styles.eventSettingsButtonText}>{t('eventSettings')}</Text>
               <Ionicons name="arrow-forward" size={20} color="white" />
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.adminButton, { backgroundColor: '#9b59b6' }]}
+              onPress={() => router.push('/admin/notifications')}
+            >
+              <Ionicons name="notifications" size={24} color="white" />
+              <Text style={styles.adminButtonText}>Notifications Push</Text>
+              <Ionicons name="arrow-forward" size={20} color="white" />
+            </TouchableOpacity>
           </View>
         )}
 
