@@ -856,7 +856,7 @@ export default function ContentManagerScreen() {
           onPress: async () => {
             try {
               setLoading(true);
-              await api.delete(`/media/photos/${photoId}`);
+              await api.delete(`/admin/photos/${photoId}`);
               // Reload photos
               if (selectedEventId) {
                 await loadGalleryPhotos(selectedEventId);
