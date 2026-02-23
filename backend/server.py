@@ -49,9 +49,49 @@ from auth import (
 from firebase_service import firebase_service
 from stripe_service import stripe_service
 from utils import generate_ticket_code, generate_qr_data
+import httpx
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
+
+# ============ PUSH NOTIFICATION HELPER ============
+
+async def send_push_notification_to_user(user_id: str, title: str, body: str, data: dict = None, db: AsyncSession = None):
+    """Send push notification to a specific user"""
+    if not db:
+        return
+    
+    try:
+        # Get user's push token
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        
+        if not user or not user.push_token:
+            logger.info(f"No push token for user {user_id}")
+            return
+        
+        push_token = user.push_token
+        if not push_token.startswith("ExponentPushToken"):
+            logger.warning(f"Invalid push token format for user {user_id}")
+            return
+        
+        message = {
+            "to": push_token,
+            "sound": "default",
+            "title": title,
+            "body": body,
+            "data": data or {}
+        }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://exp.host/--/api/v2/push/send",
+                json=[message],
+                headers={"Content-Type": "application/json"}
+            )
+            logger.info(f"Push notification sent to user {user_id}: {response.status_code}")
+    except Exception as e:
+        logger.error(f"Error sending push notification to user {user_id}: {e}")
 
 # ============ RESPONSE MODELS ============
 
