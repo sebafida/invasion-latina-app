@@ -1343,6 +1343,22 @@ const styles = StyleSheet.create({
     color: theme.colors.error,
   },
 
+  // Delete Account Button
+  deleteAccountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: theme.spacing.xl,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.xl,
+    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.sm,
+  },
+  deleteAccountText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textMuted,
+  },
+
   // QR Modal Styles
   modalOverlay: {
     flex: 1,
