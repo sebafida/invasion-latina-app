@@ -113,15 +113,17 @@ export default function DJDashboardScreen() {
   };
 
   const loadRequests = async () => {
+    if (!selectedEvent) {
+      // Wait for event to be selected
+      return;
+    }
     try {
       setLoading(true);
       let url = '/dj/requests?';
       if (statusFilter !== 'all') {
         url += `status=${statusFilter}&`;
       }
-      if (selectedEvent) {
-        url += `event_id=${selectedEvent}`;
-      }
+      url += `event_id=${selectedEvent}`;
       
       const response = await api.get(url);
       setRequests(response.data);
