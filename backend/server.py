@@ -2603,10 +2603,10 @@ async def update_vip_booking_status(
             if data.status == "confirmed":
                 if is_vip:
                     title = "🎉 Réservation VIP confirmée !"
-                    body = f"Votre table VIP pour {booking.guest_count} personnes est confirmée !"
+                    body = f"Votre table VIP pour {booking.guests} personnes est confirmée !"
                 else:
                     title = "🎉 Réservation de table confirmée !"
-                    body = f"Votre table pour {booking.guest_count} personnes est confirmée !"
+                    body = f"Votre table pour {booking.guests} personnes est confirmée !"
                 
                 # Add confirmation message if provided
                 if data.confirmation_message:
