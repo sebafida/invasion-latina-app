@@ -239,6 +239,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     init();
   }, []);
 
+  // Re-register push tokens when user becomes authenticated
+  // This ensures users who are already logged in get their push tokens registered
+  useEffect(() => {
+    if (isAuthenticated && user && !isLoading) {
+      logger.info('User authenticated, registering push notifications...');
+      registerForPushNotifications().then(token => {
+        if (token) {
+          logger.info('Push token registered successfully');
+        }
+      }).catch(err => {
+        logger.error('Push re-registration failed:', err);
+      });
+    }
+  }, [isAuthenticated, user, isLoading]);
+
   return (
     <AuthContext.Provider
       value={{
