@@ -396,7 +396,7 @@ Merci et à bientôt! 🔥`;
                   <>
                     <TouchableOpacity
                       style={styles.confirmButton}
-                      onPress={() => updateBookingStatus(booking.id, 'confirmed')}
+                      onPress={() => handleConfirmBooking(booking.id, booking.customer_name, booking.zone)}
                     >
                       <Ionicons name="checkmark" size={20} color="white" />
                       <Text style={styles.actionButtonText}>{t('confirm')}</Text>
