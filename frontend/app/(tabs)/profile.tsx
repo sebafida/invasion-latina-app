@@ -1377,6 +1377,42 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
   },
 
+  // Quick Actions Section
+  quickActionsSection: {
+    marginHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+  },
+  quickActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
+  },
+  quickActionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
+  },
+  quickActionContent: {
+    flex: 1,
+  },
+  quickActionTitle: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+  },
+  quickActionSubtitle: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textMuted,
+    marginTop: 2,
+  },
+
   // QR Modal Styles
   modalOverlay: {
     flex: 1,
