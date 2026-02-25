@@ -783,9 +783,17 @@ async def update_push_token(
     if not push_token:
         raise HTTPException(status_code=400, detail="Push token is required")
     
-    current_user.push_token = push_token
-    current_user.push_token_updated_at = datetime.now(timezone.utc)
+    # Re-fetch user from current session to ensure it's attached
+    result = await db.execute(select(User).where(User.id == current_user.id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.push_token = push_token
+    user.push_token_updated_at = datetime.now(timezone.utc)
     await db.commit()
+    
+    logger.info(f"✅ Push token updated for user {user.email}: {push_token[:30]}...")
     
     return {"message": "Push token updated successfully"}
 
