@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../src/context/AuthContext';
-import { useTranslation } from '../src/i18n';
+import { useLanguage } from '../src/context/LanguageContext';
 import api from '../src/config/api';
 import { theme } from '../src/styles/theme';
 
