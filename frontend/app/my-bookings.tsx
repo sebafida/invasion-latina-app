@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../src/context/AuthContext';
 import { useLanguage } from '../src/context/LanguageContext';
 import api from '../src/config/api';
-import { theme } from '../src/styles/theme';
+import { theme } from '../src/config/theme';
 
 interface Booking {
   id: string;
