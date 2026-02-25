@@ -142,4 +142,5 @@ export default {
   registerForPushNotifications,
   sendLocalNotification,
   getPushToken,
+  setupNotificationListeners,
 };
