@@ -8,7 +8,6 @@ import { OfflineBanner } from '../src/components/OfflineBanner';
 import { theme } from '../src/config/theme';
 import logger from '../src/config/logger';
 import { warmupBackend } from '../src/config/api';
-import { setupNotificationListeners } from '../src/config/notifications';
 
 function AppContent() {
   const { isLoading, isAuthenticated, isAuthenticating, loadUser } = useAuth();
@@ -37,31 +36,6 @@ function AppContent() {
       subscription.remove();
     };
   }, [loadUser, isAuthenticating]);
-
-  // Setup notification listeners when user is authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      logger.log('Setting up notification listeners...');
-      const cleanup = setupNotificationListeners(
-        (notification) => {
-          logger.log('📬 Notification received in foreground:', notification.request.content.title);
-        },
-        (response) => {
-          logger.log('👆 Notification tapped:', response.notification.request.content.title);
-          const data = response.notification.request.content.data;
-          // Navigate based on notification type
-          if (data?.type === 'vip_booking_confirmed' || data?.type === 'vip_booking_rejected') {
-            router.push('/my-bookings');
-          } else if (data?.type === 'song_request_accepted' || data?.type === 'song_request_rejected') {
-            router.push('/(tabs)/dj');
-          } else if (data?.type === 'new_booking_admin') {
-            router.push('/admin/bookings');
-          }
-        }
-      );
-      return cleanup;
-    }
-  }, [isAuthenticated]);
 
   // When user is authenticated, go to home
   useEffect(() => {

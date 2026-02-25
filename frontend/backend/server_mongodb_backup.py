@@ -1,0 +1,3745 @@
+"""
+INVASION LATINA - Backend API Server
+Complete FastAPI backend for the mobile app
+
+⚠️  IMPORTANT: This uses MOCK Firebase and Stripe services
+Replace with your production API keys in the .env file
+"""
+
+from fastapi import FastAPI, HTTPException, Depends, Query, Body, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
+from typing import List, Optional, Dict, Any
+from bson import ObjectId
+import logging
+import json
+import uuid
+
+# Import our modules
+from config import settings, is_using_mock_keys
+from database import connect_to_mongo, close_mongo_connection, get_database
+from models import (
+    UserCreate, UserLogin, UserBase, Event, Ticket, Booking, 
+    SongRequest, Product, Order, VIPBooking, Media
+)
+from pydantic import BaseModel
+from auth import (
+    hash_password, verify_password, create_access_token,
+    get_current_user, get_current_admin, verify_firebase_token
+)
+from firebase_service import firebase_service
+from stripe_service import stripe_service
+from utils import (
+    is_within_geofence, is_event_hours_active, can_access_dj_features,
+    generate_ticket_code, generate_qr_data
+)
+
+# ============ RESPONSE MODELS ============
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    name: str
+    role: str
+    loyalty_points: int = 0
+    badges: List[str] = []
+    friends: List[str] = []
+    language: str = "en"
+    access_token: Optional[str] = None
+
+class EventResponse(BaseModel):
+    id: str
+    name: str
+    description: str
+    event_date: datetime
+    venue_name: str
+    venue_address: str
+    lineup: List[Dict[str, str]] = []
+    ticket_categories: List[Dict[str, Any]] = []
+    xceed_ticket_url: Optional[str] = None
+    banner_image: Optional[str] = None
+    gallery_visible: bool = False
+    aftermovie_visible: bool = False
+    status: str
+
+class TicketResponse(BaseModel):
+    id: str
+    event_id: str
+    user_id: str
+    ticket_category: str
+    price: float
+    ticket_code: str
+    qr_data: str
+    status: str
+    purchase_date: datetime
+
+class FirebaseTokenData(BaseModel):
+    firebase_token: str
+
+class TicketPurchase(BaseModel):
+    event_id: str
+    ticket_category: str
+    quantity: int = 1
+    payment_method_id: str
+
+class EventCreate(BaseModel):
+    name: str
+    description: str
+    event_date: datetime
+    venue_name: str = "Mirano Continental"
+    venue_address: str = "Chaussée de Louvain 38, 1210 Brussels"
+    lineup: List[Dict[str, str]] = []
+    ticket_categories: List[Dict[str, Any]] = []
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# ============ LIFECYCLE MANAGEMENT ============
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application startup and shutdown"""
+    # Startup
+    logger.info("🚀 Starting Invasion Latina API...")
+    await connect_to_mongo()
+    
+    if is_using_mock_keys():
+        logger.warning("=" * 60)
+        logger.warning("⚠️  USING MOCK API KEYS - NOT FOR PRODUCTION!")
+        logger.warning("=" * 60)
+    
+    # Create master admin account
+    await create_master_admin()
+    
+    # Create sample event
+    await create_sample_event()
+    
+    # Create sample products
+    await create_sample_products()
+    
+    # Initialize app settings
+    await init_app_settings()
+    
+    yield
+    
+    # Shutdown
+    logger.info("👋 Shutting down Invasion Latina API...")
+    await close_mongo_connection()
+
+# ============ FASTAPI APP INITIALIZATION ============
+
+app = FastAPI(
+    title="Invasion Latina API",
+    description="Backend API for Invasion Latina Mobile App - The biggest Latino-Reggaeton party in Belgium",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# CORS Configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.allowed_origins.split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ============ HELPER FUNCTIONS ============
+
+async def create_master_admin():
+    """Create master admin account for testing"""
+    db = get_database()
+    
+    admin_email = "admin@invasionlatina.be"
+    existing = await db.users.find_one({"email": admin_email})
+    
+    if not existing:
+        admin_user = {
+            "email": admin_email,
+            "name": "Master Admin",
+            "hashed_password": hash_password("admin123"),
+            "role": "admin",
+            "loyalty_points": 0,
+            "badges": ["admin"],
+            "friends": [],
+            "language": "fr",
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        await db.users.insert_one(admin_user)
+        logger.info(f"✅ Created master admin: {admin_email} / admin123")
+
+async def create_sample_event():
+    """Create a sample upcoming event"""
+    db = get_database()
+    
+    event_count = await db.events.count_documents({})
+    
+    if event_count == 0:
+        from datetime import date
+        today = date.today()
+        days_until_saturday = (5 - today.weekday()) % 7
+        if days_until_saturday == 0:
+            days_until_saturday = 7
+        next_saturday = today + timedelta(days=days_until_saturday)
+        event_datetime = datetime.combine(next_saturday, datetime.min.time()).replace(hour=23, minute=0)
+        
+        sample_event = {
+            "name": "Invasion Latina - New Year Edition",
+            "description": "The biggest Latino-Reggaeton party in Belgium is back! 🔥",
+            "event_date": event_datetime,
+            "venue_name": "Mirano Continental",
+            "venue_address": "Chaussée de Louvain 38, 1210 Brussels",
+            "lineup": [
+                {"name": "DJ Fuego", "role": "Resident DJ"},
+                {"name": "MC Latino", "role": "Host"}
+            ],
+            "ticket_categories": [
+                {
+                    "category": "standard",
+                    "name": "Standard Entry",
+                    "price": 25.0,
+                    "total_seats": 500,
+                    "available_seats": 500,
+                    "benefits": ["General admission", "Main floor access"]
+                },
+                {
+                    "category": "vip",
+                    "name": "VIP Entry",
+                    "price": 50.0,
+                    "total_seats": 100,
+                    "available_seats": 100,
+                    "benefits": ["Priority entry", "VIP area", "1 free drink"]
+                },
+                {
+                    "category": "platinum",
+                    "name": "Platinum Entry",
+                    "price": 100.0,
+                    "total_seats": 50,
+                    "available_seats": 50,
+                    "benefits": ["All VIP benefits", "Reserved table", "2 free drinks"]
+                }
+            ],
+            "status": "upcoming",
+            "created_at": datetime.utcnow()
+        }
+        
+        await db.events.insert_one(sample_event)
+        logger.info(f"✅ Created sample event on {event_datetime}")
+
+async def create_sample_products():
+    """Create sample merchandise products"""
+    db = get_database()
+    
+    product_count = await db.products.count_documents({})
+    
+    if product_count == 0:
+        products = [
+            {
+                "name": "Invasion Latina Hoodie",
+                "description": "Premium quality hoodie with official logo",
+                "category": "apparel",
+                "price": 45.0,
+                "sizes_available": ["S", "M", "L", "XL", "XXL"],
+                "images": [],  # Placeholder - will use base64 in production
+                "stock_quantity": 100,
+                "created_at": datetime.utcnow()
+            },
+            {
+                "name": "Invasion Latina T-Shirt",
+                "description": "Classic fit t-shirt with event branding",
+                "category": "apparel",
+                "price": 25.0,
+                "sizes_available": ["S", "M", "L", "XL"],
+                "images": [],
+                "stock_quantity": 200,
+                "created_at": datetime.utcnow()
+            },
+            {
+                "name": "Invasion Latina Cap",
+                "description": "Snapback cap with embroidered logo",
+                "category": "accessories",
+                "price": 20.0,
+                "sizes_available": ["One Size"],
+                "images": [],
+                "stock_quantity": 150,
+                "created_at": datetime.utcnow()
+            }
+        ]
+        
+        await db.products.insert_many(products)
+        logger.info(f"✅ Created {len(products)} sample products")
+
+async def init_app_settings():
+    """Initialize app settings if not exists"""
+    db = get_database()
+    
+    existing = await db.app_settings.find_one({"_id": "global"})
+    
+    if not existing:
+        default_settings = {
+            "_id": "global",
+            "requests_enabled": False,  # DJ song requests toggle
+            "current_event_id": None,   # Current active event for QR codes
+            "loyalty_qr_version": 1,    # Increment this to invalidate old QR codes
+            "updated_at": datetime.utcnow(),
+            "updated_by": "system"
+        }
+        await db.app_settings.insert_one(default_settings)
+        logger.info("✅ Created default app settings")
+
+# ============ ROOT & HEALTH ENDPOINTS ============
+
+@app.get("/")
+async def root():
+    """API root"""
+    return {
+        "app": "Invasion Latina API",
+        "version": "1.0.0",
+        "status": "running",
+        "venue": "Mirano Continental, Brussels",
+        "warning": "Using mock keys" if is_using_mock_keys() else None
+    }
+
+@app.get("/api/health")
+async def health_check():
+    """Health check"""
+    db = get_database()
+    try:
+        await db.command("ping")
+        return {"status": "healthy", "database": "connected"}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Database error: {str(e)}")
+
+# ============ AUTHENTICATION ENDPOINTS ============
+
+@app.post("/api/auth/register", response_model=UserResponse)
+async def register(user_data: UserCreate):
+    """Register a new user"""
+    db = get_database()
+    
+    # Check if user already exists
+    existing_user = await db.users.find_one({"email": user_data.email})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create new user
+    hashed_password = hash_password(user_data.password)
+    user_dict = user_data.dict()
+    del user_dict["password"]
+    user_dict["hashed_password"] = hashed_password
+    user_dict["role"] = "user"
+    user_dict["loyalty_points"] = 0
+    user_dict["badges"] = []
+    user_dict["friends"] = []
+    user_dict["created_at"] = datetime.utcnow()
+    user_dict["updated_at"] = datetime.utcnow()
+    
+    result = await db.users.insert_one(user_dict)
+    user_dict["_id"] = result.inserted_id
+    
+    # Create access token
+    access_token = create_access_token(data={"sub": str(result.inserted_id)})
+    
+    return UserResponse(
+        id=str(result.inserted_id),
+        email=user_data.email,
+        name=user_data.name,
+        role="user",
+        loyalty_points=0,
+        badges=[],
+        friends=[],
+        language=user_data.language,
+        access_token=access_token
+    )
+
+@app.post("/api/auth/login", response_model=UserResponse)
+async def login(credentials: UserLogin):
+    """Login user"""
+    db = get_database()
+    
+    user = await db.users.find_one({"email": credentials.email})
+    if not user or not verify_password(credentials.password, user["hashed_password"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    access_token = create_access_token(data={"sub": str(user["_id"])})
+    
+    return UserResponse(
+        id=str(user["_id"]),
+        email=user["email"],
+        name=user["name"],
+        role=user["role"],
+        loyalty_points=user.get("loyalty_points", 0),
+        badges=user.get("badges", []),
+        friends=user.get("friends", []),
+        language=user.get("language", "en"),
+        access_token=access_token
+    )
+
+@app.post("/api/auth/firebase-login", response_model=UserResponse)
+async def firebase_login(token_data: FirebaseTokenData):
+    """Login with Firebase token"""
+    try:
+        # Verify Firebase token (MOCKED in development)
+        user_info = await firebase_service.verify_token(token_data.firebase_token)
+        
+        db = get_database()
+        
+        # Find or create user
+        user = await db.users.find_one({"email": user_info["email"]})
+        
+        if not user:
+            # Create new user from Firebase data
+            user_dict = {
+                "email": user_info["email"],
+                "name": user_info.get("name", "Firebase User"),
+                "firebase_uid": user_info["uid"],
+                "role": "user",
+                "loyalty_points": 0,
+                "badges": [],
+                "friends": [],
+                "language": "en",
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            result = await db.users.insert_one(user_dict)
+            user_dict["_id"] = result.inserted_id
+            user = user_dict
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": str(user["_id"])})
+        
+        return UserResponse(
+            id=str(user["_id"]),
+            email=user["email"],
+            name=user["name"],
+            role=user["role"],
+            loyalty_points=user.get("loyalty_points", 0),
+            badges=user.get("badges", []),
+            friends=user.get("friends", []),
+            language=user.get("language", "en"),
+            access_token=access_token
+        )
+        
+    except Exception as e:
+        logger.error(f"Firebase login error: {str(e)}")
+        raise HTTPException(status_code=401, detail="Invalid Firebase token")
+
+# ============ SOCIAL AUTHENTICATION ENDPOINTS ============
+
+class SocialAuthData(BaseModel):
+    provider: str  # 'apple' or 'google'
+    id_token: str
+    user_id: Optional[str] = None
+    email: Optional[str] = None
+    name: Optional[str] = None
+
+@app.post("/api/auth/social", response_model=UserResponse)
+async def social_login(auth_data: SocialAuthData):
+    """Login/Register with Apple or Google"""
+    db = get_database()
+    
+    try:
+        # For Apple and Google, we trust the data sent from the app
+        # In production, you should verify the id_token with Apple/Google servers
+        
+        email = auth_data.email
+        name = auth_data.name or "User"
+        provider_id = auth_data.user_id or auth_data.id_token[:50] if auth_data.id_token else None
+        
+        # For Apple Sign In, email might be null on subsequent logins
+        # In that case, try to find user by provider_id
+        if not email and auth_data.provider == 'apple' and provider_id:
+            existing_user = await db.users.find_one({"apple_id": provider_id})
+            if existing_user:
+                email = existing_user.get("email")
+                name = existing_user.get("name", name)
+        
+        if not email:
+            raise HTTPException(status_code=400, detail="Email is required. Please use email login or try Sign in with Apple again.")
+        
+        # Check if user already exists
+        user = await db.users.find_one({"email": email})
+        
+        if not user and auth_data.provider == 'apple' and provider_id:
+            # Also check by Apple ID
+            user = await db.users.find_one({"apple_id": provider_id})
+        
+        if not user:
+            # Create new user from social login
+            user_dict = {
+                "email": email,
+                "name": name,
+                f"{auth_data.provider}_id": provider_id,
+                "auth_provider": auth_data.provider,
+                "role": "user",
+                "loyalty_points": 0,
+                "badges": [],
+                "friends": [],
+                "language": "fr",
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            result = await db.users.insert_one(user_dict)
+            user_dict["_id"] = result.inserted_id
+            user = user_dict
+            logger.info(f"✅ Created new user via {auth_data.provider}: {email}")
+        else:
+            # Update provider ID if not set
+            if not user.get(f"{auth_data.provider}_id"):
+                await db.users.update_one(
+                    {"_id": user["_id"]},
+                    {"$set": {f"{auth_data.provider}_id": provider_id}}
+                )
+            logger.info(f"✅ Existing user logged in via {auth_data.provider}: {email}")
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": str(user["_id"])})
+        
+        return UserResponse(
+            id=str(user["_id"]),
+            email=user["email"],
+            name=user.get("name", name),
+            role=user.get("role", "user"),
+            loyalty_points=user.get("loyalty_points", 0),
+            badges=user.get("badges", []),
+            friends=user.get("friends", []),
+            language=user.get("language", "fr"),
+            access_token=access_token
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Social login error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Social login failed: {str(e)}")
+
+@app.get("/api/auth/me", response_model=UserResponse)
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """Get current user information"""
+    return UserResponse(
+        id=str(current_user["_id"]),
+        email=current_user["email"],
+        name=current_user["name"],
+        role=current_user["role"],
+        loyalty_points=current_user.get("loyalty_points", 0),
+        badges=current_user.get("badges", []),
+        friends=current_user.get("friends", []),
+        language=current_user.get("language", "en")
+    )
+
+
+@app.put("/api/users/push-token")
+async def update_push_token(
+    token_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user's push notification token"""
+    db = get_database()
+    
+    push_token = token_data.get("push_token")
+    if not push_token:
+        raise HTTPException(status_code=400, detail="Push token is required")
+    
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"push_token": push_token, "push_token_updated_at": datetime.utcnow()}}
+    )
+    
+    return {"message": "Push token updated successfully"}
+
+
+async def send_push_notification_to_admins(title: str, body: str, data: dict = None):
+    """Send push notification to all admin users"""
+    import httpx
+    
+    db = get_database()
+    
+    # Get all admin users with push tokens
+    admins = []
+    async for admin in db.users.find({"role": "admin", "push_token": {"$exists": True, "$ne": None}}):
+        admins.append(admin)
+    
+    if not admins:
+        print("No admin push tokens found")
+        return
+    
+    # Send notification to each admin via Expo Push API
+    messages = []
+    for admin in admins:
+        push_token = admin.get("push_token")
+        if push_token and push_token.startswith("ExponentPushToken"):
+            messages.append({
+                "to": push_token,
+                "sound": "default",
+                "title": title,
+                "body": body,
+                "data": data or {}
+            })
+    
+    if messages:
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://exp.host/--/api/v2/push/send",
+                    json=messages,
+                    headers={"Content-Type": "application/json"}
+                )
+                print(f"Push notification sent: {response.status_code}")
+        except Exception as e:
+            print(f"Error sending push notification: {e}")
+
+
+
+# ============ EVENT ENDPOINTS ============
+
+@app.get("/api/events", response_model=List[EventResponse])
+async def get_events(status: Optional[str] = Query(None)):
+    """Get all events, optionally filtered by status"""
+    db = get_database()
+    
+    query = {}
+    if status:
+        query["status"] = status
+    
+    events = []
+    async for event in db.events.find(query).sort("event_date", 1):
+        events.append(EventResponse(
+            id=str(event["_id"]),
+            name=event["name"],
+            description=event["description"],
+            event_date=event["event_date"],
+            venue_name=event["venue_name"],
+            venue_address=event["venue_address"],
+            lineup=event.get("lineup", []),
+            ticket_categories=event.get("ticket_categories", []),
+            xceed_ticket_url=event.get("xceed_ticket_url"),
+            banner_image=event.get("banner_image"),
+            gallery_visible=event.get("gallery_visible", False),
+            aftermovie_visible=event.get("aftermovie_visible", False),
+            status=event["status"]
+        ))
+    
+    return events
+
+@app.get("/api/events/next")
+async def get_next_event():
+    """Get the next upcoming event"""
+    db = get_database()
+    from datetime import datetime
+    
+    # Find the next event that hasn't happened yet
+    next_event = await db.events.find_one(
+        {
+            "event_date": {"$gte": datetime.now()},
+            "status": "published"
+        },
+        sort=[("event_date", 1)]
+    )
+    
+    if not next_event:
+        # If no upcoming event, return the most recent one
+        next_event = await db.events.find_one(
+            sort=[("event_date", -1)]
+        )
+    
+    if not next_event:
+        # If still no event found, return a mock event
+        return {
+            "event": {
+                "id": "mock-event-001",
+                "name": "Invasion Latina - Summer Edition",
+                "description": "The biggest reggaeton party in Belgium!",
+                "event_date": datetime(2025, 7, 15, 22, 0, 0).isoformat(),
+                "venue_name": "Spirito Brussels",
+                "venue_address": "Rue de Stassart 18, 1050 Bruxelles",
+                "lineup": [
+                    {"name": "DJ Reggaeton King", "role": "Main Stage"},
+                    {"name": "MC Latino", "role": "Host"},
+                    {"name": "DJ Perreo", "role": "VIP Lounge"}
+                ],
+                "ticket_categories": [
+                    {"name": "Standard", "price": 20.0, "available": True},
+                    {"name": "VIP", "price": 40.0, "available": True}
+                ],
+                "xceed_ticket_url": "https://xceed.me/invasion-latina",  # Example XCEED link
+                "status": "published"
+            }
+        }
+    
+    return {
+        "event": {
+            "id": str(next_event["_id"]),
+            "name": next_event["name"],
+            "description": next_event["description"],
+            "event_date": next_event["event_date"].isoformat() if isinstance(next_event["event_date"], datetime) else next_event["event_date"],
+            "venue_name": next_event["venue_name"],
+            "venue_address": next_event["venue_address"],
+            "lineup": next_event.get("lineup", []),
+            "ticket_categories": next_event.get("ticket_categories", []),
+            "xceed_ticket_url": next_event.get("xceed_ticket_url"),
+            "selected_djs": next_event.get("selected_djs", []),
+            "status": next_event["status"]
+        }
+    }
+
+@app.get("/api/events/{event_id}", response_model=EventResponse)
+async def get_event(event_id: str):
+    """Get specific event by ID"""
+    db = get_database()
+    
+    try:
+        event = await db.events.find_one({"_id": ObjectId(event_id)})
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        return EventResponse(
+            id=str(event["_id"]),
+            name=event["name"],
+            description=event["description"],
+            event_date=event["event_date"],
+            venue_name=event["venue_name"],
+            venue_address=event["venue_address"],
+            lineup=event.get("lineup", []),
+            ticket_categories=event.get("ticket_categories", []),
+            status=event["status"]
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid event ID")
+
+@app.post("/api/events", response_model=EventResponse)
+async def create_event(
+    event_data: EventCreate,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Create new event (admin only)"""
+    db = get_database()
+    
+    event_dict = event_data.dict()
+    event_dict["status"] = "upcoming"
+    event_dict["created_at"] = datetime.utcnow()
+    
+    result = await db.events.insert_one(event_dict)
+    event_dict["_id"] = result.inserted_id
+    
+    return EventResponse(
+        id=str(result.inserted_id),
+        name=event_data.name,
+        description=event_data.description,
+        event_date=event_data.event_date,
+        venue_name=event_data.venue_name,
+        venue_address=event_data.venue_address,
+        lineup=event_data.lineup,
+        ticket_categories=event_data.ticket_categories,
+        status="upcoming"
+    )
+
+class DJSelectionUpdate(BaseModel):
+    selected_djs: List[str]
+
+@app.put("/api/admin/events/{event_id}/djs")
+async def update_event_djs(
+    event_id: str,
+    dj_data: DJSelectionUpdate,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Update selected DJs for an event (admin only)"""
+    db = get_database()
+    
+    try:
+        result = await db.events.update_one(
+            {"_id": ObjectId(event_id)},
+            {"$set": {"selected_djs": dj_data.selected_djs, "updated_at": datetime.utcnow()}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        logger.info(f"✅ Updated DJs for event {event_id}: {dj_data.selected_djs}")
+        return {"message": "DJs selection updated successfully", "selected_djs": dj_data.selected_djs}
+        
+    except Exception as e:
+        logger.error(f"Error updating DJs: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to update DJs: {str(e)}")
+
+# ============ TICKET ENDPOINTS ============
+
+@app.post("/api/tickets/purchase", response_model=TicketResponse)
+async def purchase_ticket(
+    ticket_data: TicketPurchase,
+    current_user: dict = Depends(get_current_user)
+):
+    """Purchase a ticket"""
+    db = get_database()
+    
+    # Get event
+    try:
+        event = await db.events.find_one({"_id": ObjectId(ticket_data.event_id)})
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+    except:
+        raise HTTPException(status_code=400, detail="Invalid event ID")
+    
+    # Find ticket category
+    ticket_category = None
+    for cat in event.get("ticket_categories", []):
+        if cat["category"] == ticket_data.ticket_category:
+            ticket_category = cat
+            break
+    
+    if not ticket_category:
+        raise HTTPException(status_code=400, detail="Invalid ticket category")
+    
+    # Check availability
+    if ticket_category["available_seats"] < ticket_data.quantity:
+        raise HTTPException(status_code=400, detail="Not enough tickets available")
+    
+    # Calculate total price
+    total_price = ticket_category["price"] * ticket_data.quantity
+    
+    # Process payment with Stripe (MOCKED)
+    try:
+        payment_result = await stripe_service.process_payment(
+            amount=int(total_price * 100),  # Convert to cents
+            currency="eur",
+            payment_method_id=ticket_data.payment_method_id,
+            customer_email=current_user["email"]
+        )
+        
+        if not payment_result["success"]:
+            raise HTTPException(status_code=400, detail="Payment failed")
+        
+    except Exception as e:
+        logger.error(f"Payment processing error: {str(e)}")
+        raise HTTPException(status_code=400, detail="Payment processing failed")
+    
+    # Create tickets
+    tickets = []
+    for i in range(ticket_data.quantity):
+        ticket_dict = {
+            "event_id": ObjectId(ticket_data.event_id),
+            "user_id": ObjectId(current_user["_id"]),
+            "ticket_category": ticket_data.ticket_category,
+            "price": ticket_category["price"],
+            "ticket_code": generate_ticket_code(),
+            "qr_data": generate_qr_data(),
+            "status": "active",
+            "purchase_date": datetime.utcnow(),
+            "payment_id": payment_result.get("payment_id", "mock_payment_123")
+        }
+        
+        result = await db.tickets.insert_one(ticket_dict)
+        ticket_dict["_id"] = result.inserted_id
+        
+        tickets.append(TicketResponse(
+            id=str(result.inserted_id),
+            event_id=ticket_data.event_id,
+            user_id=str(current_user["_id"]),
+            ticket_category=ticket_data.ticket_category,
+            price=ticket_category["price"],
+            ticket_code=ticket_dict["ticket_code"],
+            qr_data=ticket_dict["qr_data"],
+            status="active",
+            purchase_date=ticket_dict["purchase_date"]
+        ))
+    
+    # Update available seats
+    await db.events.update_one(
+        {"_id": ObjectId(ticket_data.event_id), "ticket_categories.category": ticket_data.ticket_category},
+        {"$inc": {"ticket_categories.$.available_seats": -ticket_data.quantity}}
+    )
+    
+    # Award loyalty points
+    points_earned = int(total_price * 0.1)  # 10% of price as points
+    await db.users.update_one(
+        {"_id": ObjectId(current_user["_id"])},
+        {"$inc": {"loyalty_points": points_earned}}
+    )
+    
+    return tickets[0] if len(tickets) == 1 else tickets
+
+@app.get("/api/tickets/my-tickets", response_model=List[TicketResponse])
+async def get_my_tickets(current_user: dict = Depends(get_current_user)):
+    """Get current user's tickets"""
+    db = get_database()
+    
+    tickets = []
+    async for ticket in db.tickets.find({"user_id": ObjectId(current_user["_id"])}):
+        tickets.append(TicketResponse(
+            id=str(ticket["_id"]),
+            event_id=str(ticket["event_id"]),
+            user_id=str(ticket["user_id"]),
+            ticket_category=ticket["ticket_category"],
+            price=ticket["price"],
+            ticket_code=ticket["ticket_code"],
+            qr_data=ticket["qr_data"],
+            status=ticket["status"],
+            purchase_date=ticket["purchase_date"]
+        ))
+    
+    return tickets
+
+@app.post("/api/tickets/{ticket_id}/validate")
+async def validate_ticket(
+    ticket_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Validate a ticket (admin only)"""
+    db = get_database()
+    
+    try:
+        ticket = await db.tickets.find_one({"_id": ObjectId(ticket_id)})
+        if not ticket:
+            raise HTTPException(status_code=404, detail="Ticket not found")
+        
+        if ticket["status"] != "active":
+            raise HTTPException(status_code=400, detail="Ticket already used or invalid")
+        
+        # Mark ticket as used
+        await db.tickets.update_one(
+            {"_id": ObjectId(ticket_id)},
+            {"$set": {"status": "used", "validated_at": datetime.utcnow()}}
+        )
+        
+        return {"message": "Ticket validated successfully", "ticket_code": ticket["ticket_code"]}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid ticket ID")
+
+# ============ FREE ENTRY (LOYALTY REWARDS) ENDPOINTS ============
+
+@app.get("/api/loyalty/free-entry/check")
+async def check_free_entry_voucher(current_user: dict = Depends(get_current_user)):
+    """Check if user has an active free entry voucher"""
+    db = get_database()
+    user_id = str(current_user["_id"])
+    
+    # Find active voucher (not used, not expired)
+    voucher = await db.free_entry_vouchers.find_one({
+        "user_id": user_id,
+        "used": False,
+        "expires_at": {"$gt": datetime.utcnow()}
+    })
+    
+    if voucher:
+        return {
+            "has_voucher": True,
+            "voucher": {
+                "id": str(voucher["_id"]),
+                "user_id": voucher["user_id"],
+                "created_at": voucher["created_at"].isoformat(),
+                "expires_at": voucher["expires_at"].isoformat(),
+                "used": voucher["used"]
+            }
+        }
+    
+    return {"has_voucher": False, "voucher": None}
+
+@app.post("/api/loyalty/free-entry/claim")
+async def claim_free_entry(current_user: dict = Depends(get_current_user)):
+    """Claim a free entry voucher (costs 25 loyalty points)"""
+    db = get_database()
+    user_id = str(current_user["_id"])
+    
+    # Check if user has enough points
+    user = await db.users.find_one({"_id": current_user["_id"]})
+    if not user or user.get("loyalty_points", 0) < 25:
+        raise HTTPException(status_code=400, detail="Tu as besoin de 25 points de fidélité")
+    
+    # Check if user already has an active voucher
+    existing = await db.free_entry_vouchers.find_one({
+        "user_id": user_id,
+        "used": False,
+        "expires_at": {"$gt": datetime.utcnow()}
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Tu as déjà une entrée gratuite active")
+    
+    # Deduct points
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$inc": {"loyalty_points": -25}}
+    )
+    
+    # Create voucher (valid for 90 days)
+    voucher_dict = {
+        "user_id": user_id,
+        "user_name": user.get("name", "Unknown"),
+        "user_email": user.get("email"),
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(days=90),
+        "used": False,
+        "used_at": None,
+        "validated_by": None,
+        "event_id": None
+    }
+    
+    result = await db.free_entry_vouchers.insert_one(voucher_dict)
+    voucher_dict["_id"] = result.inserted_id
+    
+    logger.info(f"✅ Free entry voucher created for user {user_id}")
+    
+    return {
+        "message": "Entrée gratuite obtenue!",
+        "voucher": {
+            "id": str(voucher_dict["_id"]),
+            "user_id": voucher_dict["user_id"],
+            "created_at": voucher_dict["created_at"].isoformat(),
+            "expires_at": voucher_dict["expires_at"].isoformat(),
+            "used": voucher_dict["used"]
+        }
+    }
+
+@app.post("/api/admin/free-entry/validate")
+async def validate_free_entry(
+    voucher_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Validate a free entry voucher (Admin only - scan QR code)"""
+    db = get_database()
+    
+    voucher_id = voucher_data.get("voucher_id")
+    if not voucher_id:
+        raise HTTPException(status_code=400, detail="voucher_id is required")
+    
+    try:
+        voucher = await db.free_entry_vouchers.find_one({"_id": ObjectId(voucher_id)})
+        
+        if not voucher:
+            raise HTTPException(status_code=404, detail="Voucher non trouvé")
+        
+        if voucher["used"]:
+            raise HTTPException(status_code=400, detail=f"Ce voucher a déjà été utilisé le {voucher.get('used_at', 'date inconnue')}")
+        
+        if voucher["expires_at"] < datetime.utcnow():
+            raise HTTPException(status_code=400, detail="Ce voucher a expiré")
+        
+        # Get current event
+        current_event = await db.events.find_one(
+            {"status": {"$in": ["live", "upcoming"]}},
+            sort=[("date", -1)]
+        )
+        event_id = str(current_event["_id"]) if current_event else None
+        
+        # Mark voucher as used
+        await db.free_entry_vouchers.update_one(
+            {"_id": ObjectId(voucher_id)},
+            {
+                "$set": {
+                    "used": True,
+                    "used_at": datetime.utcnow(),
+                    "validated_by": str(current_user["_id"]),
+                    "event_id": event_id
+                }
+            }
+        )
+        
+        logger.info(f"✅ Free entry voucher {voucher_id} validated by admin {current_user.get('email')}")
+        
+        return {
+            "success": True,
+            "message": "Entrée gratuite validée!",
+            "user_name": voucher.get("user_name", "Client"),
+            "user_email": voucher.get("user_email"),
+            "voucher_id": voucher_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error validating voucher: {str(e)}")
+        raise HTTPException(status_code=400, detail="ID de voucher invalide")
+
+# ============ DJ REQUEST ENDPOINTS ============
+
+@app.post("/api/dj/request-song")
+async def request_song(
+    song_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Request a song"""
+    db = get_database()
+    
+    # Check if song requests are enabled
+    settings = await db.app_settings.find_one({"_id": "global"})
+    if not settings or not settings.get("requests_enabled", False):
+        raise HTTPException(
+            status_code=403, 
+            detail="Les demandes de chansons sont désactivées pour le moment. Revenez pendant l'événement!"
+        )
+    
+    # ============ GEOLOCATION AND TIME CHECK ============
+    # Mirano Continental coordinates
+    MIRANO_LAT = 50.8389
+    MIRANO_LNG = 4.3660
+    MAX_DISTANCE_METERS = 40  # 40 meters radius
+    
+    # Get user's location from request
+    user_lat = song_data.get("latitude")
+    user_lng = song_data.get("longitude")
+    
+    # Check if location is provided
+    if user_lat and user_lng:
+        try:
+            user_lat = float(user_lat)
+            user_lng = float(user_lng)
+            
+            # Calculate distance using Haversine formula
+            import math
+            R = 6371000  # Earth radius in meters
+            
+            lat1, lat2 = math.radians(MIRANO_LAT), math.radians(user_lat)
+            dlat = math.radians(user_lat - MIRANO_LAT)
+            dlng = math.radians(user_lng - MIRANO_LNG)
+            
+            a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng/2)**2
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+            distance = R * c
+            
+            if distance > MAX_DISTANCE_METERS:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Vous devez être au Mirano Continental pour demander une chanson (vous êtes à {int(distance)}m)"
+                )
+        except (ValueError, TypeError):
+            # If location parsing fails, skip location check
+            pass
+    else:
+        # Location not provided - require it
+        raise HTTPException(
+            status_code=403,
+            detail="Activez votre localisation pour demander une chanson"
+        )
+    
+    # Check time - only allow between 23h and 5h
+    from datetime import datetime
+    current_hour = datetime.now().hour
+    
+    # Allow requests between 23:00 (23) and 05:00 (5)
+    # This means: hour >= 23 OR hour < 5
+    if not (current_hour >= 23 or current_hour < 5):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Les demandes de chansons sont disponibles uniquement entre 23h et 5h"
+        )
+    # ============ END GEOLOCATION AND TIME CHECK ============
+    
+    # Validate required fields
+    if not song_data.get("song_title") or not song_data.get("artist_name"):
+        raise HTTPException(status_code=400, detail="Song title and artist name are required")
+    
+    # Get current or upcoming event (for testing, we don't require a "live" event)
+    current_event = await db.events.find_one(
+        {"status": {"$in": ["live", "upcoming"]}},
+        sort=[("date", -1)]
+    )
+    
+    # If no event found, create a default event context
+    event_id = str(current_event["_id"]) if current_event else "default_event"
+    
+    # Normalize song title and artist for comparison (case-insensitive)
+    song_title_normalized = song_data["song_title"].strip().lower()
+    artist_name_normalized = song_data["artist_name"].strip().lower()
+    
+    # Check for duplicate requests in the same event
+    user_id = str(current_user["_id"])
+    
+    # Find existing request with same song (case-insensitive) in pending status for this event
+    existing = await db.song_requests.find_one({
+        "song_title_normalized": song_title_normalized,
+        "artist_name_normalized": artist_name_normalized,
+        "event_id": event_id,
+        "status": "pending"
+    })
+    
+    if existing:
+        # Song already requested - check if user already requested it
+        if user_id in existing.get("requesters", []):
+            raise HTTPException(status_code=400, detail="Vous avez déjà demandé cette chanson")
+        
+        # Increment times_requested and add user as requester and voter
+        new_count = existing.get("times_requested", 1) + 1
+        await db.song_requests.update_one(
+            {"_id": existing["_id"]},
+            {
+                "$inc": {"times_requested": 1, "votes": 1},
+                "$push": {"requesters": user_id, "voters": user_id}
+            }
+        )
+        
+        return {
+            "message": f"Demande ajoutée! '{existing['song_title']}' a maintenant {new_count} demandes! 🔥",
+            "request_id": str(existing["_id"]),
+            "song": f"{existing['song_title']} by {existing['artist_name']}",
+            "times_requested": new_count
+        }
+    
+    # Create new song request
+    request_dict = {
+        "user_id": str(current_user["_id"]),
+        "user_name": song_data.get("user_name", current_user.get("name", "Anonyme")),
+        "event_id": event_id,
+        "song_title": song_data["song_title"].strip(),
+        "artist_name": song_data["artist_name"].strip(),
+        "song_title_normalized": song_title_normalized,
+        "artist_name_normalized": artist_name_normalized,
+        "requested_at": datetime.utcnow(),
+        "votes": 1,
+        "voters": [user_id],
+        "requesters": [user_id],
+        "times_requested": 1,
+        "status": "pending"
+    }
+    
+    result = await db.song_requests.insert_one(request_dict)
+    
+    return {
+        "message": "Demande envoyée!",
+        "request_id": str(result.inserted_id),
+        "song": f"{song_data['song_title']} by {song_data['artist_name']}",
+        "times_requested": 1
+    }
+
+@app.get("/api/dj/requests")
+async def get_song_requests(
+    status: Optional[str] = Query(None),
+    event_id: Optional[str] = Query(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get song requests with optional filters"""
+    db = get_database()
+    
+    # Build query
+    query = {}
+    if status:
+        query["status"] = status
+    if event_id:
+        query["event_id"] = event_id
+    
+    requests = []
+    async for request in db.song_requests.find(query).sort("requested_at", -1).limit(100):
+        user_id = str(current_user["_id"])
+        requests.append({
+            "id": str(request["_id"]),
+            "song_title": request["song_title"],
+            "artist_name": request["artist_name"],
+            "user_name": request["user_name"],
+            "votes": request["votes"],
+            "times_requested": request.get("times_requested", 1),
+            "requested_at": request["requested_at"],
+            "status": request["status"],
+            "rejection_reason": request.get("rejection_reason"),
+            "rejection_label": request.get("rejection_label"),
+            "event_id": request.get("event_id"),
+            "can_vote": user_id not in request.get("voters", []),
+            "can_request": user_id not in request.get("requesters", [])
+        })
+    
+    return requests
+
+
+@app.delete("/api/dj/requests/clear-all")
+async def clear_all_song_requests(
+    current_user: dict = Depends(get_current_admin)
+):
+    """Delete all song requests (Admin only)"""
+    db = get_database()
+    
+    try:
+        result = await db.song_requests.delete_many({})
+        logger.info(f"✅ Cleared all song requests: {result.deleted_count} deleted")
+        return {"message": f"Toutes les demandes ont été supprimées ({result.deleted_count})"}
+    except Exception as e:
+        logger.error(f"❌ Error clearing song requests: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la suppression")
+
+
+@app.delete("/api/dj/requests/{request_id}")
+async def delete_song_request(
+    request_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Delete a specific song request (Admin only)"""
+    db = get_database()
+    
+    try:
+        result = await db.song_requests.delete_one({"_id": ObjectId(request_id)})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Demande non trouvée")
+        
+        logger.info(f"✅ Deleted song request {request_id}")
+        return {"message": "Demande supprimée avec succès"}
+    except Exception as e:
+        logger.error(f"❌ Error deleting song request: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la suppression")
+
+
+@app.get("/api/dj/admin/all-requests")
+async def get_all_song_requests_admin(
+    current_user: dict = Depends(get_current_admin)
+):
+    """Get all song requests with stats grouped by event (Admin only)"""
+    db = get_database()
+    
+    # Get all events
+    events = []
+    async for event in db.events.find().sort("date", -1):
+        event_id = str(event["_id"])
+        
+        # Count requests for this event
+        pending_count = await db.song_requests.count_documents({"event_id": event_id, "status": "pending"})
+        played_count = await db.song_requests.count_documents({"event_id": event_id, "status": "played"})
+        rejected_count = await db.song_requests.count_documents({"event_id": event_id, "status": "rejected"})
+        
+        events.append({
+            "id": event_id,
+            "name": event.get("name", "Événement"),
+            "date": event.get("date"),
+            "pending": pending_count,
+            "played": played_count,
+            "rejected": rejected_count,
+            "total": pending_count + played_count + rejected_count
+        })
+    
+    # Also count requests without event (default_event)
+    default_pending = await db.song_requests.count_documents({"event_id": "default_event", "status": "pending"})
+    default_played = await db.song_requests.count_documents({"event_id": "default_event", "status": "played"})
+    default_rejected = await db.song_requests.count_documents({"event_id": "default_event", "status": "rejected"})
+    
+    if default_pending + default_played + default_rejected > 0:
+        events.insert(0, {
+            "id": "default_event",
+            "name": "Événement actuel",
+            "date": None,
+            "pending": default_pending,
+            "played": default_played,
+            "rejected": default_rejected,
+            "total": default_pending + default_played + default_rejected
+        })
+    
+    return events
+
+
+@app.get("/api/dj/my-requests")
+async def get_my_song_requests(current_user: dict = Depends(get_current_user)):
+    """Get current user's song requests with their status"""
+    db = get_database()
+    user_id = str(current_user["_id"])
+    
+    requests = []
+    async for request in db.song_requests.find(
+        {"requesters": user_id}
+    ).sort("requested_at", -1).limit(20):
+        requests.append({
+            "id": str(request["_id"]),
+            "song_title": request["song_title"],
+            "artist_name": request["artist_name"],
+            "status": request["status"],
+            "rejection_reason": request.get("rejection_label", request.get("rejection_reason")),
+            "requested_at": request["requested_at"],
+            "votes": request["votes"],
+        })
+    
+    return requests
+
+
+@app.post("/api/dj/vote/{request_id}")
+async def vote_for_song(
+    request_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Vote for a song request"""
+    db = get_database()
+    
+    try:
+        request = await db.song_requests.find_one({"_id": ObjectId(request_id)})
+        if not request:
+            raise HTTPException(status_code=404, detail="Song request not found")
+        
+        if request["status"] != "pending":
+            raise HTTPException(status_code=400, detail="Cannot vote on this request")
+        
+        user_id = str(current_user["_id"])
+        if user_id in request.get("voters", []):
+            raise HTTPException(status_code=400, detail="You have already voted for this song")
+        
+        # Add vote
+        await db.song_requests.update_one(
+            {"_id": ObjectId(request_id)},
+            {
+                "$inc": {"votes": 1},
+                "$push": {"voters": user_id}
+            }
+        )
+        
+        return {"message": "Vote added successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid request ID")
+
+@app.post("/api/dj/admin/update-request/{request_id}")
+async def update_song_request(
+    request_id: str,
+    update_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Update song request status (DJ/Admin only)"""
+    db = get_database()
+    
+    try:
+        status = update_data.get("status")
+        rejection_reason = update_data.get("rejection_reason")
+        rejection_label = update_data.get("rejection_label")
+        
+        update_dict = {"status": status}
+        if status == "played":
+            update_dict["played_at"] = datetime.utcnow()
+        elif status == "rejected":
+            if rejection_reason:
+                update_dict["rejection_reason"] = rejection_reason
+            if rejection_label:
+                update_dict["rejection_label"] = rejection_label
+        
+        result = await db.song_requests.update_one(
+            {"_id": ObjectId(request_id)},
+            {"$set": update_dict}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Song request not found")
+        
+        return {"message": f"Request {status} successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid request ID")
+
+# ============ MERCHANDISE ENDPOINTS ============
+
+@app.get("/api/products")
+async def get_products(category: Optional[str] = Query(None)):
+    """Get all products, optionally filtered by category"""
+    db = get_database()
+    
+    query = {}
+    if category:
+        query["category"] = category
+    
+    products = []
+    async for product in db.products.find(query):
+        products.append({
+            "id": str(product["_id"]),
+            "name": product["name"],
+            "description": product["description"],
+            "category": product["category"],
+            "price": product["price"],
+            "sizes_available": product.get("sizes_available", []),
+            "images": product.get("images", []),
+            "stock_quantity": product["stock_quantity"]
+        })
+    
+    return products
+
+@app.post("/api/orders")
+async def create_order(
+    order_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create merchandise order"""
+    db = get_database()
+    
+    # Validate products and calculate total
+    total_price = 0
+    order_items = []
+    
+    for item in order_data["items"]:
+        product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
+        if not product:
+            raise HTTPException(status_code=404, detail=f"Product {item['product_id']} not found")
+        
+        if product["stock_quantity"] < item["quantity"]:
+            raise HTTPException(status_code=400, detail=f"Insufficient stock for {product['name']}")
+        
+        subtotal = product["price"] * item["quantity"]
+        total_price += subtotal
+        
+        order_items.append({
+            "product_id": item["product_id"],
+            "product_name": product["name"],
+            "quantity": item["quantity"],
+            "size": item.get("size"),
+            "price": product["price"],
+            "subtotal": subtotal
+        })
+    
+    # Process payment (MOCKED)
+    try:
+        payment_result = await stripe_service.process_payment(
+            amount=int(total_price * 100),
+            currency="eur",
+            payment_method_id=order_data["payment_method_id"],
+            customer_email=current_user["email"]
+        )
+        
+        if not payment_result["success"]:
+            raise HTTPException(status_code=400, detail="Payment failed")
+        
+    except Exception as e:
+        logger.error(f"Payment processing error: {str(e)}")
+        raise HTTPException(status_code=400, detail="Payment processing failed")
+    
+    # Create order
+    order_dict = {
+        "user_id": str(current_user["_id"]),
+        "items": order_items,
+        "total_price": total_price,
+        "delivery_method": order_data["delivery_method"],
+        "delivery_address": order_data.get("delivery_address"),
+        "status": "confirmed",
+        "stripe_payment_intent_id": payment_result.get("payment_id", "mock_payment_123"),
+        "customer_name": current_user["name"],
+        "customer_email": current_user["email"],
+        "created_at": datetime.utcnow(),
+        "confirmed_at": datetime.utcnow()
+    }
+    
+    result = await db.orders.insert_one(order_dict)
+    
+    # Update stock quantities
+    for item in order_data["items"]:
+        await db.products.update_one(
+            {"_id": ObjectId(item["product_id"])},
+            {"$inc": {"stock_quantity": -item["quantity"]}}
+        )
+    
+    return {
+        "order_id": str(result.inserted_id),
+        "total_price": total_price,
+        "status": "confirmed",
+        "message": "Order placed successfully"
+    }
+
+@app.get("/api/orders/my-orders")
+async def get_my_orders(current_user: dict = Depends(get_current_user)):
+    """Get current user's orders"""
+    db = get_database()
+    
+    orders = []
+    async for order in db.orders.find({"user_id": str(current_user["_id"])}).sort("created_at", -1):
+        orders.append({
+            "id": str(order["_id"]),
+            "items": order["items"],
+            "total_price": order["total_price"],
+            "delivery_method": order["delivery_method"],
+            "status": order["status"],
+            "created_at": order["created_at"],
+            "confirmed_at": order.get("confirmed_at"),
+            "shipped_at": order.get("shipped_at"),
+            "delivered_at": order.get("delivered_at")
+        })
+    
+    return orders
+
+# ============ SOCIAL FEATURES ============
+
+@app.post("/api/social/add-friend")
+async def add_friend(
+    friend_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Add a friend by email"""
+    db = get_database()
+    
+    friend_email = friend_data.get("email")
+    if not friend_email:
+        raise HTTPException(status_code=400, detail="Friend email required")
+    
+    if friend_email == current_user["email"]:
+        raise HTTPException(status_code=400, detail="Cannot add yourself as friend")
+    
+    # Find friend user
+    friend_user = await db.users.find_one({"email": friend_email})
+    if not friend_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    friend_id = str(friend_user["_id"])
+    current_user_id = str(current_user["_id"])
+    
+    # Check if already friends
+    if friend_id in current_user.get("friends", []):
+        raise HTTPException(status_code=400, detail="Already friends with this user")
+    
+    # Add to both users' friend lists
+    await db.users.update_one(
+        {"_id": ObjectId(current_user_id)},
+        {"$push": {"friends": friend_id}}
+    )
+    
+    await db.users.update_one(
+        {"_id": ObjectId(friend_id)},
+        {"$push": {"friends": current_user_id}}
+    )
+    
+    return {
+        "message": f"Added {friend_user['name']} as friend",
+        "friend_name": friend_user["name"]
+    }
+
+@app.get("/api/social/friends")
+async def get_friends(current_user: dict = Depends(get_current_user)):
+    """Get user's friends list"""
+    db = get_database()
+    
+    friend_ids = current_user.get("friends", [])
+    if not friend_ids:
+        return []
+    
+    friends = []
+    async for friend in db.users.find({"_id": {"$in": [ObjectId(fid) for fid in friend_ids]}}):
+        friends.append({
+            "id": str(friend["_id"]),
+            "name": friend["name"],
+            "email": friend["email"],
+            "loyalty_points": friend.get("loyalty_points", 0),
+            "badges": friend.get("badges", [])
+        })
+    
+    return friends
+
+@app.get("/api/social/leaderboard")
+async def get_leaderboard():
+    """Get loyalty points leaderboard"""
+    db = get_database()
+    
+    leaderboard = []
+    async for user in db.users.find({}).sort("loyalty_points", -1).limit(50):
+        leaderboard.append({
+            "name": user["name"],
+            "loyalty_points": user.get("loyalty_points", 0),
+            "badges": user.get("badges", [])
+        })
+    
+    return leaderboard
+
+# ============ ADMIN ENDPOINTS ============
+
+@app.get("/api/admin/dashboard")
+async def admin_dashboard(current_user: dict = Depends(get_current_admin)):
+    """Get admin dashboard data"""
+    db = get_database()
+    
+    # Get statistics
+    total_users = await db.users.count_documents({})
+    total_tickets = await db.tickets.count_documents({})
+    total_orders = await db.orders.count_documents({})
+    pending_requests = await db.song_requests.count_documents({"status": "pending"})
+    
+    # Get recent activity
+    recent_users = []
+    async for user in db.users.find({}).sort("created_at", -1).limit(10):
+        recent_users.append({
+            "name": user["name"],
+            "email": user["email"],
+            "created_at": user["created_at"]
+        })
+    
+    return {
+        "stats": {
+            "total_users": total_users,
+            "total_tickets": total_tickets,
+            "total_orders": total_orders,
+            "pending_requests": pending_requests
+        },
+        "recent_users": recent_users
+    }
+
+# Note: Additional endpoints for media upload, notifications, etc. can be added as needed
+
+# ============ APP SETTINGS ENDPOINTS (ADMIN) ============
+
+@app.get("/api/admin/settings")
+async def get_app_settings(current_user: dict = Depends(get_current_admin)):
+    """Get current app settings"""
+    db = get_database()
+    
+    settings = await db.app_settings.find_one({"_id": "global"})
+    
+    if not settings:
+        settings = {
+            "_id": "global",
+            "requests_enabled": False,
+            "current_event_id": None,
+            "loyalty_qr_version": 1
+        }
+    
+    return {
+        "requests_enabled": settings.get("requests_enabled", False),
+        "current_event_id": settings.get("current_event_id"),
+        "loyalty_qr_version": settings.get("loyalty_qr_version", 1),
+        "updated_at": settings.get("updated_at"),
+        "updated_by": settings.get("updated_by")
+    }
+
+@app.post("/api/admin/settings/toggle-requests")
+async def toggle_song_requests(current_user: dict = Depends(get_current_admin)):
+    """Toggle song requests ON/OFF"""
+    db = get_database()
+    
+    settings = await db.app_settings.find_one({"_id": "global"})
+    current_status = settings.get("requests_enabled", False) if settings else False
+    new_status = not current_status
+    
+    await db.app_settings.update_one(
+        {"_id": "global"},
+        {
+            "$set": {
+                "requests_enabled": new_status,
+                "updated_at": datetime.utcnow(),
+                "updated_by": current_user["email"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "success": True,
+        "requests_enabled": new_status,
+        "message": f"Les demandes de chansons sont maintenant {'ACTIVÉES' if new_status else 'DÉSACTIVÉES'}"
+    }
+
+@app.post("/api/admin/settings/end-event")
+async def end_current_event(current_user: dict = Depends(get_current_admin)):
+    """End current event and generate new QR code version for next event"""
+    db = get_database()
+    
+    settings = await db.app_settings.find_one({"_id": "global"})
+    current_qr_version = settings.get("loyalty_qr_version", 1) if settings else 1
+    new_qr_version = current_qr_version + 1
+    
+    # Update settings: disable requests and increment QR version
+    await db.app_settings.update_one(
+        {"_id": "global"},
+        {
+            "$set": {
+                "requests_enabled": False,
+                "loyalty_qr_version": new_qr_version,
+                "current_event_id": None,
+                "updated_at": datetime.utcnow(),
+                "updated_by": current_user["email"]
+            }
+        },
+        upsert=True
+    )
+    
+    # Clear all pending song requests
+    await db.song_requests.delete_many({"status": "pending"})
+    
+    return {
+        "success": True,
+        "message": f"Événement terminé! Nouveau QR code (version {new_qr_version}) prêt pour le prochain événement.",
+        "new_qr_version": new_qr_version,
+        "requests_cleared": True
+    }
+
+@app.post("/api/admin/settings/start-event")
+async def start_new_event(
+    event_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Start a new event - enables requests and sets current event"""
+    db = get_database()
+    
+    # If no event_id provided, get the next upcoming event
+    if not event_id:
+        next_event = await db.events.find_one(
+            {"status": "upcoming"},
+            sort=[("event_date", 1)]
+        )
+        if next_event:
+            event_id = str(next_event["_id"])
+    
+    await db.app_settings.update_one(
+        {"_id": "global"},
+        {
+            "$set": {
+                "requests_enabled": True,
+                "current_event_id": event_id,
+                "updated_at": datetime.utcnow(),
+                "updated_by": current_user["email"]
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "success": True,
+        "message": "Événement démarré! Les demandes de chansons sont activées.",
+        "requests_enabled": True,
+        "current_event_id": event_id
+    }
+
+@app.get("/api/settings/requests-status")
+async def get_requests_status():
+    """Public endpoint to check if song requests are enabled"""
+    db = get_database()
+    
+    settings = await db.app_settings.find_one({"_id": "global"})
+    
+    return {
+        "requests_enabled": settings.get("requests_enabled", False) if settings else False
+    }
+
+@app.get("/api/loyalty/qr-version")
+async def get_qr_version():
+    """Get current QR code version for loyalty scanning"""
+    db = get_database()
+    
+    settings = await db.app_settings.find_one({"_id": "global"})
+    
+    return {
+        "qr_version": settings.get("loyalty_qr_version", 1) if settings else 1
+    }
+
+
+# ============ LOYALTY PROGRAM ENDPOINTS ============
+
+@app.get("/api/loyalty/my-points")
+async def get_my_loyalty_points(current_user: dict = Depends(get_current_user)):
+    """Get current user's loyalty points and stats"""
+    db = get_database()
+    
+    user = await db.users.find_one({"_id": ObjectId(current_user["_id"])})
+    
+    # Get check-in history
+    check_ins = []
+    async for check_in in db.loyalty_checkins.find(
+        {"user_id": str(current_user["_id"])}
+    ).sort("checked_in_at", -1).limit(10):
+        event = await db.events.find_one({"_id": ObjectId(check_in["event_id"])})
+        check_ins.append({
+            "event_name": event["name"] if event else "Unknown Event",
+            "points": check_in["points_earned"],
+            "date": check_in["checked_in_at"]
+        })
+    
+    # Calculate progress to next reward (25 Invasion Coins for a free guest)
+    points = user.get("loyalty_points", 0)
+    points_to_reward = 25
+    progress_percentage = min((points / points_to_reward) * 100, 100)
+    rewards_earned = points // points_to_reward
+    
+    return {
+        "points": points,
+        "check_ins_count": await db.loyalty_checkins.count_documents({"user_id": str(current_user["_id"])}),
+        "progress_to_next_reward": progress_percentage,
+        "points_needed": max(0, points_to_reward - (points % points_to_reward)),
+        "rewards_earned": rewards_earned,
+        "recent_check_ins": check_ins
+    }
+
+@app.get("/api/loyalty/rewards")
+async def get_my_rewards(current_user: dict = Depends(get_current_user)):
+    """Get user's available and redeemed rewards"""
+    db = get_database()
+    
+    rewards = []
+    async for reward in db.loyalty_rewards.find(
+        {"user_id": str(current_user["_id"])}
+    ).sort("created_at", -1):
+        rewards.append({
+            "id": str(reward["_id"]),
+            "reward_type": reward["reward_type"],
+            "points_spent": reward["points_spent"],
+            "code": reward["code"],
+            "status": reward["status"],
+            "created_at": reward["created_at"],
+            "redeemed_at": reward.get("redeemed_at"),
+            "expires_at": reward.get("expires_at")
+        })
+    
+    return rewards
+
+
+# ============ USER NOTIFICATION PREFERENCES ============
+
+@app.get("/api/user/notification-preferences")
+async def get_notification_preferences(current_user: dict = Depends(get_current_user)):
+    """Get user's notification preferences"""
+    db = get_database()
+    
+    prefs = await db.notification_preferences.find_one({"user_id": str(current_user["_id"])})
+    
+    if not prefs:
+        # Return default preferences
+        return {
+            "push_enabled": True,
+            "new_events": True,
+            "event_reminders": True,
+            "promotions": True,
+            "invasion_coins": True,
+            "dj_updates": True,
+            "newsletter_email": False
+        }
+    
+    return {
+        "push_enabled": prefs.get("push_enabled", True),
+        "new_events": prefs.get("new_events", True),
+        "event_reminders": prefs.get("event_reminders", True),
+        "promotions": prefs.get("promotions", True),
+        "invasion_coins": prefs.get("invasion_coins", True),
+        "dj_updates": prefs.get("dj_updates", True),
+        "newsletter_email": prefs.get("newsletter_email", False)
+    }
+
+@app.put("/api/user/notification-preferences")
+async def update_notification_preferences(
+    preferences: Dict[str, bool] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user's notification preferences"""
+    db = get_database()
+    
+    # Validate keys
+    allowed_keys = ["push_enabled", "new_events", "event_reminders", "promotions", "invasion_coins", "dj_updates", "newsletter_email"]
+    update_data = {k: v for k, v in preferences.items() if k in allowed_keys}
+    update_data["user_id"] = str(current_user["_id"])
+    update_data["updated_at"] = datetime.utcnow()
+    
+    # Upsert preferences
+    await db.notification_preferences.update_one(
+        {"user_id": str(current_user["_id"])},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    # Log consent for GDPR compliance
+    await db.consent_logs.insert_one({
+        "user_id": str(current_user["_id"]),
+        "user_email": current_user.get("email"),
+        "action": "notification_preferences_updated",
+        "preferences": update_data,
+        "timestamp": datetime.utcnow(),
+        "ip_address": None  # Could be added if needed
+    })
+    
+    return {"success": True, "message": "Préférences mises à jour"}
+
+
+@app.post("/api/loyalty/claim-reward")
+async def claim_reward(current_user: dict = Depends(get_current_user)):
+    """Claim a free entry reward (25 Invasion Coins)"""
+    db = get_database()
+    
+    user = await db.users.find_one({"_id": ObjectId(current_user["_id"])})
+    points = user.get("loyalty_points", 0)
+    
+    if points < 25:
+        raise HTTPException(status_code=400, detail=f"Not enough Invasion Coins. You have {points}, need 25.")
+    
+    # Generate unique reward code
+    import random
+    import string
+    code = 'IL-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    
+    # Create reward
+    reward = {
+        "user_id": str(current_user["_id"]),
+        "reward_type": "free_entry",
+        "points_required": 25,
+        "points_spent": 25,
+        "status": "pending",
+        "code": code,
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(days=90)  # 90 days to use
+    }
+    
+    result = await db.loyalty_rewards.insert_one(reward)
+    
+    # Deduct points
+    await db.users.update_one(
+        {"_id": ObjectId(current_user["_id"])},
+        {"$inc": {"loyalty_points": -25}}
+    )
+    
+    # Log transaction
+    await db.loyalty_transactions.insert_one({
+        "user_id": str(current_user["_id"]),
+        "transaction_type": "spent",
+        "points": -25,
+        "description": "Claimed free entry reward",
+        "related_reward_id": str(result.inserted_id),
+        "created_at": datetime.utcnow()
+    })
+    
+    return {
+        "message": "Reward claimed successfully!",
+        "code": code,
+        "points_remaining": points - 25
+    }
+
+@app.get("/api/loyalty/user-qr/{user_id}")
+async def get_user_qr_code(user_id: str):
+    """Get QR code data for a user (for check-in)"""
+    import json
+    
+    qr_data = {
+        "type": "loyalty_checkin",
+        "user_id": user_id,
+        "timestamp": datetime.utcnow().isoformat(),
+        "app": "InvasionLatina"
+    }
+    
+    return {"qr_code_data": json.dumps(qr_data)}
+
+@app.post("/api/loyalty/admin/check-in")
+async def admin_check_in_user(
+    qr_code_data: str,
+    event_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Admin/Staff: Check in a user and award points"""
+    import json
+    
+    # Verify admin
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    db = get_database()
+    
+    # Parse QR code
+    try:
+        qr_info = json.loads(qr_code_data)
+        user_id = qr_info["user_id"]
+    except:
+        raise HTTPException(status_code=400, detail="Invalid QR code")
+    
+    # Check if already checked in for this event
+    existing = await db.loyalty_checkins.find_one({
+        "user_id": user_id,
+        "event_id": event_id
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="User already checked in for this event")
+    
+    # Create check-in
+    check_in = {
+        "user_id": user_id,
+        "event_id": event_id,
+        "points_earned": 5,
+        "checked_in_at": datetime.utcnow(),
+        "checked_in_by": str(current_user["_id"]),
+        "qr_code_scanned": qr_code_data
+    }
+    
+    await db.loyalty_checkins.insert_one(check_in)
+    
+    # Award points
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$inc": {"loyalty_points": 5}}
+    )
+    
+    # Log transaction
+    await db.loyalty_transactions.insert_one({
+        "user_id": user_id,
+        "transaction_type": "earned",
+        "points": 5,
+        "description": f"Check-in at event",
+        "related_event_id": event_id,
+        "created_at": datetime.utcnow()
+    })
+    
+    # Get updated points
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    
+    return {
+        "message": "Check-in successful! +5 points",
+        "points_earned": 5,
+        "total_points": user.get("loyalty_points", 5),
+        "user_name": user["name"]
+    }
+
+
+
+# ============ VIP BOOKING ENDPOINTS ============
+
+# WhatsApp notification config
+WHATSAPP_ADMIN_NUMBER = "+32478814497"
+
+async def send_whatsapp_notification(message: str):
+    """Send WhatsApp notification to admin"""
+    import urllib.parse
+    import httpx
+    
+    try:
+        # Using CallMeBot API (free WhatsApp notifications)
+        # First time: send "I allow callmebot to send me messages" to +34 644 71 81 99
+        encoded_message = urllib.parse.quote(message)
+        url = f"https://api.callmebot.com/whatsapp.php?phone={WHATSAPP_ADMIN_NUMBER}&text={encoded_message}&apikey=YOUR_API_KEY"
+        
+        # For now, we'll log the message - you need to activate CallMeBot first
+        print(f"📱 WhatsApp notification would be sent to {WHATSAPP_ADMIN_NUMBER}:")
+        print(f"   {message}")
+        
+        # Uncomment this when you have the API key:
+        # async with httpx.AsyncClient() as client:
+        #     await client.get(url, timeout=10)
+        
+    except Exception as e:
+        print(f"WhatsApp notification error: {e}")
+
+@app.post("/api/vip/book")
+async def create_vip_booking(
+    booking_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a VIP table booking request"""
+    db = get_database()
+    
+    event_id = booking_data.get("event_id")
+    zone = booking_data.get("zone")
+    package = booking_data.get("package")
+    guest_count = booking_data.get("guest_count", 6)
+    bottle_preferences = booking_data.get("bottle_preferences", "")
+    special_requests = booking_data.get("special_requests", "")
+    total_price = booking_data.get("total_price", 0)
+    customer_name = booking_data.get("customer_name", "")
+    customer_email = booking_data.get("customer_email", "")
+    customer_phone = booking_data.get("customer_phone", "")
+    
+    if not event_id or not zone or not package:
+        raise HTTPException(status_code=400, detail="Missing required fields")
+    
+    # Verify event exists
+    event = await db.events.find_one({"_id": ObjectId(event_id)})
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    # Create booking
+    booking = {
+        "user_id": str(current_user["_id"]),
+        "event_id": event_id,
+        "zone": zone,
+        "package": package,
+        "guest_count": guest_count,
+        "bottle_preferences": bottle_preferences,
+        "special_requests": special_requests,
+        "total_price": total_price,
+        "status": "pending",
+        "customer_name": customer_name,
+        "customer_email": customer_email,
+        "customer_phone": customer_phone,
+        "submitted_at": datetime.utcnow()
+    }
+    
+    result = await db.vip_bookings.insert_one(booking)
+    
+    # Send WhatsApp notification to admin
+    notification_message = f"""🍾 NOUVELLE RÉSERVATION TABLE!
+
+📍 Salle: {zone}
+📦 Table: {package}
+👥 Personnes: {guest_count}
+💰 Prix: {total_price}€
+
+👤 Client: {customer_name}
+📧 Email: {customer_email}
+📱 Tél: {customer_phone}
+
+🎉 Événement: {event['name']}
+📅 Date: {event['event_date'].strftime('%d/%m/%Y') if hasattr(event['event_date'], 'strftime') else event['event_date']}
+
+💬 Demandes spéciales: {special_requests or 'Aucune'}"""
+    
+    await send_whatsapp_notification(notification_message)
+    
+    # Send push notification to admins
+    push_title = "🍾 Nouvelle réservation table!"
+    push_body = f"{customer_name} - {zone} - {guest_count} pers. - {total_price}€"
+    await send_push_notification_to_admins(
+        push_title, 
+        push_body, 
+        {"booking_id": str(result.inserted_id), "type": "vip_booking"}
+    )
+    
+    return {
+        "message": "VIP booking request submitted successfully",
+        "booking_id": str(result.inserted_id),
+        "status": "pending"
+    }
+
+@app.get("/api/vip/my-bookings")
+async def get_my_vip_bookings(current_user: dict = Depends(get_current_user)):
+    """Get current user's VIP bookings"""
+    db = get_database()
+    
+    bookings = []
+    async for booking in db.vip_bookings.find(
+        {"user_id": str(current_user["_id"])}
+    ).sort("submitted_at", -1):
+        event = await db.events.find_one({"_id": ObjectId(booking["event_id"])})
+        bookings.append({
+            "id": str(booking["_id"]),
+            "event_name": event["name"] if event else "Unknown Event",
+            "event_date": event["event_date"] if event else None,
+            "zone": booking["zone"],
+            "package": booking["package"],
+            "guest_count": booking["guest_count"],
+            "total_price": booking["total_price"],
+            "status": booking["status"],
+            "submitted_at": booking["submitted_at"]
+        })
+    
+    return bookings
+
+
+@app.get("/api/admin/vip-bookings")
+async def admin_get_all_bookings(current_user: dict = Depends(get_current_admin)):
+    """Admin: Get all VIP bookings"""
+    db = get_database()
+    
+    bookings = []
+    async for booking in db.vip_bookings.find().sort("submitted_at", -1):
+        event = await db.events.find_one({"_id": ObjectId(booking["event_id"])})
+        bookings.append({
+            "id": str(booking["_id"]),
+            "customer_name": booking.get("customer_name", ""),
+            "customer_email": booking.get("customer_email", ""),
+            "customer_phone": booking.get("customer_phone", ""),
+            "event_name": event["name"] if event else "Unknown Event",
+            "event_date": event["event_date"].isoformat() if event and hasattr(event.get("event_date"), 'isoformat') else str(event.get("event_date")) if event else None,
+            "zone": booking["zone"],
+            "package": booking["package"],
+            "guest_count": booking["guest_count"],
+            "total_price": booking["total_price"],
+            "special_requests": booking.get("special_requests", ""),
+            "status": booking["status"],
+            "submitted_at": booking["submitted_at"].isoformat() if hasattr(booking["submitted_at"], 'isoformat') else str(booking["submitted_at"])
+        })
+    
+    return bookings
+
+
+@app.delete("/api/vip/bookings/{booking_id}")
+async def cancel_vip_booking(
+    booking_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Cancel a user's own VIP booking"""
+    db = get_database()
+    
+    try:
+        # Find the booking and verify it belongs to this user
+        booking = await db.vip_bookings.find_one({"_id": ObjectId(booking_id)})
+        
+        if not booking:
+            raise HTTPException(status_code=404, detail="Réservation non trouvée")
+        
+        # Verify ownership - check by email
+        if booking.get("customer_email") != current_user.get("email"):
+            raise HTTPException(status_code=403, detail="Vous ne pouvez annuler que vos propres réservations")
+        
+        # Check if already cancelled
+        if booking.get("status") == "cancelled":
+            raise HTTPException(status_code=400, detail="Cette réservation est déjà annulée")
+        
+        # Update status to cancelled
+        result = await db.vip_bookings.update_one(
+            {"_id": ObjectId(booking_id)},
+            {"$set": {
+                "status": "cancelled",
+                "cancelled_at": datetime.utcnow()
+            }}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=500, detail="Erreur lors de l'annulation")
+        
+        return {"message": "Réservation annulée avec succès"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error cancelling booking: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.put("/api/admin/vip-bookings/{booking_id}")
+async def admin_update_booking(
+    booking_id: str,
+    update_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update a VIP booking status"""
+    db = get_database()
+    
+    try:
+        result = await db.vip_bookings.update_one(
+            {"_id": ObjectId(booking_id)},
+            {"$set": {
+                "status": update_data.get("status", "pending"),
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Réservation non trouvée")
+        
+        return {"message": "Réservation mise à jour avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.delete("/api/admin/vip-bookings/clear-all")
+async def admin_clear_all_bookings(
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Delete all VIP bookings"""
+    db = get_database()
+    
+    try:
+        result = await db.vip_bookings.delete_many({})
+        logger.info(f"✅ Cleared all VIP bookings: {result.deleted_count} deleted")
+        return {"message": f"Toutes les réservations ont été supprimées ({result.deleted_count})"}
+    except Exception as e:
+        logger.error(f"❌ Error clearing VIP bookings: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la suppression")
+
+
+@app.delete("/api/admin/vip-bookings/{booking_id}")
+async def admin_delete_booking(
+    booking_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Delete a specific VIP booking"""
+    db = get_database()
+    
+    try:
+        result = await db.vip_bookings.delete_one({"_id": ObjectId(booking_id)})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Réservation non trouvée")
+        
+        logger.info(f"✅ Deleted VIP booking {booking_id}")
+        return {"message": "Réservation supprimée avec succès"}
+    except Exception as e:
+        logger.error(f"❌ Error deleting VIP booking: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la suppression")
+
+
+
+# ============ MEDIA GALLERY ENDPOINTS ============
+
+@app.get("/api/media/galleries")
+async def get_galleries():
+    """Get all photo galleries (grouped by event) - only visible ones"""
+    db = get_database()
+    
+    galleries = []
+    
+    # Get events that have gallery_visible = true
+    async for event in db.events.find({"gallery_visible": True}).sort("event_date", -1):
+        photo_count = await db.photos.count_documents({"event_id": str(event["_id"])})
+        
+        # Get cover image (first photo or event banner)
+        cover_photo = await db.photos.find_one({"event_id": str(event["_id"])})
+        cover_image = cover_photo["url"] if cover_photo else event.get("banner_image")
+        
+        galleries.append({
+            "id": str(event["_id"]),
+            "name": event["name"],
+            "event_date": event["event_date"].isoformat() if hasattr(event["event_date"], 'isoformat') else event["event_date"],
+            "photo_count": photo_count,
+            "cover_image": cover_image
+        })
+    
+    return galleries
+
+@app.get("/api/media/gallery/{event_id}")
+async def get_gallery(event_id: str):
+    """Get photos for a specific event"""
+    db = get_database()
+    
+    try:
+        event = await db.events.find_one({"_id": ObjectId(event_id)})
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        photos = []
+        async for photo in db.photos.find({"event_id": event_id}).sort("uploaded_at", -1):
+            photos.append({
+                "id": str(photo["_id"]),
+                "url": photo["url"],
+                "thumbnail_url": photo.get("thumbnail_url", photo["url"]),
+                "tags": photo.get("tags", []),
+                "uploaded_at": photo["uploaded_at"]
+            })
+        
+        return {
+            "event_name": event["name"],
+            "event_date": event["event_date"],
+            "photos": photos
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid event ID")
+
+@app.post("/api/media/photos/{photo_id}/tag")
+async def tag_photo(
+    photo_id: str,
+    tag_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Tag yourself in a photo"""
+    db = get_database()
+    
+    user_id = tag_data.get("user_id") or str(current_user["_id"])
+    
+    try:
+        photo = await db.photos.find_one({"_id": ObjectId(photo_id)})
+        if not photo:
+            raise HTTPException(status_code=404, detail="Photo not found")
+        
+        # Check if already tagged
+        if user_id in photo.get("tags", []):
+            raise HTTPException(status_code=400, detail="Déjà tagué sur cette photo")
+        
+        # Add tag
+        await db.photos.update_one(
+            {"_id": ObjectId(photo_id)},
+            {"$push": {"tags": user_id}}
+        )
+        
+        return {"message": "Tag ajouté avec succès!"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid photo ID")
+
+@app.get("/api/media/my-tagged-photos")
+async def get_my_tagged_photos(current_user: dict = Depends(get_current_user)):
+    """Get all photos where user is tagged"""
+    db = get_database()
+    
+    user_id = str(current_user["_id"])
+    photos = []
+    
+    async for photo in db.photos.find({"tags": user_id}).sort("uploaded_at", -1):
+        event = await db.events.find_one({"_id": ObjectId(photo["event_id"])})
+        photos.append({
+            "id": str(photo["_id"]),
+            "url": photo["url"],
+            "thumbnail_url": photo.get("thumbnail_url", photo["url"]),
+            "event_name": event["name"] if event else "Unknown Event",
+            "event_date": event["event_date"] if event else None,
+            "uploaded_at": photo["uploaded_at"]
+        })
+    
+    return photos
+
+
+# ============ AFTERMOVIES ENDPOINTS ============
+
+@app.get("/api/media/aftermovies")
+async def get_aftermovies():
+    """Get all aftermovies"""
+    db = get_database()
+    
+    videos = []
+    async for video in db.aftermovies.find().sort("event_date", -1):
+        videos.append({
+            "id": str(video["_id"]),
+            "title": video["title"],
+            "event_date": video["event_date"].isoformat() if hasattr(video["event_date"], 'isoformat') else video["event_date"],
+            "thumbnail_url": video["thumbnail_url"],
+            "video_url": video["video_url"],
+            "duration": video.get("duration", "0:00"),
+            "views": video.get("views", 0)
+        })
+    
+    return videos
+
+
+# ============ LOYALTY SCANNER ENDPOINT (FOR ADMIN APP) ============
+
+@app.post("/api/loyalty/admin/scan-checkin")
+async def admin_scan_checkin(
+    scan_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Admin/Staff: Scan QR code to check-in user and award points"""
+    import json
+    
+    # Verify admin/staff role
+    if current_user.get("role") not in ["admin", "staff"]:
+        raise HTTPException(status_code=403, detail="Accès staff/admin requis")
+    
+    db = get_database()
+    
+    qr_code_data = scan_data.get("qr_code_data")
+    event_id = scan_data.get("event_id")
+    
+    if not qr_code_data:
+        raise HTTPException(status_code=400, detail="QR code manquant")
+    
+    # Parse QR code
+    try:
+        qr_info = json.loads(qr_code_data)
+        if qr_info.get("type") != "loyalty_checkin":
+            raise HTTPException(status_code=400, detail="QR code invalide")
+        user_id = qr_info["user_id"]
+        qr_version = qr_info.get("version", 1)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Format QR code invalide")
+    except KeyError:
+        raise HTTPException(status_code=400, detail="QR code incomplet")
+    
+    # Check QR code version
+    settings = await db.app_settings.find_one({"_id": "global"})
+    current_qr_version = settings.get("loyalty_qr_version", 1) if settings else 1
+    
+    if qr_version != current_qr_version:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"QR code expiré! Demandez à l'utilisateur de régénérer son QR code dans l'app."
+        )
+    
+    # Get current/latest event if not specified
+    if event_id == "current" or not event_id:
+        current_event = await db.events.find_one(
+            {"status": {"$in": ["live", "published", "upcoming"]}},
+            sort=[("event_date", -1)]
+        )
+        if not current_event:
+            raise HTTPException(status_code=404, detail="Aucun événement actif")
+        event_id = str(current_event["_id"])
+    
+    # Check if user exists
+    try:
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    except:
+        raise HTTPException(status_code=400, detail="ID utilisateur invalide")
+    
+    # Check if already checked in for this event
+    existing = await db.loyalty_checkins.find_one({
+        "user_id": user_id,
+        "event_id": event_id
+    })
+    
+    if existing:
+        return {
+            "success": False,
+            "message": f"{user['name']} est déjà enregistré pour cet événement",
+            "user_name": user["name"],
+            "already_checked_in": True
+        }
+    
+    # Create check-in
+    points_earned = 5
+    check_in = {
+        "user_id": user_id,
+        "event_id": event_id,
+        "points_earned": points_earned,
+        "checked_in_at": datetime.utcnow(),
+        "checked_in_by": str(current_user["_id"]),
+        "qr_code_scanned": qr_code_data
+    }
+    
+    await db.loyalty_checkins.insert_one(check_in)
+    
+    # Award points
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$inc": {"loyalty_points": points_earned}}
+    )
+    
+    # Log transaction
+    await db.loyalty_transactions.insert_one({
+        "user_id": user_id,
+        "transaction_type": "earned",
+        "points": points_earned,
+        "description": "Check-in événement",
+        "related_event_id": event_id,
+        "created_at": datetime.utcnow()
+    })
+    
+    # Get updated points
+    updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
+    
+    return {
+        "success": True,
+        "message": f"Check-in réussi! +{points_earned} points pour {user['name']}",
+        "user_name": user["name"],
+        "points_earned": points_earned,
+        "total_points": updated_user.get("loyalty_points", points_earned)
+    }
+
+
+@app.delete("/api/loyalty/admin/reset-checkin/{user_id}/{event_id}")
+async def admin_reset_checkin(
+    user_id: str,
+    event_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Reset a user's check-in for an event (for testing purposes)"""
+    db = get_database()
+    
+    result = await db.loyalty_checkins.delete_one({
+        "user_id": user_id,
+        "event_id": event_id
+    })
+    
+    if result.deleted_count == 0:
+        return {"success": False, "message": "Aucun check-in trouvé pour cet utilisateur/événement"}
+    
+    return {"success": True, "message": "Check-in réinitialisé avec succès"}
+
+
+# ============ DJS MANAGEMENT ENDPOINTS ============
+
+# Default DJs data
+DEFAULT_DJS = [
+    {
+        "id": "1",
+        "name": "DJ GIZMO",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/gizmodj/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 1
+    },
+    {
+        "id": "2",
+        "name": "DJ DNK",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/deejaydnk/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 2
+    },
+    {
+        "id": "3",
+        "name": "DJ CRUZ",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/djaycruz/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 3
+    },
+    {
+        "id": "4",
+        "name": "DJ DANIEL MURILLO",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/danielmurillodj/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 4
+    },
+    {
+        "id": "5",
+        "name": "DJ SUNCEE",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/deejaysuncee/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 5
+    },
+    {
+        "id": "6",
+        "name": "DJ SAMO",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/djsamobe/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 6
+    },
+    {
+        "id": "7",
+        "name": "DJ MABOY",
+        "type": "dj",
+        "instagram_url": "https://www.instagram.com/dj.maboy/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 7
+    },
+    {
+        "id": "8",
+        "name": "MC VELASQUEZ",
+        "type": "mc",
+        "instagram_url": "https://www.instagram.com/santiagovelaskz/",
+        "photo_url": None,
+        "is_resident": True,
+        "order": 8
+    }
+]
+
+@app.get("/api/djs")
+async def get_all_djs():
+    """Get all DJs and MCs"""
+    db = get_database()
+    
+    djs_list = []
+    async for dj in db.djs.find().sort("order", 1):
+        djs_list.append({
+            "id": str(dj["_id"]),
+            "name": dj["name"],
+            "type": dj.get("type", "dj"),
+            "instagram_url": dj.get("instagram_url"),
+            "photo_url": dj.get("photo_url"),
+            "is_resident": dj.get("is_resident", True),
+            "order": dj.get("order", 0)
+        })
+    
+    # Return default DJs if none in database
+    if not djs_list:
+        return DEFAULT_DJS
+    
+    return djs_list
+
+@app.get("/api/djs/event/{event_id}")
+async def get_event_djs(event_id: str):
+    """Get DJs assigned to a specific event"""
+    db = get_database()
+    
+    try:
+        event = await db.events.find_one({"_id": ObjectId(event_id)})
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        dj_ids = event.get("dj_ids", [])
+        
+        if not dj_ids:
+            # Return all resident DJs if no specific DJs assigned
+            return DEFAULT_DJS
+        
+        djs_list = []
+        for dj_id in dj_ids:
+            dj = await db.djs.find_one({"_id": ObjectId(dj_id)})
+            if dj:
+                djs_list.append({
+                    "id": str(dj["_id"]),
+                    "name": dj["name"],
+                    "type": dj.get("type", "dj"),
+                    "instagram_url": dj.get("instagram_url"),
+                    "photo_url": dj.get("photo_url"),
+                    "is_resident": dj.get("is_resident", True)
+                })
+        
+        return djs_list
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid event ID")
+
+@app.post("/api/admin/djs")
+async def create_dj(
+    dj_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Create a new DJ"""
+    db = get_database()
+    
+    new_dj = {
+        "name": dj_data["name"],
+        "type": dj_data.get("type", "dj"),
+        "instagram_url": dj_data.get("instagram_url"),
+        "photo_url": dj_data.get("photo_url"),
+        "is_resident": dj_data.get("is_resident", True),
+        "order": dj_data.get("order", 0),
+        "created_at": datetime.utcnow()
+    }
+    
+    result = await db.djs.insert_one(new_dj)
+    
+    return {
+        "id": str(result.inserted_id),
+        "message": "DJ créé avec succès"
+    }
+
+@app.put("/api/admin/djs/{dj_id}")
+async def update_dj(
+    dj_id: str,
+    dj_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update a DJ"""
+    db = get_database()
+    
+    try:
+        update_fields = {}
+        for field in ["name", "type", "instagram_url", "photo_url", "is_resident", "order"]:
+            if field in dj_data:
+                update_fields[field] = dj_data[field]
+        
+        update_fields["updated_at"] = datetime.utcnow()
+        
+        result = await db.djs.update_one(
+            {"_id": ObjectId(dj_id)},
+            {"$set": update_fields}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="DJ not found")
+        
+        return {"message": "DJ mis à jour avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/admin/events/{event_id}/assign-djs")
+async def assign_djs_to_event(
+    event_id: str,
+    data: Dict[str, List[str]] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Assign DJs to an event"""
+    db = get_database()
+    
+    dj_ids = data.get("dj_ids", [])
+    
+    try:
+        result = await db.events.update_one(
+            {"_id": ObjectId(event_id)},
+            {"$set": {"dj_ids": dj_ids, "updated_at": datetime.utcnow()}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Event not found")
+        
+        return {"message": f"{len(dj_ids)} DJs assignés à l'événement"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/admin/djs/init")
+async def initialize_default_djs(
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Initialize default DJs in database"""
+    db = get_database()
+    
+    # Check if DJs already exist
+    count = await db.djs.count_documents({})
+    if count > 0:
+        return {"message": f"{count} DJs already exist", "initialized": False}
+    
+    # Insert default DJs
+    for dj in DEFAULT_DJS:
+        dj_doc = {
+            "name": dj["name"],
+            "type": dj["type"],
+            "instagram_url": dj["instagram_url"],
+            "photo_url": dj["photo_url"],
+            "is_resident": dj["is_resident"],
+            "order": dj["order"],
+            "created_at": datetime.utcnow()
+        }
+        await db.djs.insert_one(dj_doc)
+    
+    return {"message": f"{len(DEFAULT_DJS)} DJs initialized", "initialized": True}
+
+
+
+# ============ WELCOME PAGE CONTENT ENDPOINTS ============
+
+# Default welcome content
+DEFAULT_WELCOME_CONTENT = {
+    "flyer_url": None,  # Will use local image
+    "video_url": None,  # Will use default
+    "tagline": "The Biggest Latino-Reggaeton Party in Belgium",
+    "venue_name": "Mirano Continental, Brussels"
+}
+
+@app.get("/api/welcome-content")
+async def get_welcome_content():
+    """Get welcome page content (flyer, video, tagline)"""
+    db = get_database()
+    
+    content = await db.app_settings.find_one({"type": "welcome_content"})
+    
+    if not content:
+        return DEFAULT_WELCOME_CONTENT
+    
+    return {
+        "flyer_url": content.get("flyer_url"),
+        "video_url": content.get("video_url"),
+        "tagline": content.get("tagline", DEFAULT_WELCOME_CONTENT["tagline"]),
+        "venue_name": content.get("venue_name", DEFAULT_WELCOME_CONTENT["venue_name"])
+    }
+
+@app.put("/api/admin/welcome-content")
+async def update_welcome_content(
+    content_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update welcome page content (flyer, video, tagline)"""
+    db = get_database()
+    
+    update_fields = {
+        "type": "welcome_content",
+        "updated_at": datetime.utcnow(),
+        "updated_by": str(current_user["_id"])
+    }
+    
+    # Update only provided fields
+    for field in ["flyer_url", "video_url", "tagline", "venue_name"]:
+        if field in content_data:
+            update_fields[field] = content_data[field]
+    
+    await db.app_settings.update_one(
+        {"type": "welcome_content"},
+        {"$set": update_fields},
+        upsert=True
+    )
+    
+    return {"message": "Contenu de la page d'accueil mis à jour avec succès"}
+
+@app.post("/api/admin/welcome-content/upload-flyer")
+async def upload_welcome_flyer(
+    flyer_url: str = Body(..., embed=True),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update the welcome page flyer URL"""
+    db = get_database()
+    
+    await db.app_settings.update_one(
+        {"type": "welcome_content"},
+        {
+            "$set": {
+                "flyer_url": flyer_url,
+                "updated_at": datetime.utcnow(),
+                "updated_by": str(current_user["_id"])
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "Flyer mis à jour avec succès", "flyer_url": flyer_url}
+
+@app.post("/api/admin/welcome-content/upload-video")
+async def upload_welcome_video(
+    video_url: str = Body(..., embed=True),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update the welcome page aftermovie video URL"""
+    db = get_database()
+    
+    await db.app_settings.update_one(
+        {"type": "welcome_content"},
+        {
+            "$set": {
+                "video_url": video_url,
+                "updated_at": datetime.utcnow(),
+                "updated_by": str(current_user["_id"])
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "Vidéo mise à jour avec succès", "video_url": video_url}
+
+
+
+# ============ ADMIN MEDIA ENDPOINTS ============
+
+@app.post("/api/admin/media/photos")
+async def admin_add_photo(
+    photo_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Add a photo to a gallery"""
+    db = get_database()
+    
+    url = photo_data.get("url")
+    event_id = photo_data.get("event_id")
+    
+    if not url:
+        raise HTTPException(status_code=400, detail="URL de la photo requise")
+    
+    photo = {
+        "url": url,
+        "thumbnail_url": photo_data.get("thumbnail_url", url),
+        "event_id": event_id,
+        "tags": [],
+        "uploaded_at": datetime.utcnow(),
+        "uploaded_by": str(current_user["_id"])
+    }
+    
+    result = await db.photos.insert_one(photo)
+    
+    return {
+        "id": str(result.inserted_id),
+        "message": "Photo ajoutée avec succès"
+    }
+
+@app.delete("/api/admin/media/photos/{photo_id}")
+async def admin_delete_photo(
+    photo_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Delete a photo"""
+    db = get_database()
+    
+    try:
+        result = await db.photos.delete_one({"_id": ObjectId(photo_id)})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Photo non trouvée")
+        
+        return {"message": "Photo supprimée avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/admin/media/aftermovies")
+async def admin_add_aftermovie(
+    video_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Add an aftermovie"""
+    db = get_database()
+    
+    title = video_data.get("title")
+    video_url = video_data.get("video_url")
+    
+    if not title or not video_url:
+        raise HTTPException(status_code=400, detail="Titre et URL vidéo requis")
+    
+    aftermovie = {
+        "title": title,
+        "video_url": video_url,
+        "thumbnail_url": video_data.get("thumbnail_url", "https://via.placeholder.com/400x225"),
+        "event_date": video_data.get("event_date", datetime.utcnow()),
+        "duration": video_data.get("duration", "0:00"),
+        "views": 0,
+        "created_at": datetime.utcnow(),
+        "created_by": str(current_user["_id"])
+    }
+    
+    result = await db.aftermovies.insert_one(aftermovie)
+    
+    return {
+        "id": str(result.inserted_id),
+        "message": "Aftermovie ajouté avec succès"
+    }
+
+@app.delete("/api/admin/media/aftermovies/{video_id}")
+async def admin_delete_aftermovie(
+    video_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Delete an aftermovie"""
+    db = get_database()
+    
+    try:
+        result = await db.aftermovies.delete_one({"_id": ObjectId(video_id)})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Aftermovie non trouvé")
+        
+        return {"message": "Aftermovie supprimé avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.put("/api/admin/events/{event_id}/flyer")
+async def admin_update_event_flyer(
+    event_id: str,
+    flyer_data: Dict[str, str] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update event flyer/banner image"""
+    db = get_database()
+    
+    banner_image = flyer_data.get("banner_image")
+    
+    if not banner_image:
+        raise HTTPException(status_code=400, detail="URL du flyer requise")
+    
+    try:
+        result = await db.events.update_one(
+            {"_id": ObjectId(event_id)},
+            {
+                "$set": {
+                    "banner_image": banner_image,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Événement non trouvé")
+        
+        return {"message": "Flyer mis à jour avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/admin/events")
+async def admin_create_event(
+    event_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Create a new event"""
+    db = get_database()
+    
+    name = event_data.get("name")
+    event_date = event_data.get("event_date")
+    
+    if not name or not event_date:
+        raise HTTPException(status_code=400, detail="Nom et date de l'événement requis")
+    
+    event = {
+        "name": name,
+        "description": event_data.get("description", ""),
+        "event_date": datetime.fromisoformat(event_date.replace('Z', '+00:00')) if isinstance(event_date, str) else event_date,
+        "venue_name": event_data.get("venue_name", "Mirano Continental"),
+        "venue_address": event_data.get("venue_address", "Chaussée de Louvain 38, 1210 Brussels"),
+        "banner_image": event_data.get("banner_image", ""),
+        "xceed_ticket_url": event_data.get("xceed_ticket_url", ""),
+        "ticket_categories": event_data.get("ticket_categories", [
+            {"name": "Standard", "price": 15.0, "available": True}
+        ]),
+        "lineup": [],
+        "status": "published",
+        "gallery_visible": False,  # Hidden by default - show after event
+        "aftermovie_visible": False,  # Hidden by default - show when video ready
+        "created_at": datetime.utcnow(),
+        "created_by": str(current_user["_id"])
+    }
+    
+    result = await db.events.insert_one(event)
+    
+    return {
+        "id": str(result.inserted_id),
+        "message": "Événement créé avec succès"
+    }
+
+
+@app.put("/api/admin/events/{event_id}")
+async def admin_update_event(
+    event_id: str,
+    event_data: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Update an event"""
+    db = get_database()
+    
+    update_fields = {}
+    
+    if "name" in event_data:
+        update_fields["name"] = event_data["name"]
+    if "description" in event_data:
+        update_fields["description"] = event_data["description"]
+    if "event_date" in event_data:
+        event_date = event_data["event_date"]
+        update_fields["event_date"] = datetime.fromisoformat(event_date.replace('Z', '+00:00')) if isinstance(event_date, str) else event_date
+    if "venue_name" in event_data:
+        update_fields["venue_name"] = event_data["venue_name"]
+    if "venue_address" in event_data:
+        update_fields["venue_address"] = event_data["venue_address"]
+    if "banner_image" in event_data:
+        update_fields["banner_image"] = event_data["banner_image"]
+    if "xceed_ticket_url" in event_data:
+        update_fields["xceed_ticket_url"] = event_data["xceed_ticket_url"]
+    if "ticket_categories" in event_data:
+        update_fields["ticket_categories"] = event_data["ticket_categories"]
+    if "gallery_visible" in event_data:
+        update_fields["gallery_visible"] = event_data["gallery_visible"]
+    if "aftermovie_visible" in event_data:
+        update_fields["aftermovie_visible"] = event_data["aftermovie_visible"]
+    
+    update_fields["updated_at"] = datetime.utcnow()
+    
+    try:
+        result = await db.events.update_one(
+            {"_id": ObjectId(event_id)},
+            {"$set": update_fields}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Événement non trouvé ou aucune modification")
+        
+        return {"message": "Événement mis à jour avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.put("/api/admin/events/{event_id}/visibility")
+async def admin_toggle_event_visibility(
+    event_id: str,
+    visibility_data: Dict[str, bool] = Body(...),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Toggle gallery/aftermovie visibility for an event"""
+    db = get_database()
+    
+    update_fields = {}
+    
+    if "gallery_visible" in visibility_data:
+        update_fields["gallery_visible"] = visibility_data["gallery_visible"]
+    if "aftermovie_visible" in visibility_data:
+        update_fields["aftermovie_visible"] = visibility_data["aftermovie_visible"]
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="Aucun champ de visibilité fourni")
+    
+    update_fields["updated_at"] = datetime.utcnow()
+    
+    try:
+        result = await db.events.update_one(
+            {"_id": ObjectId(event_id)},
+            {"$set": update_fields}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Événement non trouvé")
+        
+        return {"message": "Visibilité mise à jour avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+
+@app.delete("/api/admin/events/{event_id}")
+async def admin_delete_event(
+    event_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Delete an event"""
+    db = get_database()
+    
+    try:
+        result = await db.events.delete_one({"_id": ObjectId(event_id)})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Événement non trouvé")
+        
+        return {"message": "Événement supprimé avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+
+# ============ EVENT QR CODE SYSTEM FOR LOYALTY POINTS ============
+# Users scan QR codes at events to earn Invasion Coins
+
+class EventQRCodeCreate(BaseModel):
+    event_id: str
+    points_value: int = 5  # How many Invasion Coins users get
+
+@app.post("/api/admin/event-qr/create")
+async def admin_create_event_qr(
+    data: EventQRCodeCreate,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Create a new QR code for an event (for users to scan)"""
+    db = get_database()
+    
+    # Verify event exists
+    event = await db.events.find_one({"_id": ObjectId(data.event_id)})
+    if not event:
+        raise HTTPException(status_code=404, detail="Événement non trouvé")
+    
+    # Deactivate any existing active QR for this event
+    await db.event_qr_codes.update_many(
+        {"event_id": data.event_id, "is_active": True},
+        {"$set": {"is_active": False, "deactivated_at": datetime.utcnow()}}
+    )
+    
+    # Create new QR code
+    qr_code = str(uuid.uuid4())
+    
+    new_qr = {
+        "event_id": data.event_id,
+        "event_name": event["name"],
+        "qr_code": qr_code,
+        "points_value": data.points_value,
+        "is_active": True,
+        "created_at": datetime.utcnow(),
+        "created_by": str(current_user["_id"]),
+        "scans_count": 0
+    }
+    
+    result = await db.event_qr_codes.insert_one(new_qr)
+    
+    return {
+        "id": str(result.inserted_id),
+        "qr_code": qr_code,
+        "event_name": event["name"],
+        "points_value": data.points_value,
+        "is_active": True,
+        "message": "QR code créé avec succès"
+    }
+
+
+@app.get("/api/admin/event-qr/active")
+async def admin_get_active_qr(current_user: dict = Depends(get_current_admin)):
+    """Admin: Get currently active event QR code"""
+    db = get_database()
+    
+    qr = await db.event_qr_codes.find_one({"is_active": True})
+    
+    if not qr:
+        return {"active_qr": None}
+    
+    return {
+        "active_qr": {
+            "id": str(qr["_id"]),
+            "event_id": qr["event_id"],
+            "event_name": qr["event_name"],
+            "qr_code": qr["qr_code"],
+            "points_value": qr["points_value"],
+            "scans_count": qr.get("scans_count", 0),
+            "created_at": qr["created_at"]
+        }
+    }
+
+
+@app.put("/api/admin/event-qr/{qr_id}/toggle")
+async def admin_toggle_qr(
+    qr_id: str,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Activate or deactivate a QR code"""
+    db = get_database()
+    
+    qr = await db.event_qr_codes.find_one({"_id": ObjectId(qr_id)})
+    if not qr:
+        raise HTTPException(status_code=404, detail="QR code non trouvé")
+    
+    new_status = not qr.get("is_active", False)
+    
+    # If activating, deactivate all others first
+    if new_status:
+        await db.event_qr_codes.update_many(
+            {"is_active": True},
+            {"$set": {"is_active": False, "deactivated_at": datetime.utcnow()}}
+        )
+    
+    await db.event_qr_codes.update_one(
+        {"_id": ObjectId(qr_id)},
+        {"$set": {"is_active": new_status}}
+    )
+    
+    return {
+        "is_active": new_status,
+        "message": "QR code activé" if new_status else "QR code désactivé"
+    }
+
+
+@app.get("/api/admin/event-qr/history")
+async def admin_get_qr_history(current_user: dict = Depends(get_current_admin)):
+    """Admin: Get history of all event QR codes"""
+    db = get_database()
+    
+    qr_codes = []
+    async for qr in db.event_qr_codes.find().sort("created_at", -1).limit(20):
+        qr_codes.append({
+            "id": str(qr["_id"]),
+            "event_id": qr["event_id"],
+            "event_name": qr["event_name"],
+            "qr_code": qr["qr_code"],
+            "points_value": qr["points_value"],
+            "is_active": qr.get("is_active", False),
+            "scans_count": qr.get("scans_count", 0),
+            "created_at": qr["created_at"]
+        })
+    
+    return {"qr_codes": qr_codes}
+
+
+# ============ USER QR CODE SCANNING ============
+
+class ScanQRRequest(BaseModel):
+    qr_code: str
+
+@app.post("/api/loyalty/scan-event-qr")
+async def user_scan_event_qr(
+    data: ScanQRRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """User: Scan an event QR code to earn Invasion Coins"""
+    db = get_database()
+    
+    # Find the QR code
+    qr = await db.event_qr_codes.find_one({"qr_code": data.qr_code})
+    
+    if not qr:
+        raise HTTPException(status_code=404, detail="QR code invalide")
+    
+    if not qr.get("is_active", False):
+        raise HTTPException(status_code=400, detail="Ce QR code n'est plus actif")
+    
+    user_id = str(current_user["_id"])
+    qr_id = str(qr["_id"])
+    event_id = qr["event_id"]
+    
+    # Check if user already scanned this QR code
+    existing_scan = await db.event_qr_scans.find_one({
+        "user_id": user_id,
+        "qr_id": qr_id
+    })
+    
+    if existing_scan:
+        raise HTTPException(
+            status_code=400, 
+            detail="Tu as déjà scanné ce QR code. Un seul scan par soirée !"
+        )
+    
+    # Record the scan
+    scan_record = {
+        "user_id": user_id,
+        "qr_id": qr_id,
+        "event_id": event_id,
+        "points_earned": qr["points_value"],
+        "scanned_at": datetime.utcnow()
+    }
+    
+    await db.event_qr_scans.insert_one(scan_record)
+    
+    # Update scan count on QR
+    await db.event_qr_codes.update_one(
+        {"_id": qr["_id"]},
+        {"$inc": {"scans_count": 1}}
+    )
+    
+    # Award points to user
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$inc": {"loyalty_points": qr["points_value"]}}
+    )
+    
+    # Get updated user points
+    updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
+    new_points = updated_user.get("loyalty_points", 0)
+    
+    return {
+        "success": True,
+        "points_earned": qr["points_value"],
+        "total_points": new_points,
+        "event_name": qr["event_name"],
+        "message": f"Félicitations ! Tu as gagné {qr['points_value']} Invasion Coins !"
+    }
+
+
+@app.get("/api/loyalty/my-scans")
+async def get_my_scans(current_user: dict = Depends(get_current_user)):
+    """User: Get history of scanned QR codes"""
+    db = get_database()
+    
+    scans = []
+    async for scan in db.event_qr_scans.find(
+        {"user_id": str(current_user["_id"])}
+    ).sort("scanned_at", -1).limit(20):
+        qr = await db.event_qr_codes.find_one({"_id": ObjectId(scan["qr_id"])})
+        scans.append({
+            "event_name": qr["event_name"] if qr else "Événement inconnu",
+            "points_earned": scan["points_earned"],
+            "scanned_at": scan["scanned_at"]
+        })
+    
+    return {"scans": scans}
+
+
+
+
+# ============ REFERRAL PROGRAM ============
+# Users can invite friends and both earn Invasion Coins
+
+import random
+import string
+
+def generate_referral_code(name: str) -> str:
+    """Generate a unique referral code based on user's name"""
+    prefix = ''.join(c.upper() for c in name[:3] if c.isalpha())
+    if len(prefix) < 3:
+        prefix = prefix + 'INV'[:3-len(prefix)]
+    suffix = ''.join(random.choices(string.digits, k=4))
+    return f"{prefix}{suffix}"
+
+
+@app.get("/api/referral/my-code")
+async def get_my_referral_code(current_user: dict = Depends(get_current_user)):
+    """Get or create user's referral code"""
+    db = get_database()
+    user_id = str(current_user["_id"])
+    
+    # Check if user already has a referral code
+    if current_user.get("referral_code"):
+        referral_code = current_user["referral_code"]
+    else:
+        # Generate new referral code
+        referral_code = generate_referral_code(current_user.get("name", "INV"))
+        
+        # Make sure it's unique
+        while await db.users.find_one({"referral_code": referral_code}):
+            referral_code = generate_referral_code(current_user.get("name", "INV"))
+        
+        # Save to user
+        await db.users.update_one(
+            {"_id": current_user["_id"]},
+            {"$set": {"referral_code": referral_code}}
+        )
+    
+    # Count successful referrals
+    referral_count = await db.referrals.count_documents({"referrer_id": user_id})
+    
+    return {
+        "referral_code": referral_code,
+        "referral_count": referral_count,
+        "coins_per_referral": 3,
+        "share_message": f"Rejoins Invasion Latina avec mon code {referral_code} et on gagne tous les deux 3 Invasion Coins ! 🎉"
+    }
+
+
+class ApplyReferralRequest(BaseModel):
+    referral_code: str
+
+@app.post("/api/referral/apply")
+async def apply_referral_code(
+    data: ApplyReferralRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Apply a referral code (for new users)"""
+    db = get_database()
+    user_id = str(current_user["_id"])
+    
+    # Check if user already used a referral code
+    existing = await db.referrals.find_one({"referred_id": user_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Tu as déjà utilisé un code de parrainage")
+    
+    # Find the referrer by code
+    referrer = await db.users.find_one({"referral_code": data.referral_code.upper()})
+    if not referrer:
+        raise HTTPException(status_code=404, detail="Code de parrainage invalide")
+    
+    referrer_id = str(referrer["_id"])
+    
+    # Can't refer yourself
+    if referrer_id == user_id:
+        raise HTTPException(status_code=400, detail="Tu ne peux pas utiliser ton propre code")
+    
+    # Record the referral
+    referral = {
+        "referrer_id": referrer_id,
+        "referred_id": user_id,
+        "referral_code": data.referral_code.upper(),
+        "coins_awarded": 3,
+        "created_at": datetime.utcnow()
+    }
+    await db.referrals.insert_one(referral)
+    
+    # Award coins to both users
+    await db.users.update_one(
+        {"_id": referrer["_id"]},
+        {"$inc": {"loyalty_points": 3}}
+    )
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$inc": {"loyalty_points": 3}}
+    )
+    
+    # Get updated points for current user
+    updated_user = await db.users.find_one({"_id": current_user["_id"]})
+    
+    return {
+        "success": True,
+        "coins_earned": 3,
+        "total_points": updated_user.get("loyalty_points", 0),
+        "message": "Félicitations ! Toi et ton ami avez gagné 3 Invasion Coins chacun ! 🎉"
+    }
+
+
+@app.get("/api/referral/my-referrals")
+async def get_my_referrals(current_user: dict = Depends(get_current_user)):
+    """Get list of people I've referred"""
+    db = get_database()
+    user_id = str(current_user["_id"])
+    
+    referrals = []
+    async for ref in db.referrals.find({"referrer_id": user_id}).sort("created_at", -1):
+        referred_user = await db.users.find_one({"_id": ObjectId(ref["referred_id"])})
+        if referred_user:
+            referrals.append({
+                "name": referred_user.get("name", "Utilisateur"),
+                "coins_earned": ref["coins_awarded"],
+                "date": ref["created_at"]
+            })
+    
+    return {"referrals": referrals, "total_coins_earned": len(referrals) * 3}
+
+
+# ============ ADMIN: USER MANAGEMENT ============
+
+@app.get("/api/admin/users")
+async def admin_get_all_users(
+    search: str = "",
+    page: int = 1,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Get all registered users"""
+    db = get_database()
+    
+    # Build query
+    query = {}
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"email": {"$regex": search, "$options": "i"}}
+        ]
+    
+    # Count total
+    total = await db.users.count_documents(query)
+    
+    # Get users with pagination
+    skip = (page - 1) * limit
+    users = []
+    
+    async for user in db.users.find(query).sort("created_at", -1).skip(skip).limit(limit):
+        users.append({
+            "id": str(user["_id"]),
+            "name": user.get("name", ""),
+            "email": user.get("email", ""),
+            "role": user.get("role", "user"),
+            "loyalty_points": user.get("loyalty_points", 0),
+            "referral_code": user.get("referral_code", ""),
+            "created_at": user.get("created_at", datetime.utcnow()),
+            "last_login": user.get("last_login"),
+        })
+    
+    return {
+        "users": users,
+        "total": total,
+        "page": page,
+        "pages": (total + limit - 1) // limit
+    }
+
+
+@app.get("/api/admin/stats")
+async def admin_get_stats(current_user: dict = Depends(get_current_admin)):
+    """Admin: Get app statistics"""
+    db = get_database()
+    
+    total_users = await db.users.count_documents({})
+    total_events = await db.events.count_documents({})
+    total_bookings = await db.vip_bookings.count_documents({})
+    total_song_requests = await db.song_requests.count_documents({})
+    total_referrals = await db.referrals.count_documents({})
+    
+    # Users registered this month
+    month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    new_users_this_month = await db.users.count_documents({"created_at": {"$gte": month_start}})
+    
+    # Total loyalty points in circulation
+    pipeline = [{"$group": {"_id": None, "total": {"$sum": "$loyalty_points"}}}]
+    points_result = await db.users.aggregate(pipeline).to_list(1)
+    total_points = points_result[0]["total"] if points_result else 0
+    
+    return {
+        "total_users": total_users,
+        "new_users_this_month": new_users_this_month,
+        "total_events": total_events,
+        "total_bookings": total_bookings,
+        "total_song_requests": total_song_requests,
+        "total_referrals": total_referrals,
+        "total_loyalty_points": total_points
+    }
+
+
+# ============ PUSH NOTIFICATIONS ============
+
+class SendNotificationRequest(BaseModel):
+    title: str
+    body: str
+    target: str = "all"  # "all", "admins", or specific user_id
+
+@app.post("/api/admin/notifications/send")
+async def admin_send_notification(
+    data: SendNotificationRequest,
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin: Send push notification to users"""
+    db = get_database()
+    
+    # Get target users with push tokens
+    query = {"push_token": {"$exists": True, "$ne": None}}
+    
+    if data.target == "admins":
+        query["role"] = "admin"
+    elif data.target != "all":
+        query["_id"] = ObjectId(data.target)
+    
+    tokens = []
+    async for user in db.users.find(query):
+        if user.get("push_token"):
+            tokens.append(user["push_token"])
+    
+    if not tokens:
+        raise HTTPException(status_code=400, detail="Aucun utilisateur avec notifications activées")
+    
+    # Store notification in database
+    notification = {
+        "title": data.title,
+        "body": data.body,
+        "target": data.target,
+        "tokens_count": len(tokens),
+        "sent_at": datetime.utcnow(),
+        "sent_by": str(current_user["_id"])
+    }
+    await db.notifications_sent.insert_one(notification)
+    
+    # In production, you would send via Expo Push API here
+    # For now, we just return success
+    return {
+        "success": True,
+        "tokens_count": len(tokens),
+        "message": f"Notification envoyée à {len(tokens)} utilisateur(s)"
+    }
+
+
+@app.post("/api/notifications/register-token")
+async def register_push_token(
+    token: str = Body(..., embed=True),
+    current_user: dict = Depends(get_current_user)
+):
+    """Register user's push notification token"""
+    db = get_database()
+    
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"push_token": token, "push_token_updated": datetime.utcnow()}}
+    )
+    
+    return {"success": True, "message": "Token enregistré"}
+
+
+@app.get("/api/admin/notifications/history")
+async def admin_get_notification_history(current_user: dict = Depends(get_current_admin)):
+    """Admin: Get history of sent notifications"""
+    db = get_database()
+    
+    notifications = []
+    async for notif in db.notifications_sent.find().sort("sent_at", -1).limit(50):
+        notifications.append({
+            "id": str(notif["_id"]),
+            "title": notif["title"],
+            "body": notif["body"],
+            "target": notif["target"],
+            "tokens_count": notif["tokens_count"],
+            "sent_at": notif["sent_at"]
+        })
+    
+    return {"notifications": notifications}
+

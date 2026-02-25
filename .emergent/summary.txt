@@ -1,220 +1,266 @@
 <analysis>**original_problem_statement:**
-L'utilisateur finalise son application avant de la soumettre à l'App Store, mais est confronté à plusieurs problèmes persistants, principalement un bug de stabilité majeur. Après une période d'inactivité, l'application affiche un ancien flyer d'événement et empêche la connexion, obligeant l'utilisateur à désinstaller et réinstaller l'application. Ce problème est la priorité absolue à résoudre.
+L'utilisateur finalise son application pour la soumettre à l'App Store et a rencontré de nombreux problèmes. La session a commencé par la résolution de problèmes de build et de soumission à TestFlight (erreurs de version et de signature). Par la suite, l'utilisateur a reçu un rejet d'Apple pour deux raisons : le bouton Sign in with Apple n'était pas assez visible et l'option de suppression de compte était manquante.
 
-De plus, l'utilisateur a demandé plusieurs améliorations de l'interface utilisateur et de l'expérience utilisateur :
-1.  Corriger l'affichage du nom pour les utilisateurs se connectant via Apple Sign-In.
-2.  Uniformiser l'espacement entre les boutons dans l'écran de profil.
-3.  S'assurer que toutes les notifications sont activées par défaut pour les nouveaux utilisateurs.
+Après avoir corrigé ces points, des tests sur TestFlight ont révélé des bugs critiques :
+*   Les notifications push ne fonctionnent pas du tout (ni pour les demandes de tables, ni pour les chansons, ni pour les notifications de masse).
+*   Les demandes de chansons n'apparaissent pas dans le DJ Dashboard.
+*   La section Mes Réservations n'était pas visible dans le profil.
+*   Les préférences de notification ne se sauvegardent pas.
+*   Le modal de raison de refus pour les tables n'apparaît pas.
 
-Par la suite, l'utilisateur a fourni un audit de code très détaillé (provenant d'une source externe nommée Claude) avec une longue liste de corrections de sécurité, de performance et de stabilité à appliquer, qui est devenu l'objectif principal de la session.
-
-**PRODUCT REQUIREMENTS (Current Focus):**
-1.  **[P0 - CRITICAL]** Résoudre définitivement le problème de stabilité de la connexion après une période d'inactivité.
-2.  **[P1]** Implémenter toutes les corrections de sécurité et de performance critiques de l'audit pour préparer une mise à l'échelle à 20 000 utilisateurs.
-3.  **[P2]** Compléter l'interface d'administration pour la gestion des médias (suppression de photos individuelles).
+L'utilisateur a fourni un audit technique extrêmement détaillé et précis (message 627), identifiant plusieurs bugs critiques silencieux dans le code que l'agent a ensuite corrigés. La tâche principale est maintenant de déployer un build fonctionnel contenant toutes ces corrections.
 
 **User's preferred language**: French. The next agent MUST respond in French.
 
 **what currently exists?**
-L'application dispose d'un frontend React Native/Expo et d'un backend FastAPI utilisant Supabase (PostgreSQL), déployé sur Railway. Le backend et le frontend ont subi une refonte majeure basée sur un audit de code externe pour améliorer la sécurité, la performance et la stabilité. Les correctifs incluent la gestion des mots de passe, le rate-limiting, la validation Pydantic, l'augmentation du pool de connexions DB côté backend, et une logique complexe de warmup et de retry côté frontend pour gérer les cold starts du serveur. Les services Supabase et Railway ont été déplacés dans la même région (Europe) pour réduire la latence.
+L'application est une application mobile full-stack avec un frontend React Native/Expo et un backend FastAPI/Python. Le backend est hébergé sur Railway et utilise une base de données Supabase (PostgreSQL).
+
+De nombreuses corrections et fonctionnalités ont été implémentées, notamment :
+*   Correction des problèmes de rejet par Apple (bouton Sign in with Apple et ajout de la suppression de compte).
+*   Création d'une page Mes Réservations pour que les utilisateurs suivent leurs demandes de table.
+*   Correction du bug qui empêchait la sauvegarde des préférences de notification.
+*   Correction de bugs critiques dans le backend suite à un audit de l'utilisateur :
+    *   Correction d'un crash silencieux qui empêchait l'envoi de TOUTES les notifications de réservation de table.
+    *   Correction du système de broadcast de notifications.
+    *   Correction d'un bug SQL qui empêchait les demandes de chansons de fonctionner.
+    *   Correction du processus de suppression de compte qui échouait.
+*   Ajout de la logique pour que les administrateurs reçoivent une notification pour chaque nouvelle demande de table.
+*   Ajout de listeners de notification dans le frontend pour naviguer dans l'app lorsqu'on appuie sur une notification.
 
 **Last working item**:
-- Last item agent was working: Débogage du bug de connexion persistant après inactivité (build 50). L'utilisateur a signalé que malgré une série massive de correctifs, le problème de connexion persiste après environ une heure d'inactivité. De plus, un nouveau symptôme est apparu : l'application prend 5 secondes pour s'ouvrir, ce qui est probablement dû à la fonction de warmup du backend qui a été implémentée. Le travail précédent consistait à aider l'utilisateur à résoudre des problèmes de build locaux (corruption de , conflits npm <command>
-
-Usage:
-
-npm install        install all the dependencies in your project
-npm install <foo>  add the <foo> dependency to your project
-npm test           run this project's tests
-npm run <foo>      run the script named <foo>
-npm <command> -h   quick help on <command>
-npm -l             display usage info for all commands
-npm help <term>    search for help on <term>
-npm help npm       more involved overview
-
-All commands:
-
-    access, adduser, audit, bugs, cache, ci, completion,
-    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
-    edit, exec, explain, explore, find-dupes, fund, get, help,
-    help-search, hook, init, install, install-ci-test,
-    install-test, link, ll, login, logout, ls, org, outdated,
-    owner, pack, ping, pkg, prefix, profile, prune, publish,
-    query, rebuild, repo, restart, root, run-script, sbom,
-    search, set, shrinkwrap, star, stars, start, stop, team,
-    test, token, uninstall, unpublish, unstar, update, version,
-    view, whoami
-
-Specify configs in the ini-formatted file:
-    /root/.npmrc
-or on the command line via: npm <command> --key=value
-
-More configuration info: npm help config
-Configuration fields: npm help 7 config
-
-npm@10.8.2 /usr/lib/node_modules/npm/yarn install v1.22.22
-[1/4] Resolving packages...
-success Already up-to-date.
-Done in 0.62s.) avant de générer la build 50 qui a échoué aux tests de l'utilisateur.
-- Status: **BLOCKED**
-- Agent Testing Done: N
-- Which testing method agent to use? L'utilisateur effectue des tests manuels via TestFlight. Le prochain agent doit diagnostiquer l'échec en analysant les logs backend et le code frontend. Il peut utiliser  pour tester les endpoints.
-- User Testing Done: Y (L'utilisateur a testé la build 50 et confirmé que le problème principal persiste).
+- Last item agent was working: L'agent a appliqué une série de corrections critiques fournies par l'utilisateur (message #627) pour résoudre des problèmes fondamentaux avec les notifications, les demandes de chansons et la suppression de compte. L'agent a également préparé le terrain pour un nouveau build (77).
+- Status: **IN PROGRESS**
+- Agent Testing Done: N (Les tests de l'agent sur l'environnement de développement ont réussi, mais le problème principal réside dans l'environnement de production/TestFlight de l'utilisateur).
+- Which testing method agent to use? L'utilisateur effectuera des tests manuels sur TestFlight après un build réussi. L'agent doit d'abord s'assurer que le backend Railway est à jour et guider l'utilisateur pour le build frontend.
+- User Testing Done: N (L'utilisateur n'a pas encore pu tester un build contenant les dernières corrections critiques).
 
 **All Pending/In progress Issue list**:
-- Issue 1: L'application ne parvient pas à se reconnecter après une période d'inactivité (P0 - CRITICAL)
+- Issue 1: Les notifications Push ne sont pas reçues par les utilisateurs (P0 - CRITICAL)
+- Issue 2: Les demandes de chansons ne fonctionnent pas ou n'apparaissent pas dans le DJ Dashboard (P1)
+- Issue 3: Le modal pour ajouter une raison de refus de table n'apparaît pas (P2)
 
 **Issues Detail**:
-- **Issue 1: L'application ne parvient pas à se reconnecter après une période d'inactivité**
-    - **Attempted fixes**: Une refonte complète de la logique d'authentification et de gestion des erreurs a été effectuée sur la base d'un audit externe :
-        1.  **Backend ()**: Modifié pour retourner un  en cas d'erreur de base de données, au lieu d'un . C'était la correction la plus critique pour éviter que des problèmes de serveur temporaires ne provoquent une déconnexion permanente.
-        2.  **Frontend ()**: L'intercepteur  a été modifié pour ne plus supprimer le token d'authentification en cas d'erreur 401, laissant cette responsabilité au contexte d'authentification.
-        3.  **Frontend ()**: La logique de  a été renforcée pour ne supprimer le token que sur une erreur 401 avérée, et pour traiter les erreurs 503 et les erreurs réseau comme des problèmes temporaires, en utilisant les données utilisateur mises en cache. Le timeout de l'appel a été augmenté à 20 secondes.
-        4.  **Frontend (Cold Start)**: Une fonction  a été créée dans  et est appelée depuis  au retour de l'application en premier plan pour réveiller le serveur. La dernière version de cette fonction utilise un endpoint  qui ne touche pas la base de données. C'est probablement la cause du temps de démarrage de 5 secondes.
-        5.  **Frontend ()**: Un écouteur  en double qui appelait  a été supprimé pour éviter les race conditions.
+- **Issue 1: Les notifications Push ne sont pas reçues par les utilisateurs**
+    - **Attempted fixes**: De multiples corrections ont été apportées :
+        1.  Un bug critique ( au lieu de ) qui faisait crasher silencieusement l'envoi de notifications de table a été corrigé.
+        2.  Un bug dans l'enregistrement des push tokens côté backend (problème de session de base de données) a été corrigé.
+        3.  Le plugin  a été ajouté au .
+        4.  Un  a été ajouté dans  pour ré-enregistrer le token à chaque lancement de l'app si l'utilisateur est authentifié.
+        5.  Des listeners de notification ont été ajoutés dans  pour gérer les interactions.
+        6.  Le  a été corrigé dans .
     - **Next debug checklist**:
-        1.  **Analyser la cause du démarrage lent (5s)** : La fonction  dans  est la cause la plus probable. Vérifier les logs Railway pour voir combien de temps l'appel à  prend réellement. Le warmup est peut-être trop agressif ou la réponse du backend est toujours trop lente.
-        2.  **Diagnostiquer l'échec de connexion** : Le bug persiste. Il faut déterminer ce qui se passe exactement. Quand l'utilisateur signale le bug, vérifier immédiatement les logs du backend sur Railway pour voir si l'appel à  résulte en un 401, 503, un timeout, ou autre chose.
-        3.  **Valider les correctifs** : Le problème peut se situer dans l'interaction complexe des correctifs. Revoir la logique dans , , et . Est-ce que le token est toujours supprimé à tort ? Est-ce que l'état  est correctement géré en cas d'échec du  sans données en cache ?
-    - **Why fix this issue and what will be achieved with the fix?**: C'est le bug le plus critique qui empêche la soumission de l'application à l'App Store. Sa résolution rendra l'application fiable pour les utilisateurs.
+        1.  S'assurer que le backend sur **Railway** est bien déployé avec le dernier code.
+        2.  Guider l'utilisateur pour créer et soumettre le **Build 77** à TestFlight.
+        3.  Demander à l'utilisateur de réinstaller l'app depuis TestFlight et d'accepter les notifications.
+        4.  Vérifier dans l'interface admin () que le compteur d'utilisateurs avec push token est **supérieur à 0**.
+        5.  Effectuer un test de bout en bout : un utilisateur demande une table, un admin la confirme/refuse, l'utilisateur doit recevoir la notification.
+    - **Why fix this issue and what will be achieved with the fix?**: C'est une fonctionnalité essentielle de l'application. Sans notifications, l'expérience utilisateur est très dégradée.
     - **Status**: IN PROGRESS
     - **Is recurring issue?**: Y
     - **Should Test frontend/backend/both after fix?**: Both.
-    - **Blocked on other issue**: None.
+    - **Blocked on other issue**: Nécessite un déploiement réussi du backend sur Railway et du frontend (Build 77) sur TestFlight.
+
+- **Issue 2: Les demandes de chansons ne fonctionnent pas ou n'apparaissent pas dans le DJ Dashboard**
+    - **Attempted fixes**: Un bug critique dans une requête SQL () qui ne fonctionnait pas avec PostgreSQL a été corrigé dans . Le frontend a aussi été corrigé pour charger correctement les requêtes dans le dashboard.
+    - **Next debug checklist**:
+        1.  Vérifier que le backend Railway est à jour.
+        2.  Tester la fonctionnalité sur TestFlight avec le Build 77.
+    - **Why fix this issue and what will be achieved with the fix?**: C'est une fonctionnalité clé d'engagement pour les soirées.
+    - **Status**: IN PROGRESS
+    - **Is recurring issue?**: Y
+    - **Should Test frontend/backend/both after fix?**: Both.
+
+- **Issue 3: Le modal pour ajouter une raison de refus de table n'apparaît pas**
+    - **Attempted fixes**: Le code pour le modal est bien présent dans . Le problème est probablement que l'utilisateur testait avec un build qui ne contenait pas le bon code en raison de problèmes de synchronisation usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
+           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
+           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
+           [--super-prefix=<path>] [--config-env=<name>=<envvar>]
+           <command> [<args>]
+
+These are common Git commands used in various situations:
+
+start a working area (see also: git help tutorial)
+   clone     Clone a repository into a new directory
+   init      Create an empty Git repository or reinitialize an existing one
+
+work on the current change (see also: git help everyday)
+   add       Add file contents to the index
+   mv        Move or rename a file, a directory, or a symlink
+   restore   Restore working tree files
+   rm        Remove files from the working tree and from the index
+
+examine the history and state (see also: git help revisions)
+   bisect    Use binary search to find the commit that introduced a bug
+   diff      Show changes between commits, commit and working tree, etc
+   grep      Print lines matching a pattern
+   log       Show commit logs
+   show      Show various types of objects
+   status    Show the working tree status
+
+grow, mark and tweak your common history
+   branch    List, create, or delete branches
+   commit    Record changes to the repository
+   merge     Join two or more development histories together
+   rebase    Reapply commits on top of another base tip
+   reset     Reset current HEAD to the specified state
+   switch    Switch branches
+   tag       Create, list, delete or verify a tag object signed with GPG
+
+collaborate (see also: git help workflows)
+   fetch     Download objects and refs from another repository
+   pull      Fetch from and integrate with another repository or a local branch
+   push      Update remote refs along with associated objects
+
+'git help -a' and 'git help -g' list available subcommands and some
+concept guides. See 'git help <command>' or 'git help <concept>'
+to read about a specific subcommand or concept.
+See 'git help git' for an overview of the system..
+    - **Next debug checklist**:
+        1.  Tester la fonctionnalité sur TestFlight avec le Build 77.
+    - **Why fix this issue and what will be achieved with the fix?**: Améliore la communication avec le client en cas de refus.
+    - **Status**: IN PROGRESS
+    - **Is recurring issue?**: Y
+    - **Should Test frontend/backend/both after fix?**: Frontend.
 
 **In progress Task List**:
-- **Task 1: Finir d'appliquer l'audit de code Claude (P2)**
-    - **Where to resume**: De nombreux points de l'audit ont été mis en œuvre (sécurité, bugs critiques). Cependant, plusieurs tâches de performance et de finition restent à faire, comme la correction des requêtes N+1 et l'ajout de la pagination sur le backend, et l'amélioration des empty states sur le frontend.
-    - **What will be achieved with this?**: Une application plus performante, scalable et avec une meilleure expérience utilisateur.
+- **Task 1: Déployer et valider toutes les corrections critiques**
+    - **Where to resume**: Guider l'utilisateur pour s'assurer que son backend Railway est à jour, puis pour builder et soumettre la version 77 du frontend à TestFlight.
+    - **What will be achieved with this?**: Obtenir une version stable de l'application où les fonctionnalités de base (notifications, demandes de tables/chansons) sont enfin fonctionnelles.
     - **Status**: IN PROGRESS
     - **Should Test frontend/backend/both after fix?**: Both.
-    - **Blocked on something**: Le bug de connexion critique (Issue 1) doit être résolu en priorité.
+    - **Blocked on something**: Déploiement réussi sur les plateformes de l'utilisateur (Railway, TestFlight).
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **P1:** Résoudre les problèmes de performance backend identifiés dans l'audit :
-        - Corriger les requêtes N+1 dans  en utilisant des  ou .
-        - Ajouter la pagination à tous les endpoints de liste (, , etc.).
-    - **P1:** Améliorer l'expérience utilisateur sur le frontend :
-        - Ajouter des empty states et des messages d'erreur clairs sur tous les écrans.
+    - **P0**: Ajouter les colonnes  et  à la table  dans la base de données Supabase de l'utilisateur. Le code pour les utiliser existe mais est partiellement désactivé en attendant cette modification de la base de données.
+    - **P1**: Mettre en place des rappels automatiques 24h avant un événement via notification push.
+    - **P2**: Ajouter un historique des notifications envoyées dans le panneau d'administration.
 - **Future Tasks**:
-    - **P2:** Implémenter l'UI pour la gestion des médias par l'admin ().
-    - **P2:** Compléter l'implémentation des notifications push pour les rappels et les réservations VIP.
-    - **P2:** Corriger l'avertissement de version de  dans .
-    - **P2:** Générer et soumettre une build Bêta Android pour le Google Play Store.
+    - **P2**: Implémenter un système de parrainage avec récompenses.
+    - **P2**: Permettre la pré-commande de bouteilles avec paiement intégré.
+    - **P2**: Ajouter un bouton pour ajouter un événement au calendrier natif du téléphone.
 
 **Completed work in this session**
-- **Refonte majeure de la sécurité et de la stabilité basée sur un audit externe:**
-    - **Backend:** Sécurisation des mots de passe admin, ajout de rate-limiting (), validation des clés d'environnement en production, augmentation du pool de connexions DB, remplacement de  par une version timezone-aware, et **modification critique de  pour retourner 503 (erreur serveur) au lieu de 401 (erreur d'auth) en cas de problème de base de données**.
-    - **Frontend:** Refonte de la logique de gestion des erreurs dans  (l'intercepteur ne supprime plus le token) et  (gestion fine des erreurs 401 vs 503/réseau), suppression d'un double appel à , et implémentation d'un système de warmup pour contrer les cold starts.
-    - **Infrastructure:** Le service Railway a été déplacé en Europe pour être dans la même région que la base de données Supabase. Les variables  et  ont été ajoutées aux variables d'environnement de Railway.
-    - **Débogage du build local:** Aide à l'utilisateur pour résoudre des problèmes de  corrompu, de conflits npm <command>
+- Correction des deux rejets d'Apple : le style du bouton Sign in with Apple a été corrigé et la fonctionnalité de suppression de compte a été entièrement implémentée (frontend + backend).
+- Implémentation d'une nouvelle page Mes Réservations dans le profil utilisateur pour suivre l'historique et le statut des demandes de table.
+- Correction d'un bug majeur qui empêchait la sauvegarde des préférences de notification de l'utilisateur.
+- Correction de multiples bugs critiques dans le backend suite à un audit de l'utilisateur, notamment des crashs silencieux qui empêchaient les notifications et les demandes de chansons de fonctionner.
+- Ajout d'une limite de 3 demandes de chansons par utilisateur par événement.
+- Implémentation de notifications push pour les administrateurs lors de nouvelles demandes de réservation de table.
+- Ajout de listeners de notifications pour permettre la navigation dans l'application en appuyant sur une notification.
 
-Usage:
+**Earlier issues found/mentioned but not fixed**
+- Le problème principal des notifications push a été abordé à plusieurs reprises, mais n'a jamais été validé comme étant résolu en raison de problèmes de déploiement et de bugs sous-jacents qui n'ont été découverts que récemment.
 
-npm install        install all the dependencies in your project
-npm install <foo>  add the <foo> dependency to your project
-npm test           run this project's tests
-npm run <foo>      run the script named <foo>
-npm <command> -h   quick help on <command>
-npm -l             display usage info for all commands
-npm help <term>    search for help on <term>
-npm help npm       more involved overview
-
-All commands:
-
-    access, adduser, audit, bugs, cache, ci, completion,
-    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
-    edit, exec, explain, explore, find-dupes, fund, get, help,
-    help-search, hook, init, install, install-ci-test,
-    install-test, link, ll, login, logout, ls, org, outdated,
-    owner, pack, ping, pkg, prefix, profile, prune, publish,
-    query, rebuild, repo, restart, root, run-script, sbom,
-    search, set, shrinkwrap, star, stars, start, stop, team,
-    test, token, uninstall, unpublish, unstar, update, version,
-    view, whoami
-
-Specify configs in the ini-formatted file:
-    /root/.npmrc
-or on the command line via: npm <command> --key=value
-
-More configuration info: npm help config
-Configuration fields: npm help 7 config
-
-npm@10.8.2 /usr/lib/node_modules/npm/yarn install v1.22.22
-[1/4] Resolving packages...
-success Already up-to-date.
-Done in 0.59s. et de cache  sur sa machine locale.
+**Known issue recurrence from previous fork**
+- **Problème de synchronisation de l'environnement local de l'utilisateur** : L'utilisateur a eu des difficultés récurrentes à maintenir sa copie locale du projet synchronisée avec les modifications sur GitHub, ce qui a conduit à de nombreux builds infructueux avec du code obsolète.
 
 **Code Architecture**
+expo-notifications
 
+**Key Technical Concepts**
+- **Frontend**: React Native, Expo, TypeScript, Expo Application Services (EAS).
+- **Backend**: FastAPI (Python), Uvicorn, SQLAlchemy.
+- **Database**: Supabase (PostgreSQL).
+- **Hosting**: Railway (backend), Expo (frontend builds).
+- **Notifications**: Expo Push Notifications.
+
+**key DB schema**
+- : **Nécessite une migration manuelle**. Les colonnes  et  doivent être ajoutées pour que les messages de refus/confirmation soient persistés.
+- : Contient  qui est essentiel pour les notifications.
 
 **All files of reference**
-- **Fichiers critiques pour le bug actuel :**
-    - 
-    - 
-    - 
-    - 
-- **Autres fichiers importants modifiés :**
-    - 
-    - 
-    - 
+- : Contient les corrections les plus critiques pour les notifications et les demandes de chansons. **Doit être à jour sur Railway.**
+- : Contient la nouvelle logique de gestion des notifications.
+- : Contient la correction pour l'enregistrement des push tokens.
+- : Doit contenir le plugin .
+- : La nouvelle page de réservations, qui a causé des erreurs de build à cause d'imports incorrects.
 
 **Critical Info for New Agent**
-- **LE BUG DE CONNEXION N'EST PAS RÉSOLU.** Malgré des efforts considérables et la mise en œuvre de dizaines de correctifs provenant d'un audit externe, le problème fondamental persiste. L'utilisateur est frustré, et c'est la priorité absolue.
-- Le nouveau temps de chargement de 5 secondes au démarrage est un effet secondaire de la fonction . Cela indique que le backend est toujours lent à répondre au premier appel, même après avoir déplacé les services dans la même région géographique.
-- La cause la plus probable du bug est une erreur de logique dans l'interaction complexe des correctifs frontend (, , ) ou un comportement inattendu du backend malgré le correctif 503 vs 401.
-- Ne passez pas à d'autres tâches. Concentrez-vous exclusivement sur le diagnostic et la résolution de ce bug. Vous devrez travailler en étroite collaboration avec l'utilisateur pour obtenir les logs du backend au moment où l'erreur se produit sur son téléphone.
+1.  **L'audit de l'utilisateur (message #627) est la source de vérité.** L'agent précédent a implémenté les corrections basées sur cet audit. La priorité absolue est de s'assurer que ce code est déployé et testé.
+2.  **Le déploiement est un processus en deux étapes :** le backend sur **Railway** et le frontend via **EAS Build**. L'app TestFlight communique avec le backend Railway. Les corrections backend ne seront effectives qu'après un redéploiement sur Railway.
+3.  **Le problème des notifications Push est la priorité n°1.** La cause principale identifiée est que les  ne sont pas enregistrés sur le serveur. Une correction a été apportée dans  et . Cela doit être validé de toute urgence sur un nouveau build.
+4.  **L'utilisateur a des problèmes récurrents avec usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
+           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
+           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
+           [--super-prefix=<path>] [--config-env=<name>=<envvar>]
+           <command> [<args>]
+
+These are common Git commands used in various situations:
+
+start a working area (see also: git help tutorial)
+   clone     Clone a repository into a new directory
+   init      Create an empty Git repository or reinitialize an existing one
+
+work on the current change (see also: git help everyday)
+   add       Add file contents to the index
+   mv        Move or rename a file, a directory, or a symlink
+   restore   Restore working tree files
+   rm        Remove files from the working tree and from the index
+
+examine the history and state (see also: git help revisions)
+   bisect    Use binary search to find the commit that introduced a bug
+   diff      Show changes between commits, commit and working tree, etc
+   grep      Print lines matching a pattern
+   log       Show commit logs
+   show      Show various types of objects
+   status    Show the working tree status
+
+grow, mark and tweak your common history
+   branch    List, create, or delete branches
+   commit    Record changes to the repository
+   merge     Join two or more development histories together
+   rebase    Reapply commits on top of another base tip
+   reset     Reset current HEAD to the specified state
+   switch    Switch branches
+   tag       Create, list, delete or verify a tag object signed with GPG
+
+collaborate (see also: git help workflows)
+   fetch     Download objects and refs from another repository
+   pull      Fetch from and integrate with another repository or a local branch
+   push      Update remote refs along with associated objects
+
+'git help -a' and 'git help -g' list available subcommands and some
+concept guides. See 'git help <command>' or 'git help <concept>'
+to read about a specific subcommand or concept.
+See 'git help git' for an overview of the system..** Soyez extrêmement explicite avec les commandes (HEAD is now at a7f1c5b3 Auto-generated changes) pour vous assurer que son environnement local est propre avant de lancer un build.
+5.  **Des colonnes manquent dans la base de données Supabase.** Pour que les raisons de refus et les messages de confirmation des tables soient sauvegardés, l'utilisateur doit exécuter . Informez-le à ce sujet.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Build 50):** Reports the login problem persists after an hour of inactivity, and the app is now slow to open (5-second spinner).
-2.  **User:** Asks for the submit command.
-3.  **User:** Confirms the yarn install v1.22.22
-[1/4] Resolving packages...
-success Already up-to-date.
-Done in 0.71s. worked and asks what the problem was.
-4.  **User:** Reports the terminal seems stuck on .
-5.  **User:** Asks to restart the entire terminal process from scratch due to being stuck.
-6.  **User:** Reports being stuck on 
-added 6 packages, removed 6 packages, changed 1 package, and audited 998 packages in 8s
-
-189 packages are looking for funding
-  run `npm fund` for details
-
-35 vulnerabilities (1 moderate, 34 high)
-
-To address issues that do not require attention, run:
-  npm audit fix
-
-To address all issues possible (including breaking changes), run:
-  npm audit fix --force
-
-Some issues need review, and may require choosing
-a different dependency.
-
-Run `npm audit` for details..
-7.  **User:** Asks if the slow install is related to changing the Railway/Supabase region.
-8.  **User:** Reports the build is stuck on Compressing project files and asks if it's related to the backend.
-9.  **User:** After a long back and forth, agrees to follow a full cleanup command for his local environment.
-10. **User:** Provides the detailed audit from Claude and asks the agent to implement all changes, especially the critical ones, after moving Railway to Europe.
+1.  **User**: Signale que le déploiement sur Railway est bloqué.
+2.  **User**: Partage l'info de Claude indiquant que le blocage Railway est un incident temporaire de leur côté.
+3.  **Agent**: Propose de faire le build frontend (76) en attendant.
+4.  **User**: Confirme que Railway refonctionne mais que les problèmes persistent : la raison du refus n'est pas visible dans Mes Réservations et les notifications ne sont toujours pas reçues.
+5.  **Agent**: Confirme que le problème des notifications est le manque de push tokens enregistrés sur le serveur Railway.
+6.  **Agent**: Identifie et corrige un bug critique dans  qui empêchait les tokens d'être correctement enregistrés.
+7.  **User**: Fournit un audit technique très détaillé et précis (message 627) listant 6 bugs critiques à corriger, surpassant l'analyse de l'agent.
+8.  **Agent**: Acquiesce et applique méticuleusement toutes les corrections demandées par l'utilisateur.
+9.  **User**: Signale à nouveau un bug sur les demandes de chansons et l'absence du bouton Mes Réservations. Demande également des notifications pour les admins lors de nouvelles demandes de table.
+10. **Agent**: Explique que les bugs persistent car le backend Railway n'a pas les dernières corrections. Implémente les notifications admin et prépare le build 77.
 
 **Project Health Check:**
-- **Broken**: L'application est toujours instable à cause d'un bug de connexion critique et récurrent, ce qui la rend inutilisable après une période d'inactivité et bloque sa soumission à l'App Store.
+- **Broken**: Les fonctionnalités principales de l'application (notifications push, demandes de chansons) ne fonctionnent pas dans l'environnement de test de l'utilisateur (TestFlight) en raison de bugs critiques et de problèmes de déploiement.
+- **Mocked**: Aucun.
 
 **3rd Party Integrations**
-- **Railway** (Hébergement Backend)
-- **Supabase** (Base de données principale - PostgreSQL)
-- **Cloudinary** (Gestion d'images)
-- **Expo Application Services (EAS)** (Build et soumission)
-- **Apple & Google Sign-In**
+- **Railway**: Hébergement Backend
+- **Supabase**: Base de données (PostgreSQL)
+- **Cloudinary**: Gestion d'images
+- **Expo Application Services (EAS)**: Build et soumission de l'application
+- **Apple & Google Sign-In**: Authentification
+- **Expo Push Notifications**: Notifications push
 
 **Testing status**
 - Testing agent used after significant changes: NO
 - Troubleshoot agent used after agent stuck in loop: NO
 - Test files created: None
-- Known regressions: The main login bug is a persistent regression. The new 5-second app startup time is a new performance regression introduced by the attempted fixes.
+- Known regressions: Les notifications et les demandes de chansons sont des régressions ou des fonctionnalités qui n'ont jamais fonctionné correctement en production malgré de multiples tentatives de correction.
 
 **Credentials to test flow:**
 - **Admin Email**: 
-- **Admin Password**: Configuré via la variable d'environnement  sur Railway. La valeur par défaut est .
-- **Supabase Connection String**: Disponible dans  (variable ).</analysis>
+- **Admin Password**: Variable d'environnement sur Railway.
+
+**What agent forgot to execute**
+L'agent a initialement manqué plusieurs bugs critiques et silencieux (crashs de notifications, logique SQL incorrecte, configuration de projet manquante) qui ont été identifiés par l'utilisateur dans un audit détaillé. Bien que l'agent ait ensuite corrigé ces points sur instruction, le diagnostic initial était incomplet.</analysis>
