@@ -1101,7 +1101,8 @@ async def get_song_requests(
     current_user: User = Depends(get_current_user_supabase)
 ):
     """Get song requests with optional filters"""
-    query = select(SongRequest).order_by(SongRequest.requested_at.desc()).limit(100)
+    # Sort by votes first, then by request time (most voted first)
+    query = select(SongRequest).order_by(SongRequest.votes.desc(), SongRequest.requested_at.desc()).limit(100)
     
     if status:
         query = query.where(SongRequest.status == status)
