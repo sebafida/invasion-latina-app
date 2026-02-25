@@ -2787,6 +2787,44 @@ async def update_user_profile(
         }
     }
 
+@app.delete("/api/user/account")
+async def delete_user_account(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_supabase)
+):
+    """Delete user's account and all associated data (Apple App Store requirement)"""
+    user_id = current_user.id
+    logger.info(f"🗑️ Deleting account for user: {current_user.email}")
+    
+    try:
+        # Delete all user's data in order (respecting foreign key constraints)
+        # 1. Delete song requests
+        await db.execute(delete(SongRequest).where(SongRequest.user_id == user_id))
+        
+        # 2. Delete VIP bookings
+        await db.execute(delete(VIPBooking).where(VIPBooking.user_id == user_id))
+        
+        # 3. Delete notification preferences
+        await db.execute(delete(NotificationPreference).where(NotificationPreference.user_id == user_id))
+        
+        # 4. Delete loyalty vouchers
+        await db.execute(delete(LoyaltyVoucher).where(LoyaltyVoucher.user_id == user_id))
+        
+        # 5. Delete tickets
+        await db.execute(delete(Ticket).where(Ticket.user_id == user_id))
+        
+        # 6. Finally delete the user
+        await db.execute(delete(User).where(User.id == user_id))
+        
+        await db.commit()
+        logger.info(f"✅ Successfully deleted account for user: {current_user.email}")
+        
+        return {"success": True, "message": "Account deleted successfully"}
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"❌ Error deleting account: {e}")
+        raise HTTPException(status_code=500, detail="Error deleting account")
+
 # ============ MEDIA GALLERIES ============
 
 @app.get("/api/media/galleries")
