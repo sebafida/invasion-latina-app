@@ -1041,12 +1041,13 @@ async def request_song(
     
     # Check how many songs this user has already requested for this event (limit: 3)
     MAX_SONGS_PER_USER = 3
-    user_requests_count = await db.execute(
-        select(func.count()).select_from(SongRequest)
+    # Use raw SQL for JSON array contains check (PostgreSQL compatible)
+    user_requests_result = await db.execute(
+        select(SongRequest)
         .where(SongRequest.event_id == event_id)
-        .where(SongRequest.requesters.contains([user_id]))
     )
-    user_total_requests = user_requests_count.scalar() or 0
+    all_requests = user_requests_result.scalars().all()
+    user_total_requests = sum(1 for req in all_requests if user_id in (req.requesters or []))
     
     if not is_admin and user_total_requests >= MAX_SONGS_PER_USER:
         raise HTTPException(
