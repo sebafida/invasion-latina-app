@@ -611,6 +611,84 @@ Merci et à bientôt! 🔥`;
           </View>
         </View>
       </Modal>
+
+      {/* Confirm Booking Modal with Instructions */}
+      <Modal
+        visible={showConfirmModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowConfirmModal(false)}
+      >
+        <View style={styles.confirmModalOverlay}>
+          <View style={styles.confirmModalContent}>
+            <View style={styles.confirmModalHeader}>
+              <Text style={styles.confirmModalTitle}>Confirmer la réservation</Text>
+              <TouchableOpacity onPress={() => setShowConfirmModal(false)}>
+                <Ionicons name="close" size={28} color={theme.colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            {confirmTarget && (
+              <View style={styles.confirmTargetInfo}>
+                <Ionicons name="checkmark-circle" size={40} color={theme.colors.success} />
+                <Text style={styles.confirmTargetName}>{confirmTarget.name}</Text>
+                <Text style={styles.confirmTargetZone}>{confirmTarget.zone}</Text>
+              </View>
+            )}
+
+            <Text style={styles.instructionsLabel}>Consignes pour le client (optionnel)</Text>
+            
+            {/* Quick message buttons */}
+            <View style={styles.quickMessagesContainer}>
+              {QUICK_MESSAGES.map((msg, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.quickMessageBtn,
+                    confirmMessage === msg && styles.quickMessageBtnActive
+                  ]}
+                  onPress={() => setConfirmMessage(msg)}
+                >
+                  <Text style={[
+                    styles.quickMessageText,
+                    confirmMessage === msg && styles.quickMessageTextActive
+                  ]}>{msg}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TextInput
+              style={styles.confirmMessageInput}
+              placeholder="Ou écrivez un message personnalisé..."
+              placeholderTextColor={theme.colors.textMuted}
+              value={confirmMessage}
+              onChangeText={setConfirmMessage}
+              multiline
+              numberOfLines={3}
+            />
+
+            <View style={styles.confirmModalButtons}>
+              <TouchableOpacity
+                style={styles.confirmWithoutMsgBtn}
+                onPress={() => {
+                  setConfirmMessage('');
+                  confirmBookingWithMessage();
+                }}
+              >
+                <Text style={styles.confirmWithoutMsgText}>Confirmer sans message</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.confirmWithMsgBtn}
+                onPress={confirmBookingWithMessage}
+              >
+                <Ionicons name="checkmark-circle" size={22} color="white" />
+                <Text style={styles.confirmWithMsgText}>Confirmer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
