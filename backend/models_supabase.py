@@ -175,6 +175,8 @@ class VIPBooking(Base):
     
     status = Column(String(50), default='pending', index=True)
     admin_notes = Column(Text, nullable=True)
+    rejection_reason = Column(Text, nullable=True)
+    confirmation_message = Column(Text, nullable=True)
     
     submitted_at = Column(DateTime(timezone=True), server_default=func.now())
     confirmed_at = Column(DateTime(timezone=True), nullable=True)
