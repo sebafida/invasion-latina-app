@@ -2565,6 +2565,7 @@ async def get_all_vip_bookings(
 class VIPBookingStatusUpdate(BaseModel):
     status: str
     rejection_reason: Optional[str] = None
+    confirmation_message: Optional[str] = None
 
 @app.put("/api/admin/vip-bookings/{booking_id}")
 async def update_vip_booking_status(
@@ -2583,6 +2584,8 @@ async def update_vip_booking_status(
     booking.status = data.status
     if data.status == "confirmed":
         booking.confirmed_at = datetime.now(timezone.utc)
+        if data.confirmation_message:
+            booking.confirmation_message = data.confirmation_message
     elif data.status == "rejected":
         booking.rejected_at = datetime.now(timezone.utc)
         if data.rejection_reason:
