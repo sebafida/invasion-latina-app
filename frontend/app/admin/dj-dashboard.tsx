@@ -47,7 +47,7 @@ export default function DJDashboardScreen() {
   const [stats, setStats] = useState({ total: 0, pending: 0, played: 0, rejected: 0 });
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [events, setEvents] = useState<EventStats[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<string>('default_event');
+  const [selectedEvent, setSelectedEvent] = useState<string>('');
   const [showEventPicker, setShowEventPicker] = useState(false);
   
   // Reject modal states
