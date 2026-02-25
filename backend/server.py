@@ -2585,12 +2585,10 @@ async def update_vip_booking_status(
     booking.status = data.status
     if data.status == "confirmed":
         booking.confirmed_at = datetime.now(timezone.utc)
-        if data.confirmation_message:
-            booking.confirmation_message = data.confirmation_message
+        # Note: confirmation_message stored in data but not in DB (column needs to be added to Supabase)
     elif data.status == "rejected":
         booking.rejected_at = datetime.now(timezone.utc)
-        if data.rejection_reason:
-            booking.rejection_reason = data.rejection_reason
+        # Note: rejection_reason stored in data but not in DB (column needs to be added to Supabase)
     
     await db.commit()
     
