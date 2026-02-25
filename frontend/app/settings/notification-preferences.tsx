@@ -176,76 +176,37 @@ export default function NotificationPreferencesScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Push Notifications Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📱 {t('pushNotifications')}</Text>
-          
-          <View style={styles.preferenceItem}>
-            <View style={styles.preferenceInfo}>
-              <Ionicons name="notifications" size={24} color={theme.colors.primary} />
-              <View style={styles.preferenceText}>
-                <Text style={styles.preferenceTitle}>{t('enablePushNotifications')}</Text>
-                <Text style={styles.preferenceDesc}>{t('enablePushNotificationsDesc')}</Text>
-              </View>
-            </View>
-            <Switch
-              value={preferences.push_enabled}
-              onValueChange={() => togglePreference('push_enabled')}
-              trackColor={{ false: '#3e3e3e', true: theme.colors.primary }}
-              thumbColor={preferences.push_enabled ? '#fff' : '#f4f3f4'}
-            />
-          </View>
-        </View>
-
         {/* Events Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎉 {t('events')}</Text>
+          <Text style={styles.sectionTitle}>🎉 Événements</Text>
           
           <View style={styles.preferenceItem}>
             <View style={styles.preferenceInfo}>
               <Ionicons name="calendar" size={24} color="#FF9800" />
               <View style={styles.preferenceText}>
-                <Text style={styles.preferenceTitle}>{t('newEvents')}</Text>
-                <Text style={styles.preferenceDesc}>{t('newEventsDesc')}</Text>
+                <Text style={styles.preferenceTitle}>Nouveaux événements</Text>
+                <Text style={styles.preferenceDesc}>Être notifié des nouvelles soirées et événements</Text>
               </View>
             </View>
             <Switch
-              value={preferences.new_events}
-              onValueChange={() => togglePreference('new_events')}
+              value={preferences.events}
+              onValueChange={() => togglePreference('events')}
               trackColor={{ false: '#3e3e3e', true: theme.colors.primary }}
-              thumbColor={preferences.new_events ? '#fff' : '#f4f3f4'}
-              disabled={!preferences.push_enabled}
-            />
-          </View>
-
-          <View style={styles.preferenceItem}>
-            <View style={styles.preferenceInfo}>
-              <Ionicons name="alarm" size={24} color="#2196F3" />
-              <View style={styles.preferenceText}>
-                <Text style={styles.preferenceTitle}>{t('eventReminders')}</Text>
-                <Text style={styles.preferenceDesc}>{t('eventRemindersDesc')}</Text>
-              </View>
-            </View>
-            <Switch
-              value={preferences.event_reminders}
-              onValueChange={() => togglePreference('event_reminders')}
-              trackColor={{ false: '#3e3e3e', true: theme.colors.primary }}
-              thumbColor={preferences.event_reminders ? '#fff' : '#f4f3f4'}
-              disabled={!preferences.push_enabled}
+              thumbColor={preferences.events ? '#fff' : '#f4f3f4'}
             />
           </View>
         </View>
 
         {/* Promotions Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎁 {t('promotionsAndOffers')}</Text>
+          <Text style={styles.sectionTitle}>🎁 Promotions</Text>
           
           <View style={styles.preferenceItem}>
             <View style={styles.preferenceInfo}>
               <Ionicons name="pricetag" size={24} color="#E91E63" />
               <View style={styles.preferenceText}>
-                <Text style={styles.preferenceTitle}>{t('promotions')}</Text>
-                <Text style={styles.preferenceDesc}>{t('promotionsDesc')}</Text>
+                <Text style={styles.preferenceTitle}>Offres et promotions</Text>
+                <Text style={styles.preferenceDesc}>Recevoir les offres spéciales et réductions</Text>
               </View>
             </View>
             <Switch
@@ -253,72 +214,48 @@ export default function NotificationPreferencesScreen() {
               onValueChange={() => togglePreference('promotions')}
               trackColor={{ false: '#3e3e3e', true: theme.colors.primary }}
               thumbColor={preferences.promotions ? '#fff' : '#f4f3f4'}
-              disabled={!preferences.push_enabled}
             />
           </View>
         </View>
 
-        {/* Loyalty Section */}
+        {/* Song Requests Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🪙 Invasion Coins</Text>
-          
-          <View style={styles.preferenceItem}>
-            <View style={styles.preferenceInfo}>
-              <Ionicons name="star" size={24} color="#FFD700" />
-              <View style={styles.preferenceText}>
-                <Text style={styles.preferenceTitle}>{t('invasionCoinsNotif')}</Text>
-                <Text style={styles.preferenceDesc}>{t('invasionCoinsNotifDesc')}</Text>
-              </View>
-            </View>
-            <Switch
-              value={preferences.invasion_coins}
-              onValueChange={() => togglePreference('invasion_coins')}
-              trackColor={{ false: '#3e3e3e', true: theme.colors.primary }}
-              thumbColor={preferences.invasion_coins ? '#fff' : '#f4f3f4'}
-              disabled={!preferences.push_enabled}
-            />
-          </View>
-        </View>
-
-        {/* DJs Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎵 DJs</Text>
+          <Text style={styles.sectionTitle}>🎵 Demandes de musique</Text>
           
           <View style={styles.preferenceItem}>
             <View style={styles.preferenceInfo}>
               <Ionicons name="musical-notes" size={24} color="#9C27B0" />
               <View style={styles.preferenceText}>
-                <Text style={styles.preferenceTitle}>{t('djUpdates')}</Text>
-                <Text style={styles.preferenceDesc}>{t('djUpdatesDesc')}</Text>
+                <Text style={styles.preferenceTitle}>Réponses aux demandes</Text>
+                <Text style={styles.preferenceDesc}>Être notifié quand le DJ accepte ou refuse votre demande</Text>
               </View>
             </View>
             <Switch
-              value={preferences.dj_updates}
-              onValueChange={() => togglePreference('dj_updates')}
+              value={preferences.song_requests}
+              onValueChange={() => togglePreference('song_requests')}
               trackColor={{ false: '#3e3e3e', true: theme.colors.primary }}
-              thumbColor={preferences.dj_updates ? '#fff' : '#f4f3f4'}
-              disabled={!preferences.push_enabled}
+              thumbColor={preferences.song_requests ? '#fff' : '#f4f3f4'}
             />
           </View>
         </View>
 
-        {/* Email Section */}
+        {/* Friends Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📧 Email</Text>
+          <Text style={styles.sectionTitle}>👥 Amis et social</Text>
           
           <View style={styles.preferenceItem}>
             <View style={styles.preferenceInfo}>
-              <Ionicons name="mail" size={24} color="#00BCD4" />
+              <Ionicons name="people" size={24} color="#2196F3" />
               <View style={styles.preferenceText}>
-                <Text style={styles.preferenceTitle}>{t('newsletterEmail')}</Text>
-                <Text style={styles.preferenceDesc}>{t('newsletterEmailDesc')}</Text>
+                <Text style={styles.preferenceTitle}>Activité sociale</Text>
+                <Text style={styles.preferenceDesc}>Notifications liées à vos amis et activités sociales</Text>
               </View>
             </View>
             <Switch
-              value={preferences.newsletter_email}
-              onValueChange={() => togglePreference('newsletter_email')}
+              value={preferences.friends}
+              onValueChange={() => togglePreference('friends')}
               trackColor={{ false: '#3e3e3e', true: theme.colors.primary }}
-              thumbColor={preferences.newsletter_email ? '#fff' : '#f4f3f4'}
+              thumbColor={preferences.friends ? '#fff' : '#f4f3f4'}
             />
           </View>
         </View>
