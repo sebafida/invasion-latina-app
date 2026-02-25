@@ -2608,11 +2608,15 @@ async def update_vip_booking_status(
                     title = "🎉 Réservation de table confirmée !"
                     body = f"Votre table pour {booking.guest_count} personnes est confirmée !"
                 
+                # Add confirmation message if provided
+                if data.confirmation_message:
+                    body += f"\n\n📋 {data.confirmation_message}"
+                
                 await send_push_notification_to_user(
                     user_id=booking.user_id,
                     title=title,
                     body=body,
-                    data={"type": "vip_booking_confirmed", "booking_id": booking_id},
+                    data={"type": "vip_booking_confirmed", "booking_id": booking_id, "message": data.confirmation_message or ""},
                     db=db
                 )
             elif data.status == "rejected":
