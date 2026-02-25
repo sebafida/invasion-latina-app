@@ -36,12 +36,10 @@ export const registerForPushNotifications = async (): Promise<string | null> => 
   }
 
   try {
-    // Get Expo push token
-    const response = await Notifications.getExpoPushTokenAsync({
-      projectId: 'your-project-id', // This is optional in most cases
-    });
+    // Get Expo push token - projectId is auto-detected from app.json in EAS builds
+    const response = await Notifications.getExpoPushTokenAsync();
     token = response.data;
-    console.log('Push token:', token);
+    console.log('✅ Push token obtained:', token);
 
     // Store locally
     await AsyncStorage.setItem('push_token', token);
@@ -49,11 +47,21 @@ export const registerForPushNotifications = async (): Promise<string | null> => 
     // Send to backend to store in user profile
     try {
       await api.put('/users/push-token', { push_token: token });
+      console.log('✅ Push token saved to server');
     } catch (error) {
-      console.log('Failed to save push token to server:', error);
+      console.log('❌ Failed to save push token to server:', error);
+      // Retry once after 2 seconds
+      setTimeout(async () => {
+        try {
+          await api.put('/users/push-token', { push_token: token });
+          console.log('✅ Push token saved to server (retry)');
+        } catch (retryError) {
+          console.log('❌ Push token retry failed:', retryError);
+        }
+      }, 2000);
     }
   } catch (error) {
-    console.log('Error getting push token:', error);
+    console.log('❌ Error getting push token:', error);
   }
 
   // Configure for Android
