@@ -1085,4 +1085,116 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textSecondary,
   },
+
+  // Confirm Modal Styles
+  confirmModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'flex-end',
+  },
+  confirmModalContent: {
+    backgroundColor: theme.colors.cardBackground,
+    borderTopLeftRadius: theme.borderRadius.xl,
+    borderTopRightRadius: theme.borderRadius.xl,
+    padding: theme.spacing.xl,
+    maxHeight: '85%',
+  },
+  confirmModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  confirmModalTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+  },
+  confirmTargetInfo: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.elevated,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+  },
+  confirmTargetName: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+    marginTop: theme.spacing.sm,
+  },
+  confirmTargetZone: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.primary,
+    marginTop: 4,
+  },
+  instructionsLabel: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.sm,
+  },
+  quickMessagesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  quickMessageBtn: {
+    backgroundColor: theme.colors.elevated,
+    borderRadius: theme.borderRadius.lg,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.elevated,
+  },
+  quickMessageBtnActive: {
+    backgroundColor: theme.colors.primary + '20',
+    borderColor: theme.colors.primary,
+  },
+  quickMessageText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textSecondary,
+  },
+  quickMessageTextActive: {
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.bold,
+  },
+  confirmMessageInput: {
+    backgroundColor: theme.colors.elevated,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    color: theme.colors.textPrimary,
+    fontSize: theme.fontSize.md,
+    minHeight: 80,
+    textAlignVertical: 'top',
+    marginBottom: theme.spacing.lg,
+  },
+  confirmModalButtons: {
+    gap: theme.spacing.sm,
+  },
+  confirmWithoutMsgBtn: {
+    backgroundColor: theme.colors.elevated,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+  },
+  confirmWithoutMsgText: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textSecondary,
+  },
+  confirmWithMsgBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.success,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    gap: theme.spacing.sm,
+  },
+  confirmWithMsgText: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: 'white',
+  },
 });
