@@ -1101,20 +1101,27 @@ async def request_song(
     
     # Check how many songs this user has already requested for this event (limit: 3)
     MAX_SONGS_PER_USER = 3
-    # Use raw SQL for JSON array contains check (PostgreSQL compatible)
-    user_requests_result = await db.execute(
-        select(SongRequest)
-        .where(SongRequest.event_id == event_id)
-    )
-    all_requests = user_requests_result.scalars().all()
-    user_total_requests = sum(1 for req in all_requests if user_id in (req.requesters or []))
-    
-    if not is_admin and user_total_requests >= MAX_SONGS_PER_USER:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Vous avez déjà demandé {MAX_SONGS_PER_USER} chansons pour cette soirée. Limite atteinte!"
+    if not is_admin:
+        # Count requests where user_id is the original requester (user_id column)
+        # Also count requests where user is in the requesters JSON list
+        # Use a simpler approach: fetch all requests for this event and count in Python
+        all_event_requests = await db.execute(
+            select(SongRequest)
+            .where(SongRequest.event_id == event_id)
+            .where(SongRequest.status.in_(["pending", "played"]))
         )
-    
+        all_requests = all_event_requests.scalars().all()
+        user_total_requests = sum(
+            1 for req in all_requests
+            if user_id in (req.requesters or []) or req.user_id == user_id
+        )
+
+        if user_total_requests >= MAX_SONGS_PER_USER:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Vous avez déjà demandé {MAX_SONGS_PER_USER} chansons pour cette soirée. Limite atteinte!"
+            )
+
     # Check for existing request for this specific song
     result = await db.execute(
         select(SongRequest)
@@ -1124,9 +1131,10 @@ async def request_song(
         .where(SongRequest.status == "pending")
     )
     existing = result.scalar_one_or_none()
-    
+
     if existing:
-        if user_id in (existing.requesters or []):
+        # Admins can bypass the duplicate check
+        if not is_admin and user_id in (existing.requesters or []):
             raise HTTPException(status_code=400, detail="Vous avez déjà demandé cette chanson")
         
         existing.times_requested = (existing.times_requested or 1) + 1
@@ -2604,29 +2612,20 @@ async def book_vip_table(
     db.add(booking)
     await db.commit()
     await db.refresh(booking)
-    
-    # Send notification to admins about new table request
+
+    # Notify admins (info@ and seba@) about the new booking
     try:
-        admin_emails = ["info@invasionlatina.be", "seba@invasionlatina.be"]
-        admin_result = await db.execute(
-            select(User).where(User.email.in_(admin_emails))
+        event_name = event.name if event else "Événement"
+        zone_label = data.zone or "Non spécifié"
+        await send_push_notification_to_admins(
+            title="📋 Nouvelle demande de table !",
+            body=f"{name} - {guests} pers. | Zone: {zone_label} | {event_name}",
+            data={"type": "new_booking_admin", "booking_id": booking.id},
+            db=db
         )
-        admin_users = admin_result.scalars().all()
-        
-        for admin in admin_users:
-            if admin.push_token:
-                zone_text = data.zone or "Table"
-                await send_push_notification_to_user(
-                    user_id=admin.id,
-                    title="🍾 Nouvelle demande de table !",
-                    body=f"{name} demande une table {zone_text} pour {guests} personnes",
-                    data={"type": "new_booking", "booking_id": booking.id},
-                    db=db
-                )
-        logger.info(f"📲 Notified {len([a for a in admin_users if a.push_token])} admins about new booking")
     except Exception as e:
-        logger.error(f"Failed to notify admins about new booking: {e}")
-    
+        logger.error(f"Failed to send admin notification for new booking: {e}")
+
     return {
         "success": True,
         "booking_id": booking.id,
