@@ -2533,6 +2533,28 @@ async def book_vip_table(
     await db.commit()
     await db.refresh(booking)
     
+    # Send notification to admins about new table request
+    try:
+        admin_emails = ["info@invasionlatina.be", "seba@invasionlatina.be"]
+        admin_result = await db.execute(
+            select(User).where(User.email.in_(admin_emails))
+        )
+        admin_users = admin_result.scalars().all()
+        
+        for admin in admin_users:
+            if admin.push_token:
+                zone_text = data.zone or "Table"
+                await send_push_notification_to_user(
+                    user_id=admin.id,
+                    title="🍾 Nouvelle demande de table !",
+                    body=f"{name} demande une table {zone_text} pour {guests} personnes",
+                    data={"type": "new_booking", "booking_id": booking.id},
+                    db=db
+                )
+        logger.info(f"📲 Notified {len([a for a in admin_users if a.push_token])} admins about new booking")
+    except Exception as e:
+        logger.error(f"Failed to notify admins about new booking: {e}")
+    
     return {
         "success": True,
         "booking_id": booking.id,
