@@ -265,10 +265,10 @@ export default function LoginScreen() {
                     disabled={socialLoading !== null}
                   >
                     {socialLoading === 'apple' ? (
-                      <ActivityIndicator color="white" />
+                      <ActivityIndicator color="#000000" />
                     ) : (
                       <>
-                        <Ionicons name="logo-apple" size={22} color="white" />
+                        <Ionicons name="logo-apple" size={22} color="#000000" />
                         <Text style={styles.appleButtonText}>{t('continueWithApple')}</Text>
                       </>
                     )}
