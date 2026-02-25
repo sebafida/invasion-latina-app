@@ -33,7 +33,7 @@ interface Booking {
 
 export default function MyBookingsScreen() {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const router = useRouter();
   
   const [bookings, setBookings] = useState<Booking[]>([]);
