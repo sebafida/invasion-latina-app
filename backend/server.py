@@ -1818,11 +1818,17 @@ async def get_my_vip_bookings(
         
         booking_list.append({
             "id": booking.id,
-            "event_name": event.name if event else "Unknown Event",
+            "event_name": event.name if event else "Événement inconnu",
             "event_date": event.event_date.isoformat() if event and event.event_date else None,
+            "event_banner": event.banner_image if event else None,
+            "venue_name": event.venue_name if event else None,
+            "zone": booking.zone or "Non spécifié",
             "guests": booking.guests,
             "status": booking.status,
-            "submitted_at": booking.submitted_at.isoformat() if booking.submitted_at else None
+            "admin_notes": booking.admin_notes,
+            "submitted_at": booking.submitted_at.isoformat() if booking.submitted_at else None,
+            "confirmed_at": booking.confirmed_at.isoformat() if booking.confirmed_at else None,
+            "rejected_at": booking.rejected_at.isoformat() if booking.rejected_at else None,
         })
     
     return booking_list
