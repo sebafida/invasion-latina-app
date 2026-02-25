@@ -54,6 +54,9 @@ export default function BookingsAdminScreen() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<{ id: string; name: string } | null>(null);
   const [customRejectReason, setCustomRejectReason] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState<{ id: string; name: string; zone: string } | null>(null);
+  const [confirmMessage, setConfirmMessage] = useState('');
 
   // Reject reasons for VIP bookings
   const REJECT_REASONS = [
@@ -63,6 +66,14 @@ export default function BookingsAdminScreen() {
     { value: 'date_changed', label: 'Date de l\'événement modifiée', icon: 'time-outline' },
     { value: 'event_cancelled', label: 'Événement annulé', icon: 'close-circle-outline' },
     { value: 'custom', label: 'Autre raison...', icon: 'create-outline' },
+  ];
+
+  // Quick messages for confirmation
+  const QUICK_MESSAGES = [
+    'Arriver avant 1h du matin',
+    'Présenter une pièce d\'identité à l\'entrée',
+    'Dress code élégant requis',
+    'Appeler à l\'arrivée: +32 XXX XX XX XX',
   ];
 
   useEffect(() => {
