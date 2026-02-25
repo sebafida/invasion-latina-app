@@ -1039,7 +1039,22 @@ async def request_song(
     artist_name_normalized = song_data["artist_name"].strip().lower()
     user_id = current_user.id
     
-    # Check for existing request
+    # Check how many songs this user has already requested for this event (limit: 3)
+    MAX_SONGS_PER_USER = 3
+    user_requests_count = await db.execute(
+        select(func.count()).select_from(SongRequest)
+        .where(SongRequest.event_id == event_id)
+        .where(SongRequest.requesters.contains([user_id]))
+    )
+    user_total_requests = user_requests_count.scalar() or 0
+    
+    if not is_admin and user_total_requests >= MAX_SONGS_PER_USER:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Vous avez déjà demandé {MAX_SONGS_PER_USER} chansons pour cette soirée. Limite atteinte!"
+        )
+    
+    # Check for existing request for this specific song
     result = await db.execute(
         select(SongRequest)
         .where(SongRequest.song_title_normalized == song_title_normalized)
