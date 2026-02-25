@@ -19,23 +19,17 @@ import api from '../../src/config/api';
 import { useLanguage } from '../../src/context/LanguageContext';
 
 interface NotificationPreferences {
-  push_enabled: boolean;
-  new_events: boolean;
-  event_reminders: boolean;
+  events: boolean;
   promotions: boolean;
-  invasion_coins: boolean;
-  dj_updates: boolean;
-  newsletter_email: boolean;
+  song_requests: boolean;
+  friends: boolean;
 }
 
 const DEFAULT_PREFERENCES: NotificationPreferences = {
-  push_enabled: true,
-  new_events: true,
-  event_reminders: true,
+  events: true,
   promotions: true,
-  invasion_coins: true,
-  dj_updates: true,
-  newsletter_email: false,
+  song_requests: true,
+  friends: true,
 };
 
 export default function NotificationPreferencesScreen() {
