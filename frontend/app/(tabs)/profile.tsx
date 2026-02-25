@@ -789,6 +789,12 @@ export default function ProfileScreen() {
           <Ionicons name="log-out" size={20} color={theme.colors.error} />
           <Text style={styles.logoutText}>{t('logout')}</Text>
         </TouchableOpacity>
+
+        {/* Delete Account Button */}
+        <TouchableOpacity style={styles.deleteAccountButton} onPress={handleDeleteAccount}>
+          <Ionicons name="trash-outline" size={20} color={theme.colors.textMuted} />
+          <Text style={styles.deleteAccountText}>{t('deleteAccount') || 'Supprimer mon compte'}</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Free Entry QR Code Modal */}
