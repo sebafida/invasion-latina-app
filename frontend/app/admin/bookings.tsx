@@ -99,10 +99,37 @@ export default function BookingsAdminScreen() {
     }
   };
 
-  const updateBookingStatus = async (bookingId: string, newStatus: string) => {
+  const updateBookingStatus = async (bookingId: string, newStatus: string, message?: string) => {
     try {
-      await api.put(`/admin/vip-bookings/${bookingId}`, { status: newStatus });
+      await api.put(`/admin/vip-bookings/${bookingId}`, { 
+        status: newStatus,
+        confirmation_message: message 
+      });
       Alert.alert(t('success'), newStatus === 'confirmed' ? t('confirmed') : t('cancelled'));
+      loadBookings();
+    } catch (error) {
+      Alert.alert(t('error'), t('connectionError'));
+    }
+  };
+
+  const handleConfirmBooking = (bookingId: string, customerName: string, zone: string) => {
+    setConfirmTarget({ id: bookingId, name: customerName, zone: zone });
+    setConfirmMessage('');
+    setShowConfirmModal(true);
+  };
+
+  const confirmBookingWithMessage = async () => {
+    if (!confirmTarget) return;
+    
+    try {
+      await api.put(`/admin/vip-bookings/${confirmTarget.id}`, { 
+        status: 'confirmed',
+        confirmation_message: confirmMessage.trim() || null
+      });
+      Alert.alert('Confirmé', `La réservation de "${confirmTarget.name}" a été confirmée`);
+      setShowConfirmModal(false);
+      setConfirmTarget(null);
+      setConfirmMessage('');
       loadBookings();
     } catch (error) {
       Alert.alert(t('error'), t('connectionError'));
