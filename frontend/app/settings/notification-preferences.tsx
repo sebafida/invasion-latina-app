@@ -98,13 +98,10 @@ export default function NotificationPreferencesScreen() {
 
   const enableAll = () => {
     const allEnabled: NotificationPreferences = {
-      push_enabled: true,
-      new_events: true,
-      event_reminders: true,
+      events: true,
       promotions: true,
-      invasion_coins: true,
-      dj_updates: true,
-      newsletter_email: true,
+      song_requests: true,
+      friends: true,
     };
     savePreferences(allEnabled);
     Alert.alert('✅', t('allNotificationsEnabled'));
@@ -121,13 +118,10 @@ export default function NotificationPreferencesScreen() {
           style: 'destructive',
           onPress: () => {
             const allDisabled: NotificationPreferences = {
-              push_enabled: false,
-              new_events: false,
-              event_reminders: false,
+              events: false,
               promotions: false,
-              invasion_coins: false,
-              dj_updates: false,
-              newsletter_email: false,
+              song_requests: false,
+              friends: false,
             };
             savePreferences(allDisabled);
           },
