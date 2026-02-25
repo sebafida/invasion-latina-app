@@ -233,6 +233,51 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      t('deleteAccount') || 'Supprimer mon compte',
+      t('deleteAccountConfirm') || 'Êtes-vous sûr de vouloir supprimer définitivement votre compte ? Cette action est irréversible et toutes vos données seront supprimées.',
+      [
+        { text: t('cancel'), style: 'cancel' },
+        { 
+          text: t('delete') || 'Supprimer', 
+          onPress: () => confirmDeleteAccount(), 
+          style: 'destructive' 
+        }
+      ]
+    );
+  };
+
+  const confirmDeleteAccount = () => {
+    // Second confirmation for safety
+    Alert.alert(
+      t('finalConfirmation') || 'Confirmation finale',
+      t('deleteAccountFinal') || 'Tapez "SUPPRIMER" pour confirmer la suppression de votre compte.',
+      [
+        { text: t('cancel'), style: 'cancel' },
+        { 
+          text: t('confirmDelete') || 'Confirmer la suppression', 
+          onPress: async () => {
+            try {
+              await api.delete('/user/account');
+              Alert.alert(
+                t('accountDeleted') || 'Compte supprimé',
+                t('accountDeletedMessage') || 'Votre compte a été supprimé avec succès.',
+                [{ text: 'OK', onPress: () => {
+                  logout();
+                  router.replace('/');
+                }}]
+              );
+            } catch (error) {
+              Alert.alert(t('error'), t('deleteAccountError') || 'Erreur lors de la suppression du compte. Veuillez réessayer.');
+            }
+          }, 
+          style: 'destructive' 
+        }
+      ]
+    );
+  };
+
   // Guest view - show when user is not logged in
   if (!user) {
     return (
