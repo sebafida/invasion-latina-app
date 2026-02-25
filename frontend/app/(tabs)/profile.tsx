@@ -485,6 +485,24 @@ export default function ProfileScreen() {
           </View>
         </Modal>
 
+        {/* Quick Actions */}
+        <View style={styles.quickActionsSection}>
+          <TouchableOpacity
+            style={styles.quickActionButton}
+            onPress={() => router.push('/my-bookings')}
+            data-testid="my-bookings-button"
+          >
+            <View style={styles.quickActionIcon}>
+              <Ionicons name="calendar" size={24} color={theme.colors.primary} />
+            </View>
+            <View style={styles.quickActionContent}>
+              <Text style={styles.quickActionTitle}>Mes Réservations</Text>
+              <Text style={styles.quickActionSubtitle}>Voir vos tables réservées</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
+          </TouchableOpacity>
+        </View>
+
         {/* Loyalty Card */}
         <View style={styles.loyaltyCard}>
           <View style={styles.loyaltyHeader}>
