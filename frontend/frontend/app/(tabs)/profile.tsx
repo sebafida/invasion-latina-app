@@ -226,10 +226,16 @@ export default function ProfileScreen() {
           onPress: async () => {
             try {
               await logout();
-              router.replace('/');
+              // Small delay to let state update before navigation
+              setTimeout(() => {
+                try {
+                  router.replace('/');
+                } catch (e) {
+                  // Navigation error is expected during logout
+                }
+              }, 100);
             } catch (error) {
-              console.log('Logout navigation error (expected):', error);
-              // Navigation might fail but logout still works
+              console.log('Logout error (expected):', error);
             }
           }, 
           style: 'destructive' 
