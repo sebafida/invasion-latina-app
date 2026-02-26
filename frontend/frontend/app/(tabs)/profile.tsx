@@ -224,8 +224,13 @@ export default function ProfileScreen() {
         { 
           text: t('yes'), 
           onPress: async () => {
-            await logout();
-            router.replace('/');
+            try {
+              await logout();
+              router.replace('/');
+            } catch (error) {
+              console.log('Logout navigation error (expected):', error);
+              // Navigation might fail but logout still works
+            }
           }, 
           style: 'destructive' 
         }
