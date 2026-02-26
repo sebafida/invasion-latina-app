@@ -1099,8 +1099,8 @@ async def request_song(
     artist_name_normalized = song_data["artist_name"].strip().lower()
     user_id = current_user.id
     
-    # Check how many songs this user has already requested for this event (limit: 3)
-    MAX_SONGS_PER_USER = 3
+    # Check how many songs this user has already requested for this event (limit: 5)
+    MAX_SONGS_PER_USER = 5
     if not is_admin:
         # Count requests where user_id is the original requester (user_id column)
         # Also count requests where user is in the requesters JSON list
@@ -2941,7 +2941,7 @@ async def delete_user_account(
         await db.execute(delete(ConsentLog).where(ConsentLog.user_id == user_id))
 
         # 8. Delete orders
-        await db.execute(delete(Order).where(Order.id == user_id))
+        await db.execute(delete(Order).where(Order.user_id == user_id))
 
         # 9. Delete tickets
         await db.execute(delete(Ticket).where(Ticket.user_id == user_id))
