@@ -41,25 +41,33 @@ function AppContent() {
   // Setup notification listeners when user is authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      logger.log('Setting up notification listeners...');
-      const cleanup = setupNotificationListeners(
-        (notification) => {
-          logger.log('📬 Notification received in foreground:', notification.request.content.title);
-        },
-        (response) => {
-          logger.log('👆 Notification tapped:', response.notification.request.content.title);
-          const data = response.notification.request.content.data;
-          // Navigate based on notification type
-          if (data?.type === 'vip_booking_confirmed' || data?.type === 'vip_booking_rejected') {
-            router.push('/my-bookings');
-          } else if (data?.type === 'song_request_accepted' || data?.type === 'song_request_rejected') {
-            router.push('/(tabs)/dj');
-          } else if (data?.type === 'new_booking_admin') {
-            router.push('/admin/bookings');
+      try {
+        logger.log('Setting up notification listeners...');
+        const cleanup = setupNotificationListeners(
+          (notification) => {
+            logger.log('📬 Notification received in foreground:', notification?.request?.content?.title);
+          },
+          (response) => {
+            logger.log('👆 Notification tapped:', response?.notification?.request?.content?.title);
+            const data = response?.notification?.request?.content?.data;
+            // Navigate based on notification type
+            if (data?.type === 'vip_booking_confirmed' || data?.type === 'vip_booking_rejected') {
+              router.push('/my-bookings');
+            } else if (data?.type === 'song_request_accepted' || data?.type === 'song_request_rejected') {
+              router.push('/(tabs)/dj');
+            } else if (data?.type === 'new_booking_admin') {
+              router.push('/admin/bookings');
+            }
           }
-        }
-      );
-      return cleanup;
+        );
+        return () => {
+          if (cleanup && typeof cleanup === 'function') {
+            cleanup();
+          }
+        };
+      } catch (error) {
+        logger.error('Failed to setup notification listeners:', error);
+      }
     }
   }, [isAuthenticated]);
 
