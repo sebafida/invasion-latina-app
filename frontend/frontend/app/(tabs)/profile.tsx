@@ -268,9 +268,13 @@ export default function ProfileScreen() {
               Alert.alert(
                 t('accountDeleted') || 'Compte supprimé',
                 t('accountDeletedMessage') || 'Votre compte a été supprimé avec succès.',
-                [{ text: 'OK', onPress: () => {
-                  logout();
-                  router.replace('/');
+                [{ text: 'OK', onPress: async () => {
+                  try {
+                    await logout();
+                    router.replace('/');
+                  } catch (e) {
+                    console.log('Post-delete navigation error (expected):', e);
+                  }
                 }}]
               );
             } catch (error) {
