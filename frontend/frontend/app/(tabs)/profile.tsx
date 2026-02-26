@@ -277,7 +277,13 @@ export default function ProfileScreen() {
                 [{ text: 'OK', onPress: async () => {
                   try {
                     await logout();
-                    router.replace('/');
+                    setTimeout(() => {
+                      try {
+                        router.replace('/');
+                      } catch (e) {
+                        // Navigation error expected
+                      }
+                    }, 100);
                   } catch (e) {
                     console.log('Post-delete navigation error (expected):', e);
                   }
