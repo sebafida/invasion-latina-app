@@ -29,6 +29,17 @@ export default function ScanQRScreen() {
     totalPoints?: number;
   } | null>(null);
 
+  // Fallback: Enable scanning after a short delay if onCameraReady doesn't fire
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isCameraReady) {
+        console.log('Camera ready timeout - enabling scanner');
+        setIsCameraReady(true);
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
   if (!permission) {
     return (
       <View style={styles.container}>
