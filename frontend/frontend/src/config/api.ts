@@ -69,6 +69,7 @@ export const warmupBackend = async (): Promise<boolean> => {
 api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('auth_token');
+    console.log('API Request:', config.url, 'Token present:', !!token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
