@@ -2972,7 +2972,17 @@ async def delete_user_account(
         # 9. Delete tickets
         await db.execute(delete(Ticket).where(Ticket.user_id == user_id))
 
-        # 10. Finally delete the user (cascade will handle remaining relationships)
+        # 10. Delete free entry vouchers
+        await db.execute(delete(FreeEntryVoucher).where(FreeEntryVoucher.user_id == user_id))
+
+        # 11. Delete referrals (both as referrer and referred)
+        await db.execute(delete(Referral).where(Referral.referrer_id == user_id))
+        await db.execute(delete(Referral).where(Referral.referred_id == user_id))
+
+        # 12. Delete event QR scans
+        await db.execute(delete(EventQRScan).where(EventQRScan.user_id == user_id))
+
+        # 13. Finally delete the user (cascade will handle remaining relationships)
         await db.execute(delete(User).where(User.id == user_id))
         
         await db.commit()

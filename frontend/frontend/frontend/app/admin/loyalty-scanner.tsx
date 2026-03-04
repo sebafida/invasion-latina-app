@@ -35,17 +35,17 @@ export default function LoyaltyScannerScreen() {
       // Parse QR code data
       const qrData = JSON.parse(data);
       
-      if (qrData.type !== 'loyalty_checkin') {
+      if (qrData.type !== 'loyalty_checkin' || !qrData.user_id) {
         Alert.alert(t('error'), 'QR code invalide');
         setScanned(false);
         setLoading(false);
         return;
       }
 
-      // Call backend to check-in user
+      // Call backend to check-in user - send user_id extracted from QR data
       const response = await api.post('/loyalty/admin/scan-checkin', {
-        qr_code_data: data,
-        event_id: 'current' // Will use current/latest event
+        qr_code: data,
+        user_id: qrData.user_id
       });
 
       setLastResult(response.data);

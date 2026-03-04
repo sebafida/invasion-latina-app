@@ -26,7 +26,7 @@ interface EventQR {
   qr_code: string;
   points_value: number;
   is_active: boolean;
-  scans_count: number;
+  scan_count: number;
   created_at: string;
 }
 
@@ -191,7 +191,7 @@ export default function QRCodeManagerScreen() {
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{activeQR.scans_count}</Text>
+                  <Text style={styles.statValue}>{activeQR.scan_count}</Text>
                   <Text style={styles.statLabel}>Scans</Text>
                 </View>
               </View>
@@ -245,7 +245,7 @@ export default function QRCodeManagerScreen() {
                   <Text style={styles.historyEvent}>{qr.event_name}</Text>
                   <Text style={styles.historyDate}>{formatDate(qr.created_at)}</Text>
                   <Text style={styles.historyStats}>
-                    {qr.scans_count} scans • {qr.points_value} coins/scan
+                    {qr.scan_count} scans • {qr.points_value} coins/scan
                   </Text>
                 </View>
                 <View style={styles.historyStatus}>
