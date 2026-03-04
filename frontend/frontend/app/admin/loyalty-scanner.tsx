@@ -109,25 +109,29 @@ export default function LoyaltyScannerScreen() {
       <View style={styles.cameraContainer}>
         {scanning && (
           <CameraView
-            style={styles.camera}
+            style={StyleSheet.absoluteFill}
             facing="back"
+            autofocus="on"
             onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
             barcodeScannerSettings={{
               barcodeTypes: ['qr'],
             }}
-          >
-            <View style={styles.overlay}>
-              <View style={styles.scanFrame}>
-                <View style={[styles.corner, styles.cornerTL]} />
-                <View style={[styles.corner, styles.cornerTR]} />
-                <View style={[styles.corner, styles.cornerBL]} />
-                <View style={[styles.corner, styles.cornerBR]} />
-              </View>
-              <Text style={styles.scanText}>
-                {loading ? t('verifying') : t('placeQRInFrame')}
-              </Text>
+          />
+        )}
+
+        {/* Overlay positioned on top of camera (CameraView does not support children) */}
+        {scanning && !loading && (
+          <View style={styles.overlay} pointerEvents="none">
+            <View style={styles.scanFrame}>
+              <View style={[styles.corner, styles.cornerTL]} />
+              <View style={[styles.corner, styles.cornerTR]} />
+              <View style={[styles.corner, styles.cornerBL]} />
+              <View style={[styles.corner, styles.cornerBR]} />
             </View>
-          </CameraView>
+            <Text style={styles.scanText}>
+              {t('placeQRInFrame')}
+            </Text>
+          </View>
         )}
 
         {loading && (
@@ -236,7 +240,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   overlay: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',

@@ -110,8 +110,8 @@ export default function LoginScreen() {
         registerForPushNotifications().catch(err => {
           logger.error('Push notification registration failed:', err);
         });
-        
-        router.replace('/(tabs)/home');
+
+        // Navigation is handled by _layout.tsx useEffect when isAuthenticated changes
       }
     } catch (error: any) {
       logger.error('Google sign in error:', error);
@@ -175,8 +175,8 @@ export default function LoginScreen() {
           registerForPushNotifications().catch(err => {
             logger.error('Push notification registration failed:', err);
           });
-          
-          router.replace('/(tabs)/home');
+
+          // Navigation is handled by _layout.tsx useEffect when isAuthenticated changes
         }
       } catch (apiError: any) {
         // Retry on network errors
@@ -211,8 +211,8 @@ export default function LoginScreen() {
       setLoading(true);
       console.log('Attempting login...');
       await login(email, password);
-      console.log('Login successful, navigating to home...');
-      router.replace('/(tabs)/home');
+      console.log('Login successful');
+      // Navigation is handled by _layout.tsx useEffect when isAuthenticated changes
     } catch (error: any) {
       console.error('Login error:', error);
       Alert.alert(t('error'), t('loginFailed') || error.message || 'Login failed');

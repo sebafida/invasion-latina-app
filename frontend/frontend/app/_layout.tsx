@@ -14,6 +14,7 @@ function AppContent() {
   const { isLoading, isAuthenticated, isAuthenticating, loadUser } = useAuth();
   const router = useRouter();
   const appState = useRef(AppState.currentState);
+  const wasAuthenticated = useRef(false); // Track previous auth state for logout redirect
 
   // Listen for app state changes (background -> foreground)
   useEffect(() => {
@@ -71,11 +72,19 @@ function AppContent() {
     }
   }, [isAuthenticated]);
 
-  // When user is authenticated, go to home
+  // Handle navigation based on auth state changes
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      logger.log('User authenticated - navigating to home');
-      router.replace('/(tabs)/home');
+    if (!isLoading) {
+      if (isAuthenticated) {
+        logger.log('User authenticated - navigating to home');
+        wasAuthenticated.current = true;
+        router.replace('/(tabs)/home');
+      } else if (wasAuthenticated.current) {
+        // User just logged out (was authenticated, now not) - redirect to welcome
+        logger.log('User logged out - navigating to welcome');
+        wasAuthenticated.current = false;
+        router.replace('/');
+      }
     }
   }, [isLoading, isAuthenticated]);
 

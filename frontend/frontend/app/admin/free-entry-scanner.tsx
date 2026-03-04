@@ -169,6 +169,7 @@ export default function FreeEntryScanner() {
             <CameraView
               style={styles.camera}
               facing="back"
+              autofocus="on"
               onBarcodeScanned={scanning ? handleBarCodeScanned : undefined}
               barcodeScannerSettings={{
                 barcodeTypes: ['qr'],

@@ -158,47 +158,49 @@ export default function ScanQRScreen() {
   return (
     <View style={styles.container}>
       <CameraView
-        style={styles.camera}
+        style={StyleSheet.absoluteFill}
         facing="back"
+        autofocus="on"
         barcodeScannerSettings={{
           barcodeTypes: ['qr'],
         }}
         onCameraReady={handleCameraReady}
         onBarcodeScanned={isCameraReady && !scanned ? handleBarCodeScanned : undefined}
-      >
-        {/* Header */}
-        <SafeAreaView style={styles.header}>
-          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-            <FontAwesome name="times" size={24} color="white" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Scanner le QR Code</Text>
-          <View style={{ width: 40 }} />
-        </SafeAreaView>
+      />
 
-        {/* Scanner frame */}
-        <View style={styles.scannerOverlay}>
-          <View style={styles.scannerFrame}>
-            <View style={[styles.corner, styles.topLeft]} />
-            <View style={[styles.corner, styles.topRight]} />
-            <View style={[styles.corner, styles.bottomLeft]} />
-            <View style={[styles.corner, styles.bottomRight]} />
-          </View>
+      {/* UI overlay positioned on top of camera (CameraView does not support children) */}
+      {/* Header */}
+      <SafeAreaView style={styles.header}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+          <FontAwesome name="times" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Scanner le QR Code</Text>
+        <View style={{ width: 40 }} />
+      </SafeAreaView>
+
+      {/* Scanner frame */}
+      <View style={styles.scannerOverlay} pointerEvents="none">
+        <View style={styles.scannerFrame}>
+          <View style={[styles.corner, styles.topLeft]} />
+          <View style={[styles.corner, styles.topRight]} />
+          <View style={[styles.corner, styles.bottomLeft]} />
+          <View style={[styles.corner, styles.bottomRight]} />
         </View>
+      </View>
 
-        {/* Instructions */}
-        <View style={styles.instructions}>
-          <Text style={styles.instructionsText}>
-            Place le QR code de la soirée dans le cadre pour gagner tes Invasion Coins !
-          </Text>
+      {/* Instructions */}
+      <View style={styles.instructions}>
+        <Text style={styles.instructionsText}>
+          Place le QR code de la soirée dans le cadre pour gagner tes Invasion Coins !
+        </Text>
+      </View>
+
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Vérification...</Text>
         </View>
-
-        {isLoading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>Vérification...</Text>
-          </View>
-        )}
-      </CameraView>
+      )}
     </View>
   );
 }
@@ -218,6 +220,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 10,
     backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 1,
   },
   closeButton: {
     width: 40,
