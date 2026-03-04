@@ -74,8 +74,12 @@ export default function ScanQRScreen() {
     setScanned(true);
     setIsLoading(true);
 
+    console.log('Scanning QR code:', data);
+
     try {
+      console.log('Sending scan request to API...');
       const response = await api.post('/loyalty/scan-event-qr', { qr_code: data });
+      console.log('Scan response:', response.data);
       
       setResult({
         success: true,
@@ -84,8 +88,13 @@ export default function ScanQRScreen() {
         totalPoints: response.data.total_coins,
       });
     } catch (error: any) {
-      console.log('QR Scan Error:', error.response?.data || error.message);
-      const errorMessage = error.response?.data?.detail || 'Erreur lors du scan';
+      console.log('QR Scan Error:', error.response?.status, error.response?.data || error.message);
+      let errorMessage = 'Erreur lors du scan';
+      if (error.response?.status === 401) {
+        errorMessage = 'Session expirée. Veuillez vous reconnecter.';
+      } else if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      }
       setResult({
         success: false,
         message: errorMessage,
