@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import QRCode from 'react-native-qrcode-svg';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
 
@@ -178,7 +179,12 @@ export default function QRCodeManagerScreen() {
                 onPress={() => setShowQRModal(true)}
               >
                 <View style={styles.qrPlaceholder}>
-                  <FontAwesome name="qrcode" size={120} color={theme.colors.primary} />
+                  <QRCode
+                    value={activeQR.qr_code}
+                    size={120}
+                    backgroundColor="white"
+                    color="black"
+                  />
                 </View>
                 <Text style={styles.qrCodeText}>{activeQR.qr_code}</Text>
                 <Text style={styles.tapToEnlarge}>Appuyez pour agrandir</Text>
@@ -363,7 +369,12 @@ export default function QRCodeManagerScreen() {
             <View style={styles.fullscreenContent}>
               <Text style={styles.fullscreenTitle}>{activeQR.event_name}</Text>
               <View style={styles.fullscreenQR}>
-                <FontAwesome name="qrcode" size={width * 0.7} color={theme.colors.primary} />
+                <QRCode
+                  value={activeQR.qr_code}
+                  size={width * 0.7}
+                  backgroundColor="white"
+                  color="black"
+                />
               </View>
               <Text style={styles.fullscreenCode}>{activeQR.qr_code}</Text>
               <Text style={styles.fullscreenInstructions}>

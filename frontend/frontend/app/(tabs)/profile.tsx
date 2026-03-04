@@ -545,6 +545,7 @@ export default function ProfileScreen() {
                 })}
                 size={200}
                 backgroundColor="white"
+                color="black"
               />
               <Text style={styles.qrText}>{t('showQrAtEntry')}</Text>
             </View>
