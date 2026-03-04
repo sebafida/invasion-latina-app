@@ -21,6 +21,7 @@ export default function ScanQRScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
   const [result, setResult] = useState<{
     success: boolean;
     message: string;
@@ -85,6 +86,12 @@ export default function ScanQRScreen() {
   const resetScanner = () => {
     setScanned(false);
     setResult(null);
+    setIsCameraReady(false);
+  };
+
+  const handleCameraReady = () => {
+    console.log('Camera is ready for scanning');
+    setIsCameraReady(true);
   };
 
   if (result) {
@@ -145,7 +152,8 @@ export default function ScanQRScreen() {
         barcodeScannerSettings={{
           barcodeTypes: ['qr'],
         }}
-        onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+        onCameraReady={handleCameraReady}
+        onBarcodeScanned={isCameraReady && !scanned ? handleBarCodeScanned : undefined}
       >
         {/* Header */}
         <SafeAreaView style={styles.header}>
