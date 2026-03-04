@@ -80,10 +80,11 @@ export default function ScanQRScreen() {
       setResult({
         success: true,
         message: response.data.message,
-        points: response.data.points_earned,
-        totalPoints: response.data.total_points,
+        points: response.data.coins_earned,
+        totalPoints: response.data.total_coins,
       });
     } catch (error: any) {
+      console.log('QR Scan Error:', error.response?.data || error.message);
       const errorMessage = error.response?.data?.detail || 'Erreur lors du scan';
       setResult({
         success: false,
