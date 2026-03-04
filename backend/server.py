@@ -3051,12 +3051,13 @@ async def scan_loyalty_qr(
     if not qr:
         raise HTTPException(status_code=404, detail="QR code invalide ou expiré")
     
-    user_id = current_user.id
+    user_id = str(current_user.id)
+    qr_id = str(qr.id)
     
     # Check if already scanned
     result = await db.execute(
         select(EventQRScan)
-        .where(EventQRScan.qr_id == qr.id)
+        .where(EventQRScan.qr_id == qr_id)
         .where(EventQRScan.user_id == user_id)
     )
     existing_scan = result.scalar_one_or_none()
@@ -3064,30 +3065,38 @@ async def scan_loyalty_qr(
     if existing_scan:
         raise HTTPException(status_code=400, detail="Tu as déjà scanné ce QR code!")
     
-    # Create scan record
-    scan = EventQRScan(
-        qr_id=qr.id,
-        user_id=user_id,
-        coins_earned=qr.coins_reward
-    )
-    db.add(scan)
-    
-    # Update QR scan count
-    qr.scan_count = (qr.scan_count or 0) + 1
-    
-    # Update user loyalty points
-    current_user.loyalty_points = (current_user.loyalty_points or 0) + qr.coins_reward
-    
-    await db.commit()
-    await db.refresh(current_user)
-    
-    return {
-        "success": True,
-        "message": f"Félicitations! Tu as gagné {qr.coins_reward} Invasion Coins! 🎉",
-        "coins_earned": qr.coins_reward,
-        "total_coins": current_user.loyalty_points,
-        "event_name": qr.event_name
-    }
+    try:
+        # Create scan record
+        scan = EventQRScan(
+            qr_id=qr_id,
+            user_id=user_id,
+            coins_earned=qr.coins_reward
+        )
+        db.add(scan)
+        
+        # Update QR scan count
+        qr.scan_count = (qr.scan_count or 0) + 1
+        
+        # Update user loyalty points
+        current_user.loyalty_points = (current_user.loyalty_points or 0) + qr.coins_reward
+        
+        await db.commit()
+        await db.refresh(current_user)
+        
+        return {
+            "success": True,
+            "message": f"Félicitations! Tu as gagné {qr.coins_reward} Invasion Coins! 🎉",
+            "coins_earned": qr.coins_reward,
+            "total_coins": current_user.loyalty_points,
+            "event_name": qr.event_name
+        }
+    except Exception as e:
+        await db.rollback()
+        error_str = str(e).lower()
+        if "unique" in error_str or "duplicate" in error_str:
+            raise HTTPException(status_code=400, detail="Tu as déjà scanné ce QR code!")
+        logger.error(f"Error scanning QR: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors du scan. Veuillez réessayer.")
 
 @app.post("/api/loyalty/claim-reward")
 async def claim_loyalty_reward(
