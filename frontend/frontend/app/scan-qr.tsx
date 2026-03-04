@@ -21,24 +21,12 @@ export default function ScanQRScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isCameraReady, setIsCameraReady] = useState(false);
   const [result, setResult] = useState<{
     success: boolean;
     message: string;
     points?: number;
     totalPoints?: number;
   } | null>(null);
-
-  // Fallback: Enable scanning after a short delay if onCameraReady doesn't fire
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isCameraReady) {
-        console.log('Camera ready timeout - enabling scanner');
-        setIsCameraReady(true);
-      }
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
 
   if (!permission) {
     return (
@@ -74,27 +62,17 @@ export default function ScanQRScreen() {
     setScanned(true);
     setIsLoading(true);
 
-    console.log('Scanning QR code:', data);
-
     try {
-      console.log('Sending scan request to API...');
       const response = await api.post('/loyalty/scan-event-qr', { qr_code: data });
-      console.log('Scan response:', response.data);
       
       setResult({
         success: true,
         message: response.data.message,
-        points: response.data.coins_earned,
-        totalPoints: response.data.total_coins,
+        points: response.data.points_earned,
+        totalPoints: response.data.total_points,
       });
     } catch (error: any) {
-      console.log('QR Scan Error:', error.response?.status, error.response?.data || error.message);
-      let errorMessage = 'Erreur lors du scan';
-      if (error.response?.status === 401) {
-        errorMessage = 'Session expirée. Veuillez vous reconnecter.';
-      } else if (error.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
-      }
+      const errorMessage = error.response?.data?.detail || 'Erreur lors du scan';
       setResult({
         success: false,
         message: errorMessage,
@@ -107,12 +85,6 @@ export default function ScanQRScreen() {
   const resetScanner = () => {
     setScanned(false);
     setResult(null);
-    setIsCameraReady(false);
-  };
-
-  const handleCameraReady = () => {
-    console.log('Camera is ready for scanning');
-    setIsCameraReady(true);
   };
 
   if (result) {
@@ -168,49 +140,46 @@ export default function ScanQRScreen() {
   return (
     <View style={styles.container}>
       <CameraView
-        style={StyleSheet.absoluteFill}
+        style={styles.camera}
         facing="back"
-        autofocus="on"
         barcodeScannerSettings={{
           barcodeTypes: ['qr'],
         }}
-        onCameraReady={handleCameraReady}
-        onBarcodeScanned={isCameraReady && !scanned ? handleBarCodeScanned : undefined}
-      />
+        onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+      >
+        {/* Header */}
+        <SafeAreaView style={styles.header}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <FontAwesome name="times" size={24} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Scanner le QR Code</Text>
+          <View style={{ width: 40 }} />
+        </SafeAreaView>
 
-      {/* UI overlay positioned on top of camera (CameraView does not support children) */}
-      {/* Header */}
-      <SafeAreaView style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-          <FontAwesome name="times" size={24} color="white" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Scanner le QR Code</Text>
-        <View style={{ width: 40 }} />
-      </SafeAreaView>
-
-      {/* Scanner frame */}
-      <View style={styles.scannerOverlay} pointerEvents="none">
-        <View style={styles.scannerFrame}>
-          <View style={[styles.corner, styles.topLeft]} />
-          <View style={[styles.corner, styles.topRight]} />
-          <View style={[styles.corner, styles.bottomLeft]} />
-          <View style={[styles.corner, styles.bottomRight]} />
+        {/* Scanner frame */}
+        <View style={styles.scannerOverlay}>
+          <View style={styles.scannerFrame}>
+            <View style={[styles.corner, styles.topLeft]} />
+            <View style={[styles.corner, styles.topRight]} />
+            <View style={[styles.corner, styles.bottomLeft]} />
+            <View style={[styles.corner, styles.bottomRight]} />
+          </View>
         </View>
-      </View>
 
-      {/* Instructions */}
-      <View style={styles.instructions}>
-        <Text style={styles.instructionsText}>
-          Place le QR code de la soirée dans le cadre pour gagner tes Invasion Coins !
-        </Text>
-      </View>
-
-      {isLoading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Vérification...</Text>
+        {/* Instructions */}
+        <View style={styles.instructions}>
+          <Text style={styles.instructionsText}>
+            Place le QR code de la soirée dans le cadre pour gagner tes Invasion Coins !
+          </Text>
         </View>
-      )}
+
+        {isLoading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.loadingText}>Vérification...</Text>
+          </View>
+        )}
+      </CameraView>
     </View>
   );
 }
@@ -230,7 +199,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 10,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    zIndex: 1,
   },
   closeButton: {
     width: 40,

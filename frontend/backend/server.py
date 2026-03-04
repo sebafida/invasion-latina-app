@@ -93,6 +93,50 @@ async def send_push_notification_to_user(user_id: str, title: str, body: str, da
     except Exception as e:
         logger.error(f"Error sending push notification to user {user_id}: {e}")
 
+async def send_push_notification_to_admins(title: str, body: str, data: dict = None, db: AsyncSession = None):
+    """Send push notification to all admin users (info@ and seba@)"""
+    if not db:
+        return 0
+
+    try:
+        # Get all admin users with push tokens
+        result = await db.execute(
+            select(User).where(
+                User.role == "admin",
+                User.push_token != None,
+                User.push_token != ""
+            )
+        )
+        admins = result.scalars().all()
+
+        messages = []
+        for admin in admins:
+            if admin.push_token and admin.push_token.startswith("ExponentPushToken"):
+                messages.append({
+                    "to": admin.push_token,
+                    "sound": "default",
+                    "title": title,
+                    "body": body,
+                    "data": data or {}
+                })
+
+        if not messages:
+            logger.info("No admin users with valid push tokens")
+            return 0
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://exp.host/--/api/v2/push/send",
+                json=messages,
+                headers={"Content-Type": "application/json"}
+            )
+            logger.info(f"Push notification sent to {len(messages)} admins: {response.status_code}")
+
+        return len(messages)
+    except Exception as e:
+        logger.error(f"Error sending push notification to admins: {e}")
+        return 0
+
 async def send_push_notification_to_all(title: str, body: str, data: dict = None, db: AsyncSession = None, notification_type: str = None):
     """Send push notification to all users with valid push tokens"""
     if not db:
@@ -105,19 +149,27 @@ async def send_push_notification_to_all(title: str, body: str, data: dict = None
         )
         users = result.scalars().all()
         
-        # Filter by notification preferences if specified
+        # Filter users with valid push tokens
         valid_users = []
         for user in users:
             if not user.push_token or not user.push_token.startswith("ExponentPushToken"):
                 continue
-            
-            # Check notification preferences
-            prefs = user.notification_preferences or {}
-            if notification_type == "new_events" and not prefs.get("new_events", True):
-                continue
-            if notification_type == "promotions" and not prefs.get("promotions", True):
-                continue
-            
+
+            # Check notification preferences from NotificationPreference table
+            if notification_type:
+                try:
+                    pref_result = await db.execute(
+                        select(NotificationPreference).where(NotificationPreference.user_id == user.id)
+                    )
+                    prefs = pref_result.scalar_one_or_none()
+                    if prefs:
+                        if notification_type == "new_events" and not prefs.events:
+                            continue
+                        if notification_type == "promotions" and not prefs.promotions:
+                            continue
+                except Exception:
+                    pass  # If preferences check fails, still send
+
             valid_users.append(user)
         
         if not valid_users:
@@ -1047,22 +1099,29 @@ async def request_song(
     artist_name_normalized = song_data["artist_name"].strip().lower()
     user_id = current_user.id
     
-    # Check how many songs this user has already requested for this event (limit: 3)
-    MAX_SONGS_PER_USER = 3
-    # Use raw SQL for JSON array contains check (PostgreSQL compatible)
-    user_requests_result = await db.execute(
-        select(SongRequest)
-        .where(SongRequest.event_id == event_id)
-    )
-    all_requests = user_requests_result.scalars().all()
-    user_total_requests = sum(1 for req in all_requests if user_id in (req.requesters or []))
-    
-    if not is_admin and user_total_requests >= MAX_SONGS_PER_USER:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Vous avez déjà demandé {MAX_SONGS_PER_USER} chansons pour cette soirée. Limite atteinte!"
+    # Check how many songs this user has already requested for this event (limit: 5)
+    MAX_SONGS_PER_USER = 5
+    if not is_admin:
+        # Count requests where user_id is the original requester (user_id column)
+        # Also count requests where user is in the requesters JSON list
+        # Use a simpler approach: fetch all requests for this event and count in Python
+        all_event_requests = await db.execute(
+            select(SongRequest)
+            .where(SongRequest.event_id == event_id)
+            .where(SongRequest.status.in_(["pending", "played"]))
         )
-    
+        all_requests = all_event_requests.scalars().all()
+        user_total_requests = sum(
+            1 for req in all_requests
+            if user_id in (req.requesters or []) or req.user_id == user_id
+        )
+
+        if user_total_requests >= MAX_SONGS_PER_USER:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Vous avez déjà demandé {MAX_SONGS_PER_USER} chansons pour cette soirée. Limite atteinte!"
+            )
+
     # Check for existing request for this specific song
     result = await db.execute(
         select(SongRequest)
@@ -1072,9 +1131,10 @@ async def request_song(
         .where(SongRequest.status == "pending")
     )
     existing = result.scalar_one_or_none()
-    
+
     if existing:
-        if user_id in (existing.requesters or []):
+        # Admins can bypass the duplicate check
+        if not is_admin and user_id in (existing.requesters or []):
             raise HTTPException(status_code=400, detail="Vous avez déjà demandé cette chanson")
         
         existing.times_requested = (existing.times_requested or 1) + 1
@@ -1800,7 +1860,19 @@ async def create_vip_booking(
     db.add(booking)
     await db.commit()
     await db.refresh(booking)
-    
+
+    # Notify admins about the new booking
+    try:
+        event_name = event.name if event else "Événement"
+        await send_push_notification_to_admins(
+            title="📋 Nouvelle demande de table !",
+            body=f"{booking_data.name} - {booking_data.guests} pers. | {event_name}",
+            data={"type": "new_booking_admin", "booking_id": booking.id},
+            db=db
+        )
+    except Exception as e:
+        logger.error(f"Failed to send admin notification for new booking: {e}")
+
     return {
         "success": True,
         "booking_id": booking.id,
@@ -2540,29 +2612,20 @@ async def book_vip_table(
     db.add(booking)
     await db.commit()
     await db.refresh(booking)
-    
-    # Send notification to admins about new table request
+
+    # Notify admins (info@ and seba@) about the new booking
     try:
-        admin_emails = ["info@invasionlatina.be", "seba@invasionlatina.be"]
-        admin_result = await db.execute(
-            select(User).where(User.email.in_(admin_emails))
+        event_name = event.name if event else "Événement"
+        zone_label = data.zone or "Non spécifié"
+        await send_push_notification_to_admins(
+            title="📋 Nouvelle demande de table !",
+            body=f"{name} - {guests} pers. | Zone: {zone_label} | {event_name}",
+            data={"type": "new_booking_admin", "booking_id": booking.id},
+            db=db
         )
-        admin_users = admin_result.scalars().all()
-        
-        for admin in admin_users:
-            if admin.push_token:
-                zone_text = data.zone or "Table"
-                await send_push_notification_to_user(
-                    user_id=admin.id,
-                    title="🍾 Nouvelle demande de table !",
-                    body=f"{name} demande une table {zone_text} pour {guests} personnes",
-                    data={"type": "new_booking", "booking_id": booking.id},
-                    db=db
-                )
-        logger.info(f"📲 Notified {len([a for a in admin_users if a.push_token])} admins about new booking")
     except Exception as e:
-        logger.error(f"Failed to notify admins about new booking: {e}")
-    
+        logger.error(f"Failed to send admin notification for new booking: {e}")
+
     return {
         "success": True,
         "booking_id": booking.id,
@@ -2858,20 +2921,32 @@ async def delete_user_account(
         # Delete all user's data in order (respecting foreign key constraints)
         # 1. Delete song requests
         await db.execute(delete(SongRequest).where(SongRequest.user_id == user_id))
-        
+
         # 2. Delete VIP bookings
         await db.execute(delete(VIPBooking).where(VIPBooking.user_id == user_id))
-        
+
         # 3. Delete notification preferences
         await db.execute(delete(NotificationPreference).where(NotificationPreference.user_id == user_id))
-        
-        # 4. Delete loyalty vouchers
-        await db.execute(delete(LoyaltyVoucher).where(LoyaltyVoucher.user_id == user_id))
-        
-        # 5. Delete tickets
+
+        # 4. Delete loyalty checkins
+        await db.execute(delete(LoyaltyCheckin).where(LoyaltyCheckin.user_id == user_id))
+
+        # 5. Delete loyalty rewards
+        await db.execute(delete(LoyaltyReward).where(LoyaltyReward.user_id == user_id))
+
+        # 6. Delete loyalty transactions
+        await db.execute(delete(LoyaltyTransaction).where(LoyaltyTransaction.user_id == user_id))
+
+        # 7. Delete consent logs
+        await db.execute(delete(ConsentLog).where(ConsentLog.user_id == user_id))
+
+        # 8. Delete orders
+        await db.execute(delete(Order).where(Order.user_id == user_id))
+
+        # 9. Delete tickets
         await db.execute(delete(Ticket).where(Ticket.user_id == user_id))
-        
-        # 6. Finally delete the user
+
+        # 10. Finally delete the user (cascade will handle remaining relationships)
         await db.execute(delete(User).where(User.id == user_id))
         
         await db.commit()
@@ -2976,12 +3051,13 @@ async def scan_loyalty_qr(
     if not qr:
         raise HTTPException(status_code=404, detail="QR code invalide ou expiré")
     
-    user_id = current_user.id
+    user_id = str(current_user.id)
+    qr_id = str(qr.id)
     
     # Check if already scanned
     result = await db.execute(
         select(EventQRScan)
-        .where(EventQRScan.qr_id == qr.id)
+        .where(EventQRScan.qr_id == qr_id)
         .where(EventQRScan.user_id == user_id)
     )
     existing_scan = result.scalar_one_or_none()
@@ -2989,30 +3065,38 @@ async def scan_loyalty_qr(
     if existing_scan:
         raise HTTPException(status_code=400, detail="Tu as déjà scanné ce QR code!")
     
-    # Create scan record
-    scan = EventQRScan(
-        qr_id=qr.id,
-        user_id=user_id,
-        coins_earned=qr.coins_reward
-    )
-    db.add(scan)
-    
-    # Update QR scan count
-    qr.scan_count = (qr.scan_count or 0) + 1
-    
-    # Update user loyalty points
-    current_user.loyalty_points = (current_user.loyalty_points or 0) + qr.coins_reward
-    
-    await db.commit()
-    await db.refresh(current_user)
-    
-    return {
-        "success": True,
-        "message": f"Félicitations! Tu as gagné {qr.coins_reward} Invasion Coins! 🎉",
-        "coins_earned": qr.coins_reward,
-        "total_coins": current_user.loyalty_points,
-        "event_name": qr.event_name
-    }
+    try:
+        # Create scan record
+        scan = EventQRScan(
+            qr_id=qr_id,
+            user_id=user_id,
+            coins_earned=qr.coins_reward
+        )
+        db.add(scan)
+        
+        # Update QR scan count
+        qr.scan_count = (qr.scan_count or 0) + 1
+        
+        # Update user loyalty points
+        current_user.loyalty_points = (current_user.loyalty_points or 0) + qr.coins_reward
+        
+        await db.commit()
+        await db.refresh(current_user)
+        
+        return {
+            "success": True,
+            "message": f"Félicitations! Tu as gagné {qr.coins_reward} Invasion Coins! 🎉",
+            "coins_earned": qr.coins_reward,
+            "total_coins": current_user.loyalty_points,
+            "event_name": qr.event_name
+        }
+    except Exception as e:
+        await db.rollback()
+        error_str = str(e).lower()
+        if "unique" in error_str or "duplicate" in error_str:
+            raise HTTPException(status_code=400, detail="Tu as déjà scanné ce QR code!")
+        logger.error(f"Error scanning QR: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors du scan. Veuillez réessayer.")
 
 @app.post("/api/loyalty/claim-reward")
 async def claim_loyalty_reward(

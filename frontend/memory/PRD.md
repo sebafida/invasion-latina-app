@@ -183,6 +183,28 @@ EXPO_PUBLIC_BACKEND_URL=https://...
 - `/app/frontend/app/_layout.tsx`
 - `/app/frontend/app/(tabs)/profile.tsx`
 
+### 2025-12-20 - Correction de 6 Bugs Critiques (Audit Utilisateur)
+
+**Bugs corrigés (selon audit utilisateur message #627) :**
+
+| # | Fichier | Bug | Impact |
+|---|---------|-----|--------|
+| 1 | `_layout.tsx` | `setupNotificationListeners()` jamais appelé | Notifications en foreground invisibles, tap ne navigue nulle part |
+| 2 | `server.py` | Pas de `send_push_notification_to_admins()` | Admins jamais notifiés des nouvelles réservations |
+| 3 | `server.py` | `user.notification_preferences` AttributeError | Toutes les notifications broadcast crashent silencieusement |
+| 4 | `server.py` | `requesters.contains()` sur JSON (pas JSONB) | Limite de chansons ne fonctionne pas correctement |
+| 5 | `server.py` | `LoyaltyVoucher` NameError | Suppression de compte impossible (Apple rejette) |
+| 6 | `server.py` | Pas de bypass admin pour chansons | Admin ne peut pas tester les demandes de chansons |
+
+**Fichiers modifiés :**
+- `/app/frontend/frontend/app/_layout.tsx` - Ajout `setupNotificationListeners`, navigation sur tap
+- `/app/backend/server.py` - 5 corrections critiques :
+  - Ajout fonction `send_push_notification_to_admins()`
+  - Fix `send_push_notification_to_all()` (utilise table `NotificationPreference`)
+  - Fix comptage demandes chansons (Python au lieu de SQL JSON)
+  - Fix `delete_user_account()` (vrais modèles: LoyaltyCheckin, LoyaltyReward, etc.)
+  - Ajout notifications admin dans `/api/vip/booking` et `/api/vip/book`
+
 ### 2025-02 - Supabase Migration Preparation
 - Created complete PostgreSQL schema (21 tables)
 - Implemented full backend with SQLAlchemy async
@@ -200,21 +222,25 @@ EXPO_PUBLIC_BACKEND_URL=https://...
 
 ### P0 (Critical)
 - [x] **RÉSOLU** - Bug de stabilité de connexion après période d'inactivité (5 bugs auth corrigés)
+- [x] **RÉSOLU (2025-12-20)** - 6 Bugs critiques backend/frontend corrigés (audit utilisateur)
 - [ ] When user decides: Switch production to Supabase backend
 
 ### P1 (High Priority)
 - [x] **RÉSOLU** - Gestion du nom pour Apple Sign-In (bouton "Ajouter votre prénom" + endpoint `/api/user/profile`)
 - [x] **RÉSOLU** - Notifications activées par défaut à l'inscription (register + social login)
 - [x] **RÉSOLU** - Espacement des boutons dans le profil uniformisé
+- [x] **RÉSOLU** - Notifications push pour les admins lors de nouvelles demandes de table
+- [x] **RÉSOLU** - Listeners de notification avec navigation automatique
 - [ ] Full regression testing after migration
 - [ ] Data migration script (if needed)
 
 ### P2 (Medium Priority)
 - [ ] UI admin pour suppression de photos individuelles (`content-manager.tsx`)
-- [ ] Push notifications for event reminders
-- [ ] Push notifications for song request status
-- [ ] Push notifications for VIP booking confirmation
+- [x] **RÉSOLU** - Push notifications for song request status
+- [x] **RÉSOLU** - Push notifications for VIP booking confirmation
+- [ ] Push notifications for event reminders (24h avant)
 - [ ] Android Beta build
+- [ ] Ajouter colonnes `rejection_reason` et `confirmation_message` dans Supabase
 
 ### P3 (Low Priority)
 - [ ] bcrypt version warning fix (4.0.1)

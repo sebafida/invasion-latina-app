@@ -1,77 +1,79 @@
 <analysis>**original_problem_statement:**
-L'utilisateur finalise son application pour la soumettre à l'App Store et a rencontré de nombreux problèmes. La session a commencé par la résolution de problèmes de build et de soumission à TestFlight (erreurs de version et de signature). Par la suite, l'utilisateur a reçu un rejet d'Apple pour deux raisons : le bouton Sign in with Apple n'était pas assez visible et l'option de suppression de compte était manquante.
+L'utilisateur est en phase finale de soumission de son application à l'App Store et a rencontré une série de bugs critiques après avoir résolu les problèmes de rejet initiaux d'Apple (visibilité du bouton Sign in with Apple et absence de suppression de compte).
 
-Après avoir corrigé ces points, des tests sur TestFlight ont révélé des bugs critiques :
-*   Les notifications push ne fonctionnent pas du tout (ni pour les demandes de tables, ni pour les chansons, ni pour les notifications de masse).
-*   Les demandes de chansons n'apparaissent pas dans le DJ Dashboard.
-*   La section Mes Réservations n'était pas visible dans le profil.
-*   Les préférences de notification ne se sauvegardent pas.
-*   Le modal de raison de refus pour les tables n'apparaît pas.
+Les principaux problèmes testés sur TestFlight étaient :
+*   Les notifications push ne fonctionnaient pas.
+*   Les demandes de chansons n'apparaissaient pas dans le tableau de bord du DJ.
+*   Le système de connexion/déconnexion provoquait un crash de l'application.
+*   Le scanner de QR code ne détectait pas les codes.
+*   Une fois le scanner réparé, la fonctionnalité la plus critique — l'ajout de Invasion Coins aux comptes utilisateurs après un scan réussi — ne fonctionnait pas, le backend retournant une erreur 500.
 
-L'utilisateur a fourni un audit technique extrêmement détaillé et précis (message 627), identifiant plusieurs bugs critiques silencieux dans le code que l'agent a ensuite corrigés. La tâche principale est maintenant de déployer un build fonctionnel contenant toutes ces corrections.
+L'utilisateur a fourni des analyses techniques très précises à plusieurs reprises, identifiant des bugs complexes dans le backend que l'agent a ensuite implémentés. L'objectif principal est de produire une version stable et entièrement fonctionnelle de l'application pour la soumettre à l'App Store.
 
 **User's preferred language**: French. The next agent MUST respond in French.
 
 **what currently exists?**
-L'application est une application mobile full-stack avec un frontend React Native/Expo et un backend FastAPI/Python. Le backend est hébergé sur Railway et utilise une base de données Supabase (PostgreSQL).
+L'application est une application mobile full-stack (React Native/Expo frontend, FastAPI/Python backend) avec un backend hébergé sur Railway et une base de données Supabase (PostgreSQL).
 
-De nombreuses corrections et fonctionnalités ont été implémentées, notamment :
-*   Correction des problèmes de rejet par Apple (bouton Sign in with Apple et ajout de la suppression de compte).
-*   Création d'une page Mes Réservations pour que les utilisateurs suivent leurs demandes de table.
-*   Correction du bug qui empêchait la sauvegarde des préférences de notification.
-*   Correction de bugs critiques dans le backend suite à un audit de l'utilisateur :
-    *   Correction d'un crash silencieux qui empêchait l'envoi de TOUTES les notifications de réservation de table.
-    *   Correction du système de broadcast de notifications.
-    *   Correction d'un bug SQL qui empêchait les demandes de chansons de fonctionner.
-    *   Correction du processus de suppression de compte qui échouait.
-*   Ajout de la logique pour que les administrateurs reçoivent une notification pour chaque nouvelle demande de table.
-*   Ajout de listeners de notification dans le frontend pour naviguer dans l'app lorsqu'on appuie sur une notification.
+Au cours de cette session, les actions suivantes ont été accomplies :
+*   Correction de multiples bugs critiques dans le backend () et le frontend (, , etc.) sur la base des audits techniques détaillés de l'utilisateur.
+*   Résolution de pannes de build EAS dues à des chemins d'importation incorrects.
+*   Correction d'un crash de l'application lors de la connexion/déconnexion en éliminant les navigations redondantes.
+*   Réparation du scanner de QR code en activant  et en restructurant la superposition de l'interface utilisateur pour qu'elle ne soit pas un enfant du composant .
+*   Correction de la génération de QR code dans le panneau d'administration, en remplaçant une simple icône par un composant  fonctionnel.
+*   Identification et correction de la cause racine du problème de non-créditation des Invasion Coins : un objet utilisateur SQLAlchemy détaché dans le backend. Le correctif consiste à ré-interroger l'objet utilisateur dans la session de base de données de l'endpoint avant de modifier les points de fidélité.
 
 **Last working item**:
-- Last item agent was working: L'agent a appliqué une série de corrections critiques fournies par l'utilisateur (message #627) pour résoudre des problèmes fondamentaux avec les notifications, les demandes de chansons et la suppression de compte. L'agent a également préparé le terrain pour un nouveau build (77).
+- Last item agent was working: L'agent a implémenté un correctif critique dans  pour résoudre le problème des Invasion Coins qui n'étaient pas crédités après un scan QR réussi. La cause, un objet utilisateur SQLAlchemy détaché, a été corrigée en ré-interrogeant l'utilisateur dans la session de la base de données de l'endpoint avant d'appliquer la mise à jour des points.
 - Status: **IN PROGRESS**
-- Agent Testing Done: N (Les tests de l'agent sur l'environnement de développement ont réussi, mais le problème principal réside dans l'environnement de production/TestFlight de l'utilisateur).
-- Which testing method agent to use? L'utilisateur effectuera des tests manuels sur TestFlight après un build réussi. L'agent doit d'abord s'assurer que le backend Railway est à jour et guider l'utilisateur pour le build frontend.
-- User Testing Done: N (L'utilisateur n'a pas encore pu tester un build contenant les dernières corrections critiques).
+- Agent Testing Done: N
+- Which testing method agent to use? L'utilisateur doit effectuer des tests manuels. Il doit d'abord déployer le backend sur Railway (via Save to GitHub), puis créer un nouveau build iOS (ex: Build 91) pour TestFlight.
+- User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- Issue 1: Les notifications Push ne sont pas reçues par les utilisateurs (P0 - CRITICAL)
-- Issue 2: Les demandes de chansons ne fonctionnent pas ou n'apparaissent pas dans le DJ Dashboard (P1)
-- Issue 3: Le modal pour ajouter une raison de refus de table n'apparaît pas (P2)
+- Issue 1: Les Invasion Coins ne sont pas crédités après un scan QR réussi. (P0 - CRITICAL)
 
 **Issues Detail**:
-- **Issue 1: Les notifications Push ne sont pas reçues par les utilisateurs**
-    - **Attempted fixes**: De multiples corrections ont été apportées :
-        1.  Un bug critique ( au lieu de ) qui faisait crasher silencieusement l'envoi de notifications de table a été corrigé.
-        2.  Un bug dans l'enregistrement des push tokens côté backend (problème de session de base de données) a été corrigé.
-        3.  Le plugin  a été ajouté au .
-        4.  Un  a été ajouté dans  pour ré-enregistrer le token à chaque lancement de l'app si l'utilisateur est authentifié.
-        5.  Des listeners de notification ont été ajoutés dans  pour gérer les interactions.
-        6.  Le  a été corrigé dans .
+- **Issue 1: Les Invasion Coins ne sont pas crédités après un scan QR réussi.**
+    - **Attempted fixes**: L'agent a identifié que même si le scan était enregistré dans la base de données (), les points de l'utilisateur n'étaient pas mis à jour à cause d'un objet utilisateur détaché de la session SQLAlchemy. Un correctif a été appliqué dans  pour ré-interroger l'utilisateur dans la bonne session avant d'incrémenter les .
     - **Next debug checklist**:
-        1.  S'assurer que le backend sur **Railway** est bien déployé avec le dernier code.
-        2.  Guider l'utilisateur pour créer et soumettre le **Build 77** à TestFlight.
-        3.  Demander à l'utilisateur de réinstaller l'app depuis TestFlight et d'accepter les notifications.
-        4.  Vérifier dans l'interface admin () que le compteur d'utilisateurs avec push token est **supérieur à 0**.
-        5.  Effectuer un test de bout en bout : un utilisateur demande une table, un admin la confirme/refuse, l'utilisateur doit recevoir la notification.
-    - **Why fix this issue and what will be achieved with the fix?**: C'est une fonctionnalité essentielle de l'application. Sans notifications, l'expérience utilisateur est très dégradée.
-    - **Status**: IN PROGRESS
+        1.  Guider l'utilisateur pour qu'il clique sur **Save to GitHub** afin de déployer le correctif backend sur Railway.
+        2.  Vérifier que le déploiement sur Railway est terminé avec succès.
+        3.  Guider l'utilisateur pour créer et soumettre un nouveau build iOS (ex: v1.0.16, build 91) à TestFlight.
+        4.  L'utilisateur devra créer un **NOUVEAU** QR code dans l'interface d'administration.
+        5.  L'utilisateur devra scanner ce **NOUVEAU** QR code avec un compte de test.
+        6.  Vérifier dans la table  de Supabase que le champ  a bien été incrémenté.
+    - **Why fix this issue and what will be achieved with the fix?**: Il s'agit d'une fonctionnalité de base du programme de fidélité et son dysfonctionnement bloque l'expérience utilisateur.
+    - **Status**: **IN PROGRESS**
     - **Is recurring issue?**: Y
-    - **Should Test frontend/backend/both after fix?**: Both.
-    - **Blocked on other issue**: Nécessite un déploiement réussi du backend sur Railway et du frontend (Build 77) sur TestFlight.
+    - **Should Test frontend/backend/both after fix?**: Both
 
-- **Issue 2: Les demandes de chansons ne fonctionnent pas ou n'apparaissent pas dans le DJ Dashboard**
-    - **Attempted fixes**: Un bug critique dans une requête SQL () qui ne fonctionnait pas avec PostgreSQL a été corrigé dans . Le frontend a aussi été corrigé pour charger correctement les requêtes dans le dashboard.
-    - **Next debug checklist**:
-        1.  Vérifier que le backend Railway est à jour.
-        2.  Tester la fonctionnalité sur TestFlight avec le Build 77.
-    - **Why fix this issue and what will be achieved with the fix?**: C'est une fonctionnalité clé d'engagement pour les soirées.
+**In progress Task List**:
+- **Task 1: Déployer et valider la correction du système de points de fidélité.**
+    - **Where to resume**: Guider l'utilisateur pour déployer le backend sur Railway et créer un nouveau build TestFlight.
+    - **What will be achieved with this?**: Une application avec toutes les fonctionnalités critiques (notifications, login, scan QR) potentiellement fonctionnelles, prête pour un test de régression complet avant la soumission à l'App Store.
     - **Status**: IN PROGRESS
-    - **Is recurring issue?**: Y
-    - **Should Test frontend/backend/both after fix?**: Both.
+    - **Should Test frontend/backend/both after fix?**: Both
+    - **Blocked on something**: L'action de l'utilisateur pour déployer le code sur GitHub/Railway et créer le build EAS.
 
-- **Issue 3: Le modal pour ajouter une raison de refus de table n'apparaît pas**
-    - **Attempted fixes**: Le code pour le modal est bien présent dans . Le problème est probablement que l'utilisateur testait avec un build qui ne contenait pas le bon code en raison de problèmes de synchronisation usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+**Upcoming and Future Tasks**
+- **Upcoming Tasks**:
+    - **P0**: Soumettre la version stable à l'App Store après validation complète par l'utilisateur.
+    - **P1**: Soumettre la version Android à Google Play Store (le build  est prêt, mais la fiche produit nécessite des ressources graphiques et la validation du compte développeur).
+    - **P1**: Ajouter les colonnes  et  à la table  dans Supabase.
+    - **P2**: Mettre en place des rappels automatiques 24h avant un événement via notification push.
+- **Future Tasks**:
+    - Implémenter un système de parrainage avec récompenses.
+    - Permettre la pré-commande de bouteilles avec paiement intégré.
+    - Ajouter un bouton pour ajouter un événement au calendrier natif du téléphone.
+
+**Completed work in this session**
+- Correction de multiples bugs critiques (notifications, crashs de login/logout, demandes de chansons) basés sur les audits de l'utilisateur.
+- Résolution des problèmes de build EAS causés par des imports incorrects et des conflits de version.
+- Réparation complète du scanner de QR code (focus, structure de l'overlay, génération correcte des QR codes).
+- Identification et correction de la cause racine du bug des Invasion Coins (objet SQLAlchemy détaché).
+- Assistance à l'utilisateur pour les processus de soumission App Store et Google Play.
+- Guidage répété de l'utilisateur pour résoudre des problèmes de synchronisation usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
            [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
            [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
            [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
@@ -115,73 +117,46 @@ collaborate (see also: git help workflows)
 'git help -a' and 'git help -g' list available subcommands and some
 concept guides. See 'git help <command>' or 'git help <concept>'
 to read about a specific subcommand or concept.
-See 'git help git' for an overview of the system..
-    - **Next debug checklist**:
-        1.  Tester la fonctionnalité sur TestFlight avec le Build 77.
-    - **Why fix this issue and what will be achieved with the fix?**: Améliore la communication avec le client en cas de refus.
-    - **Status**: IN PROGRESS
-    - **Is recurring issue?**: Y
-    - **Should Test frontend/backend/both after fix?**: Frontend.
-
-**In progress Task List**:
-- **Task 1: Déployer et valider toutes les corrections critiques**
-    - **Where to resume**: Guider l'utilisateur pour s'assurer que son backend Railway est à jour, puis pour builder et soumettre la version 77 du frontend à TestFlight.
-    - **What will be achieved with this?**: Obtenir une version stable de l'application où les fonctionnalités de base (notifications, demandes de tables/chansons) sont enfin fonctionnelles.
-    - **Status**: IN PROGRESS
-    - **Should Test frontend/backend/both after fix?**: Both.
-    - **Blocked on something**: Déploiement réussi sur les plateformes de l'utilisateur (Railway, TestFlight).
-
-**Upcoming and Future Tasks**
-- **Upcoming Tasks**:
-    - **P0**: Ajouter les colonnes  et  à la table  dans la base de données Supabase de l'utilisateur. Le code pour les utiliser existe mais est partiellement désactivé en attendant cette modification de la base de données.
-    - **P1**: Mettre en place des rappels automatiques 24h avant un événement via notification push.
-    - **P2**: Ajouter un historique des notifications envoyées dans le panneau d'administration.
-- **Future Tasks**:
-    - **P2**: Implémenter un système de parrainage avec récompenses.
-    - **P2**: Permettre la pré-commande de bouteilles avec paiement intégré.
-    - **P2**: Ajouter un bouton pour ajouter un événement au calendrier natif du téléphone.
-
-**Completed work in this session**
-- Correction des deux rejets d'Apple : le style du bouton Sign in with Apple a été corrigé et la fonctionnalité de suppression de compte a été entièrement implémentée (frontend + backend).
-- Implémentation d'une nouvelle page Mes Réservations dans le profil utilisateur pour suivre l'historique et le statut des demandes de table.
-- Correction d'un bug majeur qui empêchait la sauvegarde des préférences de notification de l'utilisateur.
-- Correction de multiples bugs critiques dans le backend suite à un audit de l'utilisateur, notamment des crashs silencieux qui empêchaient les notifications et les demandes de chansons de fonctionner.
-- Ajout d'une limite de 3 demandes de chansons par utilisateur par événement.
-- Implémentation de notifications push pour les administrateurs lors de nouvelles demandes de réservation de table.
-- Ajout de listeners de notifications pour permettre la navigation dans l'application en appuyant sur une notification.
+See 'git help git' for an overview of the system. sur sa machine locale.
 
 **Earlier issues found/mentioned but not fixed**
-- Le problème principal des notifications push a été abordé à plusieurs reprises, mais n'a jamais été validé comme étant résolu en raison de problèmes de déploiement et de bugs sous-jacents qui n'ont été découverts que récemment.
+- Tous les problèmes soulevés au cours de cette session très dense ont été traités. La seule chose qui reste est la validation finale par l'utilisateur après le déploiement du dernier correctif.
 
 **Known issue recurrence from previous fork**
-- **Problème de synchronisation de l'environnement local de l'utilisateur** : L'utilisateur a eu des difficultés récurrentes à maintenir sa copie locale du projet synchronisée avec les modifications sur GitHub, ce qui a conduit à de nombreux builds infructueux avec du code obsolète.
+- **Synchronisation de l'environnement Git local de l'utilisateur** : Un problème majeur et récurrent. L'utilisateur a souvent travaillé avec un code obsolète, entraînant des builds ratés et une perte de temps. Une attention particulière doit être portée à la synchronisation (, HEAD is now at a7f1c5b3 Auto-generated changes) avant chaque build.
 
 **Code Architecture**
-expo-notifications
+
 
 **Key Technical Concepts**
-- **Frontend**: React Native, Expo, TypeScript, Expo Application Services (EAS).
+- **Frontend**: React Native, Expo, TypeScript, EAS Build.
 - **Backend**: FastAPI (Python), Uvicorn, SQLAlchemy.
 - **Database**: Supabase (PostgreSQL).
 - **Hosting**: Railway (backend), Expo (frontend builds).
 - **Notifications**: Expo Push Notifications.
+- **Concepts clés débogués**:
+    - **Objets SQLAlchemy détachés**: La cause racine du bug des Invasion Coins.
+    - **Limitations de  (expo-camera)**: Ne supporte pas les , nécessite .
+    - **Race Conditions de Navigation (expo-router)**: Crashs causés par des appels de navigation simultanés.
 
 **key DB schema**
-- : **Nécessite une migration manuelle**. Les colonnes  et  doivent être ajoutées pour que les messages de refus/confirmation soient persistés.
-- : Contient  qui est essentiel pour les notifications.
+- : 
+- : 
+- :  (avec contrainte d'unicité sur )
+- : Nécessite toujours l'ajout des colonnes  et .
 
 **All files of reference**
-- : Contient les corrections les plus critiques pour les notifications et les demandes de chansons. **Doit être à jour sur Railway.**
-- : Contient la nouvelle logique de gestion des notifications.
-- : Contient la correction pour l'enregistrement des push tokens.
-- : Doit contenir le plugin .
-- : La nouvelle page de réservations, qui a causé des erreurs de build à cause d'imports incorrects.
+- : Contient le dernier correctif critique pour le scan QR. Doit être déployé sur Railway.
+- : Contient les correctifs pour que le scanner fonctionne.
+- : Contient le correctif pour la génération de vrais QR codes.
+- : Contient la logique de navigation stabilisée pour le login/logout.
+- : Doit être mis à jour pour le prochain build (ex: version , build ).
 
 **Critical Info for New Agent**
-1.  **L'audit de l'utilisateur (message #627) est la source de vérité.** L'agent précédent a implémenté les corrections basées sur cet audit. La priorité absolue est de s'assurer que ce code est déployé et testé.
-2.  **Le déploiement est un processus en deux étapes :** le backend sur **Railway** et le frontend via **EAS Build**. L'app TestFlight communique avec le backend Railway. Les corrections backend ne seront effectives qu'après un redéploiement sur Railway.
-3.  **Le problème des notifications Push est la priorité n°1.** La cause principale identifiée est que les  ne sont pas enregistrés sur le serveur. Une correction a été apportée dans  et . Cela doit être validé de toute urgence sur un nouveau build.
-4.  **L'utilisateur a des problèmes récurrents avec usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+1.  **Le bug des Invasion Coins est la priorité absolue.** La cause (objet SQLAlchemy détaché) a été identifiée et corrigée dans .
+2.  **Le correctif n'est PAS encore déployé.** Vous devez guider l'utilisateur pour qu'il sauvegarde le code sur GitHub, ce qui déclenchera le déploiement sur Railway.
+3.  **Un NOUVEAU QR code doit être créé pour les tests.** Les tentatives de scan précédentes (qui ont échoué) ont déjà créé des enregistrements dans , ce qui bloquera les futurs scans du même code par le même utilisateur à cause d'une contrainte  dans la base de données.
+4.  **Soyez extrêmement explicite avec les commandes usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
            [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
            [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
            [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
@@ -225,23 +200,23 @@ collaborate (see also: git help workflows)
 'git help -a' and 'git help -g' list available subcommands and some
 concept guides. See 'git help <command>' or 'git help <concept>'
 to read about a specific subcommand or concept.
-See 'git help git' for an overview of the system..** Soyez extrêmement explicite avec les commandes (HEAD is now at a7f1c5b3 Auto-generated changes) pour vous assurer que son environnement local est propre avant de lancer un build.
-5.  **Des colonnes manquent dans la base de données Supabase.** Pour que les raisons de refus et les messages de confirmation des tables soient sauvegardés, l'utilisateur doit exécuter . Informez-le à ce sujet.
+See 'git help git' for an overview of the system..** L'environnement local de l'utilisateur se désynchronise fréquemment. Assurez-vous qu'il exécute HEAD is now at c6decd90 Auto-generated changes avant chaque build.
+5.  **Suivez le workflow de build de l'utilisateur.** L'utilisateur s'attend à recevoir la séquence complète de commandes, y compris la commande  pour incrémenter la version et le numéro de build dans .
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Signale que le déploiement sur Railway est bloqué.
-2.  **User**: Partage l'info de Claude indiquant que le blocage Railway est un incident temporaire de leur côté.
-3.  **Agent**: Propose de faire le build frontend (76) en attendant.
-4.  **User**: Confirme que Railway refonctionne mais que les problèmes persistent : la raison du refus n'est pas visible dans Mes Réservations et les notifications ne sont toujours pas reçues.
-5.  **Agent**: Confirme que le problème des notifications est le manque de push tokens enregistrés sur le serveur Railway.
-6.  **Agent**: Identifie et corrige un bug critique dans  qui empêchait les tokens d'être correctement enregistrés.
-7.  **User**: Fournit un audit technique très détaillé et précis (message 627) listant 6 bugs critiques à corriger, surpassant l'analyse de l'agent.
-8.  **Agent**: Acquiesce et applique méticuleusement toutes les corrections demandées par l'utilisateur.
-9.  **User**: Signale à nouveau un bug sur les demandes de chansons et l'absence du bouton Mes Réservations. Demande également des notifications pour les admins lors de nouvelles demandes de table.
-10. **Agent**: Explique que les bugs persistent car le backend Railway n'a pas les dernières corrections. Implémente les notifications admin et prépare le build 77.
+1.  **User**: Le scan ne crédite pas les points, même après avoir créé un nouveau QR code avec la dernière version. Quelles sont les possibilités ?
+2.  **Agent**: Demande les logs Railway en temps réel ou un test avec  pour voir l'erreur exacte.
+3.  **User**: Fournit une sortie  avec .
+4.  **Agent**: Explique que le token est un placeholder et demande à nouveau les logs Railway, qui est la méthode la plus simple.
+5.  **User**: Fournit la **cause racine exacte du bug** (objet SQLAlchemy détaché) et les **correctifs détaillés** pour le backend.
+6.  **Agent**: Acquiesce et implémente les correctifs fournis par l'utilisateur.
+7.  **User**: Demande si la dernière version que je n'ai pas encore mise sur GitHub doit être testée.
+8.  **Agent**: Confirme que c'est l'étape cruciale et fournit les instructions pour déployer sur Railway et créer un nouveau build.
+9.  **User**: Confirme que même après avoir créé un nouveau QR et mis à jour, l'erreur persiste. Demande quelles sont les autres possibilités.
+10. **Agent**: Demande de vérifier les logs Railway en temps réel pour voir l'erreur du backend maintenant que le code est (supposément) à jour.
 
 **Project Health Check:**
-- **Broken**: Les fonctionnalités principales de l'application (notifications push, demandes de chansons) ne fonctionnent pas dans l'environnement de test de l'utilisateur (TestFlight) en raison de bugs critiques et de problèmes de déploiement.
+- **Broken**: La fonctionnalité de fidélité (créditer des points via scan QR) est non fonctionnelle en production en raison d'un bug backend dont le correctif est en attente de déploiement.
 - **Mocked**: Aucun.
 
 **3rd Party Integrations**
@@ -256,11 +231,10 @@ See 'git help git' for an overview of the system..** Soyez extrêmement explicit
 - Testing agent used after significant changes: NO
 - Troubleshoot agent used after agent stuck in loop: NO
 - Test files created: None
-- Known regressions: Les notifications et les demandes de chansons sont des régressions ou des fonctionnalités qui n'ont jamais fonctionné correctement en production malgré de multiples tentatives de correction.
+- Known regressions: Les fonctionnalités de base comme le scan QR et la connexion ont subi des régressions ou des bugs persistants qui ont nécessité plusieurs itérations pour être corrigés.
 
 **Credentials to test flow:**
 - **Admin Email**: 
-- **Admin Password**: Variable d'environnement sur Railway.
 
 **What agent forgot to execute**
-L'agent a initialement manqué plusieurs bugs critiques et silencieux (crashs de notifications, logique SQL incorrecte, configuration de projet manquante) qui ont été identifiés par l'utilisateur dans un audit détaillé. Bien que l'agent ait ensuite corrigé ces points sur instruction, le diagnostic initial était incomplet.</analysis>
+L'agent a initialement eu du mal à diagnostiquer la véritable cause du bug du scan QR, se concentrant d'abord sur des problèmes frontend (caméra, génération du QR) avant que l'utilisateur n'identifie et ne fournisse lui-même la solution pour le bug critique du backend (objet SQLAlchemy détaché).</analysis>

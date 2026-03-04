@@ -1588,17 +1588,25 @@ async def scan_event_qrcode(
     # Update QR scan count
     qr.scan_count = (qr.scan_count or 0) + 1
     
-    # Update user loyalty points
-    current_user.loyalty_points = (current_user.loyalty_points or 0) + qr.coins_reward
+    # CRITICAL FIX: Re-query user in current db session to avoid detached object error
+    # The current_user from JWT might be detached from this session
+    user_result = await db.execute(select(User).where(User.id == user_id))
+    user_in_session = user_result.scalar_one_or_none()
+    
+    if not user_in_session:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Update user loyalty points on the properly attached user object
+    user_in_session.loyalty_points = (user_in_session.loyalty_points or 0) + qr.coins_reward
     
     await db.commit()
-    await db.refresh(current_user)
+    await db.refresh(user_in_session)
     
     return {
         "success": True,
         "message": f"Félicitations! Tu as gagné {qr.coins_reward} Invasion Coins! 🎉",
         "coins_earned": qr.coins_reward,
-        "total_coins": current_user.loyalty_points,
+        "total_coins": user_in_session.loyalty_points,
         "event_name": qr.event_name
     }
 
@@ -1778,14 +1786,25 @@ async def claim_free_entry(
     if existing:
         raise HTTPException(status_code=400, detail="Tu as déjà une entrée gratuite active")
     
-    # Deduct points
-    current_user.loyalty_points = (current_user.loyalty_points or 0) - 25
+    # CRITICAL FIX: Re-query user in current db session to avoid detached object error
+    user_result = await db.execute(select(User).where(User.id == current_user.id))
+    user_in_session = user_result.scalar_one_or_none()
+    
+    if not user_in_session:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Re-check points with fresh data
+    if (user_in_session.loyalty_points or 0) < 25:
+        raise HTTPException(status_code=400, detail="Tu as besoin de 25 points de fidélité")
+    
+    # Deduct points from the properly attached user object
+    user_in_session.loyalty_points = (user_in_session.loyalty_points or 0) - 25
     
     # Create voucher
     voucher = FreeEntryVoucher(
-        user_id=current_user.id,
-        user_name=current_user.name,
-        user_email=current_user.email,
+        user_id=user_in_session.id,
+        user_name=user_in_session.name,
+        user_email=user_in_session.email,
         expires_at=datetime.now(timezone.utc) + timedelta(days=90)
     )
     
@@ -1975,27 +1994,34 @@ async def apply_referral_code(
     if referrer.id == current_user.id:
         raise HTTPException(status_code=400, detail="Tu ne peux pas utiliser ton propre code")
     
+    # CRITICAL FIX: Re-query current user in current db session to avoid detached object error
+    user_result = await db.execute(select(User).where(User.id == current_user.id))
+    user_in_session = user_result.scalar_one_or_none()
+    
+    if not user_in_session:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
     # Create referral
     referral = Referral(
         referrer_id=referrer.id,
-        referred_id=current_user.id,
+        referred_id=user_in_session.id,
         referrer_points=10,
         referred_points=5
     )
     db.add(referral)
     
-    # Award points
+    # Award points - referrer is already in session from the query above
     referrer.loyalty_points = (referrer.loyalty_points or 0) + 10
-    current_user.loyalty_points = (current_user.loyalty_points or 0) + 5
+    user_in_session.loyalty_points = (user_in_session.loyalty_points or 0) + 5
     
     await db.commit()
-    await db.refresh(current_user)
+    await db.refresh(user_in_session)
     
     return {
         "success": True,
         "message": "Code de parrainage appliqué! Tu as gagné 5 Invasion Coins!",
         "points_earned": 5,
-        "total_points": current_user.loyalty_points
+        "total_points": user_in_session.loyalty_points
     }
 
 # ============ GALLERY ENDPOINTS ============
@@ -3077,17 +3103,24 @@ async def scan_loyalty_qr(
         # Update QR scan count
         qr.scan_count = (qr.scan_count or 0) + 1
         
-        # Update user loyalty points
-        current_user.loyalty_points = (current_user.loyalty_points or 0) + qr.coins_reward
+        # CRITICAL FIX: Re-query user in current db session to avoid detached object error
+        user_result = await db.execute(select(User).where(User.id == user_id))
+        user_in_session = user_result.scalar_one_or_none()
+        
+        if not user_in_session:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        # Update user loyalty points on the properly attached user object
+        user_in_session.loyalty_points = (user_in_session.loyalty_points or 0) + qr.coins_reward
         
         await db.commit()
-        await db.refresh(current_user)
+        await db.refresh(user_in_session)
         
         return {
             "success": True,
             "message": f"Félicitations! Tu as gagné {qr.coins_reward} Invasion Coins! 🎉",
             "coins_earned": qr.coins_reward,
-            "total_coins": current_user.loyalty_points,
+            "total_coins": user_in_session.loyalty_points,
             "event_name": qr.event_name
         }
     except Exception as e:
@@ -3119,14 +3152,25 @@ async def claim_loyalty_reward(
     if existing:
         raise HTTPException(status_code=400, detail="Tu as déjà une entrée gratuite active")
     
-    # Deduct points
-    current_user.loyalty_points = (current_user.loyalty_points or 0) - 25
+    # CRITICAL FIX: Re-query user in current db session to avoid detached object error
+    user_result = await db.execute(select(User).where(User.id == current_user.id))
+    user_in_session = user_result.scalar_one_or_none()
+    
+    if not user_in_session:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Re-check points with fresh data
+    if (user_in_session.loyalty_points or 0) < 25:
+        raise HTTPException(status_code=400, detail="Tu as besoin de 25 points de fidélité")
+    
+    # Deduct points from the properly attached user object
+    user_in_session.loyalty_points = (user_in_session.loyalty_points or 0) - 25
     
     # Create voucher
     voucher = FreeEntryVoucher(
-        user_id=current_user.id,
-        user_name=current_user.name,
-        user_email=current_user.email,
+        user_id=user_in_session.id,
+        user_name=user_in_session.name,
+        user_email=user_in_session.email,
         expires_at=datetime.now(timezone.utc) + timedelta(days=90)
     )
     
