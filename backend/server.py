@@ -1072,8 +1072,10 @@ async def request_song(
         else:
             raise HTTPException(status_code=403, detail="Activez votre localisation pour demander une chanson")
         
-        # Check time (admins bypass this)
-        current_hour = datetime.now().hour
+        # Check time (admins bypass this) - Use Brussels timezone
+        from zoneinfo import ZoneInfo
+        brussels_tz = ZoneInfo("Europe/Brussels")
+        current_hour = datetime.now(brussels_tz).hour
         if not (current_hour >= 23 or current_hour < 5):
             raise HTTPException(
                 status_code=403,
