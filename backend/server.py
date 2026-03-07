@@ -1042,7 +1042,7 @@ async def request_song(
     if not is_admin:
         MIRANO_LAT = 50.8566
         MIRANO_LNG = 4.3756
-        MAX_DISTANCE_METERS = 500
+        MAX_DISTANCE_METERS = 50000  # Temporarily disabled for tonight
         
         user_lat = song_data.get("latitude")
         user_lng = song_data.get("longitude")
