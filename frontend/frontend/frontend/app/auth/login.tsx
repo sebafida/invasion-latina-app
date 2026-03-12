@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,6 +25,12 @@ import { Button } from '../../src/components/Button';
 import api from '../../src/config/api';
 import { registerForPushNotifications } from '../../src/config/notifications';
 import logger from '../../src/config/logger';
+
+// Only import Apple Authentication on iOS
+let AppleAuthentication: any = null;
+if (Platform.OS === 'ios') {
+  AppleAuthentication = require('expo-apple-authentication');
+}
 
 // Only import Google Auth on native platforms
 let useAuthRequest: any = null;
@@ -123,6 +128,12 @@ export default function LoginScreen() {
   };
 
   const handleAppleSignIn = async (retryCount = 0) => {
+    // Safety check - Apple Sign In only available on iOS
+    if (Platform.OS !== 'ios' || !AppleAuthentication) {
+      Alert.alert(t('error'), 'Apple Sign In is only available on iOS');
+      return;
+    }
+    
     try {
       setIsAuthenticating(true); // BUG 4 FIX: Prevent race condition
       setSocialLoading('apple');
