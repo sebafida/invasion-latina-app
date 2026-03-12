@@ -1077,7 +1077,7 @@ async def request_song(
         from zoneinfo import ZoneInfo
         brussels_tz = ZoneInfo("Europe/Brussels")
         current_hour = datetime.now(brussels_tz).hour
-        if not (current_hour >= 23 or current_hour < 5):
+        if not (current_hour >= 22 or current_hour < 5):
             raise HTTPException(
                 status_code=403,
                 detail="Les demandes de chansons sont disponibles uniquement entre 23h et 5h"
