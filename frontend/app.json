@@ -78,7 +78,8 @@
     },
     "extra": {
       "EXPO_PUBLIC_BACKEND_URL": "https://invasion-latina-app-production.up.railway.app",
-      "GOOGLE_IOS_CLIENT_ID": "879493210543-t0apvh7hh52mdog38jdb2hkfv5urapcs.apps.googleusercontent.com"
+      "GOOGLE_IOS_CLIENT_ID": "879493210543-t0apvh7hh52mdog38jdb2hkfv5urapcs.apps.googleusercontent.com",
+      "GOOGLE_ANDROID_CLIENT_ID": "879493210543-22aec6ek4shis767jo80hlfnf27hdbbn.apps.googleusercontent.com"
     }
   }
 }

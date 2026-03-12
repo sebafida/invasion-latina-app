@@ -41,7 +41,8 @@ if (Platform.OS !== 'web') {
 
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_CLIENT_ID = Constants.expoConfig?.extra?.GOOGLE_IOS_CLIENT_ID || '';
+const GOOGLE_IOS_CLIENT_ID = Constants.expoConfig?.extra?.GOOGLE_IOS_CLIENT_ID || '';
+const GOOGLE_ANDROID_CLIENT_ID = Constants.expoConfig?.extra?.GOOGLE_ANDROID_CLIENT_ID || '';
 const isNativePlatform = Platform.OS === 'ios' || Platform.OS === 'android';
 
 const LANGUAGES = [
@@ -68,7 +69,8 @@ export default function LoginScreen() {
 
   // Google Auth - only on native platforms
   const googleAuth = isNativePlatform && useAuthRequest ? useAuthRequest({
-    iosClientId: GOOGLE_CLIENT_ID,
+    iosClientId: GOOGLE_IOS_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
   }) : [null, null, () => {}];
   
   const [request, response, promptAsync] = googleAuth;
