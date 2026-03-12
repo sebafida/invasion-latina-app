@@ -1,0 +1,418 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Alert,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../../src/config/theme';
+import { useAuth } from '../../src/context/AuthContext';
+import { useLanguage } from '../../src/context/LanguageContext';
+import { Button } from '../../src/components/Button';
+
+const LANGUAGES = [
+  { code: 'fr', flag: '🇫🇷', label: 'Français' },
+  { code: 'en', flag: '🇬🇧', label: 'English' },
+  { code: 'es', flag: '🇪🇸', label: 'Español' },
+  { code: 'nl', flag: '🇳🇱', label: 'Nederlands' },
+];
+
+export default function RegisterScreen() {
+  const router = useRouter();
+  const { register } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
+  
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptMarketing, setAcceptMarketing] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  const handleRegister = async () => {
+    if (!name || !email || !phone || !password || !confirmPassword) {
+      Alert.alert(t('error'), t('fillAllFields'));
+      return;
+    }
+    
+    // 3.1 - Validation email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert(t('error'), t('invalidEmail'));
+      return;
+    }
+    
+    // 3.1 - Validation téléphone
+    const phoneRegex = /^[+]?[\d\s\-()]{7,15}$/;
+    if (!phoneRegex.test(phone)) {
+      Alert.alert(t('error'), t('invalidPhone'));
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      Alert.alert(t('error'), t('passwordsDontMatch'));
+      return;
+    }
+    
+    if (password.length < 6) {
+      Alert.alert(t('error'), t('passwordTooShort'));
+      return;
+    }
+
+    if (!acceptTerms) {
+      Alert.alert(t('error'), t('mustAcceptTerms'));
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await register(name, email, password, phone, acceptMarketing);
+      router.replace('/(tabs)/home');
+    } catch (error: any) {
+      Alert.alert(t('registrationFailed'), error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    <View style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <Image 
+              source={require('../../assets/images/invasion-logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>{t('joinInvasionLatina')}</Text>
+            <Text style={styles.subtitle}>{t('createAccountSubtitle')}</Text>
+          </View>
+          
+          {/* Form */}
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>{t('fullName')} *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Jean Dupont"
+                placeholderTextColor={theme.colors.textMuted}
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>{t('email')} *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="ton@email.com"
+                placeholderTextColor={theme.colors.textMuted}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>{t('phoneNumber')} *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="+32 470 12 34 56"
+                placeholderTextColor={theme.colors.textMuted}
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>{t('password')} *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={t('minCharacters')}
+                placeholderTextColor={theme.colors.textMuted}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>{t('confirmPassword')} *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={t('repeatPassword')}
+                placeholderTextColor={theme.colors.textMuted}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+            </View>
+
+            {/* Consent Checkboxes */}
+            <View style={styles.consentSection}>
+              {/* Terms and Conditions - Required */}
+              <TouchableOpacity
+                style={styles.checkboxRow}
+                onPress={() => setAcceptTerms(!acceptTerms)}
+              >
+                <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
+                  {acceptTerms && <Ionicons name="checkmark" size={16} color="white" />}
+                </View>
+                <Text style={styles.checkboxLabel}>
+                  {t('acceptTerms')}{' '}
+                  <Text style={styles.linkText}>{t('termsAndConditions')}</Text>
+                  {' '}et{' '}
+                  <Text style={styles.linkText}>{t('privacyPolicy')}</Text>
+                  {' '}*
+                </Text>
+              </TouchableOpacity>
+
+              {/* Marketing Consent - Optional */}
+              <TouchableOpacity
+                style={styles.checkboxRow}
+                onPress={() => setAcceptMarketing(!acceptMarketing)}
+              >
+                <View style={[styles.checkbox, acceptMarketing && styles.checkboxChecked]}>
+                  {acceptMarketing && <Ionicons name="checkmark" size={16} color="white" />}
+                </View>
+                <Text style={styles.checkboxLabel}>
+                  {t('marketingConsent')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.requiredNote}>* {t('requiredFields')}</Text>
+
+            {/* Language Selector */}
+            <View style={styles.languageSection}>
+              <Text style={styles.languageTitle}>🌐 {t('appLanguage')}</Text>
+              <View style={styles.languageOptions}>
+                {LANGUAGES.map((lang) => (
+                  <TouchableOpacity
+                    key={lang.code}
+                    style={[
+                      styles.languageOption,
+                      language === lang.code && styles.languageOptionSelected
+                    ]}
+                    onPress={() => setLanguage(lang.code)}
+                  >
+                    <Text style={styles.languageFlag}>{lang.flag}</Text>
+                    <Text style={[
+                      styles.languageOptionText,
+                      language === lang.code && styles.languageOptionTextSelected
+                    ]}>
+                      {lang.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+            
+            <Button
+              title={t('createMyAccount')}
+              onPress={handleRegister}
+              loading={loading}
+              fullWidth
+              size="lg"
+            />
+          </View>
+
+          {/* Footer - Back to Login */}
+          <TouchableOpacity
+            style={styles.footer}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.footerText}>
+              {t('alreadyAccount')} <Text style={styles.footerLink}>{t('login')}</Text>
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.black,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.xl,
+  },
+
+  // Logo
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.lg,
+  },
+  logoImage: {
+    width: 200,
+    height: 100,
+  },
+
+  header: {
+    marginBottom: theme.spacing.xl,
+  },
+  title: {
+    fontSize: theme.fontSize.xxl,
+    fontWeight: '900' as any,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.sm,
+  },
+  subtitle: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textSecondary,
+  },
+  form: {
+    marginBottom: theme.spacing.lg,
+  },
+  inputContainer: {
+    marginBottom: theme.spacing.md,
+  },
+  label: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: '600' as any,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.sm,
+  },
+  input: {
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textPrimary,
+    borderWidth: 1,
+    borderColor: theme.colors.elevated,
+  },
+
+  // Consent Section
+  consentSection: {
+    marginBottom: theme.spacing.lg,
+    marginTop: theme.spacing.sm,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.md,
+    gap: theme.spacing.sm,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: theme.colors.textMuted,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  checkboxChecked: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+    lineHeight: 20,
+  },
+  linkText: {
+    color: theme.colors.primary,
+    textDecorationLine: 'underline',
+  },
+  requiredNote: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textMuted,
+    marginBottom: theme.spacing.md,
+    fontStyle: 'italic',
+  },
+
+  // Language Selector
+  languageSection: {
+    marginBottom: theme.spacing.lg,
+  },
+  languageTitle: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: '600' as any,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.sm,
+  },
+  languageOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: theme.spacing.xs,
+  },
+  languageOption: {
+    flex: 1,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xs,
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    minHeight: 75,
+  },
+  languageOptionSelected: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary + '20',
+  },
+  languageFlag: {
+    fontSize: 24,
+    marginBottom: theme.spacing.xs,
+  },
+  languageOptionText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+  },
+  languageOptionTextSelected: {
+    color: theme.colors.primary,
+    fontWeight: '600' as any,
+  },
+
+  // Footer
+  footer: {
+    alignItems: 'center',
+    marginTop: theme.spacing.md,
+  },
+  footerText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.fontSize.sm,
+  },
+  footerLink: {
+    color: theme.colors.primary,
+    fontWeight: '600' as any,
+  },
+});

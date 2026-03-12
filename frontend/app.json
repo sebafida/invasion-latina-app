@@ -1,0 +1,84 @@
+{
+  "expo": {
+    "name": "Invasion Latina",
+    "slug": "frontend",
+    "version": "1.0.14",
+    "orientation": "portrait",
+    "icon": "./assets/images/app-icon.png",
+    "scheme": "invasionlatina",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.invasionlatina.app",
+      "buildNumber": "89",
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Pour activer les requêtes DJ quand tu es à la soirée",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Pour activer les requêtes DJ quand tu es à la soirée",
+        "NSCameraUsageDescription": "Pour scanner ton QR code fidélité à l'entrée",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.invasionlatina.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/invasion-logo.png",
+        "backgroundColor": "#000000"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/invasion-logo.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-apple-authentication",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/app-icon.png",
+          "color": "#000000"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/invasion-logo.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#000000"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Pour activer les requêtes DJ quand tu es à la soirée"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Pour scanner ton QR code fidélité à l'entrée"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "EXPO_PUBLIC_BACKEND_URL": "https://invasion-latina-app-production.up.railway.app",
+      "GOOGLE_IOS_CLIENT_ID": "879493210543-t0apvh7hh52mdog38jdb2hkfv5urapcs.apps.googleusercontent.com"
+    }
+  }
+}

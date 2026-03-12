@@ -1040,9 +1040,10 @@ async def request_song(
     
     # Geolocation check (admins bypass this)
     if not is_admin:
-        MIRANO_LAT = 50.8566
-        MIRANO_LNG = 4.3756
-        MAX_DISTANCE_METERS = 50000  # Temporarily disabled for tonight
+        # Mirano Brussels - Chaussée de Louvain 38, 1210 Saint-Josse-ten-Noode
+        MIRANO_LAT = 50.8494
+        MIRANO_LNG = 4.3714
+        MAX_DISTANCE_METERS = 50  # 50 mètres autour du Mirano
         
         user_lat = song_data.get("latitude")
         user_lng = song_data.get("longitude")

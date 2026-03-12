@@ -1,0 +1,129 @@
+import React, { useEffect, useRef } from 'react';
+import { View, ActivityIndicator, StyleSheet, AppState, AppStateStatus } from 'react-native';
+import { Slot, useRouter } from 'expo-router';
+import { AuthProvider, useAuth } from '../src/context/AuthContext';
+import { LanguageProvider } from '../src/context/LanguageContext';
+import { ErrorBoundary } from '../src/components/ErrorBoundary';
+import { OfflineBanner } from '../src/components/OfflineBanner';
+import { theme } from '../src/config/theme';
+import logger from '../src/config/logger';
+import { warmupBackend } from '../src/config/api';
+import { setupNotificationListeners } from '../src/config/notifications';
+
+function AppContent() {
+  const { isLoading, isAuthenticated, isAuthenticating, loadUser } = useAuth();
+  const router = useRouter();
+  const appState = useRef(AppState.currentState);
+  const wasAuthenticated = useRef(false); // Track previous auth state for logout redirect
+
+  // Listen for app state changes (background -> foreground)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        // BUG 4 FIX: Only re-verify auth if not currently authenticating (social login)
+        if (!isAuthenticating) {
+          logger.log('App came to foreground - warming up backend...');
+          warmupBackend().then(() => {
+            logger.log('App came to foreground - re-verifying auth...');
+            loadUser();
+          });
+        } else {
+          logger.log('App came to foreground - skipping auth check (authentication in progress)');
+        }
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [loadUser, isAuthenticating]);
+
+  // Setup notification listeners when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      try {
+        logger.log('Setting up notification listeners...');
+        const cleanup = setupNotificationListeners(
+          (notification) => {
+            logger.log('📬 Notification received in foreground:', notification?.request?.content?.title);
+          },
+          (response) => {
+            logger.log('👆 Notification tapped:', response?.notification?.request?.content?.title);
+            const data = response?.notification?.request?.content?.data;
+            // Navigate based on notification type
+            if (data?.type === 'vip_booking_confirmed' || data?.type === 'vip_booking_rejected') {
+              router.push('/my-bookings');
+            } else if (data?.type === 'song_request_accepted' || data?.type === 'song_request_rejected') {
+              router.push('/(tabs)/dj');
+            } else if (data?.type === 'new_booking_admin') {
+              router.push('/admin/bookings');
+            }
+          }
+        );
+        return () => {
+          if (cleanup && typeof cleanup === 'function') {
+            cleanup();
+          }
+        };
+      } catch (error) {
+        logger.error('Failed to setup notification listeners:', error);
+      }
+    }
+  }, [isAuthenticated]);
+
+  // Handle navigation based on auth state changes
+  useEffect(() => {
+    if (!isLoading) {
+      if (isAuthenticated) {
+        logger.log('User authenticated - navigating to home');
+        wasAuthenticated.current = true;
+        router.replace('/(tabs)/home');
+      } else if (wasAuthenticated.current) {
+        // User just logged out (was authenticated, now not) - redirect to welcome
+        logger.log('User logged out - navigating to welcome');
+        wasAuthenticated.current = false;
+        router.replace('/');
+      }
+    }
+  }, [isLoading, isAuthenticated]);
+
+  // Show loading screen while checking auth status
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
+  // Show welcome/login page if not authenticated
+  // Or briefly show Slot before redirect if authenticated
+  return (
+    <>
+      <OfflineBanner />
+      <Slot />
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ErrorBoundary>
+      <LanguageProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </LanguageProvider>
+    </ErrorBoundary>
+  );
+}
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.black,
+  },
+});
