@@ -9,6 +9,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Linking,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -20,7 +21,6 @@ interface EventGallery {
   id: string;
   name: string;
   event_date: string;
-  photo_count: number;
   cover_image?: string;
   facebook_album_url?: string;
 }
@@ -38,54 +38,25 @@ export default function GalleriesScreen() {
   const loadGalleries = async () => {
     try {
       setLoading(true);
-      // First try to get galleries from API
       const response = await api.get('/media/galleries');
-      if (response.data && response.data.length > 0) {
-        setGalleries(response.data);
-      } else {
-        // If no galleries, get events and show them as potential galleries
-        const eventsResponse = await api.get('/events');
-        const eventGalleries = eventsResponse.data.map((event: any) => ({
-          id: event.id,
-          name: event.name,
-          event_date: event.event_date,
-          photo_count: 0,
-          cover_image: event.banner_image || null
-        }));
-        setGalleries(eventGalleries);
-      }
+      // Filter only events with facebook_album_url
+      const galleriesWithLinks = response.data.filter((g: EventGallery) => g.facebook_album_url);
+      setGalleries(galleriesWithLinks);
     } catch (error) {
       console.error('Failed to load galleries:', error);
-      // Try to get events as fallback
-      try {
-        const eventsResponse = await api.get('/events');
-        const eventGalleries = eventsResponse.data.map((event: any) => ({
-          id: event.id,
-          name: event.name,
-          event_date: event.event_date,
-          photo_count: 0,
-          cover_image: event.banner_image || null
-        }));
-        setGalleries(eventGalleries);
-      } catch {
-        setGalleries([]);
-      }
+      setGalleries([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const openGallery = async (gallery: EventGallery) => {
-    // If there's a Facebook album URL, open it directly
+  const openFacebookAlbum = async (gallery: EventGallery) => {
     if (gallery.facebook_album_url) {
       try {
         await Linking.openURL(gallery.facebook_album_url);
       } catch (error) {
-        console.error('Error opening Facebook album:', error);
+        Alert.alert('Erreur', 'Impossible d\'ouvrir le lien Facebook');
       }
-    } else {
-      // Fallback to internal gallery
-      router.push(`/gallery/${gallery.id}`);
     }
   };
 
@@ -107,8 +78,8 @@ export default function GalleriesScreen() {
             <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <Text style={styles.title}>{t('galleriesTitle')}</Text>
-            <Text style={styles.subtitle}>{t('reliveTheBestMoments')}</Text>
+            <Text style={styles.title}>{t('galleriesTitle') || 'Photos'}</Text>
+            <Text style={styles.subtitle}>{t('reliveTheBestMoments') || 'Revivez les meilleurs moments'}</Text>
           </View>
         </View>
 
@@ -116,24 +87,19 @@ export default function GalleriesScreen() {
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>{t('loadingGalleries')}</Text>
           </View>
         ) : galleries.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="images-outline" size={64} color={theme.colors.textMuted} />
-            <Text style={styles.emptyText}>{t('noGalleryAvailable')}</Text>
+            <Text style={styles.emptyText}>{t('noGalleryAvailable') || 'Aucune galerie disponible'}</Text>
             <Text style={styles.emptySubtext}>
-              {t('photosPublishedAfterEvent')}
+              {t('photosPublishedAfterEvent') || 'Les photos seront publiées après chaque événement'}
             </Text>
           </View>
         ) : (
           galleries.map((gallery) => (
-            <TouchableOpacity
-              key={gallery.id}
-              style={styles.galleryCard}
-              onPress={() => openGallery(gallery)}
-              activeOpacity={0.8}
-            >
+            <View key={gallery.id} style={styles.galleryCard}>
+              {/* Event Flyer */}
               {gallery.cover_image ? (
                 <Image
                   source={{ uri: gallery.cover_image }}
@@ -146,57 +112,31 @@ export default function GalleriesScreen() {
                 </View>
               )}
               
-              <View style={styles.galleryOverlay}>
+              {/* Event Info */}
+              <View style={styles.galleryInfo}>
                 <Text style={styles.galleryName}>{gallery.name}</Text>
-                <View style={styles.galleryMeta}>
-                  <Text style={styles.galleryDate}>
-                    {new Date(gallery.event_date).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
-                  </Text>
-                  <View style={styles.photoCountBadge}>
-                    <Ionicons name="images" size={14} color="white" />
-                    <Text style={styles.photoCountText}>{gallery.photo_count}</Text>
-                  </View>
-                </View>
+                <Text style={styles.galleryDate}>
+                  {new Date(gallery.event_date).toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                </Text>
               </View>
               
-              <View style={styles.viewButton}>
-                <Text style={styles.viewButtonText}>{t('viewPhotos')}</Text>
-                <Ionicons name="arrow-forward" size={20} color="white" />
-              </View>
-            </TouchableOpacity>
+              {/* Facebook Link Button */}
+              <TouchableOpacity
+                style={styles.viewButton}
+                onPress={() => openFacebookAlbum(gallery)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="logo-facebook" size={20} color="white" />
+                <Text style={styles.viewButtonText}>Voir les photos</Text>
+                <Ionicons name="open-outline" size={18} color="white" />
+              </TouchableOpacity>
+            </View>
           ))
         )}
-
-        {/* Features Coming Soon */}
-        <View style={styles.featuresSection}>
-          <Text style={styles.featuresTitle}>{t('features')}</Text>
-          
-          <View style={styles.featureCard}>
-            <Ionicons name="download" size={24} color={theme.colors.neonBlue} />
-            <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>{t('hdDownload')}</Text>
-              <Text style={styles.featureDesc}>{t('downloadHdPhotos')}</Text>
-            </View>
-            <View style={styles.availableBadge}>
-              <Text style={styles.availableText}>{t('available')}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.featureCard}>
-            <Ionicons name="share-social" size={24} color={theme.colors.secondary} />
-            <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>{t('socialShare')}</Text>
-              <Text style={styles.featureDesc}>{t('shareOnInstagram')}</Text>
-            </View>
-            <View style={styles.availableBadge}>
-              <Text style={styles.availableText}>{t('available')}</Text>
-            </View>
-          </View>
-        </View>
       </View>
     </ScrollView>
   );
@@ -205,219 +145,100 @@ export default function GalleriesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.black,
+    backgroundColor: theme.colors.background,
   },
   content: {
+    padding: 20,
     paddingBottom: 40,
   },
-
-  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: theme.spacing.xl,
-    paddingTop: 60,
+    marginBottom: 24,
+    paddingTop: 20,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.cardBackground,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.md,
+    padding: 8,
+    marginRight: 12,
   },
   headerText: {
     flex: 1,
   },
   title: {
-    fontSize: theme.fontSize.xxl,
-    fontWeight: theme.fontWeight.black,
+    fontSize: 28,
+    fontWeight: theme.fontWeight.bold,
     color: theme.colors.textPrimary,
   },
   subtitle: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.xs,
+    fontSize: 14,
+    color: theme.colors.textMuted,
+    marginTop: 4,
   },
-
-  // Tag Banner
-  tagBanner: {
-    flexDirection: 'row',
-    marginHorizontal: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
-    backgroundColor: theme.colors.primary + '15',
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
-  },
-  tagIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.primary + '20',
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: theme.spacing.md,
+    paddingVertical: 60,
   },
-  tagTextContainer: {
-    flex: 1,
-  },
-  tagTitle: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textPrimary,
-    marginBottom: 4,
-  },
-  tagDescription: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-    lineHeight: 18,
-  },
-
-  // Loading
-  loadingContainer: {
-    paddingVertical: theme.spacing.xxl * 2,
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-  },
-
-  // Empty State
   emptyState: {
     alignItems: 'center',
-    paddingVertical: theme.spacing.xxl * 2,
-    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: 60,
   },
   emptyText: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: theme.fontWeight.semiBold,
+    color: theme.colors.textPrimary,
+    marginTop: 16,
   },
   emptySubtext: {
-    fontSize: theme.fontSize.sm,
+    fontSize: 14,
     color: theme.colors.textMuted,
-    marginTop: theme.spacing.xs,
+    marginTop: 8,
     textAlign: 'center',
   },
-
-  // Gallery Card
   galleryCard: {
-    marginHorizontal: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
-    borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
     backgroundColor: theme.colors.cardBackground,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 20,
   },
   galleryImage: {
     width: '100%',
     height: 200,
   },
   placeholderImage: {
-    backgroundColor: theme.colors.elevated,
+    backgroundColor: theme.colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  galleryOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 50,
-    justifyContent: 'flex-end',
-    padding: theme.spacing.md,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+  galleryInfo: {
+    padding: 16,
   },
   galleryName: {
-    fontSize: theme.fontSize.lg,
+    fontSize: 18,
     fontWeight: theme.fontWeight.bold,
-    color: 'white',
-    marginBottom: theme.spacing.xs,
-  },
-  galleryMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    color: theme.colors.textPrimary,
   },
   galleryDate: {
-    fontSize: theme.fontSize.sm,
-    color: 'rgba(255,255,255,0.8)',
-  },
-  photoCountBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-    gap: 4,
-  },
-  photoCountText: {
-    color: 'white',
-    fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.bold,
+    fontSize: 14,
+    color: theme.colors.textMuted,
+    marginTop: 4,
   },
   viewButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.primary,
-    padding: theme.spacing.md,
-    gap: theme.spacing.xs,
+    backgroundColor: '#1877F2',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    gap: 8,
   },
   viewButtonText: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold,
     color: 'white',
-  },
-
-  // Features Section
-  featuresSection: {
-    marginHorizontal: theme.spacing.xl,
-    marginTop: theme.spacing.xl,
-  },
-  featuresTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.md,
-  },
-  featureCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    gap: theme.spacing.md,
-  },
-  featureText: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textPrimary,
-  },
-  featureDesc: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-    marginTop: 2,
-  },
-  availableBadge: {
-    backgroundColor: theme.colors.success + '20',
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-  },
-  availableText: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.success,
-    fontWeight: theme.fontWeight.bold,
+    fontSize: 16,
+    fontWeight: theme.fontWeight.semiBold,
   },
 });

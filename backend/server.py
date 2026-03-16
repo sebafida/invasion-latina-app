@@ -3044,6 +3044,28 @@ async def get_media_galleries(db: AsyncSession = Depends(get_db)):
     
     return galleries
 
+@app.get("/api/media/aftermovies-links")
+async def get_aftermovies_links(db: AsyncSession = Depends(get_db)):
+    """Get events with Instagram aftermovie links"""
+    result = await db.execute(
+        select(Event)
+        .where(Event.aftermovie_visible == True)
+        .order_by(Event.event_date.desc())
+    )
+    events = result.scalars().all()
+    
+    aftermovies = []
+    for event in events:
+        aftermovies.append({
+            "id": event.id,
+            "name": event.name,
+            "event_date": event.event_date.isoformat() if event.event_date else None,
+            "cover_image": event.banner_image,
+            "instagram_aftermovie_url": event.instagram_aftermovie_url
+        })
+    
+    return aftermovies
+
 @app.get("/api/media/gallery/{event_id}")
 async def get_media_gallery(event_id: str, db: AsyncSession = Depends(get_db)):
     """Get photos for an event gallery"""

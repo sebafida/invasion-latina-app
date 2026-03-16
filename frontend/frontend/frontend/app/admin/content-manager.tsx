@@ -874,265 +874,77 @@ export default function ContentManagerScreen() {
 
   const renderPhotosTab = () => (
     <View style={styles.tabContent}>
-      <Text style={styles.sectionTitle}>📷 Ajouter des Photos</Text>
-      <Text style={styles.helpText}>
-        Ajoutez des photos de vos événements pour la galerie
-      </Text>
-
-      {/* Event Dropdown Selector */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Événement *</Text>
-        {events.length === 0 ? (
-          <View style={styles.noEventsWarning}>
-            <Ionicons name="warning" size={20} color={theme.colors.warning} />
-            <Text style={styles.noEventsText}>
-              Aucun événement disponible. Créez d'abord un événement dans l'onglet "Events".
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.dropdownContainer}>
-            {events.map((event) => (
-              <TouchableOpacity
-                key={event.id}
-                style={[
-                  styles.dropdownItem,
-                  selectedEventId === event.id && styles.dropdownItemSelected
-                ]}
-                onPress={() => setSelectedEventId(event.id)}
-              >
-                <Ionicons 
-                  name={selectedEventId === event.id ? "radio-button-on" : "radio-button-off"} 
-                  size={20} 
-                  color={selectedEventId === event.id ? theme.colors.primary : theme.colors.textMuted} 
-                />
-                <Text style={[
-                  styles.dropdownItemText,
-                  selectedEventId === event.id && styles.dropdownItemTextSelected
-                ]}>
-                  {event.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
-
-      {/* Clear Gallery Button */}
-      {selectedEventId && (
-        <TouchableOpacity 
-          style={[styles.dangerButton, { marginBottom: 15 }]}
-          onPress={() => {
-            const event = events.find(e => e.id === selectedEventId);
-            handleClearGallery(selectedEventId, event?.name || 'cet événement');
-          }}
-        >
-          <Ionicons name="trash" size={20} color="white" />
-          <Text style={styles.dangerButtonText}>Vider la galerie de cet événement</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Multiple Photos Upload Button */}
-      <TouchableOpacity 
-        style={[styles.uploadButton, { backgroundColor: theme.colors.success + '20', borderColor: theme.colors.success }]}
-        onPress={pickMultiplePhotos}
-        disabled={!selectedEventId || loading}
-      >
-        <Ionicons name="images" size={24} color={theme.colors.success} />
-        <Text style={[styles.uploadButtonText, { color: theme.colors.success }]}>
-          {loading ? 'Upload en cours...' : 'Sélectionner PLUSIEURS photos (max 10)'}
-        </Text>
-      </TouchableOpacity>
-
-      <Text style={styles.orText}>ou une seule photo :</Text>
-
-      {/* Single Photo Upload Button */}
-      <TouchableOpacity 
-        style={styles.uploadButton}
-        onPress={() => pickGalleryPhoto()}
-        disabled={!selectedEventId}
-      >
-        <Ionicons name="cloud-upload" size={24} color={theme.colors.primary} />
-        <Text style={styles.uploadButtonText}>Sélectionner une photo</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.orText}>ou entrez une URL :</Text>
-
-      {/* Photo URL Input */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>URL de la Photo</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="https://exemple.com/photo.jpg"
-          placeholderTextColor={theme.colors.textMuted}
-          value={newPhotoUrl}
-          onChangeText={setNewPhotoUrl}
-          autoCapitalize="none"
-        />
-      </View>
-
-      {/* Preview */}
-      {newPhotoUrl ? (
-        <View style={styles.previewContainer}>
-          <Text style={styles.previewLabel}>Aperçu:</Text>
-          <Image
-            source={{ uri: newPhotoUrl }}
-            style={styles.photoPreview}
-            resizeMode="cover"
-          />
+      <Text style={styles.sectionTitle}>📷 Photos des événements</Text>
+      
+      <View style={[styles.infoBox, { marginTop: 20, borderLeftColor: theme.colors.primary }]}>
+        <Ionicons name="information-circle" size={24} color={theme.colors.primary} />
+        <View style={{ flex: 1, marginLeft: 10 }}>
+          <Text style={[styles.infoText, { fontWeight: 'bold', marginBottom: 8 }]}>
+            Nouveau système de photos !
+          </Text>
+          <Text style={styles.infoText}>
+            Les photos sont maintenant gérées via Facebook. Pour ajouter des photos à un événement :
+          </Text>
+          <Text style={[styles.infoText, { marginTop: 10 }]}>
+            1. Allez dans l'onglet <Text style={{ fontWeight: 'bold', color: theme.colors.primary }}>Events</Text>
+          </Text>
+          <Text style={styles.infoText}>
+            2. Modifiez l'événement souhaité
+          </Text>
+          <Text style={styles.infoText}>
+            3. Ajoutez le lien de l'album Facebook dans le champ <Text style={{ fontWeight: 'bold' }}>"Lien Album Facebook"</Text>
+          </Text>
+          <Text style={styles.infoText}>
+            4. Activez la visibilité de la galerie
+          </Text>
         </View>
-      ) : null}
+      </View>
 
       <TouchableOpacity
-        style={[styles.primaryButton, (!selectedEventId || !newPhotoUrl) && { opacity: 0.5 }]}
-        onPress={handleAddPhoto}
-        disabled={loading || !selectedEventId || !newPhotoUrl}
+        style={[styles.primaryButton, { marginTop: 20 }]}
+        onPress={() => setActiveTab('events')}
       >
-        {loading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <>
-            <Ionicons name="add-circle" size={20} color="white" />
-            <Text style={styles.primaryButtonText}>Ajouter la Photo</Text>
-          </>
-        )}
+        <Ionicons name="arrow-forward" size={20} color="white" />
+        <Text style={styles.primaryButtonText}>Aller aux Events</Text>
       </TouchableOpacity>
-
-      <View style={styles.infoBox}>
-        <Ionicons name="bulb" size={20} color={theme.colors.secondary} />
-        <Text style={styles.infoText}>
-          💡 Conseil : Utilisez "Sélectionner PLUSIEURS photos" pour gagner du temps !
-        </Text>
-      </View>
-
-      {/* Current Gallery Photos */}
-      {selectedEventId && (
-        <View style={{ marginTop: 20 }}>
-          <Text style={styles.sectionTitle}>📸 Photos actuelles ({galleryPhotos.length})</Text>
-          {loadingPhotos ? (
-            <ActivityIndicator color={theme.colors.primary} />
-          ) : galleryPhotos.length === 0 ? (
-            <Text style={styles.helpText}>Aucune photo dans cette galerie</Text>
-          ) : (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
-              {galleryPhotos.map((photo) => (
-                <View key={photo.id} style={{ width: '30%', aspectRatio: 1, position: 'relative' }}>
-                  <Image
-                    source={{ uri: photo.url }}
-                    style={{ width: '100%', height: '100%', borderRadius: 8 }}
-                    resizeMode="cover"
-                  />
-                  <TouchableOpacity
-                    style={{
-                      position: 'absolute',
-                      top: 5,
-                      right: 5,
-                      backgroundColor: 'rgba(255,0,0,0.8)',
-                      borderRadius: 12,
-                      padding: 4,
-                    }}
-                    onPress={() => handleDeletePhoto(photo.id)}
-                  >
-                    <Ionicons name="trash" size={16} color="white" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-      )}
     </View>
   );
 
   const renderAftermoviesTab = () => (
     <View style={styles.tabContent}>
-      <Text style={styles.sectionTitle}>🎬 Ajouter un Aftermovie</Text>
-      <Text style={styles.helpText}>
-        Ajoutez des vidéos YouTube/Vimeo de vos événements
-      </Text>
-
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Titre de l'Aftermovie *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Invasion Latina - Amazonia Edition"
-          placeholderTextColor={theme.colors.textMuted}
-          value={newAftermovieName}
-          onChangeText={setNewAftermovieName}
-        />
-      </View>
-
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>URL de la Vidéo YouTube/Vimeo *</Text>
-        <TextInput
-          style={[styles.input, { marginBottom: 8 }]}
-          placeholder="https://youtube.com/watch?v=xxxxx"
-          placeholderTextColor={theme.colors.textMuted}
-          value={newAftermovieUrl}
-          onChangeText={setNewAftermovieUrl}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="url"
-          textContentType="URL"
-        />
-      </View>
-
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>URL de la Miniature (optionnel)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="https://exemple.com/thumbnail.jpg"
-          placeholderTextColor={theme.colors.textMuted}
-          value={newAftermovieThumb}
-          onChangeText={setNewAftermovieThumb}
-          autoCapitalize="none"
-        />
+      <Text style={styles.sectionTitle}>🎬 Aftermovies des événements</Text>
+      
+      <View style={[styles.infoBox, { marginTop: 20, borderLeftColor: theme.colors.primary }]}>
+        <Ionicons name="information-circle" size={24} color={theme.colors.primary} />
+        <View style={{ flex: 1, marginLeft: 10 }}>
+          <Text style={[styles.infoText, { fontWeight: 'bold', marginBottom: 8 }]}>
+            Nouveau système d'aftermovies !
+          </Text>
+          <Text style={styles.infoText}>
+            Les aftermovies sont maintenant gérés via Instagram. Pour ajouter un aftermovie à un événement :
+          </Text>
+          <Text style={[styles.infoText, { marginTop: 10 }]}>
+            1. Allez dans l'onglet <Text style={{ fontWeight: 'bold', color: theme.colors.primary }}>Events</Text>
+          </Text>
+          <Text style={styles.infoText}>
+            2. Modifiez l'événement souhaité
+          </Text>
+          <Text style={styles.infoText}>
+            3. Ajoutez le lien Instagram dans le champ <Text style={{ fontWeight: 'bold' }}>"Lien Aftermovie Instagram"</Text>
+          </Text>
+          <Text style={styles.infoText}>
+            4. Activez la visibilité de l'aftermovie
+          </Text>
+        </View>
       </View>
 
       <TouchableOpacity
-        style={[styles.primaryButton, (!newAftermovieName || !newAftermovieUrl) && { opacity: 0.5 }]}
-        onPress={handleAddAftermovie}
-        disabled={loading || !newAftermovieName || !newAftermovieUrl}
+        style={[styles.primaryButton, { marginTop: 20 }]}
+        onPress={() => setActiveTab('events')}
       >
-        {loading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <>
-            <Ionicons name="videocam" size={20} color="white" />
-            <Text style={styles.primaryButtonText}>Ajouter l'Aftermovie</Text>
-          </>
-        )}
+        <Ionicons name="arrow-forward" size={20} color="white" />
+        <Text style={styles.primaryButtonText}>Aller aux Events</Text>
       </TouchableOpacity>
-
-      {/* Info box moved to bottom */}
-      <View style={[styles.infoBox, { marginTop: 20, borderLeftColor: theme.colors.warning }]}>
-        <Ionicons name="information-circle" size={20} color={theme.colors.warning} />
-        <Text style={[styles.infoText, { fontSize: 12 }]}>
-          💡 Les vidéos doivent être hébergées sur YouTube ou Vimeo. Copiez le lien et collez-le ci-dessus.
-        </Text>
-      </View>
-
-      {/* Existing Aftermovies */}
-      {aftermovies.length > 0 && (
-        <View style={styles.existingSection}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <Text style={styles.existingSectionTitle}>Aftermovies existants ({aftermovies.length})</Text>
-            <TouchableOpacity onPress={handleClearAllAftermovies}>
-              <Text style={{ color: '#FF3B30', fontSize: 14 }}>Tout supprimer</Text>
-            </TouchableOpacity>
-          </View>
-          {aftermovies.map((video) => (
-            <View key={video.id} style={[styles.existingItem, { justifyContent: 'space-between' }]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                <Ionicons name="play-circle" size={24} color={theme.colors.primary} />
-                <Text style={[styles.existingItemText, { flex: 1 }]}>{video.title}</Text>
-              </View>
-              <TouchableOpacity onPress={() => handleDeleteAftermovie(video.id)}>
-                <Ionicons name="trash-outline" size={22} color="#FF3B30" />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-      )}
     </View>
   );
 

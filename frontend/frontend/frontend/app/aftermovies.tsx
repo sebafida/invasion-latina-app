@@ -4,11 +4,12 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Image,
-  Linking,
+  TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Linking,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -16,80 +17,47 @@ import { theme } from '../src/config/theme';
 import api from '../src/config/api';
 import { useLanguage } from '../src/context/LanguageContext';
 
-interface Aftermovie {
+interface EventAftermovie {
   id: string;
-  title: string;
+  name: string;
   event_date: string;
-  thumbnail_url: string;
-  video_url: string;
-  duration: string;
-  views: number;
+  cover_image?: string;
+  instagram_aftermovie_url?: string;
 }
 
 export default function AftermoviesScreen() {
   const router = useRouter();
   const { t } = useLanguage();
-  const [videos, setVideos] = useState<Aftermovie[]>([]);
+  const [aftermovies, setAftermovies] = useState<EventAftermovie[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadVideos();
+    loadAftermovies();
   }, []);
 
-  const loadVideos = async () => {
+  const loadAftermovies = async () => {
     try {
       setLoading(true);
-      // First try to get aftermovies from API
-      const response = await api.get('/media/aftermovies');
-      if (response.data && response.data.length > 0) {
-        setVideos(response.data);
-      } else {
-        // If no aftermovies, get events and show them as potential video placeholders
-        const eventsResponse = await api.get('/events');
-        const eventVideos = eventsResponse.data.map((event: any) => ({
-          id: event.id,
-          title: event.name,
-          event_date: event.event_date,
-          thumbnail_url: event.banner_image || 'https://via.placeholder.com/800x450',
-          video_url: '',
-          duration: '--:--',
-          views: 0
-        })).filter((v: any) => v.video_url); // Only show events with videos
-        setVideos(eventVideos);
-      }
+      const response = await api.get('/media/aftermovies-links');
+      // Filter only events with instagram_aftermovie_url
+      const aftermoviesWithLinks = response.data.filter((a: EventAftermovie) => a.instagram_aftermovie_url);
+      setAftermovies(aftermoviesWithLinks);
     } catch (error) {
       console.error('Failed to load aftermovies:', error);
-      setVideos([]);
+      setAftermovies([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const openVideo = async (video: Aftermovie) => {
-    if (!video.video_url) {
-      return; // No video URL
-    }
-    
-    try {
-      const canOpen = await Linking.canOpenURL(video.video_url);
-      if (canOpen) {
-        await Linking.openURL(video.video_url);
-      } else {
-        console.error('Cannot open URL:', video.video_url);
+  const openInstagramAftermovie = async (aftermovie: EventAftermovie) => {
+    if (aftermovie.instagram_aftermovie_url) {
+      try {
+        await Linking.openURL(aftermovie.instagram_aftermovie_url);
+      } catch (error) {
+        Alert.alert('Erreur', 'Impossible d\'ouvrir le lien Instagram');
       }
-    } catch (error) {
-      console.error('Error opening video:', error);
     }
-  };
-
-  const formatViews = (views: number | undefined) => {
-    if (!views) return '0';
-    if (views >= 1000000) {
-      return (views / 1000000).toFixed(1) + 'M';
-    } else if (views >= 1000) {
-      return (views / 1000).toFixed(1) + 'K';
-    }
-    return views.toString();
   };
 
   return (
@@ -98,7 +66,7 @@ export default function AftermoviesScreen() {
       refreshControl={
         <RefreshControl
           refreshing={loading}
-          onRefresh={loadVideos}
+          onRefresh={loadAftermovies}
           tintColor={theme.colors.primary}
         />
       }
@@ -110,132 +78,70 @@ export default function AftermoviesScreen() {
             <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <Text style={styles.title}>{t('aftermoviesTitle')}</Text>
+            <Text style={styles.title}>{t('aftermoviesTitle') || 'Aftermovies'}</Text>
+            <Text style={styles.subtitle}>{t('reliveTheParty') || 'Revivez la soirée en vidéo'}</Text>
           </View>
         </View>
 
-        {/* Featured Video */}
-        {videos.length > 0 && (
-          <View style={styles.featuredSection}>
-            <Text style={styles.sectionTitle}>{t('latestVideo')}</Text>
-            <TouchableOpacity
-              style={styles.featuredCard}
-              onPress={() => openVideo(videos[0])}
-              activeOpacity={0.8}
-            >
-              <Image
-                source={{ uri: videos[0].thumbnail_url || 'https://via.placeholder.com/800x450?text=Video' }}
-                style={styles.featuredImage}
-                resizeMode="cover"
-              />
-              <View style={styles.playOverlay}>
-                <View style={styles.playButton}>
-                  <Ionicons name="play" size={40} color="white" />
-                </View>
-              </View>
-              <View style={styles.featuredInfo}>
-                <Text style={styles.featuredTitle}>{videos[0].title || 'Aftermovie'}</Text>
-                <View style={styles.featuredMeta}>
-                  {videos[0].views !== undefined && videos[0].views > 0 && (
-                    <View style={styles.metaItem}>
-                      <Ionicons name="eye" size={14} color={theme.colors.textSecondary} />
-                      <Text style={styles.metaText}>{formatViews(videos[0].views)} {t('views')}</Text>
-                    </View>
-                  )}
-                  {videos[0].duration && videos[0].duration !== '--:--' && (
-                    <View style={styles.metaItem}>
-                      <Ionicons name="time" size={14} color={theme.colors.textSecondary} />
-                      <Text style={styles.metaText}>{videos[0].duration}</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </TouchableOpacity>
+        {/* Aftermovies List */}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
           </View>
-        )}
-
-        {/* All Videos */}
-        <View style={styles.allVideosSection}>
-          <Text style={styles.sectionTitle}>{t('allVideos')}</Text>
-          
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme.colors.primary} />
-              <Text style={styles.loadingText}>{t('loadingVideos')}</Text>
-            </View>
-          ) : videos.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="film-outline" size={64} color={theme.colors.textMuted} />
-              <Text style={styles.emptyText}>{t('noVideoAvailable')}</Text>
-              <Text style={styles.emptySubtext}>{t('aftermoviesComingSoon')}</Text>
-            </View>
-          ) : (
-            videos.map((video, index) => (
+        ) : aftermovies.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="videocam-outline" size={64} color={theme.colors.textMuted} />
+            <Text style={styles.emptyText}>{t('noAftermovieAvailable') || 'Aucun aftermovie disponible'}</Text>
+            <Text style={styles.emptySubtext}>
+              {t('aftermoviesPublishedSoon') || 'Les aftermovies seront publiés après chaque événement'}
+            </Text>
+          </View>
+        ) : (
+          aftermovies.map((aftermovie) => (
+            <View key={aftermovie.id} style={styles.aftermovieCard}>
+              {/* Event Flyer */}
+              {aftermovie.cover_image ? (
+                <Image
+                  source={{ uri: aftermovie.cover_image }}
+                  style={styles.aftermovieImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={[styles.aftermovieImage, styles.placeholderImage]}>
+                  <Ionicons name="videocam" size={48} color={theme.colors.textMuted} />
+                </View>
+              )}
+              
+              {/* Play Icon Overlay */}
+              <View style={styles.playOverlay}>
+                <Ionicons name="play-circle" size={60} color="rgba(255,255,255,0.9)" />
+              </View>
+              
+              {/* Event Info */}
+              <View style={styles.aftermovieInfo}>
+                <Text style={styles.aftermovieName}>{aftermovie.name}</Text>
+                <Text style={styles.aftermovieDate}>
+                  {new Date(aftermovie.event_date).toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                </Text>
+              </View>
+              
+              {/* Instagram Link Button */}
               <TouchableOpacity
-                key={video.id}
-                style={styles.videoCard}
-                onPress={() => openVideo(video)}
+                style={styles.viewButton}
+                onPress={() => openInstagramAftermovie(aftermovie)}
                 activeOpacity={0.8}
               >
-                <View style={styles.thumbnailContainer}>
-                  <Image
-                    source={{ uri: video.thumbnail_url }}
-                    style={styles.thumbnail}
-                    resizeMode="cover"
-                  />
-                  <View style={styles.durationBadge}>
-                    <Text style={styles.durationText}>{video.duration}</Text>
-                  </View>
-                  <View style={styles.smallPlayButton}>
-                    <Ionicons name="play" size={20} color="white" />
-                  </View>
-                </View>
-                <View style={styles.videoInfo}>
-                  <Text style={styles.videoTitle} numberOfLines={2}>{video.title}</Text>
-                  <Text style={styles.videoDate}>
-                    {new Date(video.event_date).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
-                  </Text>
-                  <View style={styles.videoStats}>
-                    <Ionicons name="eye" size={12} color={theme.colors.textMuted} />
-                    <Text style={styles.statsText}>{formatViews(video.views)} {t('views')}</Text>
-                  </View>
-                </View>
+                <Ionicons name="logo-instagram" size={20} color="white" />
+                <Text style={styles.viewButtonText}>Voir l'aftermovie</Text>
+                <Ionicons name="open-outline" size={18} color="white" />
               </TouchableOpacity>
-            ))
-          )}
-        </View>
-
-        {/* Social CTA */}
-        <View style={styles.socialSection}>
-          <Text style={styles.socialTitle}>🔔 {t('stayConnected')}</Text>
-          <Text style={styles.socialText}>
-            {t('followUsForAftermovies')}
-          </Text>
-          <View style={styles.socialButtons}>
-            <TouchableOpacity 
-              style={[styles.socialButton, { backgroundColor: '#E4405F' }]}
-              onPress={() => Linking.openURL('https://www.instagram.com/invasionlatina/')}
-            >
-              <Ionicons name="logo-instagram" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.socialButton, { backgroundColor: '#000' }]}
-              onPress={() => Linking.openURL('https://www.tiktok.com/@invasionlatina')}
-            >
-              <Ionicons name="logo-tiktok" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.socialButton, { backgroundColor: '#FF0000' }]}
-              onPress={() => Linking.openURL('https://www.youtube.com/@invasionlatina')}
-            >
-              <Ionicons name="logo-youtube" size={24} color="white" />
-            </TouchableOpacity>
-          </View>
-        </View>
+            </View>
+          ))
+        )}
       </View>
     </ScrollView>
   );
@@ -244,235 +150,111 @@ export default function AftermoviesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.black,
+    backgroundColor: theme.colors.background,
   },
   content: {
+    padding: 20,
     paddingBottom: 40,
   },
-
-  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: theme.spacing.xl,
-    paddingTop: 60,
+    marginBottom: 24,
+    paddingTop: 20,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.cardBackground,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: theme.spacing.md,
+    padding: 8,
+    marginRight: 12,
   },
   headerText: {
     flex: 1,
   },
   title: {
-    fontSize: theme.fontSize.xxl,
-    fontWeight: theme.fontWeight.black,
+    fontSize: 28,
+    fontWeight: theme.fontWeight.bold,
     color: theme.colors.textPrimary,
   },
   subtitle: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.xs,
+    fontSize: 14,
+    color: theme.colors.textMuted,
+    marginTop: 4,
   },
-
-  // Section Title
-  sectionTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.bold,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: theme.fontWeight.semiBold,
     color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.md,
-    paddingHorizontal: theme.spacing.xl,
+    marginTop: 16,
   },
-
-  // Featured Video
-  featuredSection: {
-    marginBottom: theme.spacing.xl,
+  emptySubtext: {
+    fontSize: 14,
+    color: theme.colors.textMuted,
+    marginTop: 8,
+    textAlign: 'center',
   },
-  featuredCard: {
-    marginHorizontal: theme.spacing.xl,
-    borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
+  aftermovieCard: {
     backgroundColor: theme.colors.cardBackground,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 20,
+    position: 'relative',
   },
-  featuredImage: {
+  aftermovieImage: {
     width: '100%',
     height: 200,
   },
+  placeholderImage: {
+    backgroundColor: theme.colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   playOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 200,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
-  playButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingLeft: 5,
+  aftermovieInfo: {
+    padding: 16,
   },
-  featuredInfo: {
-    padding: theme.spacing.md,
-  },
-  featuredTitle: {
-    fontSize: theme.fontSize.lg,
+  aftermovieName: {
+    fontSize: 18,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.sm,
   },
-  featuredMeta: {
-    flexDirection: 'row',
-    gap: theme.spacing.lg,
+  aftermovieDate: {
+    fontSize: 14,
+    color: theme.colors.textMuted,
+    marginTop: 4,
   },
-  metaItem: {
+  viewButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.xs,
+    justifyContent: 'center',
+    backgroundColor: '#E4405F',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    gap: 8,
   },
-  metaText: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-  },
-
-  // All Videos
-  allVideosSection: {
-    marginBottom: theme.spacing.xl,
-  },
-  videoCard: {
-    flexDirection: 'row',
-    marginHorizontal: theme.spacing.xl,
-    marginBottom: theme.spacing.md,
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
-    overflow: 'hidden',
-  },
-  thumbnailContainer: {
-    width: 140,
-    height: 90,
-    position: 'relative',
-  },
-  thumbnail: {
-    width: '100%',
-    height: '100%',
-  },
-  durationBadge: {
-    position: 'absolute',
-    bottom: 4,
-    right: 4,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  durationText: {
+  viewButtonText: {
     color: 'white',
-    fontSize: 11,
-    fontWeight: theme.fontWeight.bold,
-  },
-  smallPlayButton: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    marginTop: -15,
-    marginLeft: -15,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: theme.colors.primary + 'CC',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingLeft: 2,
-  },
-  videoInfo: {
-    flex: 1,
-    padding: theme.spacing.sm,
-    justifyContent: 'center',
-  },
-  videoTitle: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textPrimary,
-    marginBottom: 4,
-  },
-  videoDate: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.textSecondary,
-    marginBottom: 4,
-  },
-  videoStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  statsText: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.textMuted,
-  },
-
-  // Loading
-  loadingContainer: {
-    paddingVertical: theme.spacing.xxl,
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-  },
-
-  // Empty State
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.xxl * 2,
-    paddingHorizontal: theme.spacing.xl,
-  },
-  emptyText: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-  },
-  emptySubtext: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textMuted,
-    marginTop: theme.spacing.xs,
-  },
-
-  // Social CTA
-  socialSection: {
-    marginHorizontal: theme.spacing.xl,
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    alignItems: 'center',
-  },
-  socialTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.sm,
-  },
-  socialText: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  socialButtons: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-  },
-  socialButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
+    fontSize: 16,
+    fontWeight: theme.fontWeight.semiBold,
   },
 });
