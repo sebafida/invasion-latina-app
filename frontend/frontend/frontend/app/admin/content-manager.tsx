@@ -35,6 +35,8 @@ interface Event {
   status: string;
   gallery_visible?: boolean;
   aftermovie_visible?: boolean;
+  facebook_album_url?: string;
+  instagram_aftermovie_url?: string;
 }
 
 interface Photo {
@@ -83,6 +85,8 @@ export default function ContentManagerScreen() {
   const [eventXceedUrl, setEventXceedUrl] = useState('');
   const [eventBannerUrl, setEventBannerUrl] = useState('');
   const [eventTicketPrice, setEventTicketPrice] = useState('');
+  const [eventFacebookAlbumUrl, setEventFacebookAlbumUrl] = useState('');
+  const [eventInstagramAftermovieUrl, setEventInstagramAftermovieUrl] = useState('');
 
 
   // Check admin access
@@ -204,6 +208,8 @@ export default function ContentManagerScreen() {
         xceed_ticket_url: eventXceedUrl,
         banner_image: eventBannerUrl,
         ticket_price: eventTicketPrice ? parseFloat(eventTicketPrice) : null,
+        facebook_album_url: eventFacebookAlbumUrl || null,
+        instagram_aftermovie_url: eventInstagramAftermovieUrl || null,
       });
       Alert.alert('Succès', 'Événement créé avec succès!');
       resetEventForm();
@@ -234,6 +240,8 @@ export default function ContentManagerScreen() {
         xceed_ticket_url: eventXceedUrl,
         banner_image: eventBannerUrl,
         ticket_price: eventTicketPrice ? parseFloat(eventTicketPrice) : null,
+        facebook_album_url: eventFacebookAlbumUrl || null,
+        instagram_aftermovie_url: eventInstagramAftermovieUrl || null,
       });
       Alert.alert('Succès', 'Événement mis à jour avec succès!');
       resetEventForm();
@@ -256,6 +264,8 @@ export default function ContentManagerScreen() {
     setEventXceedUrl('');
     setEventBannerUrl('');
     setEventTicketPrice('');
+    setEventFacebookAlbumUrl('');
+    setEventInstagramAftermovieUrl('');
   };
 
   const startEditEvent = (event: Event) => {
@@ -271,6 +281,8 @@ export default function ContentManagerScreen() {
     setEventVenue(event.venue_name || 'Mirano Continental');
     setEventXceedUrl(event.xceed_ticket_url || '');
     setEventBannerUrl(event.banner_image || '');
+    setEventFacebookAlbumUrl(event.facebook_album_url || '');
+    setEventInstagramAftermovieUrl(event.instagram_aftermovie_url || '');
     setShowEventForm(true);
   };
 
@@ -1255,7 +1267,39 @@ export default function ContentManagerScreen() {
             ) : null}
           </View>
 
-          <View style={styles.formButtons}>
+          {/* Facebook Album URL */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>📷 Lien Album Facebook (Photos)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="https://www.facebook.com/media/set/?set=..."
+              placeholderTextColor={theme.colors.textMuted}
+              value={eventFacebookAlbumUrl}
+              onChangeText={setEventFacebookAlbumUrl}
+              autoCapitalize="none"
+            />
+            <Text style={[styles.helpText, { marginTop: 4, marginBottom: 0 }]}>
+              Les utilisateurs seront redirigés vers cet album Facebook
+            </Text>
+          </View>
+
+          {/* Instagram Aftermovie URL */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>🎬 Lien Aftermovie Instagram/YouTube</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="https://www.instagram.com/reel/... ou https://youtube.com/watch?v=..."
+              placeholderTextColor={theme.colors.textMuted}
+              value={eventInstagramAftermovieUrl}
+              onChangeText={setEventInstagramAftermovieUrl}
+              autoCapitalize="none"
+            />
+            <Text style={[styles.helpText, { marginTop: 4, marginBottom: 0 }]}>
+              Les utilisateurs seront redirigés vers cette vidéo
+            </Text>
+          </View>
+
+          <View style={styles.formButtons}>>
             <TouchableOpacity
               style={styles.secondaryButton}
               onPress={() => {

@@ -77,6 +77,10 @@ class Event(Base):
     gallery_visible = Column(Boolean, default=False)
     aftermovie_visible = Column(Boolean, default=False)
     
+    # External links (Facebook album, Instagram aftermovie)
+    facebook_album_url = Column(String(500), nullable=True)
+    instagram_aftermovie_url = Column(String(500), nullable=True)
+    
     status = Column(String(50), default='upcoming', index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     

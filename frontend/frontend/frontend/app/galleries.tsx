@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -21,6 +22,7 @@ interface EventGallery {
   event_date: string;
   photo_count: number;
   cover_image?: string;
+  facebook_album_url?: string;
 }
 
 export default function GalleriesScreen() {
@@ -73,8 +75,18 @@ export default function GalleriesScreen() {
     }
   };
 
-  const openGallery = (gallery: EventGallery) => {
-    router.push(`/gallery/${gallery.id}`);
+  const openGallery = async (gallery: EventGallery) => {
+    // If there's a Facebook album URL, open it directly
+    if (gallery.facebook_album_url) {
+      try {
+        await Linking.openURL(gallery.facebook_album_url);
+      } catch (error) {
+        console.error('Error opening Facebook album:', error);
+      }
+    } else {
+      // Fallback to internal gallery
+      router.push(`/gallery/${gallery.id}`);
+    }
   };
 
   return (

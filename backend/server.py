@@ -1042,7 +1042,7 @@ async def request_song(
     if not is_admin:
         MIRANO_LAT = 50.8566
         MIRANO_LNG = 4.3756
-        MAX_DISTANCE_METERS = 50000  # Temporarily disabled for tonight
+        MAX_DISTANCE_METERS = 1000  # 1km radius around Mirano
         
         user_lat = song_data.get("latitude")
         user_lng = song_data.get("longitude")
@@ -2342,6 +2342,8 @@ class AdminEventUpdate(BaseModel):
     ticket_categories: Optional[List[Dict[str, Any]]] = None
     status: Optional[str] = None
     ticket_price: Optional[float] = None
+    facebook_album_url: Optional[str] = None
+    instagram_aftermovie_url: Optional[str] = None
 
 @app.put("/api/admin/events/{event_id}")
 async def admin_update_event(
@@ -2377,6 +2379,10 @@ async def admin_update_event(
         event.ticket_categories = data.ticket_categories
     if data.status is not None:
         event.status = data.status
+    if data.facebook_album_url is not None:
+        event.facebook_album_url = data.facebook_album_url
+    if data.instagram_aftermovie_url is not None:
+        event.instagram_aftermovie_url = data.instagram_aftermovie_url
     
     # Update ticket price in ticket_categories
     if data.ticket_price is not None:
@@ -3032,7 +3038,8 @@ async def get_media_galleries(db: AsyncSession = Depends(get_db)):
             "name": event.name,
             "event_date": event.event_date.isoformat() if event.event_date else None,
             "photo_count": photo_count,
-            "cover_image": cover_image
+            "cover_image": cover_image,
+            "facebook_album_url": event.facebook_album_url
         })
     
     return galleries
