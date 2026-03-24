@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -27,16 +26,31 @@ import api from '../../src/config/api';
 import { registerForPushNotifications } from '../../src/config/notifications';
 import logger from '../../src/config/logger';
 
+// Apple Authentication - only available on iOS
+let AppleAuthentication: any = null;
+if (Platform.OS === 'ios') {
+  try {
+    AppleAuthentication = require('expo-apple-authentication');
+  } catch (e) {
+    console.warn('Apple Auth not available:', e);
+  }
+}
+
 // Only import Google Auth on native platforms
 let useAuthRequest: any = null;
 if (Platform.OS !== 'web') {
-  const Google = require('expo-auth-session/providers/google');
-  useAuthRequest = Google.useAuthRequest;
+  try {
+    const Google = require('expo-auth-session/providers/google');
+    useAuthRequest = Google.useAuthRequest;
+  } catch (e) {
+    console.warn('Google Auth not available on this platform:', e);
+  }
 }
 
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_CLIENT_ID = Constants.expoConfig?.extra?.GOOGLE_IOS_CLIENT_ID || '';
+const GOOGLE_IOS_CLIENT_ID = Constants.expoConfig?.extra?.GOOGLE_IOS_CLIENT_ID || '';
+const GOOGLE_ANDROID_CLIENT_ID = Constants.expoConfig?.extra?.GOOGLE_ANDROID_CLIENT_ID || '';
 const isNativePlatform = Platform.OS === 'ios' || Platform.OS === 'android';
 
 const LANGUAGES = [
@@ -62,10 +76,19 @@ export default function LoginScreen() {
   };
 
   // Google Auth - only on native platforms
-  const googleAuth = isNativePlatform && useAuthRequest ? useAuthRequest({
-    iosClientId: GOOGLE_CLIENT_ID,
-  }) : [null, null, () => {}];
-  
+  // IMPORTANT: Hooks must be called unconditionally (React rules of hooks)
+  // We always call useAuthRequest but handle missing client IDs gracefully
+  const hasGoogleClientId = Platform.OS === 'ios' ? !!GOOGLE_IOS_CLIENT_ID : !!GOOGLE_ANDROID_CLIENT_ID;
+
+  // Build Google config based on platform
+  const googleConfig: any = {};
+  if (GOOGLE_IOS_CLIENT_ID) googleConfig.iosClientId = GOOGLE_IOS_CLIENT_ID;
+  if (GOOGLE_ANDROID_CLIENT_ID) googleConfig.androidClientId = GOOGLE_ANDROID_CLIENT_ID;
+
+  const googleAuth = isNativePlatform && useAuthRequest && hasGoogleClientId
+    ? useAuthRequest(googleConfig)
+    : [null, null, () => {}];
+
   const [request, response, promptAsync] = googleAuth;
 
   React.useEffect(() => {
@@ -276,9 +299,9 @@ export default function LoginScreen() {
                 )}
                 
                 <TouchableOpacity
-                  style={styles.googleButton}
+                  style={[styles.googleButton, !hasGoogleClientId && { opacity: 0.5 }]}
                   onPress={() => promptAsync()}
-                  disabled={!request || socialLoading !== null}
+                  disabled={!request || !hasGoogleClientId || socialLoading !== null}
                 >
                   {socialLoading === 'google' ? (
                     <ActivityIndicator color="#333" />
