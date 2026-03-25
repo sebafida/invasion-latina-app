@@ -11,6 +11,9 @@ import {
   Platform,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -542,74 +545,81 @@ Merci et à bientôt! 🔥`;
         animationType="slide"
         onRequestClose={() => setShowRejectModal(false)}
       >
-        <View style={styles.rejectModalOverlay}>
-          <View style={styles.rejectModalContent}>
-            <View style={styles.rejectModalHeader}>
-              <Text style={styles.rejectModalTitle}>Refuser la réservation</Text>
-              <TouchableOpacity onPress={() => setShowRejectModal(false)}>
-                <Ionicons name="close" size={28} color={theme.colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.rejectModalOverlay}>
+              <View style={styles.rejectModalContent}>
+                <View style={styles.rejectModalHeader}>
+                  <Text style={styles.rejectModalTitle}>Refuser la réservation</Text>
+                  <TouchableOpacity onPress={() => setShowRejectModal(false)}>
+                    <Ionicons name="close" size={28} color={theme.colors.textPrimary} />
+                  </TouchableOpacity>
+                </View>
 
-            {rejectTarget && (
-              <View style={styles.rejectTargetInfo}>
-                <Text style={styles.rejectTargetName}>{rejectTarget.name}</Text>
-                <Text style={styles.rejectTargetSubtitle}>Choisissez la raison du refus</Text>
-              </View>
-            )}
+                {rejectTarget && (
+                  <View style={styles.rejectTargetInfo}>
+                    <Text style={styles.rejectTargetName}>{rejectTarget.name}</Text>
+                    <Text style={styles.rejectTargetSubtitle}>Choisissez la raison du refus</Text>
+                  </View>
+                )}
 
-            <ScrollView style={styles.reasonsList}>
-              {REJECT_REASONS.map((reason) => (
-                reason.value === 'custom' ? (
-                  <View key={reason.value} style={styles.customReasonContainer}>
-                    <View style={styles.reasonOption}>
-                      <View style={styles.reasonIconContainer}>
-                        <Ionicons name={reason.icon as any} size={24} color={theme.colors.primary} />
+                <ScrollView style={styles.reasonsList}>
+                  {REJECT_REASONS.map((reason) => (
+                    reason.value === 'custom' ? (
+                      <View key={reason.value} style={styles.customReasonContainer}>
+                        <View style={styles.reasonOption}>
+                          <View style={styles.reasonIconContainer}>
+                            <Ionicons name={reason.icon as any} size={24} color={theme.colors.primary} />
+                          </View>
+                          <Text style={styles.reasonText}>{reason.label}</Text>
+                        </View>
+                        <TextInput
+                          style={styles.customReasonInput}
+                          placeholder="Écrivez votre raison..."
+                          placeholderTextColor={theme.colors.textMuted}
+                          value={customRejectReason}
+                          onChangeText={setCustomRejectReason}
+                          multiline
+                        />
+                        {customRejectReason.length > 0 && (
+                          <TouchableOpacity
+                            style={styles.sendCustomReasonBtn}
+                            onPress={() => confirmReject(reason)}
+                          >
+                            <Text style={styles.sendCustomReasonText}>Envoyer</Text>
+                            <Ionicons name="send" size={18} color="white" />
+                          </TouchableOpacity>
+                        )}
                       </View>
-                      <Text style={styles.reasonText}>{reason.label}</Text>
-                    </View>
-                    <TextInput
-                      style={styles.customReasonInput}
-                      placeholder="Écrivez votre raison..."
-                      placeholderTextColor={theme.colors.textMuted}
-                      value={customRejectReason}
-                      onChangeText={setCustomRejectReason}
-                      multiline
-                    />
-                    {customRejectReason.length > 0 && (
+                    ) : (
                       <TouchableOpacity
-                        style={styles.sendCustomReasonBtn}
+                        key={reason.value}
+                        style={styles.reasonOption}
                         onPress={() => confirmReject(reason)}
                       >
-                        <Text style={styles.sendCustomReasonText}>Envoyer</Text>
-                        <Ionicons name="send" size={18} color="white" />
+                        <View style={styles.reasonIconContainer}>
+                          <Ionicons name={reason.icon as any} size={24} color={theme.colors.error} />
+                        </View>
+                        <Text style={styles.reasonText}>{reason.label}</Text>
+                        <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
                       </TouchableOpacity>
-                    )}
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    key={reason.value}
-                    style={styles.reasonOption}
-                    onPress={() => confirmReject(reason)}
-                  >
-                    <View style={styles.reasonIconContainer}>
-                      <Ionicons name={reason.icon as any} size={24} color={theme.colors.error} />
-                    </View>
-                    <Text style={styles.reasonText}>{reason.label}</Text>
-                    <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
-                  </TouchableOpacity>
-                )
-              ))}
-            </ScrollView>
+                    )
+                  ))}
+                </ScrollView>
 
-            <TouchableOpacity
-              style={styles.rejectCancelButton}
-              onPress={() => setShowRejectModal(false)}
-            >
-              <Text style={styles.rejectCancelButtonText}>Annuler</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+                <TouchableOpacity
+                  style={styles.rejectCancelButton}
+                  onPress={() => setShowRejectModal(false)}
+                >
+                  <Text style={styles.rejectCancelButtonText}>Annuler</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Confirm Booking Modal with Instructions */}
@@ -619,53 +629,58 @@ Merci et à bientôt! 🔥`;
         animationType="slide"
         onRequestClose={() => setShowConfirmModal(false)}
       >
-        <View style={styles.confirmModalOverlay}>
-          <View style={styles.confirmModalContent}>
-            <View style={styles.confirmModalHeader}>
-              <Text style={styles.confirmModalTitle}>Confirmer la réservation</Text>
-              <TouchableOpacity onPress={() => setShowConfirmModal(false)}>
-                <Ionicons name="close" size={28} color={theme.colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.confirmModalOverlay}>
+              <View style={styles.confirmModalContent}>
+                <View style={styles.confirmModalHeader}>
+                  <Text style={styles.confirmModalTitle}>Confirmer la réservation</Text>
+                  <TouchableOpacity onPress={() => setShowConfirmModal(false)}>
+                    <Ionicons name="close" size={28} color={theme.colors.textPrimary} />
+                  </TouchableOpacity>
+                </View>
 
-            {confirmTarget && (
-              <View style={styles.confirmTargetInfo}>
-                <Ionicons name="checkmark-circle" size={40} color={theme.colors.success} />
-                <Text style={styles.confirmTargetName}>{confirmTarget.name}</Text>
-                <Text style={styles.confirmTargetZone}>{confirmTarget.zone}</Text>
-              </View>
-            )}
+                {confirmTarget && (
+                  <View style={styles.confirmTargetInfo}>
+                    <Ionicons name="checkmark-circle" size={40} color={theme.colors.success} />
+                    <Text style={styles.confirmTargetName}>{confirmTarget.name}</Text>
+                    <Text style={styles.confirmTargetZone}>{confirmTarget.zone}</Text>
+                  </View>
+                )}
 
-            <Text style={styles.instructionsLabel}>Consignes pour le client (optionnel)</Text>
-            
-            {/* Quick message buttons */}
-            <View style={styles.quickMessagesContainer}>
-              {QUICK_MESSAGES.map((msg, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.quickMessageBtn,
-                    confirmMessage === msg && styles.quickMessageBtnActive
-                  ]}
-                  onPress={() => setConfirmMessage(msg)}
-                >
-                  <Text style={[
-                    styles.quickMessageText,
-                    confirmMessage === msg && styles.quickMessageTextActive
-                  ]}>{msg}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                <Text style={styles.instructionsLabel}>Consignes pour le client (optionnel)</Text>
+                
+                {/* Quick message buttons */}
+                <View style={styles.quickMessagesContainer}>
+                  {QUICK_MESSAGES.map((msg, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.quickMessageBtn,
+                        confirmMessage === msg && styles.quickMessageBtnActive
+                      ]}
+                      onPress={() => setConfirmMessage(msg)}
+                    >
+                      <Text style={[
+                        styles.quickMessageText,
+                        confirmMessage === msg && styles.quickMessageTextActive
+                      ]}>{msg}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
 
-            <TextInput
-              style={styles.confirmMessageInput}
-              placeholder="Ou écrivez un message personnalisé..."
-              placeholderTextColor={theme.colors.textMuted}
-              value={confirmMessage}
-              onChangeText={setConfirmMessage}
-              multiline
-              numberOfLines={3}
-            />
+                <TextInput
+                  style={styles.confirmMessageInput}
+                  placeholder="Ou écrivez un message personnalisé..."
+                  placeholderTextColor={theme.colors.textMuted}
+                  value={confirmMessage}
+                  onChangeText={setConfirmMessage}
+                  multiline
+                  numberOfLines={3}
+                />
 
             <View style={styles.confirmModalButtons}>
               <TouchableOpacity
@@ -688,6 +703,8 @@ Merci et à bientôt! 🔥`;
             </View>
           </View>
         </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
