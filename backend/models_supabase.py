@@ -179,9 +179,9 @@ class VIPBooking(Base):
     
     status = Column(String(50), default='pending', index=True)
     admin_notes = Column(Text, nullable=True)
-    # Note: rejection_reason and confirmation_message need to be added to Supabase manually
-    # Run: ALTER TABLE vip_bookings ADD COLUMN rejection_reason TEXT;
-    # Run: ALTER TABLE vip_bookings ADD COLUMN confirmation_message TEXT;
+    # Note: rejection_reason and confirmation_message columns in Supabase
+    confirmation_message = Column(Text, nullable=True)
+    rejection_reason = Column(Text, nullable=True)
     
     submitted_at = Column(DateTime(timezone=True), server_default=func.now())
     confirmed_at = Column(DateTime(timezone=True), nullable=True)

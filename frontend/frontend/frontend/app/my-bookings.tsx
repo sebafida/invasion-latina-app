@@ -26,6 +26,8 @@ interface Booking {
   guests: number;
   status: 'pending' | 'confirmed' | 'rejected';
   admin_notes: string | null;
+  confirmation_message: string | null;
+  rejection_reason: string | null;
   submitted_at: string | null;
   confirmed_at: string | null;
   rejected_at: string | null;
@@ -204,6 +206,26 @@ export default function MyBookingsScreen() {
                           <View style={styles.adminMessage}>
                             <Ionicons name="chatbubble-outline" size={14} color={theme.colors.primary} />
                             <Text style={styles.adminMessageText}>{booking.admin_notes}</Text>
+                          </View>
+                        )}
+
+                        {/* Confirmation Message */}
+                        {booking.status === 'confirmed' && booking.confirmation_message && (
+                          <View style={[styles.adminMessage, { backgroundColor: theme.colors.success + '15', borderLeftColor: theme.colors.success }]}>
+                            <Ionicons name="checkmark-circle" size={14} color={theme.colors.success} />
+                            <Text style={[styles.adminMessageText, { color: theme.colors.success }]}>
+                              {booking.confirmation_message}
+                            </Text>
+                          </View>
+                        )}
+
+                        {/* Rejection Reason */}
+                        {booking.status === 'rejected' && booking.rejection_reason && (
+                          <View style={[styles.adminMessage, { backgroundColor: theme.colors.error + '15', borderLeftColor: theme.colors.error }]}>
+                            <Ionicons name="close-circle" size={14} color={theme.colors.error} />
+                            <Text style={[styles.adminMessageText, { color: theme.colors.error }]}>
+                              {booking.rejection_reason}
+                            </Text>
                           </View>
                         )}
 
@@ -421,6 +443,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     marginTop: theme.spacing.md,
     gap: theme.spacing.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: theme.colors.primary,
   },
   adminMessageText: {
     flex: 1,

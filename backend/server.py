@@ -1928,6 +1928,8 @@ async def get_my_vip_bookings(
             "guests": booking.guests,
             "status": booking.status,
             "admin_notes": booking.admin_notes,
+            "confirmation_message": booking.confirmation_message,
+            "rejection_reason": booking.rejection_reason,
             "submitted_at": booking.submitted_at.isoformat() if booking.submitted_at else None,
             "confirmed_at": booking.confirmed_at.isoformat() if booking.confirmed_at else None,
             "rejected_at": booking.rejected_at.isoformat() if booking.rejected_at else None,
@@ -2734,10 +2736,14 @@ async def update_vip_booking_status(
     booking.status = data.status
     if data.status == "confirmed":
         booking.confirmed_at = datetime.now(timezone.utc)
-        # Note: confirmation_message stored in data but not in DB (column needs to be added to Supabase)
+        # Store confirmation message in database
+        if data.confirmation_message:
+            booking.confirmation_message = data.confirmation_message
     elif data.status == "rejected":
         booking.rejected_at = datetime.now(timezone.utc)
-        # Note: rejection_reason stored in data but not in DB (column needs to be added to Supabase)
+        # Store rejection reason in database
+        if data.rejection_reason:
+            booking.rejection_reason = data.rejection_reason
     
     await db.commit()
     
