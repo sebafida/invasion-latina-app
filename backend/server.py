@@ -1080,7 +1080,7 @@ async def request_song(
         if not (current_hour >= 22 or current_hour < 5):
             raise HTTPException(
                 status_code=403,
-                detail="Les demandes de chansons sont disponibles uniquement entre 23h et 5h"
+                detail="Les demandes de chansons sont disponibles uniquement entre 22h et 5h"
             )
     
     # Validate required fields
