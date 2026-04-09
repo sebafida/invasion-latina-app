@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Alert,
   ActivityIndicator,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
@@ -28,6 +29,10 @@ export default function ScanQRScreen() {
     points?: number;
     totalPoints?: number;
   } | null>(null);
+  
+  // CRITICAL FIX: Use ref to prevent multiple scans on iOS
+  const isProcessingRef = useRef(false);
+  const lastScannedCodeRef = useRef<string | null>(null);
 
   // Fallback: Enable scanning after a short delay if onCameraReady doesn't fire
   useEffect(() => {
@@ -69,8 +74,21 @@ export default function ScanQRScreen() {
   }
 
   const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
-    if (scanned || isLoading) return;
+    // CRITICAL FIX for iOS: Multiple protection layers against duplicate scans
+    if (scanned || isLoading || isProcessingRef.current) {
+      console.log('Scan blocked - already processing');
+      return;
+    }
     
+    // Check if same code scanned (iOS can fire multiple times)
+    if (lastScannedCodeRef.current === data) {
+      console.log('Scan blocked - same QR code');
+      return;
+    }
+    
+    // Set all blockers immediately
+    isProcessingRef.current = true;
+    lastScannedCodeRef.current = data;
     setScanned(true);
     setIsLoading(true);
 
@@ -101,6 +119,7 @@ export default function ScanQRScreen() {
       });
     } finally {
       setIsLoading(false);
+      // Keep isProcessingRef true to prevent any more scans until reset
     }
   };
 
@@ -108,6 +127,9 @@ export default function ScanQRScreen() {
     setScanned(false);
     setResult(null);
     setIsCameraReady(false);
+    // Reset the refs for iOS
+    isProcessingRef.current = false;
+    lastScannedCodeRef.current = null;
   };
 
   const handleCameraReady = () => {
