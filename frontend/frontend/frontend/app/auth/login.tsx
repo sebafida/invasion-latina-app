@@ -93,6 +93,11 @@ export default function LoginScreen() {
         'https://www.googleapis.com/userinfo/v2/me',
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
+      
+      if (!userInfoResponse.ok) {
+        throw new Error('Failed to fetch Google user info');
+      }
+      
       const userInfo = await userInfoResponse.json();
       
       console.log('Google user info:', { id: userInfo.id, email: userInfo.email });
@@ -342,7 +347,13 @@ export default function LoginScreen() {
               />
             </View>
             
-            <TouchableOpacity style={styles.forgotPassword}>
+            <TouchableOpacity 
+              style={styles.forgotPassword}
+              onPress={() => Alert.alert(
+                t('forgotPassword'),
+                'Contactez-nous à info@invasionlatina.be pour réinitialiser votre mot de passe.'
+              )}
+            >
               <Text style={styles.forgotPasswordText}>{t('forgotPassword')}</Text>
             </TouchableOpacity>
             
@@ -608,6 +619,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     backgroundColor: theme.colors.elevated,
     gap: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   languageOptionActive: {
     backgroundColor: theme.colors.primary + '20',

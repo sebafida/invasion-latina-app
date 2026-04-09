@@ -126,7 +126,7 @@ export default function ScanQRScreen() {
   const resetScanner = () => {
     setScanned(false);
     setResult(null);
-    setIsCameraReady(false);
+    // NE PAS reset isCameraReady - le useEffect ne se re-déclenchera pas
     // Reset the refs for iOS
     isProcessingRef.current = false;
     lastScannedCodeRef.current = null;
@@ -155,7 +155,7 @@ export default function ScanQRScreen() {
           
           <Text style={styles.resultMessage}>{result.message}</Text>
           
-          {result.success && result.points && (
+          {result.success && result.points != null && (
             <View style={styles.pointsContainer}>
               <Text style={styles.pointsLabel}>Points gagnés</Text>
               <Text style={styles.pointsValue}>+{result.points}</Text>

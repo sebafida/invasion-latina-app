@@ -614,6 +614,7 @@ export default function ContentManagerScreen() {
       });
       Alert.alert('Succès', 'Flyer mis à jour avec succès!');
       setFlyerUrl('');
+      loadData();
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de mettre à jour le flyer');
     } finally {

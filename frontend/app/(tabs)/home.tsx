@@ -108,7 +108,7 @@ export default function HomeScreen() {
       if (response.data && response.data.length > 0) {
         // Filter only selected DJs
         const selectedDjs = response.data
-          .filter((dj: any) => selectedDjIds.includes(dj.id))
+          .filter((dj: any) => selectedDjIds.includes(String(dj.id)))
           .map((dj: any) => ({
             id: dj.id,
             name: dj.name,

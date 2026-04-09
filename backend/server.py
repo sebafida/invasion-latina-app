@@ -900,12 +900,16 @@ async def get_next_event(db: AsyncSession = Depends(get_db)):
         next_event = result.scalar_one_or_none()
     
     if not next_event:
+        # Use dynamic future date for mock event
+        from datetime import timedelta
+        next_saturday = datetime.now() + timedelta(days=(5 - datetime.now().weekday()) % 7 + 7)
+        next_event_date = next_saturday.replace(hour=22, minute=0, second=0, microsecond=0)
         return {
             "event": {
                 "id": "mock-event-001",
                 "name": "Invasion Latina - Summer Edition",
                 "description": "The biggest reggaeton party in Belgium!",
-                "event_date": datetime(2025, 7, 15, 22, 0, 0).isoformat(),
+                "event_date": next_event_date.isoformat(),
                 "venue_name": "Spirito Brussels",
                 "venue_address": "Rue de Stassart 18, 1050 Bruxelles",
                 "lineup": [
