@@ -896,7 +896,7 @@ async def get_next_event(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Event)
         .where(Event.event_date >= datetime.now(timezone.utc))
-        .where(Event.status == "published")
+        .where(Event.status.in_(["published", "upcoming"]))
         .order_by(Event.event_date)
         .limit(1)
     )
@@ -954,7 +954,7 @@ async def get_upcoming_events(db: AsyncSession = Depends(get_db), limit: int = 1
     result = await db.execute(
         select(Event)
         .where(Event.event_date >= datetime.now(timezone.utc))
-        .where(Event.status == "published")
+        .where(Event.status.in_(["published", "upcoming"]))
         .order_by(Event.event_date)
         .limit(limit)
     )
@@ -989,7 +989,7 @@ async def get_events_for_tickets(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Event)
         .where(Event.event_date >= datetime.now(timezone.utc))
-        .where(Event.status == "published")
+        .where(Event.status.in_(["published", "upcoming"]))
         .where(Event.visible_in_tickets == True)
         .order_by(Event.event_date)
     )
@@ -1020,7 +1020,7 @@ async def get_events_for_booking(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Event)
         .where(Event.event_date >= datetime.now(timezone.utc))
-        .where(Event.status == "published")
+        .where(Event.status.in_(["published", "upcoming"]))
         .order_by(Event.event_date)
     )
     events = result.scalars().all()
@@ -1177,7 +1177,7 @@ async def request_song(
                         detail=f"Vous devez être au Mirano Continental pour demander une chanson (vous êtes à {int(distance)}m)"
                     )
             except (ValueError, TypeError):
-                pass
+                raise HTTPException(status_code=400, detail="Coordonnées GPS invalides")
         else:
             raise HTTPException(status_code=403, detail="Activez votre localisation pour demander une chanson")
         
