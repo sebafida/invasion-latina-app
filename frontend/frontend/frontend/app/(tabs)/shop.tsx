@@ -27,6 +27,8 @@ interface Event {
   name: string;
   event_date: string;
   banner_image?: string;
+  is_featured?: boolean;
+  event_type?: string;
 }
 
 type RoomKey = 'main_room' | 'classy_room' | 'vip';
@@ -152,17 +154,27 @@ export default function VIPBookingScreen() {
 
   const loadEvents = async () => {
     try {
-      const response = await api.get('/events');
-      console.log('Events loaded:', response.data);
-      // Take all events, not just upcoming ones
-      const allEvents = response.data;
+      const response = await api.get('/events/for-booking');
+      console.log('Events loaded for booking:', response.data);
+      const allEvents = response.data.events || response.data || [];
       setEvents(allEvents);
       if (allEvents.length > 0) {
         setSelectedEvent(allEvents[0].id);
         console.log('Selected event:', allEvents[0].id);
       }
     } catch (error) {
-      console.error('Failed to load events:', error);
+      console.error('Failed to load events for booking:', error);
+      // Fallback to old endpoint
+      try {
+        const response = await api.get('/events');
+        const allEvents = response.data;
+        setEvents(allEvents);
+        if (allEvents.length > 0) {
+          setSelectedEvent(allEvents[0].id);
+        }
+      } catch (e) {
+        console.error('Fallback also failed:', e);
+      }
     }
   };
 
@@ -251,6 +263,58 @@ export default function VIPBookingScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
+        {/* Event Selector - ONLY SHOW IF MULTIPLE EVENTS */}
+        {events.length > 1 && (
+          <View style={styles.eventSelectorSection}>
+            <Text style={styles.eventSelectorTitle}>🎉 Choisissez l'événement</Text>
+            <View style={styles.eventSelectorContainer}>
+              {events.map((event) => (
+                <TouchableOpacity
+                  key={event.id}
+                  style={[
+                    styles.eventSelectorCard,
+                    selectedEvent === event.id && styles.eventSelectorCardActive,
+                    event.is_featured && styles.eventSelectorCardFeatured,
+                  ]}
+                  onPress={() => setSelectedEvent(event.id)}
+                >
+                  {event.is_featured && (
+                    <View style={styles.eventBadge}>
+                      <Text style={styles.eventBadgeText}>⭐ SPÉCIAL</Text>
+                    </View>
+                  )}
+                  {event.event_type === 'open_air' && !event.is_featured && (
+                    <View style={[styles.eventBadge, { backgroundColor: '#4CAF5030' }]}>
+                      <Text style={[styles.eventBadgeText, { color: '#4CAF50' }]}>🌴 OPEN AIR</Text>
+                    </View>
+                  )}
+                  <Text style={[
+                    styles.eventSelectorName,
+                    selectedEvent === event.id && styles.eventSelectorNameActive
+                  ]}>
+                    {event.name}
+                  </Text>
+                  <Text style={styles.eventSelectorDate}>
+                    {new Date(event.event_date).toLocaleDateString('fr-FR', {
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'short',
+                    })}
+                  </Text>
+                  {selectedEvent === event.id && (
+                    <Ionicons 
+                      name="checkmark-circle" 
+                      size={20} 
+                      color={theme.colors.primary} 
+                      style={styles.eventCheckmark}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* Event Flyer */}
         {currentEvent?.banner_image ? (
           <View style={styles.flyerSection}>
@@ -521,6 +585,68 @@ const styles = StyleSheet.create({
 
   content: {
     paddingBottom: 40,
+  },
+
+  // Event Selector
+  eventSelectorSection: {
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
+  },
+  eventSelectorTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.md,
+  },
+  eventSelectorContainer: {
+    gap: theme.spacing.sm,
+  },
+  eventSelectorCard: {
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    position: 'relative',
+  },
+  eventSelectorCardActive: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary + '15',
+  },
+  eventSelectorCardFeatured: {
+    borderColor: '#FFD70050',
+  },
+  eventSelectorName: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+  },
+  eventSelectorNameActive: {
+    color: theme.colors.primary,
+  },
+  eventSelectorDate: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+    marginTop: 2,
+  },
+  eventCheckmark: {
+    position: 'absolute',
+    top: theme.spacing.md,
+    right: theme.spacing.md,
+  },
+  eventBadge: {
+    backgroundColor: '#FFD70020',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 2,
+    borderRadius: theme.borderRadius.sm,
+    alignSelf: 'flex-start',
+    marginBottom: theme.spacing.xs,
+  },
+  eventBadgeText: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.bold,
+    color: '#FFD700',
   },
 
   // Header

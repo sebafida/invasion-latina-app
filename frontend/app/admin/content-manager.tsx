@@ -35,6 +35,9 @@ interface Event {
   status: string;
   gallery_visible?: boolean;
   aftermovie_visible?: boolean;
+  visible_in_tickets?: boolean;
+  is_featured?: boolean;
+  event_type?: string;
 }
 
 interface Photo {
@@ -274,7 +277,7 @@ export default function ContentManagerScreen() {
     setShowEventForm(true);
   };
 
-  const handleToggleVisibility = async (eventId: string, field: 'gallery_visible' | 'aftermovie_visible', currentValue: boolean) => {
+  const handleToggleVisibility = async (eventId: string, field: 'gallery_visible' | 'aftermovie_visible' | 'visible_in_tickets' | 'is_featured', currentValue: boolean) => {
     try {
       await api.put(`/admin/events/${eventId}/visibility`, {
         [field]: !currentValue
@@ -283,6 +286,18 @@ export default function ContentManagerScreen() {
       loadData();
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de modifier la visibilité');
+    }
+  };
+
+  const handleChangeEventType = async (eventId: string, eventType: string) => {
+    try {
+      await api.put(`/admin/events/${eventId}/visibility`, {
+        event_type: eventType
+      });
+      // Refresh events list
+      loadData();
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de modifier le type d\'événement');
     }
   };
 
@@ -1317,6 +1332,79 @@ export default function ContentManagerScreen() {
           
           {/* Visibility Toggles */}
           <View style={styles.visibilitySection}>
+            {/* Visible in Tickets Toggle */}
+            <TouchableOpacity 
+              style={[
+                styles.visibilityToggle,
+                event.visible_in_tickets !== false && styles.visibilityToggleActive
+              ]}
+              onPress={() => handleToggleVisibility(event.id, 'visible_in_tickets', event.visible_in_tickets !== false)}
+            >
+              <Ionicons 
+                name={event.visible_in_tickets !== false ? "ticket" : "ticket-outline"} 
+                size={16} 
+                color={event.visible_in_tickets !== false ? theme.colors.success : theme.colors.textMuted} 
+              />
+              <Text style={[
+                styles.visibilityToggleText,
+                event.visible_in_tickets !== false && styles.visibilityToggleTextActive
+              ]}>
+                🎟️ {event.visible_in_tickets !== false ? 'Visible' : 'Masqué'} tickets
+              </Text>
+            </TouchableOpacity>
+
+            {/* Is Featured Toggle */}
+            <TouchableOpacity 
+              style={[
+                styles.visibilityToggle,
+                event.is_featured && styles.featuredToggleActive
+              ]}
+              onPress={() => handleToggleVisibility(event.id, 'is_featured', event.is_featured || false)}
+            >
+              <Ionicons 
+                name={event.is_featured ? "star" : "star-outline"} 
+                size={16} 
+                color={event.is_featured ? '#FFD700' : theme.colors.textMuted} 
+              />
+              <Text style={[
+                styles.visibilityToggleText,
+                event.is_featured && { color: '#FFD700' }
+              ]}>
+                ⭐ {event.is_featured ? 'Spécial' : 'Normal'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Event Type Selector */}
+          <View style={styles.eventTypeSection}>
+            <Text style={styles.eventTypeLabel}>Type d'événement:</Text>
+            <View style={styles.eventTypeButtons}>
+              {[
+                { key: 'regular', label: '🏠 Mensuel' },
+                { key: 'open_air', label: '🌴 Open Air' },
+                { key: 'special', label: '🎉 Spécial' },
+              ].map((type) => (
+                <TouchableOpacity 
+                  key={type.key}
+                  style={[
+                    styles.eventTypeButton,
+                    (event.event_type || 'regular') === type.key && styles.eventTypeButtonActive
+                  ]}
+                  onPress={() => handleChangeEventType(event.id, type.key)}
+                >
+                  <Text style={[
+                    styles.eventTypeButtonText,
+                    (event.event_type || 'regular') === type.key && styles.eventTypeButtonTextActive
+                  ]}>
+                    {type.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Gallery & Aftermovie Toggles */}
+          <View style={styles.visibilitySection}>
             <TouchableOpacity 
               style={[
                 styles.visibilityToggle,
@@ -1781,6 +1869,45 @@ const styles = StyleSheet.create({
   },
   visibilityToggleTextActive: {
     color: theme.colors.success,
+    fontWeight: theme.fontWeight.bold,
+  },
+  featuredToggleActive: {
+    backgroundColor: '#FFD70020',
+  },
+  eventTypeSection: {
+    marginTop: theme.spacing.sm,
+    paddingTop: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.elevated,
+  },
+  eventTypeLabel: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textMuted,
+    marginBottom: theme.spacing.xs,
+  },
+  eventTypeButtons: {
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+  },
+  eventTypeButton: {
+    flex: 1,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.elevated,
+    alignItems: 'center',
+  },
+  eventTypeButtonActive: {
+    backgroundColor: theme.colors.primary + '30',
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+  },
+  eventTypeButtonText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textMuted,
+  },
+  eventTypeButtonTextActive: {
+    color: theme.colors.primary,
     fontWeight: theme.fontWeight.bold,
   },
   deleteButton: {
