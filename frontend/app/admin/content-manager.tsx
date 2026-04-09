@@ -1892,11 +1892,13 @@ const styles = StyleSheet.create({
   },
   eventTypeButton: {
     flex: 1,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.xs,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
     borderRadius: theme.borderRadius.sm,
     backgroundColor: theme.colors.elevated,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
   },
   eventTypeButtonActive: {
     backgroundColor: theme.colors.primary + '30',
@@ -1904,8 +1906,9 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary,
   },
   eventTypeButtonText: {
-    fontSize: theme.fontSize.xs,
+    fontSize: theme.fontSize.sm,
     color: theme.colors.textMuted,
+    textAlign: 'center',
   },
   eventTypeButtonTextActive: {
     color: theme.colors.primary,
