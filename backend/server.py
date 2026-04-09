@@ -1193,8 +1193,8 @@ async def request_song(
     artist_name_normalized = song_data["artist_name"].strip().lower()
     user_id = current_user.id
     
-    # Check how many songs this user has already requested for this event (limit: 5)
-    MAX_SONGS_PER_USER = 5
+    # Check how many songs this user has already requested for this event (limit: 3)
+    MAX_SONGS_PER_USER = 3
     if not is_admin:
         # Count requests where user_id is the original requester (user_id column)
         # Also count requests where user is in the requesters JSON list
@@ -1237,6 +1237,32 @@ async def request_song(
         existing.voters = (existing.voters or []) + [user_id]
         await db.commit()
         
+        # Check if user has reached their quota (3 songs) and send notification
+        if not is_admin:
+            all_event_requests_check = await db.execute(
+                select(SongRequest)
+                .where(SongRequest.event_id == event_id)
+                .where(SongRequest.status.in_(["pending", "played"]))
+            )
+            all_requests_check = all_event_requests_check.scalars().all()
+            user_requests_check = sum(
+                1 for req in all_requests_check
+                if user_id in (req.requesters or []) or req.user_id == user_id
+            )
+            
+            if user_requests_check >= MAX_SONGS_PER_USER:
+                try:
+                    await send_push_notification_to_user(
+                        user_id=user_id,
+                        title="🎵 Quota atteint !",
+                        body=f"Tu as fait tes {MAX_SONGS_PER_USER} demandes de musique pour cette soirée. Profite bien de la fête ! 🎉",
+                        data={"type": "song_quota_reached", "event_id": event_id},
+                        db=db
+                    )
+                    logger.info(f"✅ Sent quota notification to user {user_id}")
+                except Exception as e:
+                    logger.error(f"❌ Failed to send quota notification: {e}")
+        
         return {
             "message": f"Demande ajoutée! '{existing.song_title}' a maintenant {existing.times_requested} demandes! 🔥",
             "request_id": existing.id,
@@ -1263,6 +1289,34 @@ async def request_song(
     db.add(new_request)
     await db.commit()
     await db.refresh(new_request)
+    
+    # Check if user has reached their quota (3 songs) and send notification
+    if not is_admin:
+        # Recount after adding this request
+        all_event_requests_after = await db.execute(
+            select(SongRequest)
+            .where(SongRequest.event_id == event_id)
+            .where(SongRequest.status.in_(["pending", "played"]))
+        )
+        all_requests_after = all_event_requests_after.scalars().all()
+        user_requests_after = sum(
+            1 for req in all_requests_after
+            if user_id in (req.requesters or []) or req.user_id == user_id
+        )
+        
+        if user_requests_after >= MAX_SONGS_PER_USER:
+            # Send push notification to inform user they've reached their quota
+            try:
+                await send_push_notification_to_user(
+                    user_id=user_id,
+                    title="🎵 Quota atteint !",
+                    body=f"Tu as fait tes {MAX_SONGS_PER_USER} demandes de musique pour cette soirée. Profite bien de la fête ! 🎉",
+                    data={"type": "song_quota_reached", "event_id": event_id},
+                    db=db
+                )
+                logger.info(f"✅ Sent quota notification to user {user_id}")
+            except Exception as e:
+                logger.error(f"❌ Failed to send quota notification: {e}")
     
     return {
         "message": "Demande envoyée!",
