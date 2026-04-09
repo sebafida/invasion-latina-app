@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Pressable,
   TextInput,
   Alert,
   Image,
@@ -1334,12 +1335,16 @@ export default function ContentManagerScreen() {
           {/* Visibility Toggles */}
           <View style={styles.visibilitySection}>
             {/* Visible in Tickets Toggle */}
-            <TouchableOpacity 
-              style={[
+            <Pressable 
+              style={({ pressed }) => [
                 styles.visibilityToggle,
-                event.visible_in_tickets !== false && styles.visibilityToggleActive
+                event.visible_in_tickets !== false && styles.visibilityToggleActive,
+                pressed && { opacity: 0.6 }
               ]}
-              onPress={() => handleToggleVisibility(event.id, 'visible_in_tickets', event.visible_in_tickets !== false)}
+              onPress={() => {
+                console.log('Toggle visibility clicked for event:', event.id);
+                handleToggleVisibility(event.id, 'visible_in_tickets', event.visible_in_tickets !== false);
+              }}
             >
               <Ionicons 
                 name={event.visible_in_tickets !== false ? "ticket" : "ticket-outline"} 
@@ -1352,15 +1357,19 @@ export default function ContentManagerScreen() {
               ]}>
                 🎟️ {event.visible_in_tickets !== false ? 'Visible' : 'Masqué'} tickets
               </Text>
-            </TouchableOpacity>
+            </Pressable>
 
             {/* Is Featured Toggle */}
-            <TouchableOpacity 
-              style={[
+            <Pressable 
+              style={({ pressed }) => [
                 styles.visibilityToggle,
-                event.is_featured && styles.featuredToggleActive
+                event.is_featured && styles.featuredToggleActive,
+                pressed && { opacity: 0.6 }
               ]}
-              onPress={() => handleToggleVisibility(event.id, 'is_featured', event.is_featured || false)}
+              onPress={() => {
+                console.log('Toggle featured clicked for event:', event.id);
+                handleToggleVisibility(event.id, 'is_featured', event.is_featured || false);
+              }}
             >
               <Ionicons 
                 name={event.is_featured ? "star" : "star-outline"} 
@@ -1373,7 +1382,7 @@ export default function ContentManagerScreen() {
               ]}>
                 ⭐ {event.is_featured ? 'Spécial' : 'Normal'}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           {/* Event Type Selector */}
@@ -1385,13 +1394,17 @@ export default function ContentManagerScreen() {
                 { key: 'open_air', label: '🌴 Open Air' },
                 { key: 'special', label: '🎉 Spécial' },
               ].map((type) => (
-                <TouchableOpacity 
+                <Pressable 
                   key={type.key}
-                  style={[
+                  style={({ pressed }) => [
                     styles.eventTypeButton,
-                    (event.event_type || 'regular') === type.key && styles.eventTypeButtonActive
+                    (event.event_type || 'regular') === type.key && styles.eventTypeButtonActive,
+                    pressed && { opacity: 0.6 }
                   ]}
-                  onPress={() => handleChangeEventType(event.id, type.key)}
+                  onPress={() => {
+                    console.log('Change event type clicked:', type.key);
+                    handleChangeEventType(event.id, type.key);
+                  }}
                 >
                   <Text style={[
                     styles.eventTypeButtonText,
@@ -1399,17 +1412,18 @@ export default function ContentManagerScreen() {
                   ]}>
                     {type.label}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               ))}
             </View>
           </View>
 
           {/* Gallery & Aftermovie Toggles */}
           <View style={styles.visibilitySection}>
-            <TouchableOpacity 
-              style={[
+            <Pressable 
+              style={({ pressed }) => [
                 styles.visibilityToggle,
-                event.gallery_visible && styles.visibilityToggleActive
+                event.gallery_visible && styles.visibilityToggleActive,
+                pressed && { opacity: 0.6 }
               ]}
               onPress={() => handleToggleVisibility(event.id, 'gallery_visible', event.gallery_visible || false)}
             >
@@ -1424,12 +1438,13 @@ export default function ContentManagerScreen() {
               ]}>
                 📸 Photos {event.gallery_visible ? 'visibles' : 'masquées'}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
             
-            <TouchableOpacity 
-              style={[
+            <Pressable 
+              style={({ pressed }) => [
                 styles.visibilityToggle,
-                event.aftermovie_visible && styles.visibilityToggleActive
+                event.aftermovie_visible && styles.visibilityToggleActive,
+                pressed && { opacity: 0.6 }
               ]}
               onPress={() => handleToggleVisibility(event.id, 'aftermovie_visible', event.aftermovie_visible || false)}
             >
@@ -1444,7 +1459,7 @@ export default function ContentManagerScreen() {
               ]}>
                 🎬 Aftermovie {event.aftermovie_visible ? 'visible' : 'masqué'}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           {/* Delete Button */}
