@@ -238,7 +238,7 @@ export default function HomeScreen() {
           </View>
           
           {/* Countdown Section - Multiple Events */}
-          {upcomingEvents.length > 0 && upcomingEvents.map((event, index) => (
+          {upcomingEvents.length > 0 && upcomingEvents.filter(e => e && e.id).map((event, index) => (
             <View key={event.id} style={[styles.eventSection, index > 0 && { marginTop: 0 }]}>
             {index === 0 && (
               <View style={styles.eventHeader}>
@@ -261,18 +261,20 @@ export default function HomeScreen() {
                   <Text style={styles.openAirBadgeText}>🌴 OPEN AIR</Text>
                 </View>
               )}
-              <Text style={styles.eventName}>{event.name}</Text>
+              <Text style={styles.eventName}>{event.name || 'Événement'}</Text>
               <Text style={styles.eventVenue}>
-                📍 {event.venue_name}
+                📍 {event.venue_name || 'Lieu à confirmer'}
               </Text>
-              <Text style={styles.eventDate}>
-                {new Date(event.event_date).toLocaleDateString('fr-FR', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </Text>
+              {event.event_date && (
+                <Text style={styles.eventDate}>
+                  {new Date(event.event_date).toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </Text>
+              )}
               
               {/* Countdown */}
               {countdowns[event.id] && (
