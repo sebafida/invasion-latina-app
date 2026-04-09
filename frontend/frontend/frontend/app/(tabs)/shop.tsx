@@ -237,9 +237,9 @@ export default function VIPBookingScreen() {
       // Show success modal
       setShowSuccessModal(true);
       
-      // Reset form
-      setCustomerName('');
-      setCustomerEmail('');
+      // Reset form (keep user info if logged in)
+      setCustomerName(user?.name || '');
+      setCustomerEmail(user?.email || '');
       setCustomerPhone('');
       setBottlePreferences('');
       setSpecialRequests('');

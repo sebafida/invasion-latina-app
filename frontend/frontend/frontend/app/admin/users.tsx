@@ -57,6 +57,12 @@ export default function AdminUsersScreen() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  useEffect(() => {
+    if (page > 1) {
+      loadUsers();
+    }
+  }, [page]);
+
   const loadData = async () => {
     try {
       setIsLoading(true);

@@ -1279,13 +1279,16 @@ async def get_song_requests(
     current_user: User = Depends(get_current_user_supabase)
 ):
     """Get song requests with optional filters"""
-    # Sort by votes first, then by request time (most voted first)
-    query = select(SongRequest).order_by(SongRequest.votes.desc(), SongRequest.requested_at.desc()).limit(100)
+    # Build query with filters FIRST, then order and limit
+    query = select(SongRequest)
     
     if status:
         query = query.where(SongRequest.status == status)
     if event_id:
         query = query.where(SongRequest.event_id == event_id)
+    
+    # Apply order and limit AFTER filters
+    query = query.order_by(SongRequest.votes.desc(), SongRequest.requested_at.desc()).limit(100)
     
     result = await db.execute(query)
     requests = result.scalars().all()
@@ -1485,8 +1488,16 @@ async def get_admin_users(
             )
         )
     
-    # Count total
-    count_result = await db.execute(select(func.count()).select_from(User))
+    # Count total (with search filter applied)
+    count_query = select(func.count()).select_from(User)
+    if search:
+        count_query = count_query.where(
+            or_(
+                User.email.ilike(f"%{search}%"),
+                User.name.ilike(f"%{search}%")
+            )
+        )
+    count_result = await db.execute(count_query)
     total = count_result.scalar()
     
     # Get paginated results
@@ -2035,26 +2046,32 @@ async def get_my_referral_code(
     current_user: User = Depends(get_current_user_supabase)
 ):
     """Get or generate user's referral code"""
-    if not current_user.referral_code:
+    # Re-query user in current session to avoid DetachedInstanceError
+    result = await db.execute(select(User).where(User.id == current_user.id))
+    user_in_session = result.scalar_one_or_none()
+    if not user_in_session:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if not user_in_session.referral_code:
         # Generate unique code
         import random
         import string
         while True:
             code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-            result = await db.execute(select(User).where(User.referral_code == code))
-            if not result.scalar_one_or_none():
+            check_result = await db.execute(select(User).where(User.referral_code == code))
+            if not check_result.scalar_one_or_none():
                 break
         
-        current_user.referral_code = code
+        user_in_session.referral_code = code
         await db.commit()
     
     # Count referrals
     referral_count = (await db.execute(
-        select(func.count()).select_from(Referral).where(Referral.referrer_id == current_user.id)
+        select(func.count()).select_from(Referral).where(Referral.referrer_id == user_in_session.id)
     )).scalar()
     
     return {
-        "referral_code": current_user.referral_code,
+        "referral_code": user_in_session.referral_code,
         "referral_count": referral_count,
         "points_per_referral": 10
     }
@@ -3017,23 +3034,30 @@ async def update_user_profile(
     current_user: User = Depends(get_current_user_supabase)
 ):
     """Update user's profile (name, language)"""
+    # Re-query user in current session to avoid DetachedInstanceError
+    result = await db.execute(select(User).where(User.id == current_user.id))
+    user_in_session = result.scalar_one_or_none()
+    if not user_in_session:
+        raise HTTPException(status_code=404, detail="User not found")
+    
     if data.name is not None:
-        current_user.name = data.name.strip()
+        user_in_session.name = data.name.strip()
         logger.info(f"✅ Updated user name to: {data.name}")
     
     if data.language is not None:
-        current_user.language = data.language
+        user_in_session.language = data.language
     
     await db.commit()
+    await db.refresh(user_in_session)
     
     return {
         "success": True, 
         "message": "Profile updated",
         "user": {
-            "id": current_user.id,
-            "name": current_user.name,
-            "email": current_user.email,
-            "language": current_user.language
+            "id": user_in_session.id,
+            "name": user_in_session.name,
+            "email": user_in_session.email,
+            "language": user_in_session.language
         }
     }
 
@@ -3425,19 +3449,19 @@ async def get_all_dj_requests(
     # Also add a "default_event" for requests without event_id
     default_pending = (await db.execute(
         select(func.count()).select_from(SongRequest)
-        .where(SongRequest.event_id == None)
+        .where(SongRequest.event_id == "default_event")
         .where(SongRequest.status == 'pending')
     )).scalar() or 0
     
     default_played = (await db.execute(
         select(func.count()).select_from(SongRequest)
-        .where(SongRequest.event_id == None)
+        .where(SongRequest.event_id == "default_event")
         .where(SongRequest.status == 'played')
     )).scalar() or 0
     
     default_rejected = (await db.execute(
         select(func.count()).select_from(SongRequest)
-        .where(SongRequest.event_id == None)
+        .where(SongRequest.event_id == "default_event")
         .where(SongRequest.status == 'rejected')
     )).scalar() or 0
     

@@ -51,7 +51,7 @@ export default function AftermoviesScreen() {
           title: event.name,
           event_date: event.event_date,
           thumbnail_url: event.banner_image || 'https://via.placeholder.com/800x450',
-          video_url: '',
+          video_url: event.aftermovie_url || event.video_url || '',
           duration: '--:--',
           views: 0
         })).filter((v: any) => v.video_url); // Only show events with videos

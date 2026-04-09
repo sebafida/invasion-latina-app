@@ -217,7 +217,7 @@ export default function HomeScreen() {
       <Animated.ScrollView
         style={styles.container}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={loadNextEvent} tintColor={theme.colors.primary} />
+          <RefreshControl refreshing={loading} onRefresh={loadUpcomingEvents} tintColor={theme.colors.primary} />
         }
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],

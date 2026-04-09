@@ -71,6 +71,8 @@ export default function DJDashboardScreen() {
   ];
 
   useEffect(() => {
+    if (!user) return;
+    
     // Delay check to allow navigation to mount
     const timer = setTimeout(() => {
       // Check if admin
@@ -83,16 +85,17 @@ export default function DJDashboardScreen() {
       
       loadEvents();
       loadRequests();
-      
-      // Auto-refresh every 10 seconds
-      const interval = setInterval(() => {
-        loadRequests();
-      }, 10000);
-      
-      return () => clearInterval(interval);
     }, 100);
     
-    return () => clearTimeout(timer);
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      loadRequests();
+    }, 30000);
+    
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, [user]);
 
   useEffect(() => {
@@ -556,6 +559,49 @@ export default function DJDashboardScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Event Picker Modal */}
+      <Modal
+        visible={showEventPicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowEventPicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Sélectionner un événement</Text>
+            <ScrollView style={{ maxHeight: 300 }}>
+              <TouchableOpacity
+                style={[styles.eventPickerItem, !selectedEvent && styles.eventPickerItemSelected]}
+                onPress={() => {
+                  setSelectedEvent('');
+                  setShowEventPicker(false);
+                }}
+              >
+                <Text style={styles.eventPickerItemText}>Tous les événements</Text>
+              </TouchableOpacity>
+              {events.map((event) => (
+                <TouchableOpacity
+                  key={event.id}
+                  style={[styles.eventPickerItem, selectedEvent === event.id && styles.eventPickerItemSelected]}
+                  onPress={() => {
+                    setSelectedEvent(event.id);
+                    setShowEventPicker(false);
+                  }}
+                >
+                  <Text style={styles.eventPickerItemText}>{event.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowEventPicker(false)}
+            >
+              <Text style={styles.cancelButtonText}>Fermer</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -930,6 +976,20 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.md,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textSecondary,
+  },
+
+  // Event Picker Styles
+  eventPickerItem: {
+    padding: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.elevated,
+  },
+  eventPickerItemSelected: {
+    backgroundColor: theme.colors.primary + '20',
+  },
+  eventPickerItemText: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textPrimary,
   },
 
   // Delete Modal Styles

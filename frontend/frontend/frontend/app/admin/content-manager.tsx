@@ -748,7 +748,7 @@ export default function ContentManagerScreen() {
       {/* Upload Button */}
       <TouchableOpacity 
         style={styles.uploadButton}
-        onPress={() => pickWelcomeFlyer()}
+        onPress={() => pickEventFlyer()}
         disabled={loading}
       >
         <Ionicons name="cloud-upload" size={24} color={theme.colors.primary} />
