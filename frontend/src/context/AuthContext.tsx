@@ -11,6 +11,9 @@ interface User {
   role: string;
   loyalty_points: number;
   badges: string[];
+  auth_provider?: string;
+  language?: string;
+  friends?: string[];
 }
 
 interface AuthContextType {

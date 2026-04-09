@@ -265,12 +265,18 @@ export default function ContentManagerScreen() {
   const startEditEvent = (event: Event) => {
     setEditingEvent(event);
     setEventName(event.name);
-    // Extract date and time from event_date
-    const dateTime = new Date(event.event_date);
-    setEventDate(event.event_date.split('T')[0]); // Format YYYY-MM-DD
-    const hours = dateTime.getHours().toString().padStart(2, '0');
-    const minutes = dateTime.getMinutes().toString().padStart(2, '0');
-    setEventTime(`${hours}:${minutes}`);
+    // Extract date and time from event_date with null safety
+    if (event.event_date) {
+      const dateTime = new Date(event.event_date);
+      setEventDate(event.event_date.split('T')[0]); // Format YYYY-MM-DD
+      const hours = dateTime.getHours().toString().padStart(2, '0');
+      const minutes = dateTime.getMinutes().toString().padStart(2, '0');
+      setEventTime(`${hours}:${minutes}`);
+    } else {
+      // Default values if event_date is null
+      setEventDate(new Date().toISOString().split('T')[0]);
+      setEventTime('23:00');
+    }
     setEventDescription(event.description || '');
     setEventVenue(event.venue_name || 'Mirano Continental');
     setEventXceedUrl(event.xceed_ticket_url || '');
@@ -1321,12 +1327,12 @@ export default function ContentManagerScreen() {
             <View style={styles.eventCardInfo}>
               <Text style={styles.eventCardName}>{event.name}</Text>
               <Text style={styles.eventCardDate}>
-                {new Date(event.event_date).toLocaleDateString('fr-FR', {
+                {event.event_date ? new Date(event.event_date).toLocaleDateString('fr-FR', {
                   weekday: 'long',
                   day: 'numeric',
                   month: 'long',
                   year: 'numeric'
-                })}
+                }) : 'Date non définie'}
               </Text>
             </View>
             <Ionicons name="create-outline" size={20} color={theme.colors.textSecondary} />

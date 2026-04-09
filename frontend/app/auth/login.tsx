@@ -33,10 +33,13 @@ if (Platform.OS === 'ios') {
 }
 
 // Only import Google Auth on native platforms
-let useAuthRequest: any = null;
+let useGoogleAuth: any = null;
+let makeRedirectUri: any = null;
 if (Platform.OS !== 'web') {
   const Google = require('expo-auth-session/providers/google');
-  useAuthRequest = Google.useAuthRequest;
+  const AuthSession = require('expo-auth-session');
+  useGoogleAuth = Google.useAuthRequest;
+  makeRedirectUri = AuthSession.makeRedirectUri;
 }
 
 WebBrowser.maybeCompleteAuthSession();
@@ -51,6 +54,25 @@ const LANGUAGES = [
   { code: 'es', name: 'Español', flag: '🇪🇸' },
   { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
 ];
+
+// Custom hook to handle Google Auth only on native platforms
+function useGoogleAuthHook(): readonly [any, any, () => void] {
+  // On web or if useGoogleAuth is not available, return dummy values
+  if (!useGoogleAuth) {
+    return [null, null, () => {}] as const;
+  }
+  
+  // Always call the hook with the same config structure
+  const config = isNativePlatform ? {
+    iosClientId: GOOGLE_IOS_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
+  } : {
+    iosClientId: '',
+    androidClientId: '',
+  };
+  
+  return useGoogleAuth(config);
+}
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -67,13 +89,8 @@ export default function LoginScreen() {
     return LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
   };
 
-  // Google Auth - only on native platforms
-  const googleAuth = isNativePlatform && useAuthRequest ? useAuthRequest({
-    iosClientId: GOOGLE_IOS_CLIENT_ID,
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
-  }) : [null, null, () => {}];
-  
-  const [request, response, promptAsync] = googleAuth;
+  // Google Auth - using the custom hook that handles platform differences
+  const [request, response, promptAsync] = useGoogleAuthHook();
 
   React.useEffect(() => {
     if (response?.type === 'success') {

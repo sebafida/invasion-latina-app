@@ -193,11 +193,11 @@ export default function AftermoviesScreen() {
                 <View style={styles.videoInfo}>
                   <Text style={styles.videoTitle} numberOfLines={2}>{video.title}</Text>
                   <Text style={styles.videoDate}>
-                    {new Date(video.event_date).toLocaleDateString('fr-FR', {
+                    {video.event_date ? new Date(video.event_date).toLocaleDateString('fr-FR', {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric'
-                    })}
+                    }) : 'Date non disponible'}
                   </Text>
                   <View style={styles.videoStats}>
                     <Ionicons name="eye" size={12} color={theme.colors.textMuted} />

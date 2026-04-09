@@ -138,11 +138,11 @@ export default function GalleriesScreen() {
                 <Text style={styles.galleryName}>{gallery.name}</Text>
                 <View style={styles.galleryMeta}>
                   <Text style={styles.galleryDate}>
-                    {new Date(gallery.event_date).toLocaleDateString('fr-FR', {
+                    {gallery.event_date ? new Date(gallery.event_date).toLocaleDateString('fr-FR', {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric'
-                    })}
+                    }) : 'Date non disponible'}
                   </Text>
                   <View style={styles.photoCountBadge}>
                     <Ionicons name="images" size={14} color="white" />

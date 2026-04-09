@@ -9,11 +9,13 @@ import {
   ActivityIndicator,
   TextInput,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
+import { useAuth } from '../../src/context/AuthContext';
 
 interface User {
   id: string;
@@ -37,6 +39,7 @@ interface Stats {
 
 export default function AdminUsersScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,9 +48,19 @@ export default function AdminUsersScreen() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Admin check
   useEffect(() => {
-    loadData();
-  }, []);
+    if (user && user.role !== 'admin') {
+      Alert.alert('Accès refusé', 'Cette page est réservée aux administrateurs');
+      router.replace('/(tabs)/home');
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      loadData();
+    }
+  }, [user]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

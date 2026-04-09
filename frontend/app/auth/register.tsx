@@ -10,6 +10,7 @@ import {
   Alert,
   TouchableOpacity,
   Image,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +18,10 @@ import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
 import { Button } from '../../src/components/Button';
+
+// URLs for Terms and Privacy Policy
+const TERMS_URL = 'https://invasionlatina.be/terms';
+const PRIVACY_URL = 'https://invasionlatina.be/privacy';
 
 const LANGUAGES = [
   { code: 'fr', flag: '🇫🇷', label: 'Français' },
@@ -175,21 +180,30 @@ export default function RegisterScreen() {
             {/* Consent Checkboxes */}
             <View style={styles.consentSection}>
               {/* Terms and Conditions - Required */}
-              <TouchableOpacity
-                style={styles.checkboxRow}
-                onPress={() => setAcceptTerms(!acceptTerms)}
-              >
-                <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
-                  {acceptTerms && <Ionicons name="checkmark" size={16} color="white" />}
-                </View>
+              <View style={styles.checkboxRow}>
+                <TouchableOpacity onPress={() => setAcceptTerms(!acceptTerms)}>
+                  <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
+                    {acceptTerms && <Ionicons name="checkmark" size={16} color="white" />}
+                  </View>
+                </TouchableOpacity>
                 <Text style={styles.checkboxLabel}>
                   {t('acceptTerms')}{' '}
-                  <Text style={styles.linkText}>{t('termsAndConditions')}</Text>
+                  <Text 
+                    style={styles.linkText}
+                    onPress={() => Linking.openURL(TERMS_URL)}
+                  >
+                    {t('termsAndConditions')}
+                  </Text>
                   {' '}et{' '}
-                  <Text style={styles.linkText}>{t('privacyPolicy')}</Text>
+                  <Text 
+                    style={styles.linkText}
+                    onPress={() => Linking.openURL(PRIVACY_URL)}
+                  >
+                    {t('privacyPolicy')}
+                  </Text>
                   {' '}*
                 </Text>
-              </TouchableOpacity>
+              </View>
 
               {/* Marketing Consent - Optional */}
               <TouchableOpacity

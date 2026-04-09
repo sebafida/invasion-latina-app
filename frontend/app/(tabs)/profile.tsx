@@ -153,6 +153,10 @@ export default function ProfileScreen() {
     if (user) {
       loadLoyaltyData();
       checkFreeEntryVoucher();
+      // Check if Apple user needs to set their name
+      if (needsNameSetup()) {
+        setShowNameSetup(true);
+      }
     }
   }, [user]);
 

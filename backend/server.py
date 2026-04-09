@@ -217,6 +217,7 @@ class UserResponse(BaseModel):
     badges: List[str] = []
     friends: List[str] = []
     language: str = "en"
+    auth_provider: Optional[str] = None
     access_token: Optional[str] = None
 
 class EventResponse(BaseModel):
@@ -232,6 +233,9 @@ class EventResponse(BaseModel):
     banner_image: Optional[str] = None
     gallery_visible: bool = False
     aftermovie_visible: bool = False
+    visible_in_tickets: bool = True
+    is_featured: bool = False
+    event_type: str = "regular"
     status: str
 
 class TicketResponse(BaseModel):
@@ -878,6 +882,9 @@ async def get_events(
             banner_image=event.banner_image,
             gallery_visible=event.gallery_visible,
             aftermovie_visible=event.aftermovie_visible,
+            visible_in_tickets=getattr(event, 'visible_in_tickets', True),
+            is_featured=getattr(event, 'is_featured', False),
+            event_type=getattr(event, 'event_type', 'regular'),
             status=event.status
         )
         for event in events
@@ -1054,6 +1061,9 @@ async def get_event(event_id: str, db: AsyncSession = Depends(get_db)):
         banner_image=event.banner_image,
         gallery_visible=event.gallery_visible,
         aftermovie_visible=event.aftermovie_visible,
+        visible_in_tickets=getattr(event, 'visible_in_tickets', True),
+        is_featured=getattr(event, 'is_featured', False),
+        event_type=getattr(event, 'event_type', 'regular'),
         status=event.status
     )
 
@@ -1088,6 +1098,9 @@ async def create_event(
         venue_address=new_event.venue_address,
         lineup=new_event.lineup or [],
         ticket_categories=new_event.ticket_categories or [],
+        visible_in_tickets=getattr(new_event, 'visible_in_tickets', True),
+        is_featured=getattr(new_event, 'is_featured', False),
+        event_type=getattr(new_event, 'event_type', 'regular'),
         status="upcoming"
     )
 
@@ -2425,11 +2438,16 @@ async def add_aftermovie(
     current_user: User = Depends(get_current_admin_supabase)
 ):
     """Add an aftermovie (Admin only)"""
+    try:
+        event_date_parsed = datetime.fromisoformat(data.event_date.replace('Z', '+00:00')) if data.event_date else datetime.now(timezone.utc)
+    except (ValueError, AttributeError):
+        event_date_parsed = datetime.now(timezone.utc)
+    
     aftermovie = Aftermovie(
         title=data.title,
         youtube_url=data.video_url,
         thumbnail_url=data.thumbnail_url or "https://via.placeholder.com/400x225",
-        event_date=datetime.fromisoformat(data.event_date.replace('Z', '+00:00')) if data.event_date else datetime.now(timezone.utc)
+        event_date=event_date_parsed
     )
     
     db.add(aftermovie)
@@ -2459,7 +2477,10 @@ async def admin_create_event(
     current_user: User = Depends(get_current_admin_supabase)
 ):
     """Create a new event (Admin only)"""
-    event_date = datetime.fromisoformat(data.event_date.replace('Z', '+00:00'))
+    try:
+        event_date = datetime.fromisoformat(data.event_date.replace('Z', '+00:00'))
+    except (ValueError, AttributeError) as e:
+        raise HTTPException(status_code=400, detail=f"Invalid date format: {data.event_date}. Expected ISO 8601 format.")
     
     # Build ticket categories with custom price
     ticket_categories = data.ticket_categories or []
@@ -2527,7 +2548,10 @@ async def admin_update_event(
     if data.name is not None:
         event.name = data.name
     if data.event_date is not None:
-        event.event_date = datetime.fromisoformat(data.event_date.replace('Z', '+00:00'))
+        try:
+            event.event_date = datetime.fromisoformat(data.event_date.replace('Z', '+00:00'))
+        except (ValueError, AttributeError) as e:
+            raise HTTPException(status_code=400, detail=f"Invalid date format: {data.event_date}. Expected ISO 8601 format.")
     if data.description is not None:
         event.description = data.description
     if data.venue_name is not None:

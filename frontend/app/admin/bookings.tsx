@@ -43,7 +43,7 @@ export default function BookingsAdminScreen() {
   const insets = useSafeAreaInsets();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('pending');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'rejected'>('pending');
 
   // Delete confirmation modal states
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -297,14 +297,14 @@ Merci et à bientôt! 🔥`;
 
       {/* Filters */}
       <View style={styles.filtersContainer}>
-        {(['pending', 'confirmed', 'cancelled', 'all'] as const).map((f) => (
+        {(['pending', 'confirmed', 'rejected', 'cancelled', 'all'] as const).map((f) => (
           <TouchableOpacity
             key={f}
             style={[styles.filterButton, filter === f && styles.filterButtonActive]}
             onPress={() => setFilter(f)}
           >
             <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {f === 'all' ? t('all') : f === 'pending' ? t('pending') : f === 'confirmed' ? t('confirmed') : t('cancelled')}
+              {f === 'all' ? t('all') : f === 'pending' ? t('pending') : f === 'confirmed' ? t('confirmed') : f === 'rejected' ? 'Refusé' : t('cancelled')}
             </Text>
           </TouchableOpacity>
         ))}

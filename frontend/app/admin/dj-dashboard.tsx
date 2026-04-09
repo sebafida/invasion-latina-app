@@ -116,23 +116,26 @@ export default function DJDashboardScreen() {
   };
 
   const loadRequests = async () => {
-    if (!selectedEvent) {
-      // Wait for event to be selected
-      return;
-    }
     try {
       setLoading(true);
       let url = '/dj/requests?';
       if (statusFilter !== 'all') {
         url += `status=${statusFilter}&`;
       }
-      url += `event_id=${selectedEvent}`;
+      // Only add event_id if an event is selected
+      if (selectedEvent) {
+        url += `event_id=${selectedEvent}`;
+      }
       
       const response = await api.get(url);
       setRequests(response.data);
       
-      // Calculate stats from all requests for this event
-      const allResponse = await api.get(`/dj/requests?event_id=${selectedEvent}`);
+      // Calculate stats from all requests
+      let statsUrl = '/dj/requests?';
+      if (selectedEvent) {
+        statsUrl += `event_id=${selectedEvent}`;
+      }
+      const allResponse = await api.get(statsUrl);
       const allData = allResponse.data;
       setStats({
         total: allData.length,

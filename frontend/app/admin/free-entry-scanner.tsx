@@ -15,9 +15,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
+import { useAuth } from '../../src/context/AuthContext';
 
 export default function FreeEntryScanner() {
   const router = useRouter();
+  const { user } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -28,6 +30,14 @@ export default function FreeEntryScanner() {
     message: string;
     userName?: string;
   } | null>(null);
+
+  // Admin check
+  useEffect(() => {
+    if (user && user.role !== 'admin') {
+      Alert.alert('Accès refusé', 'Cette page est réservée aux administrateurs');
+      router.replace('/(tabs)/home');
+    }
+  }, [user]);
 
   const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
     if (!scanning || processing) return;
