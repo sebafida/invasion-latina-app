@@ -77,6 +77,11 @@ class Event(Base):
     gallery_visible = Column(Boolean, default=False)
     aftermovie_visible = Column(Boolean, default=False)
     
+    # NEW: Multi-event management fields
+    visible_in_tickets = Column(Boolean, default=True)  # Hide from tickets but keep in admin
+    is_featured = Column(Boolean, default=False)  # Special/big events (e.g., July Open Air)
+    event_type = Column(String(50), default='regular')  # 'regular', 'special', 'open_air'
+    
     status = Column(String(50), default='upcoming', index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     

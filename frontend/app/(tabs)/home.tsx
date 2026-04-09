@@ -50,44 +50,52 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
-  const [nextEvent, setNextEvent] = useState<any>(null);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [lineup, setLineup] = useState<any[]>(getDefaultLineup(t));
   const [loading, setLoading] = useState(true);
-  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [countdowns, setCountdowns] = useState<{[key: string]: { days: number, hours: number, minutes: number, seconds: number }}>({});
   
   // Scroll tracking for WhatsApp button
   const scrollY = useRef(new Animated.Value(0)).current;
   
   useEffect(() => {
-    loadNextEvent();
+    loadUpcomingEvents();
   }, []);
   
   useEffect(() => {
-    if (nextEvent) {
+    if (upcomingEvents.length > 0) {
       const interval = setInterval(() => {
-        calculateCountdown();
+        calculateCountdowns();
       }, 1000);
       
       return () => clearInterval(interval);
     }
-  }, [nextEvent]);
+  }, [upcomingEvents]);
   
-  const loadNextEvent = async () => {
+  const loadUpcomingEvents = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/events/next');
-      const event = response.data.event;
-      setNextEvent(event);
+      const response = await api.get('/events/upcoming');
+      const events = response.data.events || [];
+      setUpcomingEvents(events);
       
-      // Load lineup based on selected DJs for this event
-      if (event?.selected_djs && event.selected_djs.length > 0) {
-        loadSelectedDJs(event.selected_djs);
+      // Load lineup based on first event's selected DJs
+      if (events.length > 0 && events[0]?.selected_djs && events[0].selected_djs.length > 0) {
+        loadSelectedDJs(events[0].selected_djs);
       } else {
-        // If no DJs selected, load all DJs
         loadLineup();
       }
     } catch (error) {
-      console.error('Failed to load event:', error);
+      console.error('Failed to load events:', error);
+      // Fallback to old endpoint
+      try {
+        const response = await api.get('/events/next');
+        if (response.data.event) {
+          setUpcomingEvents([response.data.event]);
+        }
+      } catch (e) {
+        console.error('Fallback also failed:', e);
+      }
       loadLineup();
     } finally {
       setLoading(false);
@@ -134,21 +142,29 @@ export default function HomeScreen() {
     }
   };
   
-  const calculateCountdown = () => {
-    if (!nextEvent) return;
+  const calculateCountdowns = () => {
+    const newCountdowns: {[key: string]: { days: number, hours: number, minutes: number, seconds: number }} = {};
     
-    const eventDate = new Date(nextEvent.event_date);
-    const now = new Date();
-    const diff = eventDate.getTime() - now.getTime();
-    
-    if (diff > 0) {
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    upcomingEvents.forEach(event => {
+      if (!event || !event.event_date) return;
       
-      setCountdown({ days, hours, minutes, seconds });
-    }
+      const eventDate = new Date(event.event_date);
+      const now = new Date();
+      const diff = eventDate.getTime() - now.getTime();
+      
+      if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        newCountdowns[event.id] = { days, hours, minutes, seconds };
+      } else {
+        newCountdowns[event.id] = { days: 0, hours: 0, minutes: 0, seconds: 0 };
+      }
+    });
+    
+    setCountdowns(newCountdowns);
   };
 
   // Get display name - "Familia" for guests, first name for logged in users
@@ -221,20 +237,36 @@ export default function HomeScreen() {
             </View>
           </View>
           
-          {/* Countdown Section */}
-          {nextEvent && (
-            <View style={styles.eventSection}>
-            <View style={styles.eventHeader}>
-              <Text style={styles.sectionTitle}>{t('nextEvent')}</Text>
-            </View>
+          {/* Countdown Section - Multiple Events */}
+          {upcomingEvents.length > 0 && upcomingEvents.map((event, index) => (
+            <View key={event.id} style={[styles.eventSection, index > 0 && { marginTop: 0 }]}>
+            {index === 0 && (
+              <View style={styles.eventHeader}>
+                <Text style={styles.sectionTitle}>{t('nextEvent')}{upcomingEvents.length > 1 ? 's' : ''}</Text>
+              </View>
+            )}
             
-            <View style={styles.eventCard}>
-              <Text style={styles.eventName}>{nextEvent.name}</Text>
+            <View style={[
+              styles.eventCard, 
+              event.is_featured && styles.featuredEventCard,
+              event.event_type === 'open_air' && styles.openAirEventCard
+            ]}>
+              {event.is_featured && (
+                <View style={styles.featuredBadge}>
+                  <Text style={styles.featuredBadgeText}>⭐ ÉVÉNEMENT SPÉCIAL</Text>
+                </View>
+              )}
+              {event.event_type === 'open_air' && !event.is_featured && (
+                <View style={styles.openAirBadge}>
+                  <Text style={styles.openAirBadgeText}>🌴 OPEN AIR</Text>
+                </View>
+              )}
+              <Text style={styles.eventName}>{event.name}</Text>
               <Text style={styles.eventVenue}>
-                📍 {nextEvent.venue_name}
+                📍 {event.venue_name}
               </Text>
               <Text style={styles.eventDate}>
-                {new Date(nextEvent.event_date).toLocaleDateString('fr-FR', {
+                {new Date(event.event_date).toLocaleDateString('fr-FR', {
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',
@@ -243,18 +275,20 @@ export default function HomeScreen() {
               </Text>
               
               {/* Countdown */}
-              <View style={styles.countdownContainer}>
-                <CountdownBox value={countdown.days} label={t('daysLeft')} />
-                <CountdownBox value={countdown.hours} label={t('hoursLeft')} />
-                <CountdownBox value={countdown.minutes} label={t('minutesLeft')} />
-                <CountdownBox value={countdown.seconds} label={t('secondsLeft')} />
-              </View>
+              {countdowns[event.id] && (
+                <View style={styles.countdownContainer}>
+                  <CountdownBox value={countdowns[event.id].days} label={t('daysLeft')} />
+                  <CountdownBox value={countdowns[event.id].hours} label={t('hoursLeft')} />
+                  <CountdownBox value={countdowns[event.id].minutes} label={t('minutesLeft')} />
+                  <CountdownBox value={countdowns[event.id].seconds} label={t('secondsLeft')} />
+                </View>
+              )}
               
               <TouchableOpacity 
                 style={styles.buyButton}
                 onPress={() => {
-                  if (nextEvent?.xceed_ticket_url) {
-                    Linking.openURL(nextEvent.xceed_ticket_url);
+                  if (event?.xceed_ticket_url) {
+                    Linking.openURL(event.xceed_ticket_url);
                   } else {
                     router.push('/(tabs)/tickets');
                   }
@@ -267,7 +301,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        )}
+        ))}
         
         {/* Quick Actions - No Title */}
         <View style={styles.quickActions}>
@@ -508,6 +542,41 @@ const styles = StyleSheet.create({
     ...theme.shadows.lg,
     borderLeftWidth: 4,
     borderLeftColor: theme.colors.primary,
+    marginBottom: theme.spacing.md,
+  },
+  featuredEventCard: {
+    borderLeftColor: '#FFD700',
+    borderWidth: 1,
+    borderColor: '#FFD70050',
+  },
+  openAirEventCard: {
+    borderLeftColor: '#4CAF50',
+  },
+  featuredBadge: {
+    backgroundColor: '#FFD70020',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
+    alignSelf: 'flex-start',
+    marginBottom: theme.spacing.sm,
+  },
+  featuredBadgeText: {
+    color: '#FFD700',
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.bold,
+  },
+  openAirBadge: {
+    backgroundColor: '#4CAF5020',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
+    alignSelf: 'flex-start',
+    marginBottom: theme.spacing.sm,
+  },
+  openAirBadgeText: {
+    color: '#4CAF50',
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.bold,
   },
   eventName: {
     fontSize: theme.fontSize.xl,

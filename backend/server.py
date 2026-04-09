@@ -937,6 +937,97 @@ async def get_next_event(db: AsyncSession = Depends(get_db)):
         }
     }
 
+@app.get("/api/events/upcoming")
+async def get_upcoming_events(db: AsyncSession = Depends(get_db), limit: int = 10):
+    """Get all upcoming events (for multiple countdowns on home page)"""
+    result = await db.execute(
+        select(Event)
+        .where(Event.event_date >= datetime.now(timezone.utc))
+        .where(Event.status == "published")
+        .order_by(Event.event_date)
+        .limit(limit)
+    )
+    events = result.scalars().all()
+    
+    return {
+        "events": [
+            {
+                "id": event.id,
+                "name": event.name,
+                "description": event.description,
+                "event_date": event.event_date.isoformat() if event.event_date else None,
+                "venue_name": event.venue_name,
+                "venue_address": event.venue_address,
+                "lineup": event.lineup or [],
+                "ticket_categories": event.ticket_categories or [],
+                "xceed_ticket_url": event.xceed_ticket_url,
+                "selected_djs": event.selected_djs or [],
+                "banner_image": event.banner_image,
+                "visible_in_tickets": getattr(event, 'visible_in_tickets', True),
+                "is_featured": getattr(event, 'is_featured', False),
+                "event_type": getattr(event, 'event_type', 'regular'),
+                "status": event.status
+            }
+            for event in events
+        ]
+    }
+
+@app.get("/api/events/for-tickets")
+async def get_events_for_tickets(db: AsyncSession = Depends(get_db)):
+    """Get upcoming events visible in tickets section"""
+    result = await db.execute(
+        select(Event)
+        .where(Event.event_date >= datetime.now(timezone.utc))
+        .where(Event.status == "published")
+        .where(Event.visible_in_tickets == True)
+        .order_by(Event.event_date)
+    )
+    events = result.scalars().all()
+    
+    return {
+        "events": [
+            {
+                "id": event.id,
+                "name": event.name,
+                "description": event.description,
+                "event_date": event.event_date.isoformat() if event.event_date else None,
+                "venue_name": event.venue_name,
+                "venue_address": event.venue_address,
+                "xceed_ticket_url": event.xceed_ticket_url,
+                "ticket_categories": event.ticket_categories or [],
+                "is_featured": getattr(event, 'is_featured', False),
+                "event_type": getattr(event, 'event_type', 'regular'),
+                "status": event.status
+            }
+            for event in events
+        ]
+    }
+
+@app.get("/api/events/for-booking")
+async def get_events_for_booking(db: AsyncSession = Depends(get_db)):
+    """Get upcoming events for table booking (VIP reservations)"""
+    result = await db.execute(
+        select(Event)
+        .where(Event.event_date >= datetime.now(timezone.utc))
+        .where(Event.status == "published")
+        .order_by(Event.event_date)
+    )
+    events = result.scalars().all()
+    
+    return {
+        "events": [
+            {
+                "id": event.id,
+                "name": event.name,
+                "event_date": event.event_date.isoformat() if event.event_date else None,
+                "venue_name": event.venue_name,
+                "is_featured": getattr(event, 'is_featured', False),
+                "event_type": getattr(event, 'event_type', 'regular'),
+            }
+            for event in events
+        ]
+    }
+
 @app.get("/api/events/{event_id}", response_model=EventResponse)
 async def get_event(event_id: str, db: AsyncSession = Depends(get_db)):
     """Get specific event by ID"""
@@ -2404,6 +2495,9 @@ async def admin_update_event(
 class VisibilityUpdate(BaseModel):
     gallery_visible: Optional[bool] = None
     aftermovie_visible: Optional[bool] = None
+    visible_in_tickets: Optional[bool] = None
+    is_featured: Optional[bool] = None
+    event_type: Optional[str] = None
 
 @app.put("/api/admin/events/{event_id}/visibility")
 async def update_event_visibility(
@@ -2423,6 +2517,12 @@ async def update_event_visibility(
         event.gallery_visible = data.gallery_visible
     if data.aftermovie_visible is not None:
         event.aftermovie_visible = data.aftermovie_visible
+    if data.visible_in_tickets is not None:
+        event.visible_in_tickets = data.visible_in_tickets
+    if data.is_featured is not None:
+        event.is_featured = data.is_featured
+    if data.event_type is not None:
+        event.event_type = data.event_type
     
     await db.commit()
     
