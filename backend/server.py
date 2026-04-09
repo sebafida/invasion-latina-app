@@ -825,7 +825,8 @@ async def get_current_user_info(
         loyalty_points=current_user.loyalty_points or 0,
         badges=current_user.badges or [],
         friends=current_user.friends or [],
-        language=current_user.language or "en"
+        language=current_user.language or "en",
+        auth_provider=getattr(current_user, 'auth_provider', None)
     )
 
 @app.put("/api/users/push-token")
