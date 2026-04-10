@@ -233,6 +233,8 @@ class EventResponse(BaseModel):
     banner_image: Optional[str] = None
     gallery_visible: bool = False
     aftermovie_visible: bool = False
+    gallery_url: Optional[str] = None
+    aftermovie_url: Optional[str] = None
     visible_in_tickets: bool = True
     is_featured: bool = False
     event_type: str = "regular"
@@ -883,6 +885,8 @@ async def get_events(
             banner_image=event.banner_image,
             gallery_visible=event.gallery_visible,
             aftermovie_visible=event.aftermovie_visible,
+            gallery_url=getattr(event, 'gallery_url', None),
+            aftermovie_url=getattr(event, 'aftermovie_url', None),
             visible_in_tickets=getattr(event, 'visible_in_tickets', True),
             is_featured=getattr(event, 'is_featured', False),
             event_type=getattr(event, 'event_type', 'regular'),
@@ -975,6 +979,8 @@ async def get_upcoming_events(db: AsyncSession = Depends(get_db), limit: int = 1
                 "xceed_ticket_url": event.xceed_ticket_url,
                 "selected_djs": event.selected_djs or [],
                 "banner_image": event.banner_image,
+                "gallery_url": getattr(event, 'gallery_url', None),
+                "aftermovie_url": getattr(event, 'aftermovie_url', None),
                 "visible_in_tickets": getattr(event, 'visible_in_tickets', True),
                 "is_featured": getattr(event, 'is_featured', False),
                 "event_type": getattr(event, 'event_type', 'regular'),
@@ -1062,6 +1068,8 @@ async def get_event(event_id: str, db: AsyncSession = Depends(get_db)):
         banner_image=event.banner_image,
         gallery_visible=event.gallery_visible,
         aftermovie_visible=event.aftermovie_visible,
+        gallery_url=getattr(event, 'gallery_url', None),
+        aftermovie_url=getattr(event, 'aftermovie_url', None),
         visible_in_tickets=getattr(event, 'visible_in_tickets', True),
         is_featured=getattr(event, 'is_featured', False),
         event_type=getattr(event, 'event_type', 'regular'),
@@ -1099,6 +1107,8 @@ async def create_event(
         venue_address=new_event.venue_address,
         lineup=new_event.lineup or [],
         ticket_categories=new_event.ticket_categories or [],
+        gallery_url=getattr(new_event, 'gallery_url', None),
+        aftermovie_url=getattr(new_event, 'aftermovie_url', None),
         visible_in_tickets=getattr(new_event, 'visible_in_tickets', True),
         is_featured=getattr(new_event, 'is_featured', False),
         event_type=getattr(new_event, 'event_type', 'regular'),
@@ -2595,6 +2605,8 @@ async def admin_update_event(
 class VisibilityUpdate(BaseModel):
     gallery_visible: Optional[bool] = None
     aftermovie_visible: Optional[bool] = None
+    gallery_url: Optional[str] = None
+    aftermovie_url: Optional[str] = None
     visible_in_tickets: Optional[bool] = None
     is_featured: Optional[bool] = None
     event_type: Optional[str] = None
@@ -2617,6 +2629,10 @@ async def update_event_visibility(
         event.gallery_visible = data.gallery_visible
     if data.aftermovie_visible is not None:
         event.aftermovie_visible = data.aftermovie_visible
+    if data.gallery_url is not None:
+        event.gallery_url = data.gallery_url
+    if data.aftermovie_url is not None:
+        event.aftermovie_url = data.aftermovie_url
     if data.visible_in_tickets is not None:
         event.visible_in_tickets = data.visible_in_tickets
     if data.is_featured is not None:

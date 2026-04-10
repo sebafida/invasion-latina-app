@@ -76,6 +76,8 @@ class Event(Base):
     
     gallery_visible = Column(Boolean, default=False)
     aftermovie_visible = Column(Boolean, default=False)
+    gallery_url = Column(Text, nullable=True)      # External link (e.g. Facebook album)
+    aftermovie_url = Column(Text, nullable=True)    # External link (e.g. Instagram/YouTube)
     
     # NEW: Multi-event management fields
     visible_in_tickets = Column(Boolean, default=True)  # Hide from tickets but keep in admin

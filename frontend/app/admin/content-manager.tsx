@@ -36,6 +36,8 @@ interface Event {
   status: string;
   gallery_visible?: boolean;
   aftermovie_visible?: boolean;
+  gallery_url?: string;
+  aftermovie_url?: string;
   visible_in_tickets?: boolean;
   is_featured?: boolean;
   event_type?: string;
@@ -1341,66 +1343,39 @@ export default function ContentManagerScreen() {
           {/* Visibility Toggles */}
           <View style={styles.visibilitySection}>
             {/* Visible in Tickets Toggle */}
-            <Pressable 
+            <Pressable
               style={({ pressed }) => [
                 styles.visibilityToggle,
                 event.visible_in_tickets !== false && styles.visibilityToggleActive,
                 pressed && { opacity: 0.6 }
               ]}
               onPress={() => {
-                console.log('Toggle visibility clicked for event:', event.id);
                 handleToggleVisibility(event.id, 'visible_in_tickets', event.visible_in_tickets !== false);
               }}
             >
-              <Ionicons 
-                name={event.visible_in_tickets !== false ? "ticket" : "ticket-outline"} 
-                size={16} 
-                color={event.visible_in_tickets !== false ? theme.colors.success : theme.colors.textMuted} 
+              <Ionicons
+                name={event.visible_in_tickets !== false ? "ticket" : "ticket-outline"}
+                size={16}
+                color={event.visible_in_tickets !== false ? theme.colors.success : theme.colors.textMuted}
               />
               <Text style={[
                 styles.visibilityToggleText,
                 event.visible_in_tickets !== false && styles.visibilityToggleTextActive
               ]}>
-                🎟️ {event.visible_in_tickets !== false ? 'Visible' : 'Masqué'} tickets
-              </Text>
-            </Pressable>
-
-            {/* Is Featured Toggle */}
-            <Pressable 
-              style={({ pressed }) => [
-                styles.visibilityToggle,
-                event.is_featured && styles.featuredToggleActive,
-                pressed && { opacity: 0.6 }
-              ]}
-              onPress={() => {
-                console.log('Toggle featured clicked for event:', event.id);
-                handleToggleVisibility(event.id, 'is_featured', event.is_featured || false);
-              }}
-            >
-              <Ionicons 
-                name={event.is_featured ? "star" : "star-outline"} 
-                size={16} 
-                color={event.is_featured ? '#FFD700' : theme.colors.textMuted} 
-              />
-              <Text style={[
-                styles.visibilityToggleText,
-                event.is_featured && { color: '#FFD700' }
-              ]}>
-                ⭐ {event.is_featured ? 'Spécial' : 'Normal'}
+                {event.visible_in_tickets !== false ? 'Visible' : 'Masque'} tickets
               </Text>
             </Pressable>
           </View>
 
           {/* Event Type Selector */}
           <View style={styles.eventTypeSection}>
-            <Text style={styles.eventTypeLabel}>Type d'événement:</Text>
+            <Text style={styles.eventTypeLabel}>Type d'evenement:</Text>
             <View style={styles.eventTypeButtons}>
               {[
-                { key: 'regular', label: '🏠 Mensuel' },
-                { key: 'open_air', label: '🌴 Open Air' },
-                { key: 'special', label: '🎉 Spécial' },
+                { key: 'regular', label: 'Mensuel' },
+                { key: 'open_air', label: 'Open Air' },
               ].map((type) => (
-                <Pressable 
+                <Pressable
                   key={type.key}
                   style={({ pressed }) => [
                     styles.eventTypeButton,
@@ -1408,7 +1383,6 @@ export default function ContentManagerScreen() {
                     pressed && { opacity: 0.6 }
                   ]}
                   onPress={() => {
-                    console.log('Change event type clicked:', type.key);
                     handleChangeEventType(event.id, type.key);
                   }}
                 >
@@ -1423,9 +1397,9 @@ export default function ContentManagerScreen() {
             </View>
           </View>
 
-          {/* Gallery & Aftermovie Toggles */}
+          {/* Gallery & Aftermovie Toggles + External Links */}
           <View style={styles.visibilitySection}>
-            <Pressable 
+            <Pressable
               style={({ pressed }) => [
                 styles.visibilityToggle,
                 event.gallery_visible && styles.visibilityToggleActive,
@@ -1433,20 +1407,20 @@ export default function ContentManagerScreen() {
               ]}
               onPress={() => handleToggleVisibility(event.id, 'gallery_visible', event.gallery_visible || false)}
             >
-              <Ionicons 
-                name={event.gallery_visible ? "eye" : "eye-off"} 
-                size={16} 
-                color={event.gallery_visible ? theme.colors.success : theme.colors.textMuted} 
+              <Ionicons
+                name={event.gallery_visible ? "eye" : "eye-off"}
+                size={16}
+                color={event.gallery_visible ? theme.colors.success : theme.colors.textMuted}
               />
               <Text style={[
                 styles.visibilityToggleText,
                 event.gallery_visible && styles.visibilityToggleTextActive
               ]}>
-                📸 Photos {event.gallery_visible ? 'visibles' : 'masquées'}
+                Photos {event.gallery_visible ? 'visibles' : 'masquees'}
               </Text>
             </Pressable>
-            
-            <Pressable 
+
+            <Pressable
               style={({ pressed }) => [
                 styles.visibilityToggle,
                 event.aftermovie_visible && styles.visibilityToggleActive,
@@ -1454,19 +1428,68 @@ export default function ContentManagerScreen() {
               ]}
               onPress={() => handleToggleVisibility(event.id, 'aftermovie_visible', event.aftermovie_visible || false)}
             >
-              <Ionicons 
-                name={event.aftermovie_visible ? "eye" : "eye-off"} 
-                size={16} 
-                color={event.aftermovie_visible ? theme.colors.success : theme.colors.textMuted} 
+              <Ionicons
+                name={event.aftermovie_visible ? "eye" : "eye-off"}
+                size={16}
+                color={event.aftermovie_visible ? theme.colors.success : theme.colors.textMuted}
               />
               <Text style={[
                 styles.visibilityToggleText,
                 event.aftermovie_visible && styles.visibilityToggleTextActive
               ]}>
-                🎬 Aftermovie {event.aftermovie_visible ? 'visible' : 'masqué'}
+                Aftermovie {event.aftermovie_visible ? 'visible' : 'masque'}
               </Text>
             </Pressable>
           </View>
+
+          {/* External Links for Gallery & Aftermovie */}
+          {event.gallery_visible && (
+            <View style={styles.linkInputSection}>
+              <Text style={styles.linkInputLabel}>Lien album photos (Facebook)</Text>
+              <View style={styles.linkInputRow}>
+                <TextInput
+                  style={styles.linkInput}
+                  value={event.gallery_url || ''}
+                  placeholder="https://www.facebook.com/album/..."
+                  placeholderTextColor={theme.colors.textMuted}
+                  autoCapitalize="none"
+                  keyboardType="url"
+                  onEndEditing={(e) => {
+                    const url = e.nativeEvent.text.trim();
+                    if (url !== (event.gallery_url || '')) {
+                      api.put(`/admin/events/${event.id}/visibility`, { gallery_url: url })
+                        .then(() => loadData())
+                        .catch(() => Alert.alert('Erreur', 'Impossible de sauvegarder le lien'));
+                    }
+                  }}
+                />
+              </View>
+            </View>
+          )}
+
+          {event.aftermovie_visible && (
+            <View style={styles.linkInputSection}>
+              <Text style={styles.linkInputLabel}>Lien aftermovie (Instagram/YouTube)</Text>
+              <View style={styles.linkInputRow}>
+                <TextInput
+                  style={styles.linkInput}
+                  value={event.aftermovie_url || ''}
+                  placeholder="https://www.instagram.com/reel/..."
+                  placeholderTextColor={theme.colors.textMuted}
+                  autoCapitalize="none"
+                  keyboardType="url"
+                  onEndEditing={(e) => {
+                    const url = e.nativeEvent.text.trim();
+                    if (url !== (event.aftermovie_url || '')) {
+                      api.put(`/admin/events/${event.id}/visibility`, { aftermovie_url: url })
+                        .then(() => loadData())
+                        .catch(() => Alert.alert('Erreur', 'Impossible de sauvegarder le lien'));
+                    }
+                  }}
+                />
+              </View>
+            </View>
+          )}
 
           {/* Delete Button */}
           <TouchableOpacity 
@@ -1934,6 +1957,31 @@ const styles = StyleSheet.create({
   eventTypeButtonTextActive: {
     color: theme.colors.primary,
     fontWeight: theme.fontWeight.bold,
+  },
+  linkInputSection: {
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xs,
+  },
+  linkInputLabel: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+    fontWeight: theme.fontWeight.semibold,
+  },
+  linkInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  linkInput: {
+    flex: 1,
+    backgroundColor: theme.colors.elevated,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.sm,
+    color: theme.colors.textPrimary,
+    fontSize: theme.fontSize.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.cardBackground,
   },
   deleteButton: {
     flexDirection: 'row',
