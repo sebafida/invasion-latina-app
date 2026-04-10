@@ -992,16 +992,15 @@ async def get_upcoming_events(db: AsyncSession = Depends(get_db), limit: int = 1
 
 @app.get("/api/events/for-tickets")
 async def get_events_for_tickets(db: AsyncSession = Depends(get_db)):
-    """Get upcoming events visible in tickets section"""
+    """Get events visible in tickets section - admin controls visibility via toggle"""
     result = await db.execute(
         select(Event)
-        .where(Event.event_date >= datetime.now(timezone.utc))
         .where(Event.status.in_(["published", "upcoming"]))
         .where(Event.visible_in_tickets == True)
         .order_by(Event.event_date)
     )
     events = result.scalars().all()
-    
+
     return {
         "events": [
             {
@@ -1011,6 +1010,7 @@ async def get_events_for_tickets(db: AsyncSession = Depends(get_db)):
                 "event_date": event.event_date.isoformat() if event.event_date else None,
                 "venue_name": event.venue_name,
                 "venue_address": event.venue_address,
+                "banner_image": event.banner_image,
                 "xceed_ticket_url": event.xceed_ticket_url,
                 "ticket_categories": event.ticket_categories or [],
                 "is_featured": getattr(event, 'is_featured', False),
