@@ -155,15 +155,15 @@ export default function VIPBookingScreen() {
   const loadEvents = async () => {
     try {
       const response = await api.get('/events/for-booking');
-      console.log('Events loaded for booking:', response.data);
+      logger.log('Events loaded for booking:', response.data);
       const allEvents = response.data.events || response.data || [];
       setEvents(allEvents);
       if (allEvents.length > 0) {
         setSelectedEvent(allEvents[0].id);
-        console.log('Selected event:', allEvents[0].id);
+        logger.log('Selected event:', allEvents[0].id);
       }
     } catch (error) {
-      console.error('Failed to load events for booking:', error);
+      logger.error('Failed to load events for booking:', error);
       // Fallback to old endpoint
       try {
         const response = await api.get('/events');
@@ -173,7 +173,7 @@ export default function VIPBookingScreen() {
           setSelectedEvent(allEvents[0].id);
         }
       } catch (e) {
-        console.error('Fallback also failed:', e);
+        logger.error('Fallback also failed:', e);
       }
     }
   };
@@ -185,9 +185,9 @@ export default function VIPBookingScreen() {
   };
 
   const handleSubmitBooking = async () => {
-    console.log('handleSubmitBooking called');
-    console.log('selectedEvent:', selectedEvent);
-    console.log('customerName:', customerName);
+    logger.log('handleSubmitBooking called');
+    logger.log('selectedEvent:', selectedEvent);
+    logger.log('customerName:', customerName);
     
     if (!selectedEvent) {
       Alert.alert(t('error'), t('noEventAvailable'));

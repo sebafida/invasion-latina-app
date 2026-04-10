@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   RefreshControl,
   Dimensions,
@@ -24,17 +23,7 @@ const { width } = Dimensions.get('window');
 // Spotify Playlist URL
 const SPOTIFY_PLAYLIST_URL = 'https://open.spotify.com/playlist/5Pzn91AFtN8tBYYF8Wuci5?si=akXNRmENTPCpS-XWtD1AfQ';
 
-// DJ Photos
-const DJ_PHOTOS: { [key: string]: any } = {
-  'DJ GIZMO': require('../../assets/images/dj-gizmo.png'),
-  'DJ DNK': require('../../assets/images/dj-dnk.png'),
-  'DJ CRUZ': require('../../assets/images/dj-cruz.png'),
-  'DJ DANIEL MURILLO': require('../../assets/images/dj-daniel-murillo.png'),
-  'DJ SUNCEE': require('../../assets/images/dj-suncee.png'),
-  'DJ SAMO': require('../../assets/images/dj-samo.png'),
-  'DJ MABOY': require('../../assets/images/dj-maboy.png'),
-  'MC VELASQUEZ': require('../../assets/images/mc-velasquez.png'),
-};
+import { DJ_PHOTOS } from '../../src/config/djs';
 
 // Default DJs (will be replaced by event-specific lineup from API)
 const getDefaultLineup = (t: (key: string) => string) => [

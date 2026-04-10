@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string, retryCount = 0) => {
     try {
       setIsLoading(true);
-      console.log(`Login attempt... (try ${retryCount + 1})`);
+      logger.log(`Login attempt... (try ${retryCount + 1})`);
       const response = await api.post('/auth/login', { email, password }, { timeout: 15000 });
       
       const { access_token, id, email: userEmail, name, role, loyalty_points, badges } = response.data;
@@ -69,11 +69,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logger.error('Push notification registration failed:', err);
       });
     } catch (error: any) {
-      console.error('Login error:', error);
+      logger.error('Login error:', error);
       
       // Retry on network errors (not on 401/403)
       if (!error.response && retryCount < 2) {
-        console.log(`Login: Network error, retrying in 1 second...`);
+        logger.log(`Login: Network error, retrying in 1 second...`);
         await new Promise(resolve => setTimeout(resolve, 1000));
         return login(email, password, retryCount + 1);
       }
@@ -131,19 +131,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loadUser = async () => {
     // BUG 4 FIX: Skip loadUser if currently authenticating (social login in progress)
     if (isAuthenticating) {
-      console.log('loadUser: Skipped - authentication in progress');
+      logger.log('loadUser: Skipped - authentication in progress');
       return;
     }
     
     try {
-      console.log('loadUser: Checking for stored token...');
+      logger.log('loadUser: Checking for stored token...');
       
       // Check if we need to clear old tokens (after database migration)
       const AUTH_VERSION = 'supabase_v3'; // Incremented to force re-login for all users
       const storedAuthVersion = await AsyncStorage.getItem('auth_version');
       
       if (storedAuthVersion !== AUTH_VERSION) {
-        console.log('loadUser: Auth version changed - clearing old token');
+        logger.log('loadUser: Auth version changed - clearing old token');
         await AsyncStorage.removeItem('auth_token');
         await AsyncStorage.setItem('auth_version', AUTH_VERSION);
         setIsAuthenticated(false);
@@ -154,13 +154,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedToken = await AsyncStorage.getItem('auth_token');
       
       if (!storedToken) {
-        console.log('loadUser: No token - show login page');
+        logger.log('loadUser: No token - show login page');
         setIsAuthenticated(false);
         setIsLoading(false);
         return;
       }
       
-      console.log('loadUser: Token found - verifying...');
+      logger.log('loadUser: Token found - verifying...');
       
       try {
         // Use a longer timeout for token verification (cold start can take 10-15s)
@@ -170,15 +170,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(true);
         // Cache user data for offline use
         await AsyncStorage.setItem('cached_user_data', JSON.stringify(response.data));
-        console.log('loadUser: Token valid - user authenticated');
+        logger.log('loadUser: Token valid - user authenticated');
       } catch (error: any) {
-        console.log('loadUser: Token verification failed -', error.message);
+        logger.log('loadUser: Token verification failed -', error.message);
         
         // Only clear token on 401 (truly invalid/expired token)
         // 503 = server temporarily down, network error = connectivity issue
         // Both should keep the token for retry
         if (error.response?.status === 401) {
-          console.log('loadUser: Token invalid (401) - clearing auth data');
+          logger.log('loadUser: Token invalid (401) - clearing auth data');
           await AsyncStorage.removeItem('auth_token');
           await AsyncStorage.removeItem('cached_user_data');
           setUserState(null);
@@ -186,14 +186,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsAuthenticated(false);
         } else {
           // Network error, timeout, OR 503 - KEEP token and try cached data
-          console.log('loadUser: Temporary error (not 401) - keeping token');
+          logger.log('loadUser: Temporary error (not 401) - keeping token');
           setTokenState(storedToken);
           const cachedUserData = await AsyncStorage.getItem('cached_user_data');
           if (cachedUserData) {
             try {
               setUserState(JSON.parse(cachedUserData));
               setIsAuthenticated(true);
-              console.log('loadUser: Using cached user data');
+              logger.log('loadUser: Using cached user data');
             } catch {
               setIsAuthenticated(false);
             }
@@ -201,12 +201,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // No cache - still keep token, set not authenticated but DON'T delete token
             // Next foreground event will retry
             setIsAuthenticated(false);
-            console.log('loadUser: No cache available, will retry on next foreground');
+            logger.log('loadUser: No cache available, will retry on next foreground');
           }
         }
       }
     } catch (error) {
-      console.error('loadUser error:', error);
+      logger.error('loadUser error:', error);
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
@@ -236,7 +236,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         await warmupBackend();
       } catch (e) {
-        console.log('Initial warmup failed, continuing anyway');
+        logger.log('Initial warmup failed, continuing anyway');
       }
       loadUser();
     };

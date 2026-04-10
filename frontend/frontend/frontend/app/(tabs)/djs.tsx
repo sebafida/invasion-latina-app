@@ -30,17 +30,7 @@ interface DJ {
   is_resident: boolean;
 }
 
-// DJ Photos
-const DJ_PHOTOS: { [key: string]: any } = {
-  'DJ GIZMO': require('../../assets/images/dj-gizmo.png'),
-  'DJ DNK': require('../../assets/images/dj-dnk.png'),
-  'DJ CRUZ': require('../../assets/images/dj-cruz.png'),
-  'DJ DANIEL MURILLO': require('../../assets/images/dj-daniel-murillo.png'),
-  'DJ SUNCEE': require('../../assets/images/dj-suncee.png'),
-  'DJ SAMO': require('../../assets/images/dj-samo.png'),
-  'DJ MABOY': require('../../assets/images/dj-maboy.png'),
-  'MC VELASQUEZ': require('../../assets/images/mc-velasquez.png'),
-};
+import { DJ_PHOTOS } from '../../src/config/djs';
 
 // Default DJs data (will be replaced by API data when available)
 const DEFAULT_DJS: DJ[] = [
@@ -141,7 +131,6 @@ export default function DJsScreen() {
           // ALWAYS use default instagram_url since API returns null
           const finalInstagramUrl = defaultDj?.instagram_url || dj.instagram_url || null;
           
-          console.log(`DJ ${dj.name}: default=${defaultDj?.instagram_url}, final=${finalInstagramUrl}`);
           
           return {
             ...dj,
@@ -157,7 +146,6 @@ export default function DJsScreen() {
         setDjs(DEFAULT_DJS);
       }
     } catch (error) {
-      console.log('Using default DJs data');
       // Keep default data if API fails
       setDjs(DEFAULT_DJS);
     } finally {
@@ -354,12 +342,10 @@ export default function DJsScreen() {
             onPress={async () => {
               // Check token directly from AsyncStorage to get the freshest state
               const token = await AsyncStorage.getItem('auth_token');
-              console.log('Song request button pressed, token exists:', !!token);
               
               if (token && user) {
                 setShowRequestModal(true);
               } else {
-                console.log('Not authenticated, showing login modal');
                 setShowLoginModal(true);
               }
             }}

@@ -129,7 +129,6 @@ export default function ContentManagerScreen() {
           setWelcomeVenue(welcomeRes.data.venue_name || 'Mirano Continental, Brussels');
         }
       } catch (e) {
-        console.log('No welcome content found');
       }
       
     } catch (error) {

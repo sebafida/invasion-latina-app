@@ -20,7 +20,6 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
 import { LoginRequiredModal } from '../../src/components/LoginRequiredModal';
-import { registerForPushNotifications } from '../../src/config/notifications';
 import { WhatsAppButton } from '../../src/components/WhatsAppButton';
 
 interface LoyaltyData {

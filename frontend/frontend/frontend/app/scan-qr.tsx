@@ -38,7 +38,6 @@ export default function ScanQRScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isCameraReady) {
-        console.log('Camera ready timeout - enabling scanner');
         setIsCameraReady(true);
       }
     }, 1500);
@@ -76,13 +75,11 @@ export default function ScanQRScreen() {
   const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
     // CRITICAL FIX for iOS: Multiple protection layers against duplicate scans
     if (scanned || isLoading || isProcessingRef.current) {
-      console.log('Scan blocked - already processing');
       return;
     }
     
     // Check if same code scanned (iOS can fire multiple times)
     if (lastScannedCodeRef.current === data) {
-      console.log('Scan blocked - same QR code');
       return;
     }
     
@@ -92,12 +89,9 @@ export default function ScanQRScreen() {
     setScanned(true);
     setIsLoading(true);
 
-    console.log('Scanning QR code:', data);
 
     try {
-      console.log('Sending scan request to API...');
       const response = await api.post('/loyalty/scan-event-qr', { qr_code: data });
-      console.log('Scan response:', response.data);
       
       setResult({
         success: true,
@@ -106,7 +100,6 @@ export default function ScanQRScreen() {
         totalPoints: response.data.total_coins,
       });
     } catch (error: any) {
-      console.log('QR Scan Error:', error.response?.status, error.response?.data || error.message);
       let errorMessage = 'Erreur lors du scan';
       if (error.response?.status === 401) {
         errorMessage = 'Session expirée. Veuillez vous reconnecter.';
@@ -133,7 +126,6 @@ export default function ScanQRScreen() {
   };
 
   const handleCameraReady = () => {
-    console.log('Camera is ready for scanning');
     setIsCameraReady(true);
   };
 

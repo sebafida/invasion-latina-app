@@ -67,7 +67,7 @@ export default function DJRequestsScreen() {
       const response = await api.get('/dj/requests');
       setRequests(response.data);
     } catch (error) {
-      console.error('Failed to load requests:', error);
+      logger.error('Failed to load requests:', error);
     }
   };
 
@@ -95,7 +95,7 @@ export default function DJRequestsScreen() {
           latitude = location.coords.latitude.toString();
           longitude = location.coords.longitude.toString();
         } catch (locError) {
-          console.log('Could not get location:', locError);
+          logger.log('Could not get location:', locError);
         }
       }
 

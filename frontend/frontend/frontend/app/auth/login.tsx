@@ -100,7 +100,7 @@ export default function LoginScreen() {
       
       const userInfo = await userInfoResponse.json();
       
-      console.log('Google user info:', { id: userInfo.id, email: userInfo.email });
+      logger.log('Google user info:', { id: userInfo.id, email: userInfo.email });
       
       // Send to our backend
       const result = await api.post('/auth/social', {
@@ -211,7 +211,7 @@ export default function LoginScreen() {
         // User cancelled
         return;
       }
-      console.error('Apple sign in error:', error);
+      logger.error('Apple sign in error:', error);
       Alert.alert(t('error'), t('appleSignInFailed') || 'Apple sign in failed. Please try again or use email login.');
     } finally {
       setSocialLoading(null);
@@ -227,12 +227,12 @@ export default function LoginScreen() {
     
     try {
       setLoading(true);
-      console.log('Attempting login...');
+      logger.log('Attempting login...');
       await login(email, password);
-      console.log('Login successful');
+      logger.log('Login successful');
       // Navigation is handled by _layout.tsx useEffect when isAuthenticated changes
     } catch (error: any) {
-      console.error('Login error:', error);
+      logger.error('Login error:', error);
       Alert.alert(t('error'), t('loginFailed') || error.message || 'Login failed');
     } finally {
       setLoading(false);
