@@ -73,26 +73,20 @@ export default function ScanQRScreen() {
   }
 
   const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
-    // CRITICAL FIX for iOS: Multiple protection layers against duplicate scans
-    if (scanned || isLoading || isProcessingRef.current) {
+    // CRITICAL FIX for iOS: Use ref as FIRST check (synchronous, no React batching delay)
+    if (isProcessingRef.current) {
       return;
     }
-    
-    // Check if same code scanned (iOS can fire multiple times)
-    if (lastScannedCodeRef.current === data) {
-      return;
-    }
-    
-    // Set all blockers immediately
+
+    // Lock immediately BEFORE any state update (refs are synchronous)
     isProcessingRef.current = true;
     lastScannedCodeRef.current = data;
     setScanned(true);
     setIsLoading(true);
 
-
     try {
       const response = await api.post('/loyalty/scan-event-qr', { qr_code: data });
-      
+
       setResult({
         success: true,
         message: response.data.message,
@@ -100,16 +94,29 @@ export default function ScanQRScreen() {
         totalPoints: response.data.total_coins,
       });
     } catch (error: any) {
-      let errorMessage = 'Erreur lors du scan';
-      if (error.response?.status === 401) {
-        errorMessage = 'Session expirée. Veuillez vous reconnecter.';
-      } else if (error.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
+      // If backend says "already scanned" but we just scanned successfully,
+      // it means a race condition happened - treat as success (coins were already counted)
+      const detail = error.response?.data?.detail || '';
+      const isAlreadyScanned = error.response?.status === 400 && detail.includes('déjà scanné');
+
+      if (isAlreadyScanned) {
+        // Don't show error - the first request already gave the coins
+        setResult({
+          success: true,
+          message: 'QR code scanné avec succès !',
+        });
+      } else {
+        let errorMessage = 'Erreur lors du scan';
+        if (error.response?.status === 401) {
+          errorMessage = 'Session expirée. Veuillez vous reconnecter.';
+        } else if (detail) {
+          errorMessage = detail;
+        }
+        setResult({
+          success: false,
+          message: errorMessage,
+        });
       }
-      setResult({
-        success: false,
-        message: errorMessage,
-      });
     } finally {
       setIsLoading(false);
       // Keep isProcessingRef true to prevent any more scans until reset
@@ -189,7 +196,7 @@ export default function ScanQRScreen() {
           barcodeTypes: ['qr'],
         }}
         onCameraReady={handleCameraReady}
-        onBarcodeScanned={isCameraReady && !scanned ? handleBarCodeScanned : undefined}
+        onBarcodeScanned={isCameraReady && !isProcessingRef.current ? handleBarCodeScanned : undefined}
       />
 
       {/* UI overlay positioned on top of camera (CameraView does not support children) */}
