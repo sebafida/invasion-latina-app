@@ -2,7 +2,7 @@
   "expo": {
     "name": "Invasion Latina",
     "slug": "frontend",
-    "version": "1.0.22",
+    "version": "1.0.25",
     "orientation": "portrait",
     "icon": "./assets/images/app-icon.png",
     "scheme": "invasionlatina",
@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.invasionlatina.app",
-      "buildNumber": "95",
+      "buildNumber": "98",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Pour activer les requêtes DJ quand tu es à la soirée",
@@ -31,7 +31,11 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "CAMERA"
+        "CAMERA",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -79,7 +83,11 @@
     "extra": {
       "EXPO_PUBLIC_BACKEND_URL": "https://invasion-latina-app-production.up.railway.app",
       "GOOGLE_IOS_CLIENT_ID": "879493210543-t0apvh7hh52mdog38jdb2hkfv5urapcs.apps.googleusercontent.com",
-      "GOOGLE_ANDROID_CLIENT_ID": "879493210543-22aec6ek4shis767jo80hlfnf27hdbbn.apps.googleusercontent.com"
+      "GOOGLE_ANDROID_CLIENT_ID": "879493210543-22aec6ek4shis767jo80hlfnf27hdbbn.apps.googleusercontent.com",
+      "router": {},
+      "eas": {
+        "projectId": "2f2c1ddc-bb78-48d1-842d-29efd1fb623a"
+      }
     }
   }
 }
