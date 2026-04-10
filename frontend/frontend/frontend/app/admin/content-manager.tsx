@@ -887,264 +887,126 @@ export default function ContentManagerScreen() {
 
   const renderPhotosTab = () => (
     <View style={styles.tabContent}>
-      <Text style={styles.sectionTitle}>📷 Ajouter des Photos</Text>
+      <Text style={styles.sectionTitle}>Lien Photos par evenement</Text>
       <Text style={styles.helpText}>
-        Ajoutez des photos de vos événements pour la galerie
+        Collez le lien de l'album Facebook pour chaque evenement. Activez "Photos visibles" dans l'onglet Events d'abord.
       </Text>
 
-      {/* Event Dropdown Selector */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Événement *</Text>
-        {events.length === 0 ? (
-          <View style={styles.noEventsWarning}>
-            <Ionicons name="warning" size={20} color={theme.colors.warning} />
-            <Text style={styles.noEventsText}>
-              Aucun événement disponible. Créez d'abord un événement dans l'onglet "Events".
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.dropdownContainer}>
-            {events.map((event) => (
-              <TouchableOpacity
-                key={event.id}
-                style={[
-                  styles.dropdownItem,
-                  selectedEventId === event.id && styles.dropdownItemSelected
-                ]}
-                onPress={() => setSelectedEventId(event.id)}
-              >
-                <Ionicons 
-                  name={selectedEventId === event.id ? "radio-button-on" : "radio-button-off"} 
-                  size={20} 
-                  color={selectedEventId === event.id ? theme.colors.primary : theme.colors.textMuted} 
-                />
+      {events.length === 0 ? (
+        <View style={styles.noEventsWarning}>
+          <Ionicons name="warning" size={20} color={theme.colors.warning} />
+          <Text style={styles.noEventsText}>
+            Aucun evenement disponible. Creez d'abord un evenement dans l'onglet "Events".
+          </Text>
+        </View>
+      ) : (
+        events.map((event) => (
+          <View key={event.id} style={styles.linkEventCard}>
+            <View style={styles.linkEventHeader}>
+              <Ionicons name="calendar" size={18} color={theme.colors.primary} />
+              <Text style={styles.linkEventName}>{event.name}</Text>
+              <View style={[
+                styles.linkStatusBadge,
+                { backgroundColor: event.gallery_visible ? theme.colors.success + '20' : theme.colors.textMuted + '20' }
+              ]}>
                 <Text style={[
-                  styles.dropdownItemText,
-                  selectedEventId === event.id && styles.dropdownItemTextSelected
+                  styles.linkStatusText,
+                  { color: event.gallery_visible ? theme.colors.success : theme.colors.textMuted }
                 ]}>
-                  {event.name}
+                  {event.gallery_visible ? 'Visible' : 'Masque'}
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
-
-      {/* Clear Gallery Button */}
-      {selectedEventId && (
-        <TouchableOpacity 
-          style={[styles.dangerButton, { marginBottom: 15 }]}
-          onPress={() => {
-            const event = events.find(e => e.id === selectedEventId);
-            handleClearGallery(selectedEventId, event?.name || 'cet événement');
-          }}
-        >
-          <Ionicons name="trash" size={20} color="white" />
-          <Text style={styles.dangerButtonText}>Vider la galerie de cet événement</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Multiple Photos Upload Button */}
-      <TouchableOpacity 
-        style={[styles.uploadButton, { backgroundColor: theme.colors.success + '20', borderColor: theme.colors.success }]}
-        onPress={pickMultiplePhotos}
-        disabled={!selectedEventId || loading}
-      >
-        <Ionicons name="images" size={24} color={theme.colors.success} />
-        <Text style={[styles.uploadButtonText, { color: theme.colors.success }]}>
-          {loading ? 'Upload en cours...' : 'Sélectionner PLUSIEURS photos (max 10)'}
-        </Text>
-      </TouchableOpacity>
-
-      <Text style={styles.orText}>ou une seule photo :</Text>
-
-      {/* Single Photo Upload Button */}
-      <TouchableOpacity 
-        style={styles.uploadButton}
-        onPress={() => pickGalleryPhoto()}
-        disabled={!selectedEventId}
-      >
-        <Ionicons name="cloud-upload" size={24} color={theme.colors.primary} />
-        <Text style={styles.uploadButtonText}>Sélectionner une photo</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.orText}>ou entrez une URL :</Text>
-
-      {/* Photo URL Input */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>URL de la Photo</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="https://exemple.com/photo.jpg"
-          placeholderTextColor={theme.colors.textMuted}
-          value={newPhotoUrl}
-          onChangeText={setNewPhotoUrl}
-          autoCapitalize="none"
-        />
-      </View>
-
-      {/* Preview */}
-      {newPhotoUrl ? (
-        <View style={styles.previewContainer}>
-          <Text style={styles.previewLabel}>Aperçu:</Text>
-          <Image
-            source={{ uri: newPhotoUrl }}
-            style={styles.photoPreview}
-            resizeMode="cover"
-          />
-        </View>
-      ) : null}
-
-      <TouchableOpacity
-        style={[styles.primaryButton, (!selectedEventId || !newPhotoUrl) && { opacity: 0.5 }]}
-        onPress={handleAddPhoto}
-        disabled={loading || !selectedEventId || !newPhotoUrl}
-      >
-        {loading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <>
-            <Ionicons name="add-circle" size={20} color="white" />
-            <Text style={styles.primaryButtonText}>Ajouter la Photo</Text>
-          </>
-        )}
-      </TouchableOpacity>
-
-      <View style={styles.infoBox}>
-        <Ionicons name="bulb" size={20} color={theme.colors.secondary} />
-        <Text style={styles.infoText}>
-          💡 Conseil : Utilisez "Sélectionner PLUSIEURS photos" pour gagner du temps !
-        </Text>
-      </View>
-
-      {/* Current Gallery Photos */}
-      {selectedEventId && (
-        <View style={{ marginTop: 20 }}>
-          <Text style={styles.sectionTitle}>📸 Photos actuelles ({galleryPhotos.length})</Text>
-          {loadingPhotos ? (
-            <ActivityIndicator color={theme.colors.primary} />
-          ) : galleryPhotos.length === 0 ? (
-            <Text style={styles.helpText}>Aucune photo dans cette galerie</Text>
-          ) : (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
-              {galleryPhotos.map((photo) => (
-                <View key={photo.id} style={{ width: '30%', aspectRatio: 1, position: 'relative' }}>
-                  <Image
-                    source={{ uri: photo.url }}
-                    style={{ width: '100%', height: '100%', borderRadius: 8 }}
-                    resizeMode="cover"
-                  />
-                  <TouchableOpacity
-                    style={{
-                      position: 'absolute',
-                      top: 5,
-                      right: 5,
-                      backgroundColor: 'rgba(255,0,0,0.8)',
-                      borderRadius: 12,
-                      padding: 4,
-                    }}
-                    onPress={() => handleDeletePhoto(photo.id)}
-                  >
-                    <Ionicons name="trash" size={16} color="white" />
-                  </TouchableOpacity>
-                </View>
-              ))}
+              </View>
             </View>
-          )}
-        </View>
+            <TextInput
+              style={styles.linkEventInput}
+              value={event.gallery_url || ''}
+              placeholder="https://www.facebook.com/media/set/?set=..."
+              placeholderTextColor={theme.colors.textMuted}
+              autoCapitalize="none"
+              keyboardType="url"
+              onEndEditing={(e) => {
+                const url = e.nativeEvent.text.trim();
+                if (url !== (event.gallery_url || '')) {
+                  api.put(`/admin/events/${event.id}/visibility`, { gallery_url: url })
+                    .then(() => { Alert.alert('Sauvegarde', 'Lien photos mis a jour'); loadData(); })
+                    .catch(() => Alert.alert('Erreur', 'Impossible de sauvegarder le lien'));
+                }
+              }}
+            />
+            {!event.gallery_visible && (
+              <TouchableOpacity
+                style={styles.linkActivateButton}
+                onPress={() => handleToggleVisibility(event.id, 'gallery_visible', false)}
+              >
+                <Ionicons name="eye" size={16} color={theme.colors.primary} />
+                <Text style={styles.linkActivateText}>Activer Photos visibles</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ))
       )}
     </View>
   );
 
   const renderAftermoviesTab = () => (
     <View style={styles.tabContent}>
-      <Text style={styles.sectionTitle}>🎬 Ajouter un Aftermovie</Text>
+      <Text style={styles.sectionTitle}>Lien Aftermovie par evenement</Text>
       <Text style={styles.helpText}>
-        Ajoutez des vidéos YouTube/Vimeo de vos événements
+        Collez le lien Instagram ou YouTube de l'aftermovie pour chaque evenement. Activez "Aftermovie visible" dans l'onglet Events d'abord.
       </Text>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Titre de l'Aftermovie *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Invasion Latina - Amazonia Edition"
-          placeholderTextColor={theme.colors.textMuted}
-          value={newAftermovieName}
-          onChangeText={setNewAftermovieName}
-        />
-      </View>
-
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>URL de la Vidéo YouTube/Vimeo *</Text>
-        <TextInput
-          style={[styles.input, { marginBottom: 8 }]}
-          placeholder="https://youtube.com/watch?v=xxxxx"
-          placeholderTextColor={theme.colors.textMuted}
-          value={newAftermovieUrl}
-          onChangeText={setNewAftermovieUrl}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="url"
-          textContentType="URL"
-        />
-      </View>
-
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>URL de la Miniature (optionnel)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="https://exemple.com/thumbnail.jpg"
-          placeholderTextColor={theme.colors.textMuted}
-          value={newAftermovieThumb}
-          onChangeText={setNewAftermovieThumb}
-          autoCapitalize="none"
-        />
-      </View>
-
-      <TouchableOpacity
-        style={[styles.primaryButton, (!newAftermovieName || !newAftermovieUrl) && { opacity: 0.5 }]}
-        onPress={handleAddAftermovie}
-        disabled={loading || !newAftermovieName || !newAftermovieUrl}
-      >
-        {loading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <>
-            <Ionicons name="videocam" size={20} color="white" />
-            <Text style={styles.primaryButtonText}>Ajouter l'Aftermovie</Text>
-          </>
-        )}
-      </TouchableOpacity>
-
-      {/* Info box moved to bottom */}
-      <View style={[styles.infoBox, { marginTop: 20, borderLeftColor: theme.colors.warning }]}>
-        <Ionicons name="information-circle" size={20} color={theme.colors.warning} />
-        <Text style={[styles.infoText, { fontSize: 12 }]}>
-          💡 Les vidéos doivent être hébergées sur YouTube ou Vimeo. Copiez le lien et collez-le ci-dessus.
-        </Text>
-      </View>
-
-      {/* Existing Aftermovies */}
-      {aftermovies.length > 0 && (
-        <View style={styles.existingSection}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <Text style={styles.existingSectionTitle}>Aftermovies existants ({aftermovies.length})</Text>
-            <TouchableOpacity onPress={handleClearAllAftermovies}>
-              <Text style={{ color: '#FF3B30', fontSize: 14 }}>Tout supprimer</Text>
-            </TouchableOpacity>
-          </View>
-          {aftermovies.map((video) => (
-            <View key={video.id} style={[styles.existingItem, { justifyContent: 'space-between' }]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                <Ionicons name="play-circle" size={24} color={theme.colors.primary} />
-                <Text style={[styles.existingItemText, { flex: 1 }]}>{video.title}</Text>
-              </View>
-              <TouchableOpacity onPress={() => handleDeleteAftermovie(video.id)}>
-                <Ionicons name="trash-outline" size={22} color="#FF3B30" />
-              </TouchableOpacity>
-            </View>
-          ))}
+      {events.length === 0 ? (
+        <View style={styles.noEventsWarning}>
+          <Ionicons name="warning" size={20} color={theme.colors.warning} />
+          <Text style={styles.noEventsText}>
+            Aucun evenement disponible. Creez d'abord un evenement dans l'onglet "Events".
+          </Text>
         </View>
+      ) : (
+        events.map((event) => (
+          <View key={event.id} style={styles.linkEventCard}>
+            <View style={styles.linkEventHeader}>
+              <Ionicons name="videocam" size={18} color={theme.colors.primary} />
+              <Text style={styles.linkEventName}>{event.name}</Text>
+              <View style={[
+                styles.linkStatusBadge,
+                { backgroundColor: event.aftermovie_visible ? theme.colors.success + '20' : theme.colors.textMuted + '20' }
+              ]}>
+                <Text style={[
+                  styles.linkStatusText,
+                  { color: event.aftermovie_visible ? theme.colors.success : theme.colors.textMuted }
+                ]}>
+                  {event.aftermovie_visible ? 'Visible' : 'Masque'}
+                </Text>
+              </View>
+            </View>
+            <TextInput
+              style={styles.linkEventInput}
+              value={event.aftermovie_url || ''}
+              placeholder="https://www.instagram.com/reel/... ou https://youtube.com/..."
+              placeholderTextColor={theme.colors.textMuted}
+              autoCapitalize="none"
+              keyboardType="url"
+              onEndEditing={(e) => {
+                const url = e.nativeEvent.text.trim();
+                if (url !== (event.aftermovie_url || '')) {
+                  api.put(`/admin/events/${event.id}/visibility`, { aftermovie_url: url })
+                    .then(() => { Alert.alert('Sauvegarde', 'Lien aftermovie mis a jour'); loadData(); })
+                    .catch(() => Alert.alert('Erreur', 'Impossible de sauvegarder le lien'));
+                }
+              }}
+            />
+            {!event.aftermovie_visible && (
+              <TouchableOpacity
+                style={styles.linkActivateButton}
+                onPress={() => handleToggleVisibility(event.id, 'aftermovie_visible', false)}
+              >
+                <Ionicons name="eye" size={16} color={theme.colors.primary} />
+                <Text style={styles.linkActivateText}>Activer Aftermovie visible</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ))
       )}
     </View>
   );
@@ -1982,6 +1844,53 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     borderWidth: 1,
     borderColor: theme.colors.cardBackground,
+  },
+  linkEventCard: {
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  linkEventHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  linkEventName: {
+    flex: 1,
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+  },
+  linkStatusBadge: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 2,
+    borderRadius: theme.borderRadius.full,
+  },
+  linkStatusText: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.bold,
+  },
+  linkEventInput: {
+    backgroundColor: theme.colors.elevated,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.sm,
+    color: theme.colors.textPrimary,
+    fontSize: theme.fontSize.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.elevated,
+  },
+  linkActivateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+  },
+  linkActivateText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.primary,
   },
   deleteButton: {
     flexDirection: 'row',
