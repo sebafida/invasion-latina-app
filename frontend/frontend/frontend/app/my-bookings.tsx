@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -209,8 +210,28 @@ export default function MyBookingsScreen() {
 
                         {/* Submitted Date */}
                         <Text style={styles.submittedDate}>
-                          Demande envoyée le {formatDate(booking.submitted_at)}
+                          Demande envoyee le {formatDate(booking.submitted_at)}
                         </Text>
+
+                        {/* Pending booking: estimated delay + WhatsApp contact */}
+                        {booking.status === 'pending' && (
+                          <View style={styles.pendingInfo}>
+                            <View style={styles.pendingDelay}>
+                              <Ionicons name="time-outline" size={14} color={theme.colors.textSecondary} />
+                              <Text style={styles.pendingDelayText}>Reponse sous 24-48h</Text>
+                            </View>
+                            <TouchableOpacity
+                              style={styles.contactButton}
+                              onPress={() => {
+                                const msg = encodeURIComponent(`Bonjour, je souhaite avoir des nouvelles de ma reservation pour ${booking.event_name}. Merci !`);
+                                Linking.openURL(`https://wa.me/32478814497?text=${msg}`);
+                              }}
+                            >
+                              <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
+                              <Text style={styles.contactButtonText}>Nous contacter</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
                       </View>
                     </View>
                   );
@@ -432,6 +453,37 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
     marginTop: theme.spacing.md,
     fontStyle: 'italic',
+  },
+  pendingInfo: {
+    marginTop: theme.spacing.md,
+    padding: theme.spacing.sm,
+    backgroundColor: theme.colors.elevated,
+    borderRadius: theme.borderRadius.md,
+    gap: theme.spacing.sm,
+  },
+  pendingDelay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  pendingDelayText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+  },
+  contactButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    backgroundColor: '#25D366' + '15',
+    borderRadius: theme.borderRadius.md,
+    alignSelf: 'flex-start',
+  },
+  contactButtonText: {
+    fontSize: theme.fontSize.sm,
+    color: '#25D366',
+    fontWeight: theme.fontWeight.semibold,
   },
   bottomSpacer: {
     height: theme.spacing.xxl,

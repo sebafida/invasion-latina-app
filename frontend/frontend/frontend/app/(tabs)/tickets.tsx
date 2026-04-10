@@ -187,9 +187,30 @@ export default function TicketsScreen() {
                 {/* Info Note */}
                 {event.xceed_ticket_url && (
                   <Text style={styles.noteText}>
-                    ℹ️ XCEED
+                    XCEED
                   </Text>
                 )}
+
+                {/* Add to Calendar */}
+                <TouchableOpacity
+                  style={styles.calendarButton}
+                  onPress={() => {
+                    const startDate = new Date(event.event_date);
+                    const endDate = new Date(startDate.getTime() + 6 * 60 * 60 * 1000); // +6h
+                    const title = encodeURIComponent(event.name);
+                    const location = encodeURIComponent(event.venue_name + ', ' + (event.venue_address || 'Bruxelles'));
+                    // iOS calendar deep link
+                    const calUrl = `calshow:${Math.floor(startDate.getTime() / 1000)}`;
+                    // Use a more compatible URL scheme
+                    const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}/${endDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}&location=${location}`;
+                    Linking.openURL(googleCalUrl).catch(() => {
+                      Alert.alert('Calendrier', `${event.name}\n${new Date(event.event_date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}\n${event.venue_name}\n\nAjoute cet evenement manuellement a ton calendrier !`);
+                    });
+                  }}
+                >
+                  <Ionicons name="calendar-outline" size={18} color={theme.colors.primary} />
+                  <Text style={styles.calendarButtonText}>{t('addToCalendar') || 'Ajouter au calendrier'}</Text>
+                </TouchableOpacity>
               </View>
             </View>
           ))
@@ -352,6 +373,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: theme.spacing.sm,
     fontStyle: 'italic',
+  },
+  calendarButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '40',
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.primary + '10',
+  },
+  calendarButtonText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.semibold,
   },
 
   // Info Section

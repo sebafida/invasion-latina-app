@@ -240,19 +240,14 @@ export default function HomeScreen() {
               event.is_featured && styles.featuredEventCard,
               event.event_type === 'open_air' && styles.openAirEventCard
             ]}>
-              {event.is_featured && (
-                <View style={styles.featuredBadge}>
-                  <Text style={styles.featuredBadgeText}>⭐ ÉVÉNEMENT SPÉCIAL</Text>
-                </View>
-              )}
-              {event.event_type === 'open_air' && !event.is_featured && (
+              {event.event_type === 'open_air' && (
                 <View style={styles.openAirBadge}>
-                  <Text style={styles.openAirBadgeText}>🌴 OPEN AIR</Text>
+                  <Text style={styles.openAirBadgeText}>OPEN AIR</Text>
                 </View>
               )}
               <Text style={styles.eventName}>{event.name || 'Événement'}</Text>
               <Text style={styles.eventVenue}>
-                📍 {event.venue_name || 'Lieu à confirmer'}
+                {event.venue_name || 'Lieu a confirmer'}
               </Text>
               {event.event_date && (
                 <Text style={styles.eventDate}>
