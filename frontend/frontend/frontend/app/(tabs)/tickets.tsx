@@ -46,19 +46,9 @@ export default function TicketsScreen() {
   const loadEvents = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/events');
-      // Filter events that are in the future or have upcoming/published status
-      const now = new Date();
-      const upcomingEvents = response.data.filter((e: Event) => {
-        const eventDate = new Date(e.event_date);
-        // Show event if it's in the future OR has upcoming/published status
-        return eventDate > now || e.status === 'upcoming' || e.status === 'published';
-      });
-      // Sort by date, closest first
-      upcomingEvents.sort((a: Event, b: Event) => 
-        new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
-      );
-      setEvents(upcomingEvents);
+      const response = await api.get('/events/for-tickets');
+      const eventsList = response.data.events || response.data || [];
+      setEvents(eventsList);
     } catch (error) {
       console.error('Failed to load events:', error);
     } finally {

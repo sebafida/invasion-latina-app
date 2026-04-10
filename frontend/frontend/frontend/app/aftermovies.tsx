@@ -39,24 +39,21 @@ export default function AftermoviesScreen() {
   const loadVideos = async () => {
     try {
       setLoading(true);
-      // First try to get aftermovies from API
-      const response = await api.get('/media/aftermovies');
-      if (response.data && response.data.length > 0) {
-        setVideos(response.data);
-      } else {
-        // If no aftermovies, get events and show them as potential video placeholders
-        const eventsResponse = await api.get('/events');
-        const eventVideos = eventsResponse.data.map((event: any) => ({
+      // Load events that have aftermovie_visible + aftermovie_url
+      const response = await api.get('/events');
+      const eventsList = Array.isArray(response.data) ? response.data : (response.data.events || []);
+      const eventVideos = eventsList
+        .filter((event: any) => event.aftermovie_visible && event.aftermovie_url)
+        .map((event: any) => ({
           id: event.id,
           title: event.name,
           event_date: event.event_date,
           thumbnail_url: event.banner_image || 'https://via.placeholder.com/800x450',
-          video_url: event.aftermovie_url || event.video_url || '',
+          video_url: event.aftermovie_url,
           duration: '--:--',
           views: 0
-        })).filter((v: any) => v.video_url); // Only show events with videos
-        setVideos(eventVideos);
-      }
+        }));
+      setVideos(eventVideos);
     } catch (error) {
       console.error('Failed to load aftermovies:', error);
       setVideos([]);
@@ -193,11 +190,11 @@ export default function AftermoviesScreen() {
                 <View style={styles.videoInfo}>
                   <Text style={styles.videoTitle} numberOfLines={2}>{video.title}</Text>
                   <Text style={styles.videoDate}>
-                    {new Date(video.event_date).toLocaleDateString('fr-FR', {
+                    {video.event_date ? new Date(video.event_date).toLocaleDateString('fr-FR', {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric'
-                    })}
+                    }) : 'Date non disponible'}
                   </Text>
                   <View style={styles.videoStats}>
                     <Ionicons name="eye" size={12} color={theme.colors.textMuted} />

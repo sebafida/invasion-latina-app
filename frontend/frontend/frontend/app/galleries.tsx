@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Linking,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -21,6 +23,7 @@ interface EventGallery {
   event_date: string;
   photo_count: number;
   cover_image?: string;
+  gallery_url?: string;
 }
 
 export default function GalleriesScreen() {
@@ -36,45 +39,36 @@ export default function GalleriesScreen() {
   const loadGalleries = async () => {
     try {
       setLoading(true);
-      // First try to get galleries from API
-      const response = await api.get('/media/galleries');
-      if (response.data && response.data.length > 0) {
-        setGalleries(response.data);
-      } else {
-        // If no galleries, get events and show them as potential galleries
-        const eventsResponse = await api.get('/events');
-        const eventGalleries = eventsResponse.data.map((event: any) => ({
+      // Load events and filter those with gallery_visible + gallery_url
+      const response = await api.get('/events');
+      const eventsList = Array.isArray(response.data) ? response.data : (response.data.events || []);
+      const visibleGalleries = eventsList
+        .filter((event: any) => event.gallery_visible && event.gallery_url)
+        .map((event: any) => ({
           id: event.id,
           name: event.name,
           event_date: event.event_date,
           photo_count: 0,
-          cover_image: event.banner_image || null
+          cover_image: event.banner_image || null,
+          gallery_url: event.gallery_url,
         }));
-        setGalleries(eventGalleries);
-      }
+      setGalleries(visibleGalleries);
     } catch (error) {
       console.error('Failed to load galleries:', error);
-      // Try to get events as fallback
-      try {
-        const eventsResponse = await api.get('/events');
-        const eventGalleries = eventsResponse.data.map((event: any) => ({
-          id: event.id,
-          name: event.name,
-          event_date: event.event_date,
-          photo_count: 0,
-          cover_image: event.banner_image || null
-        }));
-        setGalleries(eventGalleries);
-      } catch {
-        setGalleries([]);
-      }
+      setGalleries([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const openGallery = (gallery: EventGallery) => {
-    router.push(`/gallery/${gallery.id}`);
+  const openGallery = async (gallery: EventGallery) => {
+    if (gallery.gallery_url) {
+      try {
+        await Linking.openURL(gallery.gallery_url);
+      } catch (error) {
+        Alert.alert('Erreur', 'Impossible d\'ouvrir le lien');
+      }
+    }
   };
 
   return (
@@ -138,11 +132,11 @@ export default function GalleriesScreen() {
                 <Text style={styles.galleryName}>{gallery.name}</Text>
                 <View style={styles.galleryMeta}>
                   <Text style={styles.galleryDate}>
-                    {new Date(gallery.event_date).toLocaleDateString('fr-FR', {
+                    {gallery.event_date ? new Date(gallery.event_date).toLocaleDateString('fr-FR', {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric'
-                    })}
+                    }) : 'Date non disponible'}
                   </Text>
                   <View style={styles.photoCountBadge}>
                     <Ionicons name="images" size={14} color="white" />
@@ -152,6 +146,7 @@ export default function GalleriesScreen() {
               </View>
               
               <View style={styles.viewButton}>
+                <Ionicons name="open-outline" size={18} color="white" />
                 <Text style={styles.viewButtonText}>{t('viewPhotos')}</Text>
                 <Ionicons name="arrow-forward" size={20} color="white" />
               </View>
