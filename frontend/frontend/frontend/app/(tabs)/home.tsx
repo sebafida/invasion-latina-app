@@ -236,60 +236,70 @@ export default function HomeScreen() {
             )}
             
             <View style={[
-              styles.eventCard, 
-              event.is_featured && styles.featuredEventCard,
+              styles.eventCard,
               event.event_type === 'open_air' && styles.openAirEventCard
             ]}>
-              {event.event_type === 'open_air' && (
-                <View style={styles.openAirBadge}>
-                  <Text style={styles.openAirBadgeText}>OPEN AIR</Text>
-                </View>
+              {/* Flyer background image */}
+              {event.banner_image && (
+                <Image
+                  source={{ uri: event.banner_image }}
+                  style={styles.eventCardBg}
+                  resizeMode="cover"
+                />
               )}
-              <Text style={styles.eventName}>{event.name || 'Événement'}</Text>
-              <Text style={styles.eventVenue}>
-                {event.venue_name || 'Lieu a confirmer'}
-              </Text>
-              {event.event_date && (
-                <Text style={styles.eventDate}>
-                  {new Date(event.event_date).toLocaleDateString('fr-FR', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+              <View style={event.banner_image ? styles.eventCardOverlay : { padding: theme.spacing.lg }}>
+                {event.event_type === 'open_air' && (
+                  <View style={styles.openAirBadge}>
+                    <Text style={styles.openAirBadgeText}>OPEN AIR</Text>
+                  </View>
+                )}
+                <Text style={styles.eventName}>{event.name || 'Evenement'}</Text>
+                <Text style={styles.eventVenue}>
+                  {event.venue_name || 'Lieu a confirmer'}
                 </Text>
-              )}
-              
-              {/* Countdown */}
-              {countdowns[event.id] && (
-                <View style={styles.countdownContainer}>
-                  <CountdownBox value={countdowns[event.id].days} label={t('daysLeft')} />
-                  <CountdownBox value={countdowns[event.id].hours} label={t('hoursLeft')} />
-                  <CountdownBox value={countdowns[event.id].minutes} label={t('minutesLeft')} />
-                  <CountdownBox value={countdowns[event.id].seconds} label={t('secondsLeft')} />
-                </View>
-              )}
-              
-              <TouchableOpacity 
-                style={styles.buyButton}
-                onPress={() => {
-                  if (event?.xceed_ticket_url) {
-                    Linking.openURL(event.xceed_ticket_url);
-                  } else {
-                    router.push('/(tabs)/tickets');
-                  }
-                }}
-              >
-                <View style={styles.buyButtonContent}>
-                  <Text style={styles.buyButtonText}>{t('buyTickets')}</Text>
-                  <Ionicons name="arrow-forward" size={20} color="white" />
-                </View>
-              </TouchableOpacity>
+                {event.event_date && (
+                  <Text style={styles.eventDate}>
+                    {new Date(event.event_date).toLocaleDateString('fr-FR', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </Text>
+                )}
+
+                {/* Countdown */}
+                {countdowns[event.id] && (
+                  <View style={styles.countdownContainer}>
+                    <CountdownBox value={countdowns[event.id].days} label={t('daysLeft')} />
+                    <CountdownBox value={countdowns[event.id].hours} label={t('hoursLeft')} />
+                    <CountdownBox value={countdowns[event.id].minutes} label={t('minutesLeft')} />
+                    <CountdownBox value={countdowns[event.id].seconds} label={t('secondsLeft')} />
+                  </View>
+                )}
+
+                <TouchableOpacity
+                  style={styles.buyButton}
+                  onPress={() => {
+                    if (event?.xceed_ticket_url) {
+                      Linking.openURL(event.xceed_ticket_url);
+                    } else {
+                      router.push('/(tabs)/tickets');
+                    }
+                  }}
+                >
+                  <View style={styles.buyButtonContent}>
+                    <Text style={styles.buyButtonText}>{t('buyTickets')}</Text>
+                    <Ionicons name="arrow-forward" size={20} color="white" />
+                  </View>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         ))}
         
-        {/* Quick Actions - No Title */}
+        <View style={styles.sectionDivider} />
+        {/* Quick Actions */}
         <View style={styles.quickActions}>
           <View style={styles.actionsGrid}>
             <ActionCard
@@ -323,6 +333,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        <View style={styles.sectionDivider} />
         {/* Spotify Playlist */}
         <TouchableOpacity 
           style={styles.spotifyCard}
@@ -380,6 +391,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        <View style={styles.sectionDivider} />
         {/* Social Media Section */}
         <View style={styles.socialSection}>
           <View style={styles.lineupHeader}>
@@ -524,11 +536,24 @@ const styles = StyleSheet.create({
   eventCard: {
     backgroundColor: theme.colors.cardBackground,
     borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
+    overflow: 'hidden',
     ...theme.shadows.lg,
     borderLeftWidth: 4,
     borderLeftColor: theme.colors.primary,
     marginBottom: theme.spacing.md,
+    position: 'relative',
+  },
+  eventCardBg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.2,
+  },
+  eventCardOverlay: {
+    padding: theme.spacing.lg,
+    backgroundColor: 'rgba(0,0,0,0.55)',
   },
   featuredEventCard: {
     borderLeftColor: '#FFD700',
@@ -581,7 +606,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   
-  // Countdown
+  // Countdown - Premium style
   countdownContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -594,6 +619,8 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     marginHorizontal: theme.spacing.xs,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '25',
   },
   countdownValue: {
     fontSize: 28,
@@ -602,15 +629,18 @@ const styles = StyleSheet.create({
   },
   countdownLabel: {
     fontSize: theme.fontSize.xs,
-    color: theme.colors.textMuted,
+    color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   
-  // Buy Button
+  // Buy Button - with subtle neon glow
   buyButton: {
     backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.md,
     overflow: 'hidden',
+    ...theme.shadows.neon,
   },
   buyButtonContent: {
     flexDirection: 'row',
@@ -625,6 +655,13 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.sm,
   },
   
+  // Section divider
+  sectionDivider: {
+    height: 1,
+    backgroundColor: theme.colors.elevated,
+    marginHorizontal: theme.spacing.xl,
+    marginVertical: theme.spacing.lg,
+  },
   // Quick Actions
   quickActions: {
     paddingHorizontal: theme.spacing.xl,

@@ -7,8 +7,8 @@ export const theme = {
     secondary: '#FFD700',     // Gold Accent
     black: '#000000',         // Deep Black
     
-    // Neon Accents
-    neonPink: '#00E5CC',     // Brand Turquoise (replaces pink)
+    // Accents
+    neonPink: '#E91E8C',     // Elegant rose - price accent
     neonBlue: '#00D4FF',
     neonGreen: '#39FF14',
     
