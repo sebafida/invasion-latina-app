@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.invasionlatina.app",
-      "buildNumber": "101",
+      "buildNumber": "104",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Pour activer les requêtes DJ quand tu es à la soirée",
@@ -22,7 +22,7 @@
     },
     "android": {
       "package": "com.invasionlatina.app",
-      "versionCode": 1,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/invasion-logo.png",
         "backgroundColor": "#000000"
