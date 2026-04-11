@@ -12,6 +12,7 @@ When ready to switch, rename this file to server.py
 import os
 import secrets
 from fastapi import FastAPI, HTTPException, Depends, Query, Body, File, UploadFile, Request
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
@@ -3721,6 +3722,43 @@ async def end_event(
         "message": "Événement terminé. Les demandes de chansons sont désactivées.",
         "requests_enabled": False
     }
+
+# ============ CALENDAR ICS DOWNLOAD ============
+
+@app.get("/api/calendar/{event_id}")
+async def get_event_ics(event_id: str, db: AsyncSession = Depends(get_db)):
+    """Generate .ics calendar file for an event (for iOS Calendar)"""
+    result = await db.execute(select(Event).where(Event.id == event_id))
+    event = result.scalar_one_or_none()
+
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    start = event.event_date
+    end = start + timedelta(hours=6)
+
+    def fmt(dt):
+        return dt.strftime("%Y%m%dT%H%M%SZ")
+
+    location = f"{event.venue_name}, {event.venue_address}" if event.venue_address else event.venue_name
+
+    ics = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Invasion Latina//App//EN
+BEGIN:VEVENT
+DTSTART:{fmt(start)}
+DTEND:{fmt(end)}
+SUMMARY:{event.name}
+LOCATION:{location}
+DESCRIPTION:Invasion Latina - {event.name}
+END:VEVENT
+END:VCALENDAR"""
+
+    return Response(
+        content=ics,
+        media_type="text/calendar",
+        headers={"Content-Disposition": f'attachment; filename="{event.name}.ics"'}
+    )
 
 # ============ EVENT FLYER UPDATE ============
 

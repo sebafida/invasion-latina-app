@@ -9,6 +9,8 @@ import {
   RefreshControl,
   Linking,
   Alert,
+  Platform,
+  Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
@@ -196,16 +198,29 @@ export default function TicketsScreen() {
                   style={styles.calendarButton}
                   onPress={() => {
                     const startDate = new Date(event.event_date);
-                    const endDate = new Date(startDate.getTime() + 6 * 60 * 60 * 1000); // +6h
-                    const title = encodeURIComponent(event.name);
-                    const location = encodeURIComponent(event.venue_name + ', ' + (event.venue_address || 'Bruxelles'));
-                    // iOS calendar deep link
-                    const calUrl = `calshow:${Math.floor(startDate.getTime() / 1000)}`;
-                    // Use a more compatible URL scheme
-                    const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}/${endDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}&location=${location}`;
-                    Linking.openURL(googleCalUrl).catch(() => {
-                      Alert.alert('Calendrier', `${event.name}\n${new Date(event.event_date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}\n${event.venue_name}\n\nAjoute cet evenement manuellement a ton calendrier !`);
-                    });
+                    const endDate = new Date(startDate.getTime() + 6 * 60 * 60 * 1000);
+                    const title = event.name;
+                    const location = event.venue_name + ', ' + (event.venue_address || 'Bruxelles');
+                    const description = `${title} - ${location}`;
+
+                    if (Platform.OS === 'ios') {
+                      // iOS: generate .ics content and open via data URL
+                      const pad = (n: number) => n.toString().padStart(2, '0');
+                      const formatICS = (d: Date) => `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+                      const icsUrl = `https://invasion-latina-app-production.up.railway.app/api/calendar/${event.id}`;
+                      Linking.openURL(icsUrl).catch(() => {
+                        // Fallback: share event details
+                        Share.share({
+                          message: `${title}\n${new Date(event.event_date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}\n${location}`,
+                        });
+                      });
+                    } else {
+                      // Android: Google Calendar
+                      const encodedTitle = encodeURIComponent(title);
+                      const encodedLocation = encodeURIComponent(location);
+                      const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodedTitle}&dates=${startDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}/${endDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}&location=${encodedLocation}`;
+                      Linking.openURL(googleCalUrl);
+                    }
                   }}
                 >
                   <Ionicons name="calendar-outline" size={18} color={theme.colors.primary} />
