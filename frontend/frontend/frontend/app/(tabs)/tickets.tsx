@@ -306,11 +306,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.cardBackground,
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
-    ...theme.shadows.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.elevated,
   },
   eventBanner: {
     width: '100%',
-    height: 200,
+    height: 220,
   },
   placeholderBanner: {
     backgroundColor: theme.colors.elevated,
@@ -368,6 +369,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.colors.primary,
+    ...theme.shadows.neon,
     borderRadius: theme.borderRadius.md,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,

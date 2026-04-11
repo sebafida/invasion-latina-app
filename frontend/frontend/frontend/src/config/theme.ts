@@ -8,7 +8,7 @@ export const theme = {
     black: '#000000',         // Deep Black
     
     // Accents
-    neonPink: '#E91E8C',     // Elegant rose - price accent
+    neonPink: '#FFD700',     // Gold accent for prices (matches brand)
     neonBlue: '#00D4FF',
     neonGreen: '#39FF14',
     
