@@ -9,6 +9,7 @@ import {
   Image,
   Linking,
   Animated,
+  Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -271,28 +272,44 @@ export default function HomeScreen() {
                 {/* Countdown */}
                 {countdowns[event.id] && (
                   <View style={styles.countdownContainer}>
-                    <CountdownBox value={countdowns[event.id].days} label={t('daysLeft')} />
-                    <CountdownBox value={countdowns[event.id].hours} label={t('hoursLeft')} />
-                    <CountdownBox value={countdowns[event.id].minutes} label={t('minutesLeft')} />
-                    <CountdownBox value={countdowns[event.id].seconds} label={t('secondsLeft')} />
+                    <CountdownBox value={countdowns[event.id].days} label={t('daysLeft')} urgent={countdowns[event.id].days === 0} />
+                    <CountdownBox value={countdowns[event.id].hours} label={t('hoursLeft')} urgent={countdowns[event.id].days === 0} />
+                    <CountdownBox value={countdowns[event.id].minutes} label={t('minutesLeft')} urgent={countdowns[event.id].days === 0} />
+                    <CountdownBox value={countdowns[event.id].seconds} label={t('secondsLeft')} urgent={countdowns[event.id].days === 0} />
                   </View>
                 )}
 
-                <TouchableOpacity
-                  style={styles.buyButton}
-                  onPress={() => {
-                    if (event?.xceed_ticket_url) {
-                      Linking.openURL(event.xceed_ticket_url);
-                    } else {
-                      router.push('/(tabs)/tickets');
-                    }
-                  }}
-                >
-                  <View style={styles.buyButtonContent}>
-                    <Text style={styles.buyButtonText}>{t('buyTickets')}</Text>
-                    <Ionicons name="arrow-forward" size={20} color="white" />
-                  </View>
-                </TouchableOpacity>
+                <View style={styles.eventButtons}>
+                  <TouchableOpacity
+                    style={styles.buyButton}
+                    onPress={() => {
+                      if (event?.xceed_ticket_url) {
+                        Linking.openURL(event.xceed_ticket_url);
+                      } else {
+                        router.push('/(tabs)/tickets');
+                      }
+                    }}
+                  >
+                    <View style={styles.buyButtonContent}>
+                      <Text style={styles.buyButtonText}>{t('buyTickets')}</Text>
+                      <Ionicons name="arrow-forward" size={20} color="white" />
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.shareButton}
+                    onPress={() => {
+                      const dateStr = event.event_date
+                        ? new Date(event.event_date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+                        : '';
+                      Share.share({
+                        message: `${event.name}\n${dateStr}\n${event.venue_name || ''}\n\nRejoins-moi a la plus grande soiree latino de Belgique !\nhttps://invasionlatina.be`,
+                      });
+                    }}
+                  >
+                    <Ionicons name="share-outline" size={20} color={theme.colors.textSecondary} />
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </View>
@@ -443,12 +460,33 @@ export default function HomeScreen() {
   );
 }
 
-const CountdownBox = ({ value, label }: { value: number; label: string }) => (
-  <View style={styles.countdownBox}>
-    <Text style={styles.countdownValue}>{value.toString().padStart(2, '0')}</Text>
-    <Text style={styles.countdownLabel}>{label}</Text>
-  </View>
-);
+const CountdownBox = ({ value, label, urgent }: { value: number; label: string; urgent?: boolean }) => {
+  const pulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (urgent) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulse, { toValue: 1.05, duration: 1000, useNativeDriver: true }),
+          Animated.timing(pulse, { toValue: 1, duration: 1000, useNativeDriver: true }),
+        ])
+      ).start();
+    }
+  }, [urgent]);
+
+  return (
+    <Animated.View style={[
+      styles.countdownBox,
+      urgent && styles.countdownBoxUrgent,
+      urgent && { transform: [{ scale: pulse }] },
+    ]}>
+      <Text style={[styles.countdownValue, urgent && styles.countdownValueUrgent]}>
+        {value.toString().padStart(2, '0')}
+      </Text>
+      <Text style={styles.countdownLabel}>{label}</Text>
+    </Animated.View>
+  );
+};
 
 const ActionCard = ({
   icon,
@@ -638,9 +676,23 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  countdownBoxUrgent: {
+    borderColor: theme.colors.primary + '60',
+    backgroundColor: theme.colors.primary + '10',
+  },
+  countdownValueUrgent: {
+    color: '#FFFFFF',
+  },
   
+  // Event buttons row
+  eventButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
   // Buy Button - with subtle neon glow
   buyButton: {
+    flex: 1,
     backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.md,
     overflow: 'hidden',
@@ -657,6 +709,16 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
     color: 'white',
     marginRight: theme.spacing.sm,
+  },
+  shareButton: {
+    width: 48,
+    height: 48,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.elevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.cardBackground,
   },
   
   // Section divider

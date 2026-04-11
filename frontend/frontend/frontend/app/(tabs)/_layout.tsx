@@ -1,9 +1,31 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../src/config/theme';
+
+// Animated logo with subtle shine on mount
+const AnimatedLogo = () => {
+  const opacity = useRef(new Animated.Value(0.7)).current;
+
+  useEffect(() => {
+    // Fade in elegantly on mount
+    Animated.sequence([
+      Animated.timing(opacity, { toValue: 1, duration: 800, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0.85, duration: 600, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.Image
+      source={require('../../assets/images/invasion-logo.png')}
+      style={[styles.headerLogo, { opacity }]}
+      resizeMode="contain"
+    />
+  );
+};
 
 // Back button component for non-home tabs
 const BackToHomeButton = () => {
@@ -65,13 +87,7 @@ export default function TabLayout() {
           // CUSTOM HEADER WITH CENTERED LOGO
           // ============================================
           headerTitleAlign: 'center',
-          headerTitle: () => (
-            <Image 
-              source={require('../../assets/images/invasion-logo.png')}
-              style={styles.headerLogo}
-              resizeMode="contain"
-            />
-          ),
+          headerTitle: () => <AnimatedLogo />,
           headerLeft: () => (
             <View style={styles.headerSpacer} />
           ),
