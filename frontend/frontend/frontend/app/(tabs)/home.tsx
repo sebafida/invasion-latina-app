@@ -303,7 +303,7 @@ export default function HomeScreen() {
                         ? new Date(event.event_date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
                         : '';
                       Share.share({
-                        message: `${event.name}\n${dateStr}\n${event.venue_name || ''}\n\nRejoins-moi a la plus grande soiree latino de Belgique !\nhttps://invasionlatina.be`,
+                        message: `${event.name}\n${dateStr}\n${event.venue_name || ''}\n\nRejoins-moi pour la plus grande soiree latino reggaeton de Belgique !\nhttps://invasionlatina.be`,
                       });
                     }}
                   >
