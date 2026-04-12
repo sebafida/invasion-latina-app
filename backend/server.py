@@ -1040,6 +1040,7 @@ async def get_events_for_booking(db: AsyncSession = Depends(get_db)):
                 "name": event.name,
                 "event_date": event.event_date.isoformat() if event.event_date else None,
                 "venue_name": event.venue_name,
+                "banner_image": event.banner_image,
                 "is_featured": getattr(event, 'is_featured', False),
                 "event_type": getattr(event, 'event_type', 'regular'),
             }

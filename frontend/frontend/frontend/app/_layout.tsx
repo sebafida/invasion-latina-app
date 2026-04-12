@@ -73,20 +73,31 @@ function AppContent() {
   }, [isAuthenticated]);
 
   // Handle navigation based on auth state changes
+  const isLoggingOut = useRef(false);
+
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated) {
-        logger.log('User authenticated - navigating to home');
+        isLoggingOut.current = false;
         wasAuthenticated.current = true;
         router.replace('/(tabs)/home');
       } else if (wasAuthenticated.current) {
-        // User just logged out (was authenticated, now not) - redirect to welcome
-        logger.log('User logged out - navigating to welcome');
+        // User just logged out - show loading while redirecting
+        isLoggingOut.current = true;
         wasAuthenticated.current = false;
         router.replace('/');
       }
     }
   }, [isLoading, isAuthenticated]);
+
+  // Show loading screen during logout (prevents "Oups" flash from ErrorBoundary)
+  if (isLoggingOut.current) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
 
   // Show loading screen while checking auth status
   if (isLoading) {

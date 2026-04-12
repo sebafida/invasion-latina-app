@@ -266,7 +266,7 @@ export default function VIPBookingScreen() {
         {/* Event Selector - ONLY SHOW IF MULTIPLE EVENTS */}
         {events.length > 1 && (
           <View style={styles.eventSelectorSection}>
-            <Text style={styles.eventSelectorTitle}>🎉 Choisissez l'événement</Text>
+            <Text style={styles.eventSelectorTitle}>Choisissez l'evenement</Text>
             <View style={styles.eventSelectorContainer}>
               {events.map((event) => (
                 <TouchableOpacity
@@ -278,14 +278,9 @@ export default function VIPBookingScreen() {
                   ]}
                   onPress={() => setSelectedEvent(event.id)}
                 >
-                  {event.is_featured && (
-                    <View style={styles.eventBadge}>
-                      <Text style={styles.eventBadgeText}>⭐ SPÉCIAL</Text>
-                    </View>
-                  )}
-                  {event.event_type === 'open_air' && !event.is_featured && (
+                  {event.event_type === 'open_air' && (
                     <View style={[styles.eventBadge, { backgroundColor: '#4CAF5030' }]}>
-                      <Text style={[styles.eventBadgeText, { color: '#4CAF50' }]}>🌴 OPEN AIR</Text>
+                      <Text style={[styles.eventBadgeText, { color: '#4CAF50' }]}>OPEN AIR</Text>
                     </View>
                   )}
                   <Text style={[
