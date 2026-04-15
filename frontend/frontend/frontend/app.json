@@ -2,7 +2,7 @@
   "expo": {
     "name": "Invasion Latina",
     "slug": "frontend",
-    "version": "1.0.26",
+    "version": "1.0.27",
     "orientation": "portrait",
     "icon": "./assets/images/app-icon.png",
     "scheme": "invasionlatina",
@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.invasionlatina.app",
-      "buildNumber": "104",
+      "buildNumber": "105",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Pour activer les requêtes DJ quand tu es à la soirée",
@@ -22,7 +22,7 @@
     },
     "android": {
       "package": "com.invasionlatina.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/invasion-logo.png",
         "backgroundColor": "#000000"
