@@ -917,11 +917,13 @@ export default function ContentManagerScreen() {
               </View>
             </View>
             <TextInput
+              key={`gallery-${event.id}-${event.gallery_url || ''}`}
               style={styles.linkEventInput}
-              value={event.gallery_url || ''}
+              defaultValue={event.gallery_url || ''}
               placeholder="https://www.facebook.com/media/set/?set=..."
               placeholderTextColor={theme.colors.textMuted}
               autoCapitalize="none"
+              autoCorrect={false}
               keyboardType="url"
               onEndEditing={(e) => {
                 const url = e.nativeEvent.text.trim();
@@ -980,11 +982,13 @@ export default function ContentManagerScreen() {
               </View>
             </View>
             <TextInput
+              key={`aftermovie-${event.id}-${event.aftermovie_url || ''}`}
               style={styles.linkEventInput}
-              value={event.aftermovie_url || ''}
+              defaultValue={event.aftermovie_url || ''}
               placeholder="https://www.instagram.com/reel/... ou https://youtube.com/..."
               placeholderTextColor={theme.colors.textMuted}
               autoCapitalize="none"
+              autoCorrect={false}
               keyboardType="url"
               onEndEditing={(e) => {
                 const url = e.nativeEvent.text.trim();
@@ -1309,11 +1313,13 @@ export default function ContentManagerScreen() {
               <Text style={styles.linkInputLabel}>Lien album photos (Facebook)</Text>
               <View style={styles.linkInputRow}>
                 <TextInput
+                  key={`event-gallery-${event.id}-${event.gallery_url || ''}`}
                   style={styles.linkInput}
-                  value={event.gallery_url || ''}
+                  defaultValue={event.gallery_url || ''}
                   placeholder="https://www.facebook.com/album/..."
                   placeholderTextColor={theme.colors.textMuted}
                   autoCapitalize="none"
+                  autoCorrect={false}
                   keyboardType="url"
                   onEndEditing={(e) => {
                     const url = e.nativeEvent.text.trim();
@@ -1333,11 +1339,13 @@ export default function ContentManagerScreen() {
               <Text style={styles.linkInputLabel}>Lien aftermovie (Instagram/YouTube)</Text>
               <View style={styles.linkInputRow}>
                 <TextInput
+                  key={`event-aftermovie-${event.id}-${event.aftermovie_url || ''}`}
                   style={styles.linkInput}
-                  value={event.aftermovie_url || ''}
+                  defaultValue={event.aftermovie_url || ''}
                   placeholder="https://www.instagram.com/reel/..."
                   placeholderTextColor={theme.colors.textMuted}
                   autoCapitalize="none"
+                  autoCorrect={false}
                   keyboardType="url"
                   onEndEditing={(e) => {
                     const url = e.nativeEvent.text.trim();
