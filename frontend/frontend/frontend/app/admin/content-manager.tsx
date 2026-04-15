@@ -928,8 +928,13 @@ export default function ContentManagerScreen() {
               onEndEditing={(e) => {
                 const url = e.nativeEvent.text.trim();
                 if (url !== (event.gallery_url || '')) {
-                  api.put(`/admin/events/${event.id}/visibility`, { gallery_url: url })
-                    .then(() => { Alert.alert('Sauvegarde', 'Lien photos mis a jour'); loadData(); })
+                  // Auto-activate visibility when a URL is added
+                  const payload: any = { gallery_url: url };
+                  if (url && !event.gallery_visible) {
+                    payload.gallery_visible = true;
+                  }
+                  api.put(`/admin/events/${event.id}/visibility`, payload)
+                    .then(() => { Alert.alert('Sauvegarde', url ? 'Lien photos sauvegarde et visible' : 'Lien retire'); loadData(); })
                     .catch(() => Alert.alert('Erreur', 'Impossible de sauvegarder le lien'));
                 }
               }}
@@ -993,8 +998,13 @@ export default function ContentManagerScreen() {
               onEndEditing={(e) => {
                 const url = e.nativeEvent.text.trim();
                 if (url !== (event.aftermovie_url || '')) {
-                  api.put(`/admin/events/${event.id}/visibility`, { aftermovie_url: url })
-                    .then(() => { Alert.alert('Sauvegarde', 'Lien aftermovie mis a jour'); loadData(); })
+                  // Auto-activate visibility when a URL is added
+                  const payload: any = { aftermovie_url: url };
+                  if (url && !event.aftermovie_visible) {
+                    payload.aftermovie_visible = true;
+                  }
+                  api.put(`/admin/events/${event.id}/visibility`, payload)
+                    .then(() => { Alert.alert('Sauvegarde', url ? 'Lien aftermovie sauvegarde et visible' : 'Lien retire'); loadData(); })
                     .catch(() => Alert.alert('Erreur', 'Impossible de sauvegarder le lien'));
                 }
               }}
