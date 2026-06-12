@@ -10,6 +10,7 @@ import {
   TextInput,
   Alert,
   Modal,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -23,6 +24,10 @@ import { LoginRequiredModal } from '../../src/components/LoginRequiredModal';
 import { GlassCard } from '../../src/components/ui/GlassCard';
 import { GradientButton } from '../../src/components/ui/GradientButton';
 import { PressableScale } from '../../src/components/ui/PressableScale';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+// 2 colonnes : largeur en pixels (un % à l'intérieur de PressableScale ne se résout pas)
+const DJ_CARD_WIDTH = (SCREEN_WIDTH - theme.spacing.lg * 2 - theme.spacing.md) / 2;
 
 interface DJ {
   id: string;
@@ -275,11 +280,13 @@ export default function DJsScreen() {
                 </View>
 
                 {/* Name */}
-                <Text style={styles.djName}>{dj.name}</Text>
+                <Text style={styles.djName} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>
+                  {dj.name}
+                </Text>
 
                 {/* Tap to follow */}
                 {dj.instagram_url && (
-                  <Text style={styles.followText}>{t('followOnInstagram')}</Text>
+                  <Text style={styles.followText} numberOfLines={1}>{t('followOnInstagram')}</Text>
                 )}
               </GlassCard>
             </PressableScale>
@@ -525,10 +532,13 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   djCardWrap: {
-    width: '47%',
+    width: DJ_CARD_WIDTH,
   },
   djCard: {
     alignItems: 'center',
+    width: '100%',
+    minHeight: 188,
+    justifyContent: 'flex-start',
   },
   photoContainer: {
     position: 'relative',
