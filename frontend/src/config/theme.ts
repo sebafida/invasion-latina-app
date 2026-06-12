@@ -7,8 +7,8 @@ export const theme = {
     secondary: '#FFD700',     // Gold Accent
     black: '#000000',         // Deep Black
     
-    // Neon Accents
-    neonPink: '#00E5CC',     // Brand Turquoise (replaces pink)
+    // Accents
+    neonPink: '#FFD700',     // Gold accent for prices (matches brand)
     neonBlue: '#00D4FF',
     neonGreen: '#39FF14',
     
@@ -97,6 +97,32 @@ export const theme = {
       shadowRadius: 10,
       elevation: 10,
     },
+    goldGlow: {
+      shadowColor: '#FFD700',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.5,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+  },
+
+  // Gradient palettes (use with expo-linear-gradient)
+  gradients: {
+    brand: ['#00E5CC', '#00B8D4'] as const,          // turquoise → cyan
+    brandDark: ['#00E5CC', '#007A99'] as const,
+    gold: ['#FFD700', '#FFA500'] as const,            // gold → orange
+    night: ['#1A1A1A', '#0A0A0A'] as const,           // card fade
+    nightCard: ['#222226', '#141417'] as const,       // subtle card depth
+    overlayBottom: ['transparent', 'rgba(0,0,0,0.92)'] as const, // image caption fade
+    danger: ['#FF5E57', '#FF3B30'] as const,
+  },
+
+  // Hairline borders for glass cards
+  borders: {
+    subtle: 'rgba(255, 255, 255, 0.08)',
+    medium: 'rgba(255, 255, 255, 0.14)',
+    brand: 'rgba(0, 229, 204, 0.35)',
+    gold: 'rgba(255, 215, 0, 0.35)',
   },
 };
 

@@ -13,15 +13,21 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import QRCode from 'react-native-qrcode-svg';
 import { useRouter } from 'expo-router';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
+import { Language } from '../../src/i18n/translations';
+import { getDateLocale } from '../../src/i18n/dateLocale';
 import api from '../../src/config/api';
 import { LoginRequiredModal } from '../../src/components/LoginRequiredModal';
-import { registerForPushNotifications } from '../../src/config/notifications';
 import { WhatsAppButton } from '../../src/components/WhatsAppButton';
+import logger from '../../src/config/logger';
+import { GlassCard } from '../../src/components/ui/GlassCard';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { PressableScale } from '../../src/components/ui/PressableScale';
 
 interface LoyaltyData {
   points: number;
@@ -42,7 +48,7 @@ interface FreeEntryVoucher {
   used: boolean;
 }
 
-const LANGUAGES = [
+const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
   { code: 'es', name: 'Español', flag: '🇪🇸' },
@@ -89,7 +95,7 @@ export default function ProfileScreen() {
   // Save new name
   const handleSaveName = async () => {
     if (!newName.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer un nom');
+      Alert.alert(t('error'), t('enterNameError'));
       return;
     }
     
@@ -104,10 +110,10 @@ export default function ProfileScreen() {
       
       setShowEditNameModal(false);
       setNewName('');
-      Alert.alert('Succès', 'Votre nom a été mis à jour');
+      Alert.alert(t('success'), t('nameUpdated'));
     } catch (error) {
-      console.error('Error saving name:', error);
-      Alert.alert('Erreur', 'Impossible de sauvegarder le nom');
+      logger.error('Error saving name:', error);
+      Alert.alert(t('error'), t('nameSaveError'));
     } finally {
       setSavingName(false);
     }
@@ -153,10 +159,6 @@ export default function ProfileScreen() {
     if (user) {
       loadLoyaltyData();
       checkFreeEntryVoucher();
-      // Check if Apple user needs to set their name
-      if (needsNameSetup()) {
-        setShowNameSetup(true);
-      }
     }
   }, [user]);
 
@@ -167,7 +169,7 @@ export default function ProfileScreen() {
       const response = await api.get('/loyalty/my-points');
       setLoyaltyData(response.data);
     } catch (error) {
-      console.error('Failed to load loyalty data:', error);
+      logger.error('Failed to load loyalty data:', error);
     } finally {
       setLoading(false);
     }
@@ -206,7 +208,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleChangeLanguage = async (langCode: string) => {
+  const handleChangeLanguage = async (langCode: Language) => {
     setChangingLanguage(true);
     // Simulate a small delay for better UX
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -239,7 +241,7 @@ export default function ProfileScreen() {
                 }
               }, 100);
             } catch (error) {
-              console.log('Logout error (expected):', error);
+              logger.log('Logout error (expected):', error);
             }
           }, 
           style: 'destructive' 
@@ -289,7 +291,7 @@ export default function ProfileScreen() {
                       }
                     }, 100);
                   } catch (e) {
-                    console.log('Post-delete navigation error (expected):', e);
+                    logger.log('Post-delete navigation error (expected):', e);
                   }
                 }}]
               );
@@ -335,13 +337,13 @@ export default function ProfileScreen() {
           </View>
 
           {/* Login / Register buttons */}
-          <TouchableOpacity
-            style={styles.loginButton}
+          <GradientButton
+            title={t('createFreeAccount')}
+            icon="person-add"
+            variant="brand"
             onPress={() => router.push('/auth/register')}
-          >
-            <Ionicons name="person-add" size={20} color="white" />
-            <Text style={styles.loginButtonText}>{t('createFreeAccount')}</Text>
-          </TouchableOpacity>
+            style={styles.loginButton}
+          />
 
           <TouchableOpacity
             style={styles.secondaryButton}
@@ -351,9 +353,10 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           {/* Language Selector */}
-          <TouchableOpacity 
+          <PressableScale
             style={styles.languageSelectorButton}
             onPress={() => setShowLanguageModal(true)}
+            accessibilityLabel={t('language')}
           >
             <View style={styles.languageSelectorLeft}>
               <Ionicons name="language" size={24} color={theme.colors.primary} />
@@ -365,7 +368,7 @@ export default function ProfileScreen() {
               </View>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
-          </TouchableOpacity>
+          </PressableScale>
         </View>
 
         {/* Language Modal */}
@@ -379,7 +382,11 @@ export default function ProfileScreen() {
             <View style={styles.languageModalContent}>
               <View style={styles.languageModalHeader}>
                 <Text style={styles.languageModalTitle}>{t('chooseLanguage')}</Text>
-                <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
+                <TouchableOpacity
+                  onPress={() => setShowLanguageModal(false)}
+                  accessibilityLabel={t('close')}
+                  accessibilityRole="button"
+                >
                   <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
                 </TouchableOpacity>
               </View>
@@ -445,9 +452,18 @@ export default function ProfileScreen() {
             <View style={styles.profileInfo}>
               {getDisplayName() ? (
                 <>
-                  <View style={styles.avatar}>
-                    <Ionicons name="person" size={40} color={theme.colors.textPrimary} />
-                  </View>
+                  <LinearGradient
+                    colors={theme.gradients.brand}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[styles.avatarHalo, theme.shadows.neon]}
+                  >
+                    <View style={styles.avatar}>
+                      <Text style={styles.avatarInitial}>
+                        {(getDisplayName() || '?').charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                  </LinearGradient>
                   <View>
                   <Text style={styles.name}>{getDisplayName()}</Text>
                   {user?.email && !user.email.includes('privaterelay.appleid.com') && !user.email.includes('@appleid.com') && (
@@ -466,7 +482,7 @@ export default function ProfileScreen() {
                 onPress={() => setShowEditNameModal(true)}
               >
                 <Ionicons name="person-add" size={24} color={theme.colors.primary} />
-                <Text style={styles.editNameButtonText}>Ajouter votre prénom</Text>
+                <Text style={styles.editNameButtonText}>{t('addYourFirstName')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -482,14 +498,14 @@ export default function ProfileScreen() {
           <View style={styles.modalOverlay}>
             <View style={styles.editNameModalContent}>
               <View style={styles.editNameModalHeader}>
-                <Text style={styles.editNameModalTitle}>Votre prénom</Text>
+                <Text style={styles.editNameModalTitle}>{t('yourFirstName')}</Text>
                 <TouchableOpacity onPress={() => setShowEditNameModal(false)}>
                   <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
                 </TouchableOpacity>
               </View>
               <TextInput
                 style={styles.editNameInput}
-                placeholder="Entrez votre prénom"
+                placeholder={t('enterFirstNamePlaceholder')}
                 placeholderTextColor={theme.colors.textMuted}
                 value={newName}
                 onChangeText={setNewName}
@@ -503,7 +519,7 @@ export default function ProfileScreen() {
                 {savingName ? (
                   <ActivityIndicator color="white" />
                 ) : (
-                  <Text style={styles.saveNameButtonText}>Sauvegarder</Text>
+                  <Text style={styles.saveNameButtonText}>{t('save')}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -521,8 +537,8 @@ export default function ProfileScreen() {
               <Ionicons name="calendar" size={24} color={theme.colors.primary} />
             </View>
             <View style={styles.quickActionContent}>
-              <Text style={styles.quickActionTitle}>Mes Réservations</Text>
-              <Text style={styles.quickActionSubtitle}>Voir vos tables réservées</Text>
+              <Text style={styles.quickActionTitle}>{t('myBookings')}</Text>
+              <Text style={styles.quickActionSubtitle}>{t('viewYourReservedTables')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
           </TouchableOpacity>
@@ -566,11 +582,14 @@ export default function ProfileScreen() {
               {/* Progress Bar */}
               <View style={styles.progressContainer}>
                 <View style={styles.progressBar}>
-                  <View 
+                  <LinearGradient
+                    colors={theme.gradients.brand}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
                     style={[
                       styles.progressFill,
                       { width: `${loyaltyData.progress_to_next_reward}%` }
-                    ]} 
+                    ]}
                   />
                 </View>
                 <Text style={styles.progressText}>
@@ -627,7 +646,7 @@ export default function ProfileScreen() {
                       <View style={styles.historyInfo}>
                         <Text style={styles.historyEvent}>{checkin.event_name}</Text>
                         <Text style={styles.historyDate}>
-                          {new Date(checkin.date).toLocaleDateString(language === 'en' ? 'en-US' : language === 'es' ? 'es-ES' : language === 'nl' ? 'nl-NL' : 'fr-FR')}
+                          {new Date(checkin.date).toLocaleDateString(getDateLocale(language))}
                         </Text>
                       </View>
                       <Text style={styles.historyPoints}>+{checkin.points} {t('coins')}</Text>
@@ -648,8 +667,8 @@ export default function ProfileScreen() {
             <Ionicons name="scan" size={28} color="white" />
           </View>
           <View style={styles.scanQRInfo}>
-            <Text style={styles.scanQRTitle}>Scanner le QR Code</Text>
-            <Text style={styles.scanQRSubtitle}>Gagne des Invasion Coins à chaque soirée !</Text>
+            <Text style={styles.scanQRTitle}>{t('scanQRCode')}</Text>
+            <Text style={styles.scanQRSubtitle}>{t('earnCoinsEveryParty')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={24} color={theme.colors.textMuted} />
         </TouchableOpacity>
@@ -907,7 +926,7 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    paddingBottom: 40,
+    paddingBottom: 110,
   },
 
   // Guest styles
@@ -996,14 +1015,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: theme.colors.cardBackground,
+  avatarHalo: {
+    width: 86,
+    height: 86,
+    borderRadius: 43,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: theme.spacing.md,
+  },
+  avatar: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    backgroundColor: theme.colors.cardBackground,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarInitial: {
+    fontSize: theme.fontSize.xxl,
+    fontWeight: theme.fontWeight.black,
+    color: theme.colors.primary,
   },
   name: {
     fontSize: theme.fontSize.xl,
@@ -1036,6 +1067,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.xl,
+    borderWidth: 1,
+    borderColor: theme.borders.brand,
+    ...theme.shadows.neon,
   },
   loyaltyHeader: {
     flexDirection: 'row',
@@ -1068,7 +1102,11 @@ const styles = StyleSheet.create({
   pointsNumber: {
     fontSize: 64,
     fontWeight: theme.fontWeight.black,
-    color: theme.colors.primary,
+    color: theme.colors.secondary,
+    fontVariant: ['tabular-nums'],
+    textShadowColor: 'rgba(255, 215, 0, 0.35)',
+    textShadowRadius: 16,
+    textShadowOffset: { width: 0, height: 0 },
   },
   pointsLabel: {
     fontSize: theme.fontSize.md,
@@ -1085,7 +1123,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: theme.colors.primary,
+    borderRadius: 6,
   },
   progressText: {
     fontSize: theme.fontSize.sm,

@@ -4,11 +4,18 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import api from './api';
+import logger from './logger';
+
+// Tronque le token pour ne jamais le logger en clair
+const maskToken = (token: string | null | undefined) =>
+  token ? `${token.slice(0, 12)}…` : 'null';
 
 // Configure notifications
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -21,15 +28,15 @@ let responseListener: any = null;
 export const setupNotificationListeners = (onNotificationReceived?: (notification: any) => void, onNotificationResponse?: (response: any) => void) => {
   // Clean up existing listeners
   if (notificationListener) {
-    Notifications.removeNotificationSubscription(notificationListener);
+    notificationListener.remove();
   }
   if (responseListener) {
-    Notifications.removeNotificationSubscription(responseListener);
+    responseListener.remove();
   }
 
   // Listener for notifications received while app is in foreground
   notificationListener = Notifications.addNotificationReceivedListener(notification => {
-    console.log('📬 Notification received:', notification);
+    logger.log('📬 Notification received:', notification);
     if (onNotificationReceived) {
       onNotificationReceived(notification);
     }
@@ -37,7 +44,7 @@ export const setupNotificationListeners = (onNotificationReceived?: (notificatio
 
   // Listener for when user taps on notification
   responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-    console.log('👆 Notification tapped:', response);
+    logger.log('👆 Notification tapped:', response);
     if (onNotificationResponse) {
       onNotificationResponse(response);
     }
@@ -45,19 +52,19 @@ export const setupNotificationListeners = (onNotificationReceived?: (notificatio
 
   return () => {
     if (notificationListener) {
-      Notifications.removeNotificationSubscription(notificationListener);
+      notificationListener.remove();
     }
     if (responseListener) {
-      Notifications.removeNotificationSubscription(responseListener);
+      responseListener.remove();
     }
   };
 };
 
 export const registerForPushNotifications = async (): Promise<string | null> => {
-  let token = null;
+  let token: string | null = null;
 
   if (!Device.isDevice) {
-    console.log('Push notifications only work on physical devices');
+    logger.log('Push notifications only work on physical devices');
     return null;
   }
 
@@ -71,7 +78,7 @@ export const registerForPushNotifications = async (): Promise<string | null> => 
   }
 
   if (finalStatus !== 'granted') {
-    console.log('Push notification permission denied');
+    logger.log('Push notification permission denied');
     return null;
   }
 
@@ -84,7 +91,7 @@ export const registerForPushNotifications = async (): Promise<string | null> => 
       projectId: projectId,
     });
     token = response.data;
-    console.log('✅ Push token obtained:', token);
+    logger.log('✅ Push token obtained:', maskToken(token));
 
     // Store locally
     await AsyncStorage.setItem('push_token', token);
@@ -92,21 +99,21 @@ export const registerForPushNotifications = async (): Promise<string | null> => 
     // Send to backend to store in user profile
     try {
       await api.put('/users/push-token', { push_token: token });
-      console.log('✅ Push token saved to server');
+      logger.log('✅ Push token saved to server');
     } catch (error) {
-      console.log('❌ Failed to save push token to server:', error);
+      logger.log('❌ Failed to save push token to server:', error);
       // Retry once after 2 seconds
       setTimeout(async () => {
         try {
           await api.put('/users/push-token', { push_token: token });
-          console.log('✅ Push token saved to server (retry)');
+          logger.log('✅ Push token saved to server (retry)');
         } catch (retryError) {
-          console.log('❌ Push token retry failed:', retryError);
+          logger.log('❌ Push token retry failed:', retryError);
         }
       }, 2000);
     }
   } catch (error) {
-    console.log('❌ Error getting push token:', error);
+    logger.log('❌ Error getting push token:', error);
   }
 
   // Configure for Android

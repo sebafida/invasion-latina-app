@@ -9,22 +9,24 @@ import {
   Platform,
   ScrollView,
   Alert,
-  Image,
   ActivityIndicator,
   Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
-import { Button } from '../../src/components/Button';
 import api from '../../src/config/api';
 import { registerForPushNotifications } from '../../src/config/notifications';
 import logger from '../../src/config/logger';
+import { GlassCard } from '../../src/components/ui/GlassCard';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { PressableScale } from '../../src/components/ui/PressableScale';
 
 // Only import Apple Authentication on iOS
 let AppleAuthentication: any = null;
@@ -33,13 +35,10 @@ if (Platform.OS === 'ios') {
 }
 
 // Only import Google Auth on native platforms
-let useGoogleAuth: any = null;
-let makeRedirectUri: any = null;
+let useAuthRequest: any = null;
 if (Platform.OS !== 'web') {
   const Google = require('expo-auth-session/providers/google');
-  const AuthSession = require('expo-auth-session');
-  useGoogleAuth = Google.useAuthRequest;
-  makeRedirectUri = AuthSession.makeRedirectUri;
+  useAuthRequest = Google.useAuthRequest;
 }
 
 WebBrowser.maybeCompleteAuthSession();
@@ -55,42 +54,29 @@ const LANGUAGES = [
   { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
 ];
 
-// Custom hook to handle Google Auth only on native platforms
-function useGoogleAuthHook(): readonly [any, any, () => void] {
-  // On web or if useGoogleAuth is not available, return dummy values
-  if (!useGoogleAuth) {
-    return [null, null, () => {}] as const;
-  }
-  
-  // Always call the hook with the same config structure
-  const config = isNativePlatform ? {
-    iosClientId: GOOGLE_IOS_CLIENT_ID,
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
-  } : {
-    iosClientId: '',
-    androidClientId: '',
-  };
-  
-  return useGoogleAuth(config);
-}
-
 export default function LoginScreen() {
   const router = useRouter();
   const { login, setUser, setToken, setIsAuthenticating } = useAuth();
   const { t, language, setLanguage } = useLanguage();
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'apple' | 'google' | null>(null);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [focusedField, setFocusedField] = useState<'email' | 'password' | null>(null);
 
   const getCurrentLanguage = () => {
     return LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
   };
 
-  // Google Auth - using the custom hook that handles platform differences
-  const [request, response, promptAsync] = useGoogleAuthHook();
+  // Google Auth - only on native platforms
+  const googleAuth = isNativePlatform && useAuthRequest ? useAuthRequest({
+    iosClientId: GOOGLE_IOS_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
+  }) : [null, null, () => {}];
+
+  const [request, response, promptAsync] = googleAuth;
 
   React.useEffect(() => {
     if (response?.type === 'success') {
@@ -100,25 +86,25 @@ export default function LoginScreen() {
 
   const handleGoogleSignIn = async (accessToken: string | undefined) => {
     if (!accessToken) return;
-    
+
     try {
       setIsAuthenticating(true); // BUG 4 FIX: Prevent race condition
       setSocialLoading('google');
-      
+
       // Get user info from Google
       const userInfoResponse = await fetch(
         'https://www.googleapis.com/userinfo/v2/me',
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      
+
       if (!userInfoResponse.ok) {
         throw new Error('Failed to fetch Google user info');
       }
-      
+
       const userInfo = await userInfoResponse.json();
-      
-      console.log('Google user info:', { id: userInfo.id, email: userInfo.email });
-      
+
+      logger.log('Google user info:', { id: userInfo.id, email: userInfo.email });
+
       // Send to our backend
       const result = await api.post('/auth/social', {
         provider: 'google',
@@ -127,14 +113,14 @@ export default function LoginScreen() {
         email: userInfo.email,
         name: userInfo.name,
       });
-      
+
       if (result.data.access_token) {
         // BUG 3 FIX: Save auth_version after Google login
         await AsyncStorage.setItem('auth_token', result.data.access_token);
         await AsyncStorage.setItem('auth_version', 'supabase_v3');
         setToken(result.data.access_token);
         setUser(result.data);
-        
+
         // 2.2 - Activer les notifications push après Google login
         registerForPushNotifications().catch(err => {
           logger.error('Push notification registration failed:', err);
@@ -157,28 +143,28 @@ export default function LoginScreen() {
       Alert.alert(t('error'), 'Apple Sign In is only available on iOS');
       return;
     }
-    
+
     try {
       setIsAuthenticating(true); // BUG 4 FIX: Prevent race condition
       setSocialLoading('apple');
-      
+
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       });
-      
+
       logger.log('Apple credential received:', {
         user: credential.user,
         email: credential.email,
         hasIdentityToken: !!credential.identityToken
       });
-      
+
       // Apple only provides email on first sign in
       // For subsequent sign ins, we need to use the user ID to find the account
       const email = credential.email || `${credential.user}@privaterelay.appleid.com`;
-      
+
       // Get name from Apple credential (only available on first sign in)
       let userName = undefined;
       if (credential.fullName) {
@@ -189,7 +175,7 @@ export default function LoginScreen() {
           userName = fullName;
         }
       }
-      
+
       // Send to our backend with retry logic
       try {
         const result = await api.post('/auth/social', {
@@ -199,13 +185,13 @@ export default function LoginScreen() {
           email: email,
           name: userName,
         }, { timeout: 15000 });
-        
+
         if (result.data.access_token) {
           await AsyncStorage.setItem('auth_token', result.data.access_token);
           await AsyncStorage.setItem('auth_version', 'supabase_v3');
           setToken(result.data.access_token);
           setUser(result.data);
-          
+
           // 2.2 - Activer les notifications push après Apple login
           registerForPushNotifications().catch(err => {
             logger.error('Push notification registration failed:', err);
@@ -228,34 +214,34 @@ export default function LoginScreen() {
         // User cancelled
         return;
       }
-      console.error('Apple sign in error:', error);
+      logger.error('Apple sign in error:', error);
       Alert.alert(t('error'), t('appleSignInFailed') || 'Apple sign in failed. Please try again or use email login.');
     } finally {
       setSocialLoading(null);
       setIsAuthenticating(false); // BUG 4 FIX: Reset flag
     }
   };
-  
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert(t('error'), t('fillAllFields') || 'Please fill all fields');
       return;
     }
-    
+
     try {
       setLoading(true);
-      console.log('Attempting login...');
+      logger.log('Attempting login...');
       await login(email, password);
-      console.log('Login successful');
+      logger.log('Login successful');
       // Navigation is handled by _layout.tsx useEffect when isAuthenticated changes
     } catch (error: any) {
-      console.error('Login error:', error);
+      logger.error('Login error:', error);
       Alert.alert(t('error'), t('loginFailed') || error.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
-  
+
   return (
     <View style={styles.container}>
       <KeyboardAvoidingView
@@ -265,13 +251,13 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <Image 
+            <Image
               source={require('../../assets/images/invasion-logo.png')}
               style={styles.logoImage}
-              resizeMode="contain"
+              contentFit="contain"
             />
           </View>
-          
+
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>{t('welcome')}</Text>
@@ -279,25 +265,27 @@ export default function LoginScreen() {
           </View>
 
           {/* Language Selector */}
-          <TouchableOpacity 
-            style={styles.languageSelector}
+          <PressableScale
             onPress={() => setShowLanguageModal(true)}
+            accessibilityLabel={t('chooseLanguage')}
+            style={styles.languageSelector}
           >
             <Text style={styles.languageSelectorText}>
               {getCurrentLanguage().flag} {getCurrentLanguage().name}
             </Text>
             <Ionicons name="chevron-down" size={16} color={theme.colors.primary} />
-          </TouchableOpacity>
+          </PressableScale>
 
           {/* Social Login Buttons - Only on native platforms */}
           {isNativePlatform && (
             <>
               <View style={styles.socialButtons}>
                 {Platform.OS === 'ios' && (
-                  <TouchableOpacity
-                    style={styles.appleButton}
-                    onPress={handleAppleSignIn}
+                  <PressableScale
+                    onPress={() => handleAppleSignIn()}
                     disabled={socialLoading !== null}
+                    accessibilityLabel={t('continueWithApple')}
+                    style={styles.appleButton}
                   >
                     {socialLoading === 'apple' ? (
                       <ActivityIndicator color="#000000" />
@@ -307,13 +295,14 @@ export default function LoginScreen() {
                         <Text style={styles.appleButtonText}>{t('continueWithApple')}</Text>
                       </>
                     )}
-                  </TouchableOpacity>
+                  </PressableScale>
                 )}
-                
-                <TouchableOpacity
-                  style={styles.googleButton}
+
+                <PressableScale
                   onPress={() => promptAsync()}
                   disabled={!request || socialLoading !== null}
+                  accessibilityLabel={t('continueWithGoogle')}
+                  style={styles.googleButton}
                 >
                   {socialLoading === 'google' ? (
                     <ActivityIndicator color="#333" />
@@ -323,7 +312,7 @@ export default function LoginScreen() {
                       <Text style={styles.googleButtonText}>{t('continueWithGoogle')}</Text>
                     </>
                   )}
-                </TouchableOpacity>
+                </PressableScale>
               </View>
 
               {/* Divider */}
@@ -334,55 +323,68 @@ export default function LoginScreen() {
               </View>
             </>
           )}
-          
+
           {/* Form */}
           <View style={styles.form}>
             <View style={styles.inputContainer}>
               <Text style={styles.label}>{t('email')}</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="ton@email.com"
-                placeholderTextColor={theme.colors.textMuted}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
+              <GlassCard
+                noPadding
+                style={[styles.inputCard, focusedField === 'email' && styles.inputCardFocused]}
+              >
+                <TextInput
+                  style={styles.input}
+                  placeholder="ton@email.com"
+                  placeholderTextColor={theme.colors.textMuted}
+                  value={email}
+                  onChangeText={setEmail}
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField(null)}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                />
+              </GlassCard>
             </View>
-            
+
             <View style={styles.inputContainer}>
               <Text style={styles.label}>{t('password')}</Text>
-              <TextInput
-                style={styles.input}
-                placeholder={t('enterPassword')}
-                placeholderTextColor={theme.colors.textMuted}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-              />
+              <GlassCard
+                noPadding
+                style={[styles.inputCard, focusedField === 'password' && styles.inputCardFocused]}
+              >
+                <TextInput
+                  style={styles.input}
+                  placeholder={t('enterPassword')}
+                  placeholderTextColor={theme.colors.textMuted}
+                  value={password}
+                  onChangeText={setPassword}
+                  onFocus={() => setFocusedField('password')}
+                  onBlur={() => setFocusedField(null)}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+              </GlassCard>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.forgotPassword}
               onPress={() => Alert.alert(
                 t('forgotPassword'),
-                'Contactez-nous à info@invasionlatina.be pour réinitialiser votre mot de passe.'
+                t('forgotPasswordMessage')
               )}
             >
               <Text style={styles.forgotPasswordText}>{t('forgotPassword')}</Text>
             </TouchableOpacity>
-            
-            <Button
+
+            <GradientButton
               title={t('login')}
+              icon="log-in-outline"
               onPress={handleLogin}
               loading={loading}
-              fullWidth
-              size="lg"
             />
           </View>
-          
+
           {/* Footer */}
           <TouchableOpacity
             style={styles.footer}
@@ -406,7 +408,11 @@ export default function LoginScreen() {
           <View style={styles.languageModalContent}>
             <View style={styles.languageModalHeader}>
               <Text style={styles.languageModalTitle}>{t('chooseLanguage')}</Text>
-              <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
+              <TouchableOpacity
+                onPress={() => setShowLanguageModal(false)}
+                accessibilityRole="button"
+                accessibilityLabel={t('close')}
+              >
                 <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
               </TouchableOpacity>
             </View>
@@ -458,7 +464,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xl,
     paddingVertical: theme.spacing.xxl,
   },
-  
+
   logoContainer: {
     alignItems: 'center',
     marginBottom: theme.spacing.xl,
@@ -467,15 +473,16 @@ const styles = StyleSheet.create({
     width: 220,
     height: 110,
   },
-  
+
   header: {
     marginBottom: theme.spacing.xl,
   },
   title: {
     fontSize: theme.fontSize.xxxl,
-    fontWeight: '900' as any,
+    fontWeight: theme.fontWeight.black,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
+    letterSpacing: 0.4,
   },
   subtitle: {
     fontSize: theme.fontSize.md,
@@ -492,8 +499,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.borderRadius.lg,
     paddingVertical: 14,
+    minHeight: 50,
     gap: theme.spacing.sm,
     borderWidth: 1,
     borderColor: '#FFFFFF',
@@ -501,25 +509,22 @@ const styles = StyleSheet.create({
   appleButtonText: {
     color: '#000000',
     fontSize: theme.fontSize.md,
-    fontWeight: '600' as any,
+    fontWeight: theme.fontWeight.semibold,
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'white',
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.borderRadius.lg,
     paddingVertical: 14,
+    minHeight: 50,
     gap: theme.spacing.sm,
-  },
-  googleIcon: {
-    width: 20,
-    height: 20,
   },
   googleButtonText: {
     color: '#333',
     fontSize: theme.fontSize.md,
-    fontWeight: '600' as any,
+    fontWeight: theme.fontWeight.semibold,
   },
 
   // Divider
@@ -532,13 +537,15 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: theme.colors.elevated,
+    backgroundColor: theme.borders.subtle,
   },
   dividerText: {
     color: theme.colors.textMuted,
     fontSize: theme.fontSize.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
-  
+
   form: {
     marginBottom: theme.spacing.xl,
   },
@@ -547,18 +554,21 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: theme.fontSize.sm,
-    fontWeight: '600' as any,
+    fontWeight: theme.fontWeight.semibold,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
+    letterSpacing: 0.3,
+  },
+  inputCard: {
+    borderRadius: theme.borderRadius.md,
+  },
+  inputCardFocused: {
+    borderColor: theme.borders.brand,
   },
   input: {
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
     padding: theme.spacing.md,
     fontSize: theme.fontSize.md,
     color: theme.colors.textPrimary,
-    borderWidth: 1,
-    borderColor: theme.colors.elevated,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
@@ -567,9 +577,9 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     color: theme.colors.primary,
     fontSize: theme.fontSize.sm,
-    fontWeight: '600' as any,
+    fontWeight: theme.fontWeight.semibold,
   },
-  
+
   footer: {
     alignItems: 'center',
     marginTop: theme.spacing.xl,
@@ -580,7 +590,7 @@ const styles = StyleSheet.create({
   },
   footerLink: {
     color: theme.colors.primary,
-    fontWeight: '700' as any,
+    fontWeight: theme.fontWeight.bold,
   },
 
   // Language Selector
@@ -595,11 +605,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.elevated,
     borderRadius: theme.borderRadius.full,
     alignSelf: 'center',
+    borderWidth: 1,
+    borderColor: theme.borders.subtle,
   },
   languageSelectorText: {
     color: theme.colors.textPrimary,
     fontSize: theme.fontSize.sm,
-    fontWeight: '500' as any,
+    fontWeight: theme.fontWeight.medium,
   },
 
   // Language Modal
@@ -614,6 +626,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     padding: theme.spacing.xl,
     paddingBottom: 40,
+    borderTopWidth: 1,
+    borderTopColor: theme.borders.subtle,
   },
   languageModalHeader: {
     flexDirection: 'row',
@@ -623,7 +637,7 @@ const styles = StyleSheet.create({
   },
   languageModalTitle: {
     fontSize: theme.fontSize.xl,
-    fontWeight: '700' as any,
+    fontWeight: theme.fontWeight.bold,
     color: theme.colors.textPrimary,
   },
   languageOptions: {
@@ -651,10 +665,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: theme.fontSize.md,
     color: theme.colors.textPrimary,
-    fontWeight: '500' as any,
+    fontWeight: theme.fontWeight.medium,
   },
   languageOptionTextActive: {
     color: theme.colors.primary,
-    fontWeight: '700' as any,
+    fontWeight: theme.fontWeight.bold,
   },
 });

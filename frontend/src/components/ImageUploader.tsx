@@ -11,6 +11,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../config/theme';
+import logger from '../config/logger';
 
 interface ImageUploaderProps {
   label: string;
@@ -104,7 +105,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const uploadToCloudinary = async (uri: string) => {
     if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-      console.log('Cloudinary non configuré');
+      logger.log('Cloudinary non configuré');
       return;
     }
 
@@ -136,7 +137,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         throw new Error('Upload failed');
       }
     } catch (error) {
-      console.error('Cloudinary upload error:', error);
+      logger.error('Cloudinary upload error:', error);
       Alert.alert('Erreur', 'Impossible d\'uploader l\'image. Veuillez réessayer.');
     } finally {
       setUploading(false);

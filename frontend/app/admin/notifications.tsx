@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
+import logger from '../../src/config/logger';
 
 interface NotificationStats {
   total_users: number;
@@ -44,7 +45,7 @@ export default function NotificationsScreen() {
       const response = await api.get('/admin/notifications/stats');
       setStats(response.data);
     } catch (error) {
-      console.error('Failed to load notification stats:', error);
+      logger.error('Failed to load notification stats:', error);
     } finally {
       setLoadingStats(false);
     }
@@ -82,7 +83,7 @@ export default function NotificationsScreen() {
                 }}]
               );
             } catch (error: any) {
-              console.error('Failed to send notification:', error);
+              logger.error('Failed to send notification:', error);
               Alert.alert('Erreur', error.response?.data?.detail || 'Impossible d\'envoyer la notification');
             } finally {
               setLoading(false);
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.darkGray,
+    borderBottomColor: theme.colors.elevated,
   },
   backButton: {
     width: 40,
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
   },
   statsCard: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.cardBackground,
     borderRadius: 12,
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
@@ -338,7 +339,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   templateCard: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.cardBackground,
     borderRadius: 12,
     padding: theme.spacing.md,
     marginRight: theme.spacing.sm,
@@ -364,7 +365,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.cardBackground,
     borderRadius: 8,
     padding: theme.spacing.md,
     color: theme.colors.textPrimary,
@@ -389,7 +390,7 @@ const styles = StyleSheet.create({
   typeOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.cardBackground,
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 20,

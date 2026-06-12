@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
 import { useLanguage } from '../../src/context/LanguageContext';
+import logger from '../../src/config/logger';
 
 interface NotificationPreferences {
   events: boolean;
@@ -52,7 +53,7 @@ export default function NotificationPreferencesScreen() {
           setPreferences(JSON.parse(stored));
         }
       } catch (e) {
-        console.log('Using default preferences');
+        logger.log('Using default preferences');
       }
     } finally {
       setLoading(false);
@@ -178,14 +179,14 @@ export default function NotificationPreferencesScreen() {
 
         {/* Events Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎉 Événements</Text>
+          <Text style={styles.sectionTitle}>🎉 {t('eventsSection')}</Text>
           
           <View style={styles.preferenceItem}>
             <View style={styles.preferenceInfo}>
               <Ionicons name="calendar" size={24} color="#FF9800" />
               <View style={styles.preferenceText}>
-                <Text style={styles.preferenceTitle}>Nouveaux événements</Text>
-                <Text style={styles.preferenceDesc}>Être notifié des nouvelles soirées et événements</Text>
+                <Text style={styles.preferenceTitle}>{t('newEvents')}</Text>
+                <Text style={styles.preferenceDesc}>{t('newEventsDesc')}</Text>
               </View>
             </View>
             <Switch
@@ -199,14 +200,14 @@ export default function NotificationPreferencesScreen() {
 
         {/* Promotions Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎁 Promotions</Text>
+          <Text style={styles.sectionTitle}>🎁 {t('promotions')}</Text>
           
           <View style={styles.preferenceItem}>
             <View style={styles.preferenceInfo}>
               <Ionicons name="pricetag" size={24} color="#E91E63" />
               <View style={styles.preferenceText}>
-                <Text style={styles.preferenceTitle}>Offres et promotions</Text>
-                <Text style={styles.preferenceDesc}>Recevoir les offres spéciales et réductions</Text>
+                <Text style={styles.preferenceTitle}>{t('promotionsAndOffers')}</Text>
+                <Text style={styles.preferenceDesc}>{t('promotionsDesc')}</Text>
               </View>
             </View>
             <Switch
@@ -220,14 +221,14 @@ export default function NotificationPreferencesScreen() {
 
         {/* Song Requests Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎵 Demandes de musique</Text>
+          <Text style={styles.sectionTitle}>🎵 {t('musicRequestsSection')}</Text>
           
           <View style={styles.preferenceItem}>
             <View style={styles.preferenceInfo}>
               <Ionicons name="musical-notes" size={24} color="#9C27B0" />
               <View style={styles.preferenceText}>
-                <Text style={styles.preferenceTitle}>Réponses aux demandes</Text>
-                <Text style={styles.preferenceDesc}>Être notifié quand le DJ accepte ou refuse votre demande</Text>
+                <Text style={styles.preferenceTitle}>{t('songRequestResponses')}</Text>
+                <Text style={styles.preferenceDesc}>{t('songRequestResponsesDesc')}</Text>
               </View>
             </View>
             <Switch
@@ -241,14 +242,14 @@ export default function NotificationPreferencesScreen() {
 
         {/* Friends Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>👥 Amis et social</Text>
+          <Text style={styles.sectionTitle}>👥 {t('friendsSection')}</Text>
           
           <View style={styles.preferenceItem}>
             <View style={styles.preferenceInfo}>
               <Ionicons name="people" size={24} color="#2196F3" />
               <View style={styles.preferenceText}>
-                <Text style={styles.preferenceTitle}>Activité sociale</Text>
-                <Text style={styles.preferenceDesc}>Notifications liées à vos amis et activités sociales</Text>
+                <Text style={styles.preferenceTitle}>{t('socialActivity')}</Text>
+                <Text style={styles.preferenceDesc}>{t('socialActivityDesc')}</Text>
               </View>
             </View>
             <Switch

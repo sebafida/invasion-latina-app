@@ -4,16 +4,26 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  Image,
   RefreshControl,
   Linking,
   Alert,
+  Platform,
+  Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../../src/config/theme';
 import { useLanguage } from '../../src/context/LanguageContext';
+import { getDateLocale } from '../../src/i18n/dateLocale';
 import api from '../../src/config/api';
+import logger from '../../src/config/logger';
+import { ErrorRetry } from '../../src/components/ErrorRetry';
+import { GlassCard } from '../../src/components/ui/GlassCard';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { PressableScale } from '../../src/components/ui/PressableScale';
+import { SkeletonCard } from '../../src/components/ui/Skeleton';
+import { EmptyState } from '../../src/components/ui/EmptyState';
 
 interface Event {
   id: string;
@@ -35,9 +45,10 @@ interface Event {
 const DEFAULT_EVENT_FLYER = require('../../assets/images/event-flyer.jpg');
 
 export default function TicketsScreen() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     loadEvents();
@@ -46,11 +57,13 @@ export default function TicketsScreen() {
   const loadEvents = async () => {
     try {
       setLoading(true);
+      setError(false);
       const response = await api.get('/events/for-tickets');
       const eventsList = response.data.events || response.data || [];
       setEvents(eventsList);
     } catch (error) {
-      console.error('Failed to load events:', error);
+      logger.error('Failed to load events:', error);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -58,15 +71,15 @@ export default function TicketsScreen() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'long', 
-      day: 'numeric', 
-      month: 'long', 
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     };
-    return date.toLocaleDateString('fr-FR', options);
+    return date.toLocaleDateString(getDateLocale(language), options);
   };
 
   const handleBuyTickets = async (event: Event) => {
@@ -86,8 +99,32 @@ export default function TicketsScreen() {
         Alert.alert(t('error'), t('connectionError'));
       }
     } catch (error) {
-      console.error('Failed to open XCEED link:', error);
+      logger.error('Failed to open XCEED link:', error);
       Alert.alert(t('error'), t('connectionError'));
+    }
+  };
+
+  const handleAddToCalendar = (event: Event) => {
+    const startDate = new Date(event.event_date);
+    const endDate = new Date(startDate.getTime() + 6 * 60 * 60 * 1000);
+    const title = event.name;
+    const location = event.venue_name + ', ' + (event.venue_address || 'Bruxelles');
+
+    if (Platform.OS === 'ios') {
+      // iOS: open hosted .ics
+      const icsUrl = `https://invasion-latina-app-production.up.railway.app/api/calendar/${event.id}`;
+      Linking.openURL(icsUrl).catch(() => {
+        // Fallback: share event details
+        Share.share({
+          message: `${title}\n${new Date(event.event_date).toLocaleDateString(getDateLocale(language), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}\n${location}`,
+        });
+      });
+    } else {
+      // Android: Google Calendar
+      const encodedTitle = encodeURIComponent(title);
+      const encodedLocation = encodeURIComponent(location);
+      const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodedTitle}&dates=${startDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}/${endDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}&location=${encodedLocation}`;
+      Linking.openURL(googleCalUrl);
     }
   };
 
@@ -112,42 +149,49 @@ export default function TicketsScreen() {
     >
       <View style={styles.content}>
         {/* Events List */}
-        {events.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="calendar-outline" size={64} color={theme.colors.textMuted} />
-            <Text style={styles.emptyText}>{t('noEventScheduled')}</Text>
-            <Text style={styles.emptySubtext}>
-              {t('comingSoonFeature')}
-            </Text>
+        {error ? (
+          <ErrorRetry onRetry={loadEvents} />
+        ) : loading && events.length === 0 ? (
+          <View style={styles.skeletonWrap}>
+            <SkeletonCard imageHeight={220} />
+            <SkeletonCard imageHeight={220} />
           </View>
+        ) : events.length === 0 ? (
+          <EmptyState
+            icon="calendar-outline"
+            title={t('noEventScheduled')}
+            subtitle={t('comingSoonFeature')}
+          />
         ) : (
-          events.map((event) => (
-            <View key={event.id} style={styles.eventCard}>
-              {/* Event Banner */}
-              {event.banner_image ? (
+          events.map((event, index) => (
+            <GlassCard
+              key={event.id}
+              variant={index === 0 ? 'glow' : 'default'}
+              noPadding
+              style={styles.eventCard}
+            >
+              {/* Event Flyer + overlay caption */}
+              <View style={styles.bannerContainer}>
                 <Image
-                  source={{ uri: event.banner_image }}
+                  source={event.banner_image ? { uri: event.banner_image } : DEFAULT_EVENT_FLYER}
                   style={styles.eventBanner}
-                  resizeMode="cover"
+                  contentFit="cover"
+                  transition={250}
                 />
-              ) : (
-                <Image
-                  source={DEFAULT_EVENT_FLYER}
-                  style={styles.eventBanner}
-                  resizeMode="cover"
-                />
-              )}
+                <LinearGradient
+                  colors={theme.gradients.overlayBottom}
+                  style={styles.bannerOverlay}
+                >
+                  <Text style={styles.bannerTitle} numberOfLines={2}>{event.name}</Text>
+                  <View style={styles.bannerDateRow}>
+                    <Ionicons name="calendar" size={14} color={theme.colors.primary} />
+                    <Text style={styles.bannerDate}>{formatDate(event.event_date)}</Text>
+                  </View>
+                </LinearGradient>
+              </View>
 
               {/* Event Info */}
               <View style={styles.eventInfo}>
-                <Text style={styles.eventName}>{event.name}</Text>
-                
-                {/* Date & Time */}
-                <View style={styles.infoRow}>
-                  <Ionicons name="calendar" size={16} color={theme.colors.primary} />
-                  <Text style={styles.infoText}>{formatDate(event.event_date)}</Text>
-                </View>
-
                 {/* Venue */}
                 <View style={styles.infoRow}>
                   <Ionicons name="location" size={16} color={theme.colors.primary} />
@@ -156,7 +200,7 @@ export default function TicketsScreen() {
 
                 {/* Price Range */}
                 <View style={styles.priceContainer}>
-                  <Ionicons name="pricetag" size={16} color={theme.colors.neonPink} />
+                  <Ionicons name="pricetag" size={16} color={theme.colors.secondary} />
                   <Text style={styles.priceText}>
                     {getPriceRange(event.ticket_categories)}
                   </Text>
@@ -168,37 +212,39 @@ export default function TicketsScreen() {
                 </Text>
 
                 {/* Buy Button */}
-                <TouchableOpacity
-                  style={[
-                    styles.buyButton,
-                    !event.xceed_ticket_url && styles.buyButtonDisabled
-                  ]}
+                <GradientButton
+                  title={event.xceed_ticket_url ? t('buyOnXceed') : t('comingSoon')}
+                  icon="ticket"
+                  variant="gold"
+                  disabled={!event.xceed_ticket_url}
                   onPress={() => handleBuyTickets(event)}
-                >
-                  <Ionicons name="ticket" size={20} color="white" />
-                  <Text style={styles.buyButtonText}>
-                    {event.xceed_ticket_url ? t('buyOnXceed') : t('comingSoon')}
-                  </Text>
-                  {event.xceed_ticket_url && (
-                    <Ionicons name="arrow-forward" size={20} color="white" />
-                  )}
-                </TouchableOpacity>
+                />
 
                 {/* Info Note */}
                 {event.xceed_ticket_url && (
                   <Text style={styles.noteText}>
-                    ℹ️ XCEED
+                    XCEED
                   </Text>
                 )}
+
+                {/* Add to Calendar */}
+                <PressableScale
+                  onPress={() => handleAddToCalendar(event)}
+                  style={styles.calendarButton}
+                  accessibilityLabel={t('addToCalendar') || 'Ajouter au calendrier'}
+                >
+                  <Ionicons name="calendar-outline" size={18} color={theme.colors.primary} />
+                  <Text style={styles.calendarButtonText}>{t('addToCalendar') || 'Ajouter au calendrier'}</Text>
+                </PressableScale>
               </View>
-            </View>
+            </GlassCard>
           ))
         )}
 
         {/* Info Section */}
         <View style={styles.infoSection}>
           <Text style={styles.infoSectionTitle}>{t('informations')}</Text>
-          <View style={styles.infoBox}>
+          <GlassCard style={styles.infoBox}>
             <Text style={styles.infoBoxText}>
               • {t('ticketsSoldViaXceed')}
             </Text>
@@ -211,7 +257,7 @@ export default function TicketsScreen() {
             <Text style={styles.infoBoxText}>
               • {t('refundConditions')}
             </Text>
-          </View>
+          </GlassCard>
         </View>
       </View>
     </ScrollView>
@@ -223,74 +269,59 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.black,
   },
-  
+
   content: {
-    paddingBottom: 40,
+    paddingBottom: 110,
+    paddingTop: theme.spacing.lg,
   },
 
-  // Header
-  header: {
-    padding: theme.spacing.xl,
-  },
-  title: {
-    fontSize: theme.fontSize.xxl,
-    fontWeight: theme.fontWeight.black,
-    color: theme.colors.textPrimary,
-  },
-  subtitle: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.xs,
-  },
-
-  // Empty State
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.xxl * 2,
+  skeletonWrap: {
     paddingHorizontal: theme.spacing.xl,
-  },
-  emptyText: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textMuted,
-    marginTop: theme.spacing.xs,
-    textAlign: 'center',
   },
 
   // Event Card
   eventCard: {
     marginHorizontal: theme.spacing.xl,
     marginBottom: theme.spacing.xl,
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
-    ...theme.shadows.lg,
+  },
+  bannerContainer: {
+    position: 'relative',
   },
   eventBanner: {
     width: '100%',
-    height: 200,
+    height: 220,
   },
-  placeholderBanner: {
-    backgroundColor: theme.colors.elevated,
-    justifyContent: 'center',
+  bannerOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.xxl,
+    paddingBottom: theme.spacing.md,
+    justifyContent: 'flex-end',
+  },
+  bannerTitle: {
+    fontSize: theme.fontSize.xl,
+    fontWeight: theme.fontWeight.black,
+    color: theme.colors.textPrimary,
+    letterSpacing: 0.4,
+  },
+  bannerDateRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.xs,
+  },
+  bannerDate: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.fontWeight.semibold,
   },
 
   // Event Info
   eventInfo: {
     padding: theme.spacing.lg,
-  },
-  eventName: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: theme.fontWeight.black,
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.md,
   },
   infoRow: {
     flexDirection: 'row',
@@ -309,15 +340,18 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
-    backgroundColor: theme.colors.neonPink + '20',
-    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 215, 0, 0.10)',
+    borderWidth: 1,
+    borderColor: theme.borders.gold,
+    borderRadius: theme.borderRadius.full,
     alignSelf: 'flex-start',
   },
   priceText: {
     fontSize: theme.fontSize.md,
     fontWeight: theme.fontWeight.bold,
-    color: theme.colors.neonPink,
+    color: theme.colors.secondary,
     marginLeft: theme.spacing.sm,
+    fontVariant: ['tabular-nums'],
   },
   eventDescription: {
     fontSize: theme.fontSize.sm,
@@ -325,33 +359,29 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: theme.spacing.md,
   },
-
-  // Buy Button
-  buyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.sm,
-  },
-  buyButtonDisabled: {
-    backgroundColor: theme.colors.textMuted,
-    opacity: 0.6,
-  },
-  buyButtonText: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold,
-    color: 'white',
-  },
   noteText: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.textMuted,
     textAlign: 'center',
     marginTop: theme.spacing.sm,
     fontStyle: 'italic',
+  },
+  calendarButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.borders.brand,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: 'rgba(0, 229, 204, 0.06)',
+  },
+  calendarButtonText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeight.semibold,
   },
 
   // Info Section
@@ -361,16 +391,15 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   infoSectionTitle: {
-    fontSize: theme.fontSize.lg,
+    fontSize: theme.fontSize.md,
     fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textPrimary,
+    color: theme.colors.textSecondary,
     marginBottom: theme.spacing.md,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
   },
   infoBox: {
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.lg,
-    borderLeftWidth: 4,
+    borderLeftWidth: 3,
     borderLeftColor: theme.colors.primary,
   },
   infoBoxText: {

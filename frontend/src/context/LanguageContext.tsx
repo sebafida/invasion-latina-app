@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import translations, { Language, Translations } from '../i18n/translations';
+import logger from '../config/logger';
 
 interface LanguageContextType {
   language: Language;
@@ -28,7 +29,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         setCurrentTranslations(translations[savedLanguage as Language]);
       }
     } catch (error) {
-      console.error('Failed to load language:', error);
+      logger.error('Failed to load language:', error);
     }
   };
 
@@ -38,7 +39,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       setLanguageState(lang);
       setCurrentTranslations(translations[lang]);
     } catch (error) {
-      console.error('Failed to save language:', error);
+      logger.error('Failed to save language:', error);
     }
   };
 

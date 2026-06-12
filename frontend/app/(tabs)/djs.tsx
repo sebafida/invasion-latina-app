@@ -5,21 +5,24 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   Linking,
   RefreshControl,
   TextInput,
   Alert,
   Modal,
-  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../../src/config/theme';
 import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { LoginRequiredModal } from '../../src/components/LoginRequiredModal';
+import { GlassCard } from '../../src/components/ui/GlassCard';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { PressableScale } from '../../src/components/ui/PressableScale';
 
 interface DJ {
   id: string;
@@ -30,17 +33,8 @@ interface DJ {
   is_resident: boolean;
 }
 
-// DJ Photos
-const DJ_PHOTOS: { [key: string]: any } = {
-  'DJ GIZMO': require('../../assets/images/dj-gizmo.png'),
-  'DJ DNK': require('../../assets/images/dj-dnk.png'),
-  'DJ CRUZ': require('../../assets/images/dj-cruz.png'),
-  'DJ DANIEL MURILLO': require('../../assets/images/dj-daniel-murillo.png'),
-  'DJ SUNCEE': require('../../assets/images/dj-suncee.png'),
-  'DJ SAMO': require('../../assets/images/dj-samo.png'),
-  'DJ MABOY': require('../../assets/images/dj-maboy.png'),
-  'MC VELASQUEZ': require('../../assets/images/mc-velasquez.png'),
-};
+import { DJ_PHOTOS } from '../../src/config/djs';
+import logger from '../../src/config/logger';
 
 // Default DJs data (will be replaced by API data when available)
 const DEFAULT_DJS: DJ[] = [
@@ -132,10 +126,8 @@ export default function DJsScreen() {
       if (response.data && response.data.length > 0) {
         // Map the DJs and ALWAYS merge with DEFAULT_DJS for instagram_url
         const djsWithSelection = response.data.map((dj: any) => {
-          // Null safety for dj.name
-          const djName = dj.name || 'Unknown DJ';
           // Find matching default DJ by name (case insensitive, trimmed)
-          const djNameUpper = djName.toUpperCase().trim();
+          const djNameUpper = dj.name.toUpperCase().trim();
           const defaultDj = DEFAULT_DJS.find(d => 
             d.name.toUpperCase().trim() === djNameUpper
           );
@@ -143,11 +135,9 @@ export default function DJsScreen() {
           // ALWAYS use default instagram_url since API returns null
           const finalInstagramUrl = defaultDj?.instagram_url || dj.instagram_url || null;
           
-          console.log(`DJ ${djName}: default=${defaultDj?.instagram_url}, final=${finalInstagramUrl}`);
           
           return {
             ...dj,
-            name: djName,
             instagram_url: finalInstagramUrl,
             is_selected: selectedDjIds.includes(dj.id) || selectedDjIds.includes(String(dj.id))
           };
@@ -160,7 +150,6 @@ export default function DJsScreen() {
         setDjs(DEFAULT_DJS);
       }
     } catch (error) {
-      console.log('Using default DJs data');
       // Keep default data if API fails
       setDjs(DEFAULT_DJS);
     } finally {
@@ -219,9 +208,9 @@ export default function DJsScreen() {
         await Linking.openURL(url);
       }
     } catch (error) {
-      console.error('Failed to open Instagram:', error);
+      logger.error('Failed to open Instagram:', error);
       // Final fallback
-      Linking.openURL(url).catch(e => console.error('Fallback failed:', e));
+      Linking.openURL(url).catch(e => logger.error('Fallback failed:', e));
     }
   };
 
@@ -248,48 +237,52 @@ export default function DJsScreen() {
         {/* DJs Grid */}
         <View style={styles.djGrid}>
           {djList.map((dj) => (
-            <TouchableOpacity
+            <PressableScale
               key={dj.id}
-              style={styles.djCard}
+              style={styles.djCardWrap}
               onPress={() => dj.instagram_url && openInstagram(dj.instagram_url)}
-              activeOpacity={0.8}
+              accessibilityLabel={dj.name}
             >
-              {/* Photo */}
-              <View style={styles.photoContainer}>
-                {DJ_PHOTOS[dj.name] ? (
-                  <Image
-                    source={DJ_PHOTOS[dj.name]}
-                    style={styles.djPhoto}
-                    resizeMode="cover"
-                  />
-                ) : dj.photo_url ? (
-                  <Image
-                    source={{ uri: dj.photo_url }}
-                    style={styles.djPhoto}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View style={styles.placeholderPhoto}>
-                    <Ionicons name="headset" size={40} color={theme.colors.primary} />
-                  </View>
-                )}
-                
-                {/* Instagram Icon */}
-                {dj.instagram_url && (
-                  <View style={styles.instagramBadge}>
-                    <Ionicons name="logo-instagram" size={16} color="white" />
-                  </View>
-                )}
-              </View>
+              <GlassCard style={styles.djCard}>
+                {/* Photo */}
+                <View style={styles.photoContainer}>
+                  {DJ_PHOTOS[dj.name] ? (
+                    <Image
+                      source={DJ_PHOTOS[dj.name]}
+                      style={styles.djPhoto}
+                      contentFit="cover"
+                      transition={200}
+                    />
+                  ) : dj.photo_url ? (
+                    <Image
+                      source={{ uri: dj.photo_url }}
+                      style={styles.djPhoto}
+                      contentFit="cover"
+                      transition={200}
+                    />
+                  ) : (
+                    <View style={styles.placeholderPhoto}>
+                      <Ionicons name="headset" size={40} color={theme.colors.primary} />
+                    </View>
+                  )}
 
-              {/* Name */}
-              <Text style={styles.djName}>{dj.name}</Text>
-              
-              {/* Tap to follow */}
-              {dj.instagram_url && (
-                <Text style={styles.followText}>{t('followOnInstagram')}</Text>
-              )}
-            </TouchableOpacity>
+                  {/* Instagram Icon */}
+                  {dj.instagram_url && (
+                    <View style={styles.instagramBadge}>
+                      <Ionicons name="logo-instagram" size={16} color="white" />
+                    </View>
+                  )}
+                </View>
+
+                {/* Name */}
+                <Text style={styles.djName}>{dj.name}</Text>
+
+                {/* Tap to follow */}
+                {dj.instagram_url && (
+                  <Text style={styles.followText}>{t('followOnInstagram')}</Text>
+                )}
+              </GlassCard>
+            </PressableScale>
           ))}
         </View>
 
@@ -304,47 +297,50 @@ export default function DJsScreen() {
 
             <View style={styles.mcSection}>
               {mcList.map((mc) => (
-                <TouchableOpacity
+                <PressableScale
                   key={mc.id}
-                  style={styles.mcCard}
                   onPress={() => mc.instagram_url && openInstagram(mc.instagram_url)}
-                  activeOpacity={0.8}
+                  accessibilityLabel={mc.name}
                 >
-                  {/* Photo */}
-                  <View style={styles.mcPhotoContainer}>
-                    {DJ_PHOTOS[mc.name] ? (
-                      <Image
-                        source={DJ_PHOTOS[mc.name]}
-                        style={styles.mcPhoto}
-                        resizeMode="cover"
-                      />
-                    ) : mc.photo_url ? (
-                      <Image
-                        source={{ uri: mc.photo_url }}
-                        style={styles.mcPhoto}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View style={styles.mcPlaceholderPhoto}>
-                        <Ionicons name="mic" size={32} color={theme.colors.secondary} />
-                      </View>
-                    )}
-                  </View>
+                  <GlassCard variant="gold" style={styles.mcCard}>
+                    {/* Photo */}
+                    <View style={styles.mcPhotoContainer}>
+                      {DJ_PHOTOS[mc.name] ? (
+                        <Image
+                          source={DJ_PHOTOS[mc.name]}
+                          style={styles.mcPhoto}
+                          contentFit="cover"
+                          transition={200}
+                        />
+                      ) : mc.photo_url ? (
+                        <Image
+                          source={{ uri: mc.photo_url }}
+                          style={styles.mcPhoto}
+                          contentFit="cover"
+                          transition={200}
+                        />
+                      ) : (
+                        <View style={styles.mcPlaceholderPhoto}>
+                          <Ionicons name="mic" size={32} color={theme.colors.secondary} />
+                        </View>
+                      )}
+                    </View>
 
-                  {/* Info */}
-                  <View style={styles.mcInfo}>
-                    <Text style={styles.mcName}>{mc.name}</Text>
-                    <Text style={styles.mcRole}>{t('masterOfCeremonies')}</Text>
-                    {mc.instagram_url && (
-                      <View style={styles.mcInstagram}>
-                        <Ionicons name="logo-instagram" size={16} color={theme.colors.primary} />
-                        <Text style={styles.mcInstagramText}>@{mc.instagram_url.split('/').filter(Boolean).pop()}</Text>
-                      </View>
-                    )}
-                  </View>
+                    {/* Info */}
+                    <View style={styles.mcInfo}>
+                      <Text style={styles.mcName}>{mc.name}</Text>
+                      <Text style={styles.mcRole}>{t('masterOfCeremonies')}</Text>
+                      {mc.instagram_url && (
+                        <View style={styles.mcInstagram}>
+                          <Ionicons name="logo-instagram" size={16} color={theme.colors.primary} />
+                          <Text style={styles.mcInstagramText}>@{mc.instagram_url.split('/').filter(Boolean).pop()}</Text>
+                        </View>
+                      )}
+                    </View>
 
-                  <Ionicons name="chevron-forward" size={24} color={theme.colors.textMuted} />
-                </TouchableOpacity>
+                    <Ionicons name="chevron-forward" size={24} color={theme.colors.textMuted} />
+                  </GlassCard>
+                </PressableScale>
               ))}
             </View>
           </>
@@ -352,28 +348,33 @@ export default function DJsScreen() {
 
         {/* Song Request Section */}
         <View style={styles.requestSection}>
-          <TouchableOpacity
-            style={styles.requestButton}
+          <PressableScale
             onPress={async () => {
               // Check token directly from AsyncStorage to get the freshest state
               const token = await AsyncStorage.getItem('auth_token');
-              console.log('Song request button pressed, token exists:', !!token);
-              
+
               if (token && user) {
                 setShowRequestModal(true);
               } else {
-                console.log('Not authenticated, showing login modal');
                 setShowLoginModal(true);
               }
             }}
+            accessibilityLabel={t('askForSong')}
           >
-            <Ionicons name="musical-note" size={24} color="white" />
-            <View style={styles.requestButtonContent}>
-              <Text style={styles.requestButtonTitle}>{t('askForSong')}</Text>
-              <Text style={styles.requestButtonSubtitle}>{t('playYourFavorite')}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="white" />
-          </TouchableOpacity>
+            <LinearGradient
+              colors={theme.gradients.brand}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.requestButton, theme.shadows.neon]}
+            >
+              <Ionicons name="musical-note" size={24} color="#000" />
+              <View style={styles.requestButtonContent}>
+                <Text style={styles.requestButtonTitle}>{t('askForSong')}</Text>
+                <Text style={styles.requestButtonSubtitle}>{t('playYourFavorite')}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="#000" />
+            </LinearGradient>
+          </PressableScale>
         </View>
 
       </View>
@@ -389,7 +390,11 @@ export default function DJsScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('askForSong')}</Text>
-              <TouchableOpacity onPress={() => setShowRequestModal(false)}>
+              <TouchableOpacity
+                onPress={() => setShowRequestModal(false)}
+                accessibilityLabel={t('close')}
+                accessibilityRole="button"
+              >
                 <Ionicons name="close" size={28} color={theme.colors.textPrimary} />
               </TouchableOpacity>
             </View>
@@ -420,20 +425,14 @@ export default function DJsScreen() {
               />
             </View>
 
-            <TouchableOpacity
-              style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
+            <GradientButton
+              title={t('sendRequest')}
+              icon="send"
+              variant="brand"
+              loading={submitting}
               onPress={handleSubmitSongRequest}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <>
-                  <Ionicons name="send" size={20} color="white" />
-                  <Text style={styles.submitButtonText}>Envoyer la demande</Text>
-                </>
-              )}
-            </TouchableOpacity>
+              style={styles.submitButton}
+            />
           </View>
         </View>
       </Modal>
@@ -454,12 +453,13 @@ export default function DJsScreen() {
             <Text style={styles.successMessage}>
               {t('songAddedToList')}
             </Text>
-            <TouchableOpacity
-              style={styles.successButton}
+            <GradientButton
+              title={t('great')}
+              variant="brand"
+              size="md"
               onPress={() => setShowSuccessModal(false)}
-            >
-              <Text style={styles.successButtonText}>{t('great')}</Text>
-            </TouchableOpacity>
+              style={styles.successButton}
+            />
           </View>
         </View>
       </Modal>
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.black,
   },
   content: {
-    paddingBottom: 40,
+    paddingBottom: 110,
   },
 
   // Header
@@ -524,11 +524,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     gap: theme.spacing.md,
   },
-  djCard: {
+  djCardWrap: {
     width: '47%',
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
+  },
+  djCard: {
     alignItems: 'center',
   },
   photoContainer: {
@@ -589,9 +588,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.elevated,
   },
   dividerText: {
-    fontSize: theme.fontSize.lg,
+    fontSize: theme.fontSize.md,
     fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textPrimary,
+    color: theme.colors.secondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
   },
 
   // MC Section
@@ -601,12 +602,7 @@ const styles = StyleSheet.create({
   mcCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.secondary,
   },
   mcPhotoContainer: {
     marginRight: theme.spacing.md,
@@ -722,7 +718,6 @@ const styles = StyleSheet.create({
   requestButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
@@ -733,11 +728,11 @@ const styles = StyleSheet.create({
   requestButtonTitle: {
     fontSize: theme.fontSize.lg,
     fontWeight: theme.fontWeight.bold,
-    color: 'white',
+    color: '#000',
   },
   requestButtonSubtitle: {
     fontSize: theme.fontSize.sm,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(0,0,0,0.65)',
     marginTop: 2,
   },
 
@@ -852,22 +847,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
   },
   submitButton: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.sm,
     marginTop: theme.spacing.md,
-  },
-  submitButtonDisabled: {
-    opacity: 0.7,
-  },
-  submitButtonText: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold,
-    color: 'white',
   },
 
   // Success Modal
@@ -897,16 +877,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   successButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.xxl,
-    borderRadius: theme.borderRadius.md,
     width: '100%',
-    alignItems: 'center',
-  },
-  successButtonText: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold,
-    color: 'white',
   },
 });

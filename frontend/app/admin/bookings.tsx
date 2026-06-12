@@ -16,9 +16,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../src/config/theme';
-import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
+import logger from '../../src/config/logger';
 
 interface Booking {
   id: string;
@@ -37,13 +37,12 @@ interface Booking {
 }
 
 export default function BookingsAdminScreen() {
-  const { user } = useAuth();
   const { t, language } = useLanguage();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'rejected'>('pending');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('pending');
 
   // Delete confirmation modal states
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -76,12 +75,7 @@ export default function BookingsAdminScreen() {
     'Appeler à l\'arrivée: +32 XXX XX XX XX',
   ];
 
-  useEffect(() => {
-    if (user?.role !== 'admin') {
-      Alert.alert('Accès refusé', 'Cette page est réservée aux administrateurs');
-      router.replace('/(tabs)/home');
-    }
-  }, [user]);
+  // Le contrôle d'accès admin est centralisé dans app/admin/_layout.tsx
 
   useEffect(() => {
     loadBookings();
@@ -93,7 +87,7 @@ export default function BookingsAdminScreen() {
       const response = await api.get('/admin/vip-bookings');
       setBookings(response.data);
     } catch (error) {
-      console.error('Failed to load bookings:', error);
+      logger.error('Failed to load bookings:', error);
     } finally {
       setLoading(false);
     }
@@ -160,7 +154,7 @@ export default function BookingsAdminScreen() {
       setDeleteTarget(null);
       loadBookings();
     } catch (error: any) {
-      console.error('Delete error:', error);
+      logger.error('Delete error:', error);
     }
   };
 
@@ -175,7 +169,7 @@ export default function BookingsAdminScreen() {
       setShowClearAllModal(false);
       loadBookings();
     } catch (error: any) {
-      console.error('Clear all error:', error);
+      logger.error('Clear all error:', error);
     }
   };
 
@@ -190,7 +184,7 @@ export default function BookingsAdminScreen() {
       setCancelTarget(null);
       loadBookings();
     } catch (error: any) {
-      console.error('Cancel error:', error);
+      logger.error('Cancel error:', error);
     }
   };
 
@@ -297,14 +291,14 @@ Merci et à bientôt! 🔥`;
 
       {/* Filters */}
       <View style={styles.filtersContainer}>
-        {(['pending', 'confirmed', 'rejected', 'cancelled', 'all'] as const).map((f) => (
+        {(['pending', 'confirmed', 'cancelled', 'all'] as const).map((f) => (
           <TouchableOpacity
             key={f}
             style={[styles.filterButton, filter === f && styles.filterButtonActive]}
             onPress={() => setFilter(f)}
           >
             <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {f === 'all' ? t('all') : f === 'pending' ? t('pending') : f === 'confirmed' ? t('confirmed') : f === 'rejected' ? 'Refusé' : t('cancelled')}
+              {f === 'all' ? t('all') : f === 'pending' ? t('pending') : f === 'confirmed' ? t('confirmed') : t('cancelled')}
             </Text>
           </TouchableOpacity>
         ))}

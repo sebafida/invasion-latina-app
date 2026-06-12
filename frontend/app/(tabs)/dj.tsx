@@ -11,7 +11,6 @@ import {
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/native';
@@ -21,6 +20,10 @@ import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
 import { LoginRequiredModal } from '../../src/components/LoginRequiredModal';
 import logger from '../../src/config/logger';
+import { GlassCard } from '../../src/components/ui/GlassCard';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { PressableScale } from '../../src/components/ui/PressableScale';
+import { EmptyState } from '../../src/components/ui/EmptyState';
 
 interface SongRequest {
   id: string;
@@ -38,7 +41,7 @@ interface SongRequest {
 }
 
 export default function DJRequestsScreen() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { t } = useLanguage();
   const [requests, setRequests] = useState<SongRequest[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,6 +50,7 @@ export default function DJRequestsScreen() {
   // 2.6 - Mode dev uniquement pour admins ou en développement
   const [devMode, setDevMode] = useState(user?.role === 'admin' || __DEV__);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   // 2.1 - Fix memory leak : utiliser useFocusEffect au lieu de useEffect
   useFocusEffect(
@@ -67,7 +71,7 @@ export default function DJRequestsScreen() {
       const response = await api.get('/dj/requests');
       setRequests(response.data);
     } catch (error) {
-      console.error('Failed to load requests:', error);
+      logger.error('Failed to load requests:', error);
     }
   };
 
@@ -95,7 +99,7 @@ export default function DJRequestsScreen() {
           latitude = location.coords.latitude.toString();
           longitude = location.coords.longitude.toString();
         } catch (locError) {
-          console.log('Could not get location:', locError);
+          logger.log('Could not get location:', locError);
         }
       }
 
@@ -122,10 +126,9 @@ export default function DJRequestsScreen() {
     }
   };
 
-  const handleSubmitRequest = async () => {
-    // Check token directly from AsyncStorage
-    const token = await AsyncStorage.getItem('auth_token');
-    if (token && user) {
+  const handleSubmitRequest = () => {
+    // Auth verifiee via le contexte (AuthContext)
+    if (isAuthenticated && user) {
       handleRequestSong();
     } else {
       setShowLoginModal(true);
@@ -194,39 +197,42 @@ export default function DJRequestsScreen() {
         )}
 
         {/* Request Form */}
-        <View style={styles.requestForm}>
+        <GlassCard variant="glow" style={styles.requestForm}>
           <Text style={styles.formTitle}>{t('requestSong')}</Text>
-          
-          <View style={styles.inputContainer}>
+
+          <View style={[styles.inputContainer, focusedInput === 'song' && styles.inputContainerFocused]}>
             <TextInput
               style={styles.inputFull}
               placeholder={t('songTitle')}
               placeholderTextColor={theme.colors.textMuted}
               value={songTitle}
               onChangeText={setSongTitle}
+              onFocus={() => setFocusedInput('song')}
+              onBlur={() => setFocusedInput(null)}
             />
           </View>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, focusedInput === 'artist' && styles.inputContainerFocused]}>
             <TextInput
               style={styles.inputFull}
               placeholder={t('artist')}
               placeholderTextColor={theme.colors.textMuted}
               value={artistName}
               onChangeText={setArtistName}
+              onFocus={() => setFocusedInput('artist')}
+              onBlur={() => setFocusedInput(null)}
             />
           </View>
 
-          <TouchableOpacity
-            style={styles.submitButton}
+          <GradientButton
+            title={t('sendRequest')}
+            icon="musical-note"
+            variant="brand"
+            loading={loading}
             onPress={handleSubmitRequest}
-            disabled={loading}
-          >
-            <Text style={styles.submitButtonText}>
-              {loading ? t('loading') : t('sendRequest')}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            style={styles.submitButton}
+          />
+        </GlassCard>
 
         {/* Requests List */}
         <View style={styles.requestsList}>
@@ -238,22 +244,25 @@ export default function DJRequestsScreen() {
           </View>
 
           {requests.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="musical-notes-outline" size={64} color={theme.colors.textMuted} />
-              <Text style={styles.emptyText}>{t('noRequests')}</Text>
-              <Text style={styles.emptySubtext}>{t('requestSong')}!</Text>
-            </View>
+            <EmptyState
+              icon="musical-notes-outline"
+              title={t('noRequests')}
+              subtitle={`${t('requestSong')}!`}
+            />
           ) : (
             requests.map((request, index) => (
-              <View key={request.id} style={[
-                styles.requestCard,
-                request.status === 'rejected' && styles.requestCardRejected,
-                request.status === 'played' && styles.requestCardPlayed
-              ]}>
+              <GlassCard
+                key={request.id}
+                variant={request.status === 'played' ? 'glow' : 'default'}
+                style={[
+                  styles.requestCard,
+                  request.status === 'rejected' && styles.requestCardRejected,
+                ]}
+              >
                 <View style={styles.requestRank}>
                   <Text style={styles.rankNumber}>#{index + 1}</Text>
                 </View>
-                
+
                 <View style={styles.requestInfo}>
                   <Text style={styles.requestSong}>{request.song_title}</Text>
                   <Text style={styles.requestArtist}>{request.artist_name}</Text>
@@ -268,7 +277,7 @@ export default function DJRequestsScreen() {
                       </>
                     )}
                   </View>
-                  
+
                   {/* Status badges */}
                   {request.status === 'played' && (
                     <View style={styles.statusBadgePlayed}>
@@ -276,7 +285,7 @@ export default function DJRequestsScreen() {
                       <Text style={styles.statusTextPlayed}>{t('played') || 'Joué'}</Text>
                     </View>
                   )}
-                  
+
                   {request.status === 'rejected' && (
                     <View style={styles.statusBadgeRejected}>
                       <Ionicons name="close-circle" size={14} color={theme.colors.error} />
@@ -285,9 +294,16 @@ export default function DJRequestsScreen() {
                       </Text>
                     </View>
                   )}
+
+                  {(!request.status || request.status === 'pending') && (
+                    <View style={styles.statusBadgePending}>
+                      <Ionicons name="time" size={14} color={theme.colors.warning} />
+                      <Text style={styles.statusTextPending}>{t('statusPending')}</Text>
+                    </View>
+                  )}
                 </View>
 
-                <TouchableOpacity
+                <PressableScale
                   style={[
                     styles.voteButton,
                     !request.can_vote && styles.voteButtonDisabled,
@@ -296,15 +312,21 @@ export default function DJRequestsScreen() {
                   ]}
                   onPress={() => handleVote(request.id)}
                   disabled={!request.can_vote || request.status === 'rejected' || request.status === 'played'}
+                  accessibilityLabel={`${t('vote')} ${request.song_title}`}
                 >
                   <Ionicons
                     name={request.status === 'played' ? 'checkmark' : request.status === 'rejected' ? 'close' : request.can_vote ? 'arrow-up' : 'checkmark'}
                     size={20}
-                    color="white"
+                    color={request.status === 'played' || request.status === 'rejected' || !request.can_vote ? 'white' : theme.colors.primary}
                   />
-                  <Text style={styles.voteCount}>{request.votes}</Text>
-                </TouchableOpacity>
-              </View>
+                  <Text style={[
+                    styles.voteCount,
+                    (request.status === 'played' || request.status === 'rejected' || !request.can_vote) && styles.voteCountOnColor,
+                  ]}>
+                    {request.votes}
+                  </Text>
+                </PressableScale>
+              </GlassCard>
             ))
           )}
         </View>
@@ -328,7 +350,7 @@ const styles = StyleSheet.create({
   
   content: {
     flex: 1,
-    paddingBottom: 40,
+    paddingBottom: 110,
   },
 
   // Header
@@ -397,15 +419,14 @@ const styles = StyleSheet.create({
   requestForm: {
     marginHorizontal: theme.spacing.xl,
     marginBottom: theme.spacing.xl,
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
   },
   formTitle: {
-    fontSize: theme.fontSize.lg,
+    fontSize: theme.fontSize.md,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.md,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -414,6 +435,11 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     paddingHorizontal: theme.spacing.md,
     marginBottom: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.borders.subtle,
+  },
+  inputContainerFocused: {
+    borderColor: theme.colors.primary,
   },
   input: {
     flex: 1,
@@ -429,16 +455,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
   },
   submitButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
-    paddingVertical: theme.spacing.md,
-    alignItems: 'center',
     marginTop: theme.spacing.sm,
-  },
-  submitButtonText: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold,
-    color: 'white',
   },
 
   // List
@@ -451,10 +468,12 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   listTitle: {
-    fontSize: theme.fontSize.xl,
+    fontSize: theme.fontSize.lg,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textPrimary,
     marginRight: theme.spacing.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
   },
   badge: {
     backgroundColor: theme.colors.primary,
@@ -468,30 +487,10 @@ const styles = StyleSheet.create({
     color: 'white',
   },
 
-  // Empty State
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.xxl,
-  },
-  emptyText: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-  },
-  emptySubtext: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textMuted,
-    marginTop: theme.spacing.xs,
-  },
-
   // Request Card
   requestCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
   },
   requestRank: {
@@ -541,7 +540,9 @@ const styles = StyleSheet.create({
     color: theme.colors.neonPink,
   },
   voteButton: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: 'rgba(0, 229, 204, 0.08)',
+    borderWidth: 1,
+    borderColor: theme.borders.brand,
     borderRadius: theme.borderRadius.md,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
@@ -550,12 +551,17 @@ const styles = StyleSheet.create({
   },
   voteButtonDisabled: {
     backgroundColor: theme.colors.success,
+    borderColor: 'transparent',
   },
   voteCount: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.bold,
-    color: 'white',
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.black,
+    color: theme.colors.primary,
     marginTop: 2,
+    fontVariant: ['tabular-nums'],
+  },
+  voteCountOnColor: {
+    color: 'white',
   },
   
   // Clear All Section
@@ -594,12 +600,23 @@ const styles = StyleSheet.create({
   // Status styles
   requestCardRejected: {
     opacity: 0.6,
-    borderWidth: 1,
     borderColor: theme.colors.error + '50',
   },
-  requestCardPlayed: {
-    borderWidth: 1,
-    borderColor: theme.colors.success + '50',
+  statusBadgePending: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.warning + '20',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.borderRadius.full,
+    marginTop: theme.spacing.xs,
+    alignSelf: 'flex-start',
+    gap: 4,
+  },
+  statusTextPending: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.warning,
+    fontWeight: theme.fontWeight.medium,
   },
   statusBadgeRejected: {
     flexDirection: 'row',

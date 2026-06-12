@@ -13,27 +13,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { theme } from '../../src/config/theme';
 import { useLanguage } from '../../src/context/LanguageContext';
-import { useAuth } from '../../src/context/AuthContext';
 import api from '../../src/config/api';
+import logger from '../../src/config/logger';
 
 export default function LoyaltyScannerScreen() {
   const router = useRouter();
   const { t } = useLanguage();
-  const { user } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [scanning, setScanning] = useState(true);
   const [loading, setLoading] = useState(false);
   const [lastResult, setLastResult] = useState<any>(null);
   const [showResult, setShowResult] = useState(false);
-
-  // Admin check
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      Alert.alert('Accès refusé', 'Cette page est réservée aux administrateurs');
-      router.replace('/(tabs)/home');
-    }
-  }, [user]);
 
   const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
     if (scanned || loading) return;
@@ -62,7 +53,7 @@ export default function LoyaltyScannerScreen() {
       setShowResult(true);
       
     } catch (error: any) {
-      console.error('Scan error:', error);
+      logger.error('Scan error:', error);
       const message = error.response?.data?.detail || t('checkinFailed');
       Alert.alert(t('error'), message);
       setScanned(false);

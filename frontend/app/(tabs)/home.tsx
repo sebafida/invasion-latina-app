@@ -3,41 +3,40 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   RefreshControl,
   Dimensions,
-  Image,
   Linking,
   Animated,
+  Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
+import { Translations } from '../../src/i18n/translations';
+import { getDateLocale } from '../../src/i18n/dateLocale';
 import api from '../../src/config/api';
+import logger from '../../src/config/logger';
 import { WhatsAppButton } from '../../src/components/WhatsAppButton';
+import { ErrorRetry } from '../../src/components/ErrorRetry';
+import { GlassCard } from '../../src/components/ui/GlassCard';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { PressableScale } from '../../src/components/ui/PressableScale';
+import { Countdown } from '../../src/components/ui/Countdown';
+import { Skeleton } from '../../src/components/ui/Skeleton';
 
 const { width } = Dimensions.get('window');
 
 // Spotify Playlist URL
 const SPOTIFY_PLAYLIST_URL = 'https://open.spotify.com/playlist/5Pzn91AFtN8tBYYF8Wuci5?si=akXNRmENTPCpS-XWtD1AfQ';
 
-// DJ Photos
-const DJ_PHOTOS: { [key: string]: any } = {
-  'DJ GIZMO': require('../../assets/images/dj-gizmo.png'),
-  'DJ DNK': require('../../assets/images/dj-dnk.png'),
-  'DJ CRUZ': require('../../assets/images/dj-cruz.png'),
-  'DJ DANIEL MURILLO': require('../../assets/images/dj-daniel-murillo.png'),
-  'DJ SUNCEE': require('../../assets/images/dj-suncee.png'),
-  'DJ SAMO': require('../../assets/images/dj-samo.png'),
-  'DJ MABOY': require('../../assets/images/dj-maboy.png'),
-  'MC VELASQUEZ': require('../../assets/images/mc-velasquez.png'),
-};
+import { DJ_PHOTOS } from '../../src/config/djs';
 
 // Default DJs (will be replaced by event-specific lineup from API)
-const getDefaultLineup = (t: (key: string) => string) => [
+const getDefaultLineup = (t: (key: keyof Translations) => string) => [
   { id: '1', name: 'DJ GIZMO', role: t('residentDj') },
   { id: '2', name: 'DJ DNK', role: t('residentDj') },
   { id: '3', name: 'DJ CRUZ', role: t('residentDj') },
@@ -48,37 +47,28 @@ const getDefaultLineup = (t: (key: string) => string) => [
 
 export default function HomeScreen() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [lineup, setLineup] = useState<any[]>(getDefaultLineup(t));
   const [loading, setLoading] = useState(true);
-  const [countdowns, setCountdowns] = useState<{[key: string]: { days: number, hours: number, minutes: number, seconds: number }}>({});
-  
+  const [error, setError] = useState(false);
+
   // Scroll tracking for WhatsApp button
   const scrollY = useRef(new Animated.Value(0)).current;
-  
+
   useEffect(() => {
     loadUpcomingEvents();
   }, []);
-  
-  useEffect(() => {
-    if (upcomingEvents.length > 0) {
-      const interval = setInterval(() => {
-        calculateCountdowns();
-      }, 1000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [upcomingEvents]);
-  
+
   const loadUpcomingEvents = async () => {
     try {
       setLoading(true);
+      setError(false);
       const response = await api.get('/events/upcoming');
       const events = response.data.events || [];
       setUpcomingEvents(events);
-      
+
       // Load lineup based on first event's selected DJs
       if (events.length > 0 && events[0]?.selected_djs && events[0].selected_djs.length > 0) {
         loadSelectedDJs(events[0].selected_djs);
@@ -86,7 +76,7 @@ export default function HomeScreen() {
         loadLineup();
       }
     } catch (error) {
-      console.error('Failed to load events:', error);
+      logger.error('Failed to load events:', error);
       // Fallback to old endpoint
       try {
         const response = await api.get('/events/next');
@@ -94,7 +84,8 @@ export default function HomeScreen() {
           setUpcomingEvents([response.data.event]);
         }
       } catch (e) {
-        console.error('Fallback also failed:', e);
+        logger.error('Fallback also failed:', e);
+        setError(true);
       }
       loadLineup();
     } finally {
@@ -114,13 +105,13 @@ export default function HomeScreen() {
             name: dj.name,
             role: dj.type === 'mc' ? 'MC' : t('residentDj')
           }));
-        
+
         if (selectedDjs.length > 0) {
           setLineup(selectedDjs);
         }
       }
     } catch (error) {
-      console.error('Failed to load selected DJs:', error);
+      logger.error('Failed to load selected DJs:', error);
     }
   };
 
@@ -137,34 +128,9 @@ export default function HomeScreen() {
         setLineup(djsFromApi);
       }
     } catch (error) {
-      console.error('Failed to load DJs:', error);
+      logger.error('Failed to load DJs:', error);
       // Keep default lineup
     }
-  };
-  
-  const calculateCountdowns = () => {
-    const newCountdowns: {[key: string]: { days: number, hours: number, minutes: number, seconds: number }} = {};
-    
-    upcomingEvents.forEach(event => {
-      if (!event || !event.event_date) return;
-      
-      const eventDate = new Date(event.event_date);
-      const now = new Date();
-      const diff = eventDate.getTime() - now.getTime();
-      
-      if (diff > 0) {
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        
-        newCountdowns[event.id] = { days, hours, minutes, seconds };
-      } else {
-        newCountdowns[event.id] = { days: 0, hours: 0, minutes: 0, seconds: 0 };
-      }
-    });
-    
-    setCountdowns(newCountdowns);
   };
 
   // Get display name - "Familia" for guests, first name for logged in users
@@ -172,17 +138,17 @@ export default function HomeScreen() {
     if (!user) {
       return 'Familia';
     }
-    
+
     const name = user.name || '';
-    
+
     // Check if it's a default/placeholder name (Apple Sign In users)
-    const isPlaceholder = !name || 
-      name.toLowerCase() === 'user' || 
+    const isPlaceholder = !name ||
+      name.toLowerCase() === 'user' ||
       name.toLowerCase().startsWith('user') ||
       name === 'Nuevo Miembro' ||
       name === 'Amigo' ||
       /^[a-f0-9-]{20,}$/i.test(name); // UUID-like strings
-    
+
     if (isPlaceholder) {
       // Try to get name from email (only for non-Apple users)
       const email = user.email || '';
@@ -197,12 +163,12 @@ export default function HomeScreen() {
       // For Apple Sign In users, return empty string (just show "Bienvenue")
       return '';
     }
-    
+
     // Get first name only (split by space and take first part)
     const firstName = name.split(' ')[0];
     return firstName;
   };
-  
+
   // Get welcome message
   const getWelcomeMessage = () => {
     const displayName = getDisplayName();
@@ -211,7 +177,25 @@ export default function HomeScreen() {
     }
     return t('welcome') + '!';
   };
-  
+
+  const handleShareEvent = (event: any) => {
+    const dateStr = event.event_date
+      ? new Date(event.event_date).toLocaleDateString(getDateLocale(language), { weekday: 'long', day: 'numeric', month: 'long' })
+      : '';
+    Share.share({
+      message: `${event.name}\n${dateStr}\n${event.venue_name || ''}\n\n${t('shareEventMessage')}\nhttps://invasionlatina.be`,
+    });
+  };
+
+  const countdownLabels = {
+    days: t('daysLeft'),
+    hours: t('hoursLeft'),
+    minutes: t('minutesLeft'),
+    seconds: t('secondsLeft'),
+  };
+
+  const isInitialLoading = loading && upcomingEvents.length === 0 && !error;
+
   return (
     <View style={{ flex: 1 }}>
       <Animated.ScrollView
@@ -229,228 +213,292 @@ export default function HomeScreen() {
           {/* Hero Section */}
           <View style={styles.hero}>
             <Text style={styles.userName}>{getWelcomeMessage()}</Text>
-            
-            <View style={styles.pointsCard}>
-              <Text style={styles.pointsText}>
-                {user?.loyalty_points || 0} {t('points')}
-              </Text>
-            </View>
+
+            <GlassCard variant="glow" noPadding style={styles.pointsCard}>
+              <View style={styles.pointsInner}>
+                <Ionicons name="star" size={14} color={theme.colors.secondary} />
+                <Text style={styles.pointsText}>
+                  {user?.loyalty_points || 0} {t('points')}
+                </Text>
+              </View>
+            </GlassCard>
           </View>
-          
-          {/* Countdown Section - Multiple Events */}
+
+          {/* Network error with retry */}
+          {error && upcomingEvents.length === 0 && (
+            <ErrorRetry onRetry={loadUpcomingEvents} />
+          )}
+
+          {/* Initial loading skeleton (replaces spinner) */}
+          {isInitialLoading && (
+            <View style={styles.eventSection}>
+              <Skeleton width={160} height={14} style={{ marginBottom: theme.spacing.md }} />
+              <GlassCard noPadding>
+                <Skeleton width="100%" height={300} borderRadius={0} />
+                <View style={{ padding: theme.spacing.lg }}>
+                  <Skeleton width="70%" height={22} />
+                  <Skeleton width="45%" height={14} style={{ marginTop: theme.spacing.sm }} />
+                  <Skeleton width="100%" height={64} style={{ marginTop: theme.spacing.lg }} />
+                </View>
+              </GlassCard>
+            </View>
+          )}
+
+          {/* Hero Events - flyer + fade + countdown */}
           {upcomingEvents.length > 0 && upcomingEvents.filter(e => e && e.id).map((event, index) => (
             <View key={event.id} style={[styles.eventSection, index > 0 && { marginTop: 0 }]}>
-            {index === 0 && (
-              <View style={styles.eventHeader}>
-                <Text style={styles.sectionTitle}>{t('nextEvent')}{upcomingEvents.length > 1 ? 's' : ''}</Text>
-              </View>
-            )}
-            
-            <View style={[
-              styles.eventCard, 
-              event.is_featured && styles.featuredEventCard,
-              event.event_type === 'open_air' && styles.openAirEventCard
-            ]}>
-              {event.is_featured && (
-                <View style={styles.featuredBadge}>
-                  <Text style={styles.featuredBadgeText}>⭐ ÉVÉNEMENT SPÉCIAL</Text>
-                </View>
+              {index === 0 && (
+                <SectionTitle title={`${t('nextEvent')}${upcomingEvents.length > 1 ? 's' : ''}`} />
               )}
-              {event.event_type === 'open_air' && !event.is_featured && (
-                <View style={styles.openAirBadge}>
-                  <Text style={styles.openAirBadgeText}>🌴 OPEN AIR</Text>
-                </View>
-              )}
-              <Text style={styles.eventName}>{event.name || 'Événement'}</Text>
-              <Text style={styles.eventVenue}>
-                📍 {event.venue_name || 'Lieu à confirmer'}
-              </Text>
-              {event.event_date && (
-                <Text style={styles.eventDate}>
-                  {new Date(event.event_date).toLocaleDateString('fr-FR', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </Text>
-              )}
-              
-              {/* Countdown */}
-              {countdowns[event.id] && (
-                <View style={styles.countdownContainer}>
-                  <CountdownBox value={countdowns[event.id].days} label={t('daysLeft')} />
-                  <CountdownBox value={countdowns[event.id].hours} label={t('hoursLeft')} />
-                  <CountdownBox value={countdowns[event.id].minutes} label={t('minutesLeft')} />
-                  <CountdownBox value={countdowns[event.id].seconds} label={t('secondsLeft')} />
-                </View>
-              )}
-              
-              <TouchableOpacity 
-                style={styles.buyButton}
-                onPress={() => {
-                  if (event?.xceed_ticket_url) {
-                    Linking.openURL(event.xceed_ticket_url);
-                  } else {
-                    router.push('/(tabs)/tickets');
-                  }
-                }}
-              >
-                <View style={styles.buyButtonContent}>
-                  <Text style={styles.buyButtonText}>{t('buyTickets')}</Text>
-                  <Ionicons name="arrow-forward" size={20} color="white" />
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-        
-        {/* Quick Actions - No Title */}
-        <View style={styles.quickActions}>
-          <View style={styles.actionsGrid}>
-            <ActionCard
-              icon="musical-notes"
-              title={t('djRequests')}
-              subtitle={t('voteForSongs')}
-              color={theme.colors.neonPink}
-              onPress={() => router.push('/(tabs)/dj')}
-            />
-            <ActionCard
-              icon="images"
-              title={t('photos')}
-              subtitle={t('eventGalleries')}
-              color={theme.colors.primary}
-              onPress={() => router.push('/galleries')}
-            />
-            <ActionCard
-              icon="play-circle"
-              title={t('aftermovies')}
-              subtitle={t('watchRecap')}
-              color={theme.colors.neonBlue}
-              onPress={() => router.push('/aftermovies')}
-            />
-            <ActionCard
-              icon="wine"
-              title={t('booking')}
-              subtitle={t('tables')}
-              color={theme.colors.primary}
-              onPress={() => router.push('/(tabs)/shop')}
-            />
-          </View>
-        </View>
 
-        {/* Spotify Playlist */}
-        <TouchableOpacity 
-          style={styles.spotifyCard}
-          onPress={() => Linking.openURL(SPOTIFY_PLAYLIST_URL)}
-          activeOpacity={0.8}
-        >
-          <View style={styles.spotifyIcon}>
-            <Image 
-              source={require('../../assets/images/spotify-logo.png')}
-              style={styles.spotifyLogoImage}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={styles.spotifyInfo}>
-            <Text style={styles.spotifyTitle}>{t('spotifyPlaylist')}</Text>
-            <Text style={styles.spotifySubtitle}>Que viva la música latina</Text>
-          </View>
-          <Ionicons name="open-outline" size={24} color="#1DB954" />
-        </TouchableOpacity>
-        
-        {/* Lineup - DJs Grid */}
-        <View style={styles.lineupSection}>
-          <View style={styles.lineupHeader}>
-            <Ionicons name="disc" size={24} color={theme.colors.primary} />
-            <Text style={styles.sectionTitle}>{t('lineup')}</Text>
-          </View>
-          
-          <View style={styles.lineupGrid}>
-            {lineup.map((dj: any, index: number) => (
-              <TouchableOpacity 
-                key={dj.id || index} 
-                style={styles.djCard}
-                onPress={() => router.push('/(tabs)/djs')}
-                activeOpacity={0.8}
+              <GlassCard
+                variant={event.event_type === 'open_air' ? 'default' : 'glow'}
+                noPadding
+                style={styles.eventCard}
               >
-                {DJ_PHOTOS[dj.name] ? (
-                  <Image
-                    source={DJ_PHOTOS[dj.name]}
-                    style={styles.djPhoto}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View style={styles.djPhotoPlaceholder}>
-                    <Ionicons 
-                      name={dj.role === 'MC' ? 'mic' : 'headset'} 
-                      size={28} 
-                      color={theme.colors.primary} 
+                {event.banner_image ? (
+                  <View style={styles.flyerWrap}>
+                    <Image
+                      source={{ uri: event.banner_image }}
+                      style={styles.flyerImage}
+                      contentFit="cover"
+                      transition={200}
+                      cachePolicy="memory-disk"
                     />
+                    <LinearGradient
+                      colors={theme.gradients.overlayBottom}
+                      style={styles.flyerFade}
+                    />
+
+                    {/* Date badge - gold glass */}
+                    {event.event_date && (
+                      <GlassCard variant="gold" noPadding style={styles.dateBadge}>
+                        <View style={styles.dateBadgeInner}>
+                          <Ionicons name="calendar" size={13} color={theme.colors.secondary} />
+                          <Text style={styles.dateBadgeText}>
+                            {new Date(event.event_date).toLocaleDateString(getDateLocale(language), {
+                              day: 'numeric',
+                              month: 'short',
+                            })}
+                          </Text>
+                        </View>
+                      </GlassCard>
+                    )}
+
+                    {/* Title on the fade */}
+                    <View style={styles.flyerContent}>
+                      {event.event_type === 'open_air' && (
+                        <View style={styles.openAirBadge}>
+                          <Text style={styles.openAirBadgeText}>OPEN AIR</Text>
+                        </View>
+                      )}
+                      <Text style={styles.eventName}>{event.name || 'Evenement'}</Text>
+                      <View style={styles.venueRow}>
+                        <Ionicons name="location" size={14} color={theme.colors.primary} />
+                        <Text style={styles.eventVenue}>{event.venue_name || t('venueTbc')}</Text>
+                      </View>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.noFlyerHeader}>
+                    {event.event_type === 'open_air' && (
+                      <View style={styles.openAirBadge}>
+                        <Text style={styles.openAirBadgeText}>OPEN AIR</Text>
+                      </View>
+                    )}
+                    <Text style={styles.eventName}>{event.name || 'Evenement'}</Text>
+                    <View style={styles.venueRow}>
+                      <Ionicons name="location" size={14} color={theme.colors.primary} />
+                      <Text style={styles.eventVenue}>{event.venue_name || t('venueTbc')}</Text>
+                    </View>
+                    {event.event_date && (
+                      <Text style={styles.eventDate}>
+                        {new Date(event.event_date).toLocaleDateString(getDateLocale(language), {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </Text>
+                    )}
                   </View>
                 )}
-                <Text style={styles.djCardName} numberOfLines={1}>{dj.name}</Text>
-                <Text style={styles.djCardRole}>{dj.role}</Text>
-              </TouchableOpacity>
-            ))}
+
+                <View style={styles.eventBody}>
+                  {/* Countdown - isolated memoized component (no full-screen re-render) */}
+                  {event.event_date && (
+                    <View style={styles.countdownWrap}>
+                      <Countdown targetDate={event.event_date} labels={countdownLabels} />
+                    </View>
+                  )}
+
+                  <View style={styles.eventButtons}>
+                    <View style={styles.buyButton}>
+                      <GradientButton
+                        title={t('buyTickets')}
+                        icon="arrow-forward"
+                        onPress={() => {
+                          if (event?.xceed_ticket_url) {
+                            Linking.openURL(event.xceed_ticket_url);
+                          } else {
+                            router.push('/(tabs)/tickets');
+                          }
+                        }}
+                      />
+                    </View>
+
+                    <PressableScale
+                      onPress={() => handleShareEvent(event)}
+                      accessibilityLabel={t('shareEventMessage')}
+                      style={styles.shareButton}
+                    >
+                      <Ionicons name="share-outline" size={20} color={theme.colors.textSecondary} />
+                    </PressableScale>
+                  </View>
+                </View>
+              </GlassCard>
+            </View>
+          ))}
+
+          {/* Quick Actions */}
+          <View style={styles.quickActions}>
+            <View style={styles.actionsGrid}>
+              <ActionCard
+                icon="musical-notes"
+                title={t('djRequests')}
+                subtitle={t('voteForSongs')}
+                color={theme.colors.neonPink}
+                onPress={() => router.push('/(tabs)/dj')}
+              />
+              <ActionCard
+                icon="images"
+                title={t('photos')}
+                subtitle={t('eventGalleries')}
+                color={theme.colors.primary}
+                onPress={() => router.push('/galleries')}
+              />
+              <ActionCard
+                icon="play-circle"
+                title={t('aftermovies')}
+                subtitle={t('watchRecap')}
+                color={theme.colors.neonBlue}
+                onPress={() => router.push('/aftermovies')}
+              />
+              <ActionCard
+                icon="wine"
+                title={t('booking')}
+                subtitle={t('tables')}
+                color={theme.colors.primary}
+                onPress={() => router.push('/(tabs)/shop')}
+              />
+            </View>
+          </View>
+
+          {/* Spotify Playlist */}
+          <PressableScale
+            onPress={() => Linking.openURL(SPOTIFY_PLAYLIST_URL)}
+            accessibilityLabel={t('spotifyPlaylist')}
+            style={styles.spotifyWrap}
+          >
+            <GlassCard noPadding>
+              <View style={styles.spotifyCard}>
+                <View style={styles.spotifyIcon}>
+                  <Image
+                    source={require('../../assets/images/spotify-logo.png')}
+                    style={styles.spotifyLogoImage}
+                    contentFit="contain"
+                  />
+                </View>
+                <View style={styles.spotifyInfo}>
+                  <Text style={styles.spotifyTitle}>{t('spotifyPlaylist')}</Text>
+                  <Text style={styles.spotifySubtitle}>Que viva la música latina</Text>
+                </View>
+                <Ionicons name="open-outline" size={24} color="#1DB954" />
+              </View>
+            </GlassCard>
+          </PressableScale>
+
+          {/* Lineup - DJs Grid */}
+          <View style={styles.lineupSection}>
+            <SectionTitle title={t('lineup')} />
+
+            <View style={styles.lineupGrid}>
+              {lineup.map((dj: any, index: number) => (
+                <View key={dj.id || index} style={styles.djCardWrap}>
+                  <PressableScale
+                    onPress={() => router.push('/(tabs)/djs')}
+                    accessibilityLabel={dj.name}
+                  >
+                    <GlassCard noPadding style={styles.djCard}>
+                    {DJ_PHOTOS[dj.name] ? (
+                      <Image
+                        source={DJ_PHOTOS[dj.name]}
+                        style={styles.djPhoto}
+                        contentFit="cover"
+                        transition={200}
+                      />
+                    ) : (
+                      <View style={styles.djPhotoPlaceholder}>
+                        <Ionicons
+                          name={dj.role === 'MC' ? 'mic' : 'headset'}
+                          size={28}
+                          color={theme.colors.primary}
+                        />
+                      </View>
+                    )}
+                      <Text style={styles.djCardName} numberOfLines={1}>{dj.name}</Text>
+                      <Text style={styles.djCardRole}>{dj.role}</Text>
+                    </GlassCard>
+                  </PressableScale>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Social Media Section */}
+          <View style={styles.socialSection}>
+            <SectionTitle title={t('socialNetworks')} />
+
+            <View style={styles.socialGrid}>
+              <SocialCard
+                icon="logo-instagram"
+                color="#E4405F"
+                name="Instagram"
+                url="https://www.instagram.com/invasionlatina/"
+              />
+              <SocialCard
+                icon="logo-facebook"
+                color="#1877F2"
+                name="Facebook"
+                url="https://www.facebook.com/invasionlatina/?locale=fr_FR"
+              />
+              <SocialCard
+                icon="logo-tiktok"
+                color="#FF0044"
+                name="TikTok"
+                url="https://www.tiktok.com/@invasionlatina"
+              />
+            </View>
           </View>
         </View>
+      </Animated.ScrollView>
 
-        {/* Social Media Section */}
-        <View style={styles.socialSection}>
-          <View style={styles.lineupHeader}>
-            <Ionicons name="share-social" size={24} color={theme.colors.primary} />
-            <Text style={styles.sectionTitle}>{t('socialNetworks')}</Text>
-          </View>
-          
-          <View style={styles.socialGrid}>
-            <TouchableOpacity 
-              style={styles.socialCard}
-              onPress={() => Linking.openURL('https://www.instagram.com/invasionlatina/')}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.socialIconContainer, { backgroundColor: '#E4405F20' }]}>
-                <Ionicons name="logo-instagram" size={28} color="#E4405F" />
-              </View>
-              <Text style={styles.socialName}>Instagram</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.socialCard}
-              onPress={() => Linking.openURL('https://www.facebook.com/invasionlatina/?locale=fr_FR')}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.socialIconContainer, { backgroundColor: '#1877F220' }]}>
-                <Ionicons name="logo-facebook" size={28} color="#1877F2" />
-              </View>
-              <Text style={styles.socialName}>Facebook</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.socialCard}
-              onPress={() => Linking.openURL('https://www.tiktok.com/@invasionlatina')}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.socialIconContainer, { backgroundColor: '#FF004420' }]}>
-                <Ionicons name="logo-tiktok" size={28} color="#FF0044" />
-              </View>
-              <Text style={styles.socialName}>TikTok</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Animated.ScrollView>
-    
-    {/* WhatsApp Floating Button */}
-    <WhatsAppButton scrollY={scrollY} />
+      {/* WhatsApp Floating Button */}
+      <WhatsAppButton scrollY={scrollY} />
     </View>
   );
 }
 
-const CountdownBox = ({ value, label }: { value: number; label: string }) => (
-  <View style={styles.countdownBox}>
-    <Text style={styles.countdownValue}>{value.toString().padStart(2, '0')}</Text>
-    <Text style={styles.countdownLabel}>{label}</Text>
+// Section title with a small turquoise gradient tick on the left
+const SectionTitle = ({ title }: { title: string }) => (
+  <View style={styles.sectionTitleRow}>
+    <LinearGradient
+      colors={theme.gradients.brand}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={styles.sectionTick}
+    />
+    <Text style={styles.sectionTitleText}>{title}</Text>
   </View>
 );
 
@@ -467,17 +515,38 @@ const ActionCard = ({
   color: string;
   onPress?: () => void;
 }) => (
-  <TouchableOpacity 
-    style={styles.actionCard}
-    onPress={onPress}
-    activeOpacity={0.7}
-  >
-    <View style={[styles.actionIconContainer, { backgroundColor: color + '20' }]}>
-      <Ionicons name={icon} size={28} color={color} />
-    </View>
-    <Text style={styles.actionTitle}>{title}</Text>
-    <Text style={styles.actionSubtitle}>{subtitle}</Text>
-  </TouchableOpacity>
+  <PressableScale onPress={onPress} accessibilityLabel={title} style={styles.actionCardWrap}>
+    <GlassCard style={styles.actionCard}>
+      <View style={[styles.actionIconContainer, { backgroundColor: color + '20' }]}>
+        <Ionicons name={icon} size={28} color={color} />
+      </View>
+      <Text style={styles.actionTitle}>{title}</Text>
+      <Text style={styles.actionSubtitle}>{subtitle}</Text>
+    </GlassCard>
+  </PressableScale>
+);
+
+const SocialCard = ({
+  icon,
+  color,
+  name,
+  url,
+}: {
+  icon: any;
+  color: string;
+  name: string;
+  url: string;
+}) => (
+  <View style={styles.socialCardWrap}>
+    <PressableScale onPress={() => Linking.openURL(url)} accessibilityLabel={name}>
+      <GlassCard noPadding style={styles.socialCard}>
+        <View style={[styles.socialIconContainer, { backgroundColor: color + '20' }]}>
+          <Ionicons name={icon} size={28} color={color} />
+        </View>
+        <Text style={styles.socialName}>{name}</Text>
+      </GlassCard>
+    </PressableScale>
+  </View>
 );
 
 const styles = StyleSheet.create({
@@ -485,19 +554,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.black,
   },
-  
+
   content: {
     flex: 1,
-    paddingBottom: 40,
+    paddingBottom: 120, // floating glass tab bar
   },
-  
+
   // Hero
   hero: {
-    padding: theme.spacing.xl,
-  },
-  greeting: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.textSecondary,
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.lg,
   },
   userName: {
     fontSize: theme.fontSize.xxl,
@@ -506,66 +573,96 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   pointsCard: {
+    alignSelf: 'flex-start',
+    borderRadius: theme.borderRadius.full,
+  },
+  pointsInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.cardBackground,
+    gap: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.full,
-    alignSelf: 'flex-start',
   },
   pointsText: {
-    marginLeft: theme.spacing.sm,
     fontSize: theme.fontSize.md,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textPrimary,
   },
-  
+
+  // Section title with gradient tick
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  sectionTick: {
+    width: 22,
+    height: 3,
+    borderRadius: 2,
+  },
+  sectionTitleText: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+  },
+
   // Event
   eventSection: {
     paddingHorizontal: theme.spacing.xl,
     marginBottom: theme.spacing.xl,
   },
-  eventHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  sectionTitle: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textPrimary,
-  },
   eventCard: {
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    ...theme.shadows.lg,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
     marginBottom: theme.spacing.md,
   },
-  featuredEventCard: {
-    borderLeftColor: '#FFD700',
-    borderWidth: 1,
-    borderColor: '#FFD70050',
+
+  // Flyer hero
+  flyerWrap: {
+    position: 'relative',
   },
-  openAirEventCard: {
-    borderLeftColor: '#4CAF50',
+  flyerImage: {
+    width: '100%',
+    height: 320,
   },
-  featuredBadge: {
-    backgroundColor: '#FFD70020',
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
-    alignSelf: 'flex-start',
-    marginBottom: theme.spacing.sm,
+  flyerFade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 180,
   },
-  featuredBadgeText: {
-    color: '#FFD700',
+  flyerContent: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: theme.spacing.lg,
+  },
+  dateBadge: {
+    position: 'absolute',
+    top: theme.spacing.md,
+    right: theme.spacing.md,
+    borderRadius: theme.borderRadius.full,
+  },
+  dateBadgeInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 6,
+  },
+  dateBadgeText: {
+    color: theme.colors.secondary,
     fontSize: theme.fontSize.xs,
     fontWeight: theme.fontWeight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  noFlyerHeader: {
+    padding: theme.spacing.lg,
+    paddingBottom: 0,
   },
   openAirBadge: {
     backgroundColor: '#4CAF5020',
@@ -574,6 +671,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.sm,
     alignSelf: 'flex-start',
     marginBottom: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: '#4CAF5050',
   },
   openAirBadgeText: {
     color: '#4CAF50',
@@ -581,66 +680,52 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeight.bold,
   },
   eventName: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: theme.fontWeight.bold,
+    fontSize: theme.fontSize.xxl,
+    fontWeight: theme.fontWeight.black,
     color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
+  },
+  venueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   eventVenue: {
     fontSize: theme.fontSize.md,
     color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
   },
   eventDate: {
     fontSize: theme.fontSize.sm,
     color: theme.colors.textMuted,
-    marginBottom: theme.spacing.lg,
-  },
-  
-  // Countdown
-  countdownContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.lg,
-  },
-  countdownBox: {
-    flex: 1,
-    backgroundColor: theme.colors.elevated,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginHorizontal: theme.spacing.xs,
-    alignItems: 'center',
-  },
-  countdownValue: {
-    fontSize: 28,
-    fontWeight: theme.fontWeight.black,
-    color: theme.colors.primary,
-  },
-  countdownLabel: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.textMuted,
     marginTop: theme.spacing.xs,
   },
-  
-  // Buy Button
-  buyButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
-    overflow: 'hidden',
+  eventBody: {
+    padding: theme.spacing.lg,
   },
-  buyButtonContent: {
+  countdownWrap: {
+    marginBottom: theme.spacing.lg,
+  },
+
+  // Event buttons row
+  eventButtons: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  buyButton: {
+    flex: 1,
+  },
+  shareButton: {
+    width: 54,
+    height: 54,
+    borderRadius: theme.borderRadius.lg,
+    backgroundColor: theme.colors.elevated,
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.borders.medium,
   },
-  buyButtonText: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold,
-    color: 'white',
-    marginRight: theme.spacing.sm,
-  },
-  
+
   // Quick Actions
   quickActions: {
     paddingHorizontal: theme.spacing.xl,
@@ -649,59 +734,51 @@ const styles = StyleSheet.create({
   actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: theme.spacing.md,
     marginHorizontal: -theme.spacing.xs,
   },
-  actionCard: {
+  actionCardWrap: {
     width: (width - theme.spacing.xl * 2 - theme.spacing.xs * 4) / 2,
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
     margin: theme.spacing.xs,
-    ...theme.shadows.md,
+  },
+  actionCard: {
+    minHeight: 120,
   },
   actionIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: theme.spacing.sm,
   },
   actionTitle: {
-    fontSize: theme.fontSize.md,
+    fontSize: theme.fontSize.sm,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.xs,
+    marginBottom: 2,
   },
   actionSubtitle: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.textMuted,
   },
-  
+
   // Lineup
   lineupSection: {
     paddingHorizontal: theme.spacing.xl,
     marginBottom: theme.spacing.xl,
   },
-  lineupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
   lineupGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginTop: theme.spacing.md,
+  },
+  djCardWrap: {
+    width: '31%',
+    marginBottom: theme.spacing.sm,
   },
   djCard: {
-    width: '31%',
     alignItems: 'center',
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.sm,
-    marginBottom: theme.spacing.sm,
   },
   djPhoto: {
     width: 60,
@@ -733,15 +810,15 @@ const styles = StyleSheet.create({
   },
 
   // Spotify
+  spotifyWrap: {
+    marginHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,
+  },
   spotifyCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.md,
-    borderLeftWidth: 4,
+    borderLeftWidth: 3,
     borderLeftColor: '#1DB954',
   },
   spotifyIcon: {
@@ -778,16 +855,15 @@ const styles = StyleSheet.create({
   },
   socialGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: theme.spacing.md,
+    marginHorizontal: -theme.spacing.xs,
+  },
+  socialCardWrap: {
+    flex: 1,
+    marginHorizontal: theme.spacing.xs,
   },
   socialCard: {
-    flex: 1,
     alignItems: 'center',
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.md,
-    marginHorizontal: theme.spacing.xs,
   },
   socialIconContainer: {
     width: 50,
@@ -799,19 +875,6 @@ const styles = StyleSheet.create({
   },
   socialName: {
     fontSize: theme.fontSize.sm,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textPrimary,
-    textAlign: 'center',
-  },
-
-  // Follow Section
-  followSection: {
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.lg,
-    alignItems: 'center',
-  },
-  followTitle: {
-    fontSize: theme.fontSize.lg,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textPrimary,
     textAlign: 'center',

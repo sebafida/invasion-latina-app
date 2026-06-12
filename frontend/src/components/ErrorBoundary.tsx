@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { theme } from '../config/theme';
+import logger from '../config/logger';
 
 interface Props {
   children: React.ReactNode;
@@ -23,8 +24,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('App crash:', error);
-    console.error('Component stack:', errorInfo?.componentStack);
+    logger.error('App crash:', error);
+    logger.error('Component stack:', errorInfo?.componentStack);
   }
 
   render() {

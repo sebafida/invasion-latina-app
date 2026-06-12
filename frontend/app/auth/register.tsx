@@ -9,32 +9,32 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
-  Image,
-  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
-import { Button } from '../../src/components/Button';
+import { Language } from '../../src/i18n/translations';
+import { GlassCard } from '../../src/components/ui/GlassCard';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { PressableScale } from '../../src/components/ui/PressableScale';
 
-// URLs for Terms and Privacy Policy
-const TERMS_URL = 'https://invasionlatina.be/terms';
-const PRIVACY_URL = 'https://invasionlatina.be/privacy';
-
-const LANGUAGES = [
+const LANGUAGES: { code: Language; flag: string; label: string }[] = [
   { code: 'fr', flag: '🇫🇷', label: 'Français' },
   { code: 'en', flag: '🇬🇧', label: 'English' },
   { code: 'es', flag: '🇪🇸', label: 'Español' },
   { code: 'nl', flag: '🇳🇱', label: 'Nederlands' },
 ];
 
+type FieldName = 'name' | 'email' | 'phone' | 'password' | 'confirmPassword';
+
 export default function RegisterScreen() {
   const router = useRouter();
   const { register } = useAuth();
   const { language, setLanguage, t } = useLanguage();
-  
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -43,32 +43,33 @@ export default function RegisterScreen() {
   const [acceptMarketing, setAcceptMarketing] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+  const [focusedField, setFocusedField] = useState<FieldName | null>(null);
+
   const handleRegister = async () => {
     if (!name || !email || !phone || !password || !confirmPassword) {
       Alert.alert(t('error'), t('fillAllFields'));
       return;
     }
-    
+
     // 3.1 - Validation email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert(t('error'), t('invalidEmail'));
       return;
     }
-    
+
     // 3.1 - Validation téléphone
     const phoneRegex = /^[+]?[\d\s\-()]{7,15}$/;
     if (!phoneRegex.test(phone)) {
       Alert.alert(t('error'), t('invalidPhone'));
       return;
     }
-    
+
     if (password !== confirmPassword) {
       Alert.alert(t('error'), t('passwordsDontMatch'));
       return;
     }
-    
+
     if (password.length < 6) {
       Alert.alert(t('error'), t('passwordTooShort'));
       return;
@@ -78,7 +79,7 @@ export default function RegisterScreen() {
       Alert.alert(t('error'), t('mustAcceptTerms'));
       return;
     }
-    
+
     try {
       setLoading(true);
       await register(name, email, password, phone, acceptMarketing);
@@ -89,7 +90,33 @@ export default function RegisterScreen() {
       setLoading(false);
     }
   };
-  
+
+  const renderInput = (
+    field: FieldName,
+    label: string,
+    value: string,
+    onChange: (v: string) => void,
+    inputProps: Partial<React.ComponentProps<typeof TextInput>> = {},
+  ) => (
+    <View style={styles.inputContainer}>
+      <Text style={styles.label}>{label} *</Text>
+      <GlassCard
+        noPadding
+        style={[styles.inputCard, focusedField === field && styles.inputCardFocused]}
+      >
+        <TextInput
+          style={styles.input}
+          placeholderTextColor={theme.colors.textMuted}
+          value={value}
+          onChangeText={onChange}
+          onFocus={() => setFocusedField(field)}
+          onBlur={() => setFocusedField(null)}
+          {...inputProps}
+        />
+      </GlassCard>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <KeyboardAvoidingView
@@ -99,10 +126,10 @@ export default function RegisterScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <Image 
+            <Image
               source={require('../../assets/images/invasion-logo.png')}
               style={styles.logoImage}
-              resizeMode="contain"
+              contentFit="contain"
             />
           </View>
 
@@ -111,107 +138,69 @@ export default function RegisterScreen() {
             <Text style={styles.title}>{t('joinInvasionLatina')}</Text>
             <Text style={styles.subtitle}>{t('createAccountSubtitle')}</Text>
           </View>
-          
+
           {/* Form */}
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('fullName')} *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Jean Dupont"
-                placeholderTextColor={theme.colors.textMuted}
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
-            </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('email')} *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="ton@email.com"
-                placeholderTextColor={theme.colors.textMuted}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
+            {renderInput('name', t('fullName'), name, setName, {
+              placeholder: 'Jean Dupont',
+              autoCapitalize: 'words',
+            })}
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('phoneNumber')} *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="+32 470 12 34 56"
-                placeholderTextColor={theme.colors.textMuted}
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-              />
-            </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('password')} *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder={t('minCharacters')}
-                placeholderTextColor={theme.colors.textMuted}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-              />
-            </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('confirmPassword')} *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder={t('repeatPassword')}
-                placeholderTextColor={theme.colors.textMuted}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-                autoCapitalize="none"
-              />
-            </View>
+            {renderInput('email', t('email'), email, setEmail, {
+              placeholder: 'ton@email.com',
+              keyboardType: 'email-address',
+              autoCapitalize: 'none',
+            })}
+
+            {renderInput('phone', t('phoneNumber'), phone, setPhone, {
+              placeholder: '+32 470 12 34 56',
+              keyboardType: 'phone-pad',
+            })}
+
+            {renderInput('password', t('password'), password, setPassword, {
+              placeholder: t('minCharacters'),
+              secureTextEntry: true,
+              autoCapitalize: 'none',
+            })}
+
+            {renderInput('confirmPassword', t('confirmPassword'), confirmPassword, setConfirmPassword, {
+              placeholder: t('repeatPassword'),
+              secureTextEntry: true,
+              autoCapitalize: 'none',
+            })}
 
             {/* Consent Checkboxes */}
             <View style={styles.consentSection}>
               {/* Terms and Conditions - Required */}
-              <View style={styles.checkboxRow}>
-                <TouchableOpacity onPress={() => setAcceptTerms(!acceptTerms)}>
-                  <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
-                    {acceptTerms && <Ionicons name="checkmark" size={16} color="white" />}
-                  </View>
-                </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.checkboxRow}
+                onPress={() => setAcceptTerms(!acceptTerms)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: acceptTerms }}
+                accessibilityLabel={t('acceptTerms')}
+              >
+                <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
+                  {acceptTerms && <Ionicons name="checkmark" size={16} color="#000" />}
+                </View>
                 <Text style={styles.checkboxLabel}>
                   {t('acceptTerms')}{' '}
-                  <Text 
-                    style={styles.linkText}
-                    onPress={() => Linking.openURL(TERMS_URL)}
-                  >
-                    {t('termsAndConditions')}
-                  </Text>
+                  <Text style={styles.linkText}>{t('termsAndConditions')}</Text>
                   {' '}et{' '}
-                  <Text 
-                    style={styles.linkText}
-                    onPress={() => Linking.openURL(PRIVACY_URL)}
-                  >
-                    {t('privacyPolicy')}
-                  </Text>
+                  <Text style={styles.linkText}>{t('privacyPolicy')}</Text>
                   {' '}*
                 </Text>
-              </View>
+              </TouchableOpacity>
 
               {/* Marketing Consent - Optional */}
               <TouchableOpacity
                 style={styles.checkboxRow}
                 onPress={() => setAcceptMarketing(!acceptMarketing)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: acceptMarketing }}
+                accessibilityLabel={t('marketingConsent')}
               >
                 <View style={[styles.checkbox, acceptMarketing && styles.checkboxChecked]}>
-                  {acceptMarketing && <Ionicons name="checkmark" size={16} color="white" />}
+                  {acceptMarketing && <Ionicons name="checkmark" size={16} color="#000" />}
                 </View>
                 <Text style={styles.checkboxLabel}>
                   {t('marketingConsent')}
@@ -221,37 +210,40 @@ export default function RegisterScreen() {
 
             <Text style={styles.requiredNote}>* {t('requiredFields')}</Text>
 
-            {/* Language Selector */}
+            {/* Language Selector - glass pills */}
             <View style={styles.languageSection}>
               <Text style={styles.languageTitle}>🌐 {t('appLanguage')}</Text>
               <View style={styles.languageOptions}>
                 {LANGUAGES.map((lang) => (
-                  <TouchableOpacity
-                    key={lang.code}
-                    style={[
-                      styles.languageOption,
-                      language === lang.code && styles.languageOptionSelected
-                    ]}
-                    onPress={() => setLanguage(lang.code)}
-                  >
-                    <Text style={styles.languageFlag}>{lang.flag}</Text>
-                    <Text style={[
-                      styles.languageOptionText,
-                      language === lang.code && styles.languageOptionTextSelected
-                    ]}>
-                      {lang.label}
-                    </Text>
-                  </TouchableOpacity>
+                  <View key={lang.code} style={styles.languageOptionWrap}>
+                    <PressableScale
+                      onPress={() => setLanguage(lang.code)}
+                      accessibilityLabel={lang.label}
+                    >
+                      <GlassCard
+                        variant={language === lang.code ? 'glow' : 'default'}
+                        noPadding
+                        style={styles.languageOption}
+                      >
+                        <Text style={styles.languageFlag}>{lang.flag}</Text>
+                        <Text style={[
+                          styles.languageOptionText,
+                          language === lang.code && styles.languageOptionTextSelected
+                        ]}>
+                          {lang.label}
+                        </Text>
+                      </GlassCard>
+                    </PressableScale>
+                  </View>
                 ))}
               </View>
             </View>
-            
-            <Button
+
+            <GradientButton
               title={t('createMyAccount')}
+              icon="person-add"
               onPress={handleRegister}
               loading={loading}
-              fullWidth
-              size="lg"
             />
           </View>
 
@@ -299,9 +291,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: theme.fontSize.xxl,
-    fontWeight: '900' as any,
+    fontWeight: theme.fontWeight.black,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
+    letterSpacing: 0.4,
   },
   subtitle: {
     fontSize: theme.fontSize.md,
@@ -311,22 +304,25 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   inputContainer: {
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
   },
   label: {
     fontSize: theme.fontSize.sm,
-    fontWeight: '600' as any,
+    fontWeight: theme.fontWeight.semibold,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
+    letterSpacing: 0.3,
+  },
+  inputCard: {
+    borderRadius: theme.borderRadius.md,
+  },
+  inputCardFocused: {
+    borderColor: theme.borders.brand,
   },
   input: {
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
     padding: theme.spacing.md,
     fontSize: theme.fontSize.md,
     color: theme.colors.textPrimary,
-    borderWidth: 1,
-    borderColor: theme.colors.elevated,
   },
 
   // Consent Section
@@ -345,7 +341,7 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: theme.colors.textMuted,
+    borderColor: theme.borders.medium,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
@@ -367,7 +363,7 @@ const styles = StyleSheet.create({
   requiredNote: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.textMuted,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
     fontStyle: 'italic',
   },
 
@@ -377,30 +373,26 @@ const styles = StyleSheet.create({
   },
   languageTitle: {
     fontSize: theme.fontSize.sm,
-    fontWeight: '600' as any,
+    fontWeight: theme.fontWeight.semibold,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
+    letterSpacing: 0.3,
   },
   languageOptions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: theme.spacing.xs,
+    marginHorizontal: -theme.spacing.xs / 2,
+  },
+  languageOptionWrap: {
+    flex: 1,
+    marginHorizontal: theme.spacing.xs / 2,
   },
   languageOption: {
-    flex: 1,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.xs,
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
     minHeight: 75,
-  },
-  languageOptionSelected: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '20',
+    borderRadius: theme.borderRadius.md,
   },
   languageFlag: {
     fontSize: 24,
@@ -413,13 +405,13 @@ const styles = StyleSheet.create({
   },
   languageOptionTextSelected: {
     color: theme.colors.primary,
-    fontWeight: '600' as any,
+    fontWeight: theme.fontWeight.semibold,
   },
 
   // Footer
   footer: {
     alignItems: 'center',
-    marginTop: theme.spacing.md,
+    marginTop: theme.spacing.lg,
   },
   footerText: {
     color: theme.colors.textSecondary,
@@ -427,6 +419,6 @@ const styles = StyleSheet.create({
   },
   footerLink: {
     color: theme.colors.primary,
-    fontWeight: '600' as any,
+    fontWeight: theme.fontWeight.semibold,
   },
 });

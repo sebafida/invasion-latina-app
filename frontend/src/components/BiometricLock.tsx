@@ -12,6 +12,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../config/theme';
 import { useLanguage } from '../context/LanguageContext';
+import logger from '../config/logger';
 
 interface BiometricLockProps {
   onAuthenticated: () => void;
@@ -76,7 +77,7 @@ export const BiometricLock: React.FC<BiometricLockProps> = ({
         );
       }
     } catch (error) {
-      console.error('Biometric auth error:', error);
+      logger.error('Biometric auth error:', error);
       // If error, let user through
       onAuthenticated();
     } finally {

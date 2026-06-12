@@ -13,6 +13,8 @@ import QRCode from 'react-native-qrcode-svg';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
 import { useAuth } from '../../src/context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import logger from '../config/logger';
 
 interface FreeEntryVoucher {
   id: string;
@@ -30,6 +32,7 @@ interface FreeEntryCardProps {
 
 export function FreeEntryCard({ visible = true }: FreeEntryCardProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [showQRModal, setShowQRModal] = useState(false);
   const [voucher, setVoucher] = useState<FreeEntryVoucher | null>(null);
   const [loading, setLoading] = useState(false);
@@ -52,7 +55,7 @@ export function FreeEntryCard({ visible = true }: FreeEntryCardProps) {
         setVoucher(response.data.voucher);
       }
     } catch (error) {
-      console.log('No existing voucher');
+      logger.log('No existing voucher');
     } finally {
       setLoading(false);
     }
@@ -61,30 +64,30 @@ export function FreeEntryCard({ visible = true }: FreeEntryCardProps) {
   const handleClaimFreeEntry = async () => {
     if (!canClaimFreeEntry) {
       Alert.alert(
-        'Points insuffisants',
-        `Tu as besoin de 25 points pour obtenir une entrée gratuite. Tu as actuellement ${loyaltyPoints} points.`
+        t('insufficientPoints'),
+        t('insufficientPointsMessage').replace('{points}', String(loyaltyPoints))
       );
       return;
     }
 
     Alert.alert(
-      'Obtenir entrée gratuite',
-      'Tu vas utiliser 25 points de fidélité pour obtenir une entrée gratuite au prochain event. Continuer?',
+      t('getFreeEntry'),
+      t('freeEntryConfirmMessage'),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Confirmer',
+          text: t('confirm'),
           onPress: async () => {
             try {
               setClaiming(true);
               const response = await api.post('/loyalty/free-entry/claim');
               setVoucher(response.data.voucher);
               Alert.alert(
-                '🎉 Félicitations!',
-                'Tu as obtenu une entrée gratuite! Présente le QR code à l\'entrée de la prochaine soirée.'
+                `🎉 ${t('congratulations')}`,
+                t('freeEntryCongrats')
               );
             } catch (error: any) {
-              Alert.alert('Erreur', error.response?.data?.detail || 'Impossible d\'obtenir l\'entrée gratuite');
+              Alert.alert(t('error'), error.response?.data?.detail || t('freeEntryClaimError'));
             } finally {
               setClaiming(false);
             }
@@ -105,10 +108,8 @@ export function FreeEntryCard({ visible = true }: FreeEntryCardProps) {
             <Ionicons name="ticket" size={28} color="white" />
           </View>
           <View style={styles.freeEntryContent}>
-            <Text style={styles.freeEntryTitle}>🎫 Entrée Gratuite Active!</Text>
-            <Text style={styles.freeEntrySubtitle}>
-              Appuie pour afficher ton QR code
-            </Text>
+            <Text style={styles.freeEntryTitle}>{t('freeEntryActive')}</Text>
+<Text style={styles.freeEntrySubtitle}>{t('tapToShowQr')}</Text>
           </View>
           <Ionicons name="qr-code" size={28} color="white" />
         </TouchableOpacity>
@@ -124,10 +125,8 @@ export function FreeEntryCard({ visible = true }: FreeEntryCardProps) {
                 <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
               </TouchableOpacity>
 
-              <Text style={styles.qrTitle}>🎫 Entrée Gratuite</Text>
-              <Text style={styles.qrSubtitle}>
-                Présente ce QR code à l'entrée
-              </Text>
+              <Text style={styles.qrTitle}>🎫 {t('freeEntry')}</Text>
+<Text style={styles.qrSubtitle}>{t('showQrCodeAtEntrance')}</Text>
 
               <View style={styles.qrContainer}>
                 <QRCode
@@ -146,9 +145,7 @@ export function FreeEntryCard({ visible = true }: FreeEntryCardProps) {
               
               <View style={styles.warningBox}>
                 <Ionicons name="warning" size={20} color={theme.colors.warning} />
-                <Text style={styles.warningText}>
-                  Ce code ne peut être utilisé qu'une seule fois
-                </Text>
+<Text style={styles.warningText}>{t('qrCodeOneTime')}</Text>
               </View>
             </View>
           </View>
@@ -169,9 +166,9 @@ export function FreeEntryCard({ visible = true }: FreeEntryCardProps) {
           <Ionicons name="gift" size={28} color="white" />
         </View>
         <View style={styles.freeEntryContent}>
-          <Text style={styles.freeEntryTitle}>🎁 Entrée Gratuite Disponible!</Text>
+          <Text style={styles.freeEntryTitle}>{t('freeEntryAvailable')}</Text>
           <Text style={styles.freeEntrySubtitle}>
-            {claiming ? 'Chargement...' : 'Tu as 25 points! Appuie pour réclamer'}
+            {claiming ? t('loading') : t('claimFreeEntryHint')}
           </Text>
         </View>
         {claiming ? (
@@ -188,10 +185,10 @@ export function FreeEntryCard({ visible = true }: FreeEntryCardProps) {
     <View style={styles.progressCard}>
       <View style={styles.progressHeader}>
         <Ionicons name="ticket-outline" size={24} color={theme.colors.primary} />
-        <Text style={styles.progressTitle}>Entrée Gratuite</Text>
+        <Text style={styles.progressTitle}>{t('freeEntry')}</Text>
       </View>
       <Text style={styles.progressSubtitle}>
-        Encore {25 - loyaltyPoints} points pour une entrée gratuite!
+        {t('pointsRemainingForFreeEntry').replace('{points}', String(25 - loyaltyPoints))}
       </Text>
       <View style={styles.progressBarContainer}>
         <View style={[styles.progressBar, { width: `${(loyaltyPoints / 25) * 100}%` }]} />

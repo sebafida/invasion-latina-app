@@ -7,8 +7,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { theme } from '../config/theme';
+import { useLanguage } from '../context/LanguageContext';
 
 export const OfflineBanner: React.FC = () => {
+  const { t } = useLanguage();
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
@@ -22,7 +24,7 @@ export const OfflineBanner: React.FC = () => {
 
   return (
     <View style={styles.banner}>
-      <Text style={styles.text}>Pas de connexion internet</Text>
+      <Text style={styles.text}>{t('noInternetConnection')}</Text>
     </View>
   );
 };

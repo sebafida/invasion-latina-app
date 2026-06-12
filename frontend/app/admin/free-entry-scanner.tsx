@@ -15,11 +15,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
-import { useAuth } from '../../src/context/AuthContext';
+import logger from '../../src/config/logger';
 
 export default function FreeEntryScanner() {
   const router = useRouter();
-  const { user } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -30,14 +29,6 @@ export default function FreeEntryScanner() {
     message: string;
     userName?: string;
   } | null>(null);
-
-  // Admin check
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      Alert.alert('Accès refusé', 'Cette page est réservée aux administrateurs');
-      router.replace('/(tabs)/home');
-    }
-  }, [user]);
 
   const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
     if (!scanning || processing) return;
@@ -69,7 +60,7 @@ export default function FreeEntryScanner() {
       });
       
     } catch (error: any) {
-      console.error('Validation error:', error);
+      logger.error('Validation error:', error);
       setLastResult({
         success: false,
         message: error.response?.data?.detail || 'Erreur lors de la validation'
@@ -124,7 +115,7 @@ export default function FreeEntryScanner() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.permissionContainer}>
-          <Ionicons name="camera-off" size={64} color={theme.colors.textMuted} />
+          <Ionicons name="videocam-off" size={64} color={theme.colors.textMuted} />
           <Text style={styles.permissionText}>
             Autorisation caméra requise pour scanner les QR codes
           </Text>

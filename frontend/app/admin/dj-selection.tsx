@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
+import logger from '../../src/config/logger';
 
 interface DJ {
   id: string;
@@ -74,7 +75,7 @@ export default function DJSelectionScreen() {
         setSelectedDjIds(eventResponse.data.event.selected_djs || []);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      logger.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -118,7 +119,7 @@ export default function DJSelectionScreen() {
         [{ text: 'Super !', style: 'default' }]
       );
     } catch (error: any) {
-      console.error('Error saving selection:', error);
+      logger.error('Error saving selection:', error);
       Alert.alert('Erreur', error.response?.data?.detail || 'Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);

@@ -4,18 +4,25 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
   Linking,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { theme } from '../src/config/theme';
 import api from '../src/config/api';
+import logger from '../src/config/logger';
 import { useLanguage } from '../src/context/LanguageContext';
+import { getDateLocale } from '../src/i18n/dateLocale';
+import { ErrorRetry } from '../src/components/ErrorRetry';
+import { SkeletonCard } from '../src/components/ui/Skeleton';
+import { EmptyState } from '../src/components/ui/EmptyState';
+import { PressableScale } from '../src/components/ui/PressableScale';
+import { GlassCard } from '../src/components/ui/GlassCard';
 
 interface EventGallery {
   id: string;
@@ -28,9 +35,10 @@ interface EventGallery {
 
 export default function GalleriesScreen() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [galleries, setGalleries] = useState<EventGallery[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     loadGalleries();
@@ -39,6 +47,7 @@ export default function GalleriesScreen() {
   const loadGalleries = async () => {
     try {
       setLoading(true);
+      setError(false);
       // Load events and filter those with gallery_visible + gallery_url
       const response = await api.get('/events');
       const eventsList = Array.isArray(response.data) ? response.data : (response.data.events || []);
@@ -54,8 +63,9 @@ export default function GalleriesScreen() {
         }));
       setGalleries(visibleGalleries);
     } catch (error) {
-      console.error('Failed to load galleries:', error);
+      logger.error('Failed to load galleries:', error);
       setGalleries([]);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -66,7 +76,7 @@ export default function GalleriesScreen() {
       try {
         await Linking.openURL(gallery.gallery_url);
       } catch (error) {
-        Alert.alert('Erreur', 'Impossible d\'ouvrir le lien');
+        Alert.alert(t('error'), t('cannotOpenLink'));
       }
     }
   };
@@ -96,61 +106,71 @@ export default function GalleriesScreen() {
 
         {/* Galleries List */}
         {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>{t('loadingGalleries')}</Text>
+          <View style={styles.skeletons}>
+            <SkeletonCard imageHeight={200} />
+            <SkeletonCard imageHeight={200} />
           </View>
+        ) : error ? (
+          <ErrorRetry onRetry={loadGalleries} />
         ) : galleries.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="images-outline" size={64} color={theme.colors.textMuted} />
-            <Text style={styles.emptyText}>{t('noGalleryAvailable')}</Text>
-            <Text style={styles.emptySubtext}>
-              {t('photosPublishedAfterEvent')}
-            </Text>
-          </View>
+          <EmptyState
+            icon="images-outline"
+            title={t('noGalleryAvailable')}
+            subtitle={t('photosPublishedAfterEvent')}
+          />
         ) : (
           galleries.map((gallery) => (
-            <TouchableOpacity
+            <PressableScale
               key={gallery.id}
               style={styles.galleryCard}
               onPress={() => openGallery(gallery)}
-              activeOpacity={0.8}
+              accessibilityLabel={gallery.name}
             >
               {gallery.cover_image ? (
                 <Image
                   source={{ uri: gallery.cover_image }}
                   style={styles.galleryImage}
-                  resizeMode="cover"
+                  contentFit="cover"
+                  transition={200}
+                  cachePolicy="memory-disk"
                 />
               ) : (
                 <View style={[styles.galleryImage, styles.placeholderImage]}>
                   <Ionicons name="images" size={48} color={theme.colors.textMuted} />
                 </View>
               )}
-              
-              <View style={styles.galleryOverlay}>
+
+              <LinearGradient
+                colors={theme.gradients.overlayBottom}
+                style={styles.galleryOverlay}
+              >
                 <Text style={styles.galleryName}>{gallery.name}</Text>
                 <View style={styles.galleryMeta}>
                   <Text style={styles.galleryDate}>
-                    {gallery.event_date ? new Date(gallery.event_date).toLocaleDateString('fr-FR', {
+                    {gallery.event_date ? new Date(gallery.event_date).toLocaleDateString(getDateLocale(language), {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric'
-                    }) : 'Date non disponible'}
+                    }) : t('dateNotSet')}
                   </Text>
                   <View style={styles.photoCountBadge}>
                     <Ionicons name="images" size={14} color="white" />
                     <Text style={styles.photoCountText}>{gallery.photo_count}</Text>
                   </View>
                 </View>
-              </View>
-              
-              <View style={styles.viewButton}>
-                <Ionicons name="open-outline" size={18} color="white" />
+              </LinearGradient>
+
+              <LinearGradient
+                colors={theme.gradients.brand}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.viewButton}
+              >
+                <Ionicons name="open-outline" size={18} color="#000" />
                 <Text style={styles.viewButtonText}>{t('viewPhotos')}</Text>
-                <Ionicons name="arrow-forward" size={20} color="white" />
-              </View>
-            </TouchableOpacity>
+                <Ionicons name="arrow-forward" size={20} color="#000" />
+              </LinearGradient>
+            </PressableScale>
           ))
         )}
 
@@ -158,7 +178,7 @@ export default function GalleriesScreen() {
         <View style={styles.featuresSection}>
           <Text style={styles.featuresTitle}>{t('features')}</Text>
           
-          <View style={styles.featureCard}>
+          <GlassCard style={styles.featureCard}>
             <Ionicons name="download" size={24} color={theme.colors.neonBlue} />
             <View style={styles.featureText}>
               <Text style={styles.featureTitle}>{t('hdDownload')}</Text>
@@ -167,9 +187,9 @@ export default function GalleriesScreen() {
             <View style={styles.availableBadge}>
               <Text style={styles.availableText}>{t('available')}</Text>
             </View>
-          </View>
-          
-          <View style={styles.featureCard}>
+          </GlassCard>
+
+          <GlassCard style={styles.featureCard}>
             <Ionicons name="share-social" size={24} color={theme.colors.secondary} />
             <View style={styles.featureText}>
               <Text style={styles.featureTitle}>{t('socialShare')}</Text>
@@ -178,7 +198,7 @@ export default function GalleriesScreen() {
             <View style={styles.availableBadge}>
               <Text style={styles.availableText}>{t('available')}</Text>
             </View>
-          </View>
+          </GlassCard>
         </View>
       </View>
     </ScrollView>
@@ -260,33 +280,8 @@ const styles = StyleSheet.create({
   },
 
   // Loading
-  loadingContainer: {
-    paddingVertical: theme.spacing.xxl * 2,
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-  },
-
-  // Empty State
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.xxl * 2,
+  skeletons: {
     paddingHorizontal: theme.spacing.xl,
-  },
-  emptyText: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textMuted,
-    marginTop: theme.spacing.xs,
-    textAlign: 'center',
   },
 
   // Gallery Card
@@ -296,6 +291,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     backgroundColor: theme.colors.cardBackground,
+    borderWidth: 1,
+    borderColor: theme.borders.subtle,
   },
   galleryImage: {
     width: '100%',
@@ -314,11 +311,10 @@ const styles = StyleSheet.create({
     bottom: 50,
     justifyContent: 'flex-end',
     padding: theme.spacing.md,
-    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   galleryName: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.bold,
+    fontSize: theme.fontSize.xl,
+    fontWeight: theme.fontWeight.black,
     color: 'white',
     marginBottom: theme.spacing.xs,
   },
@@ -349,14 +345,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.primary,
     padding: theme.spacing.md,
     gap: theme.spacing.xs,
   },
   viewButtonText: {
     fontSize: theme.fontSize.md,
     fontWeight: theme.fontWeight.bold,
-    color: 'white',
+    color: '#000',
+    letterSpacing: 0.3,
   },
 
   // Features Section
@@ -373,9 +369,6 @@ const styles = StyleSheet.create({
   featureCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
     marginBottom: theme.spacing.sm,
     gap: theme.spacing.md,
   },

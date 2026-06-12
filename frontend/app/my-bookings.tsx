@@ -6,15 +6,20 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  Image,
-  ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import { SkeletonCard, SkeletonRow } from '../src/components/ui/Skeleton';
+import { EmptyState } from '../src/components/ui/EmptyState';
+import { PressableScale } from '../src/components/ui/PressableScale';
 import { useAuth } from '../src/context/AuthContext';
 import { useLanguage } from '../src/context/LanguageContext';
+import { getDateLocale } from '../src/i18n/dateLocale';
 import api from '../src/config/api';
 import { theme } from '../src/config/theme';
+import logger from '../src/config/logger';
 
 interface Booking {
   id: string;
@@ -33,7 +38,7 @@ interface Booking {
 
 export default function MyBookingsScreen() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
   
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -50,7 +55,7 @@ export default function MyBookingsScreen() {
       const response = await api.get('/vip/my-bookings');
       setBookings(response.data);
     } catch (error) {
-      console.error('Failed to load bookings:', error);
+      logger.error('Failed to load bookings:', error);
     } finally {
       setLoading(false);
     }
@@ -65,18 +70,18 @@ export default function MyBookingsScreen() {
   const getStatusInfo = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return { icon: 'checkmark-circle', color: theme.colors.success, label: 'Confirmée' };
+        return { icon: 'checkmark-circle', color: theme.colors.success, label: t('statusConfirmed') };
       case 'rejected':
-        return { icon: 'close-circle', color: theme.colors.error, label: 'Refusée' };
+        return { icon: 'close-circle', color: theme.colors.error, label: t('statusRejected') };
       default:
-        return { icon: 'time', color: theme.colors.warning, label: 'En attente' };
+        return { icon: 'time', color: theme.colors.warning, label: t('statusPending') };
     }
   };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Date non définie';
+    if (!dateString) return t('dateNotSet');
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
+    return date.toLocaleDateString(getDateLocale(language), {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -87,7 +92,7 @@ export default function MyBookingsScreen() {
   const formatTime = (dateString: string | null) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleTimeString('fr-FR', {
+    return date.toLocaleTimeString(getDateLocale(language), {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -104,8 +109,10 @@ export default function MyBookingsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+      <View style={[styles.container, styles.skeletons]}>
+        <SkeletonCard imageHeight={120} />
+        <SkeletonRow />
+        <SkeletonRow />
       </View>
     );
   }
@@ -117,7 +124,7 @@ export default function MyBookingsScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mes Réservations</Text>
+        <Text style={styles.headerTitle}>{t('myBookings')}</Text>
         <View style={styles.headerRight} />
       </View>
 
@@ -132,25 +139,19 @@ export default function MyBookingsScreen() {
         }
       >
         {bookings.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="calendar-outline" size={64} color={theme.colors.textMuted} />
-            <Text style={styles.emptyTitle}>Aucune réservation</Text>
-            <Text style={styles.emptySubtitle}>
-              Vos réservations de tables apparaîtront ici
-            </Text>
-            <TouchableOpacity
-              style={styles.bookButton}
-              onPress={() => router.push('/(tabs)/shop')}
-            >
-              <Text style={styles.bookButtonText}>Réserver une table</Text>
-            </TouchableOpacity>
-          </View>
+          <EmptyState
+            icon="calendar-outline"
+            title={t('noBookings')}
+            subtitle={t('noBookingsSubtitle')}
+            actionLabel={t('bookATable')}
+            onAction={() => router.push('/(tabs)/shop')}
+          />
         ) : (
           <>
             {/* Upcoming Bookings */}
             {upcomingBookings.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>À venir</Text>
+                <Text style={styles.sectionTitle}>{t('upcoming')}</Text>
                 {upcomingBookings.map((booking) => {
                   const statusInfo = getStatusInfo(booking.status);
                   return (
@@ -160,7 +161,9 @@ export default function MyBookingsScreen() {
                         <Image
                           source={{ uri: booking.event_banner }}
                           style={styles.eventBanner}
-                          resizeMode="cover"
+                          contentFit="cover"
+                          transition={200}
+                          cachePolicy="memory-disk"
                         />
                       )}
                       
@@ -190,11 +193,11 @@ export default function MyBookingsScreen() {
 
                         <View style={styles.detailsRow}>
                           <View style={styles.detailItem}>
-                            <Text style={styles.detailLabel}>Zone</Text>
+                            <Text style={styles.detailLabel}>{t('zone')}</Text>
                             <Text style={styles.detailValue}>{booking.zone}</Text>
                           </View>
                           <View style={styles.detailItem}>
-                            <Text style={styles.detailLabel}>Personnes</Text>
+                            <Text style={styles.detailLabel}>{t('guestsLabel')}</Text>
                             <Text style={styles.detailValue}>{booking.guests}</Text>
                           </View>
                         </View>
@@ -209,8 +212,29 @@ export default function MyBookingsScreen() {
 
                         {/* Submitted Date */}
                         <Text style={styles.submittedDate}>
-                          Demande envoyée le {formatDate(booking.submitted_at)}
+                          {t('requestSentOn')} {formatDate(booking.submitted_at)}
                         </Text>
+
+                        {/* Pending booking: estimated delay + WhatsApp contact */}
+                        {booking.status === 'pending' && (
+                          <View style={styles.pendingInfo}>
+                            <View style={styles.pendingDelay}>
+                              <Ionicons name="time-outline" size={14} color={theme.colors.textSecondary} />
+                              <Text style={styles.pendingDelayText}>{t('responseWithin24h')}</Text>
+                            </View>
+                            <PressableScale
+                              style={styles.contactButton}
+                              onPress={() => {
+                                const msg = encodeURIComponent(t('whatsappBookingInquiry').replace('{event}', booking.event_name));
+                                Linking.openURL(`https://wa.me/32478814497?text=${msg}`);
+                              }}
+                              accessibilityLabel={t('contactUs')}
+                            >
+                              <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
+                              <Text style={styles.contactButtonText}>{t('contactUs')}</Text>
+                            </PressableScale>
+                          </View>
+                        )}
                       </View>
                     </View>
                   );
@@ -221,7 +245,7 @@ export default function MyBookingsScreen() {
             {/* Past Bookings */}
             {pastBookings.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Historique</Text>
+                <Text style={styles.sectionTitle}>{t('history')}</Text>
                 {pastBookings.map((booking) => {
                   const statusInfo = getStatusInfo(booking.status);
                   return (
@@ -245,11 +269,11 @@ export default function MyBookingsScreen() {
 
                         <View style={styles.detailsRow}>
                           <View style={styles.detailItem}>
-                            <Text style={styles.detailLabel}>Zone</Text>
+                            <Text style={styles.detailLabel}>{t('zone')}</Text>
                             <Text style={styles.detailValue}>{booking.zone}</Text>
                           </View>
                           <View style={styles.detailItem}>
-                            <Text style={styles.detailLabel}>Personnes</Text>
+                            <Text style={styles.detailLabel}>{t('guestsLabel')}</Text>
                             <Text style={styles.detailValue}>{booking.guests}</Text>
                           </View>
                         </View>
@@ -351,6 +375,12 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     marginBottom: theme.spacing.md,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.borders.subtle,
+  },
+  skeletons: {
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: 100,
   },
   pastCard: {
     opacity: 0.7,
@@ -432,6 +462,37 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
     marginTop: theme.spacing.md,
     fontStyle: 'italic',
+  },
+  pendingInfo: {
+    marginTop: theme.spacing.md,
+    padding: theme.spacing.sm,
+    backgroundColor: theme.colors.elevated,
+    borderRadius: theme.borderRadius.md,
+    gap: theme.spacing.sm,
+  },
+  pendingDelay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  pendingDelayText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textSecondary,
+  },
+  contactButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    backgroundColor: '#25D366' + '15',
+    borderRadius: theme.borderRadius.md,
+    alignSelf: 'flex-start',
+  },
+  contactButtonText: {
+    fontSize: theme.fontSize.sm,
+    color: '#25D366',
+    fontWeight: theme.fontWeight.semibold,
   },
   bottomSpacer: {
     height: theme.spacing.xxl,

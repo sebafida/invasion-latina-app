@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
 import { useLanguage } from '../../src/context/LanguageContext';
+import logger from '../../src/config/logger';
 
 interface AppSettings {
   requests_enabled: boolean;
@@ -37,7 +38,7 @@ export default function EventSettingsScreen() {
       const response = await api.get('/admin/settings');
       setSettings(response.data);
     } catch (error: any) {
-      console.error('Error fetching settings:', error);
+      logger.error('Error fetching settings:', error);
       Alert.alert('Erreur', 'Impossible de charger les paramètres');
     } finally {
       setLoading(false);

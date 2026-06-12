@@ -38,7 +38,6 @@ export default function ScanQRScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isCameraReady) {
-        console.log('Camera ready timeout - enabling scanner');
         setIsCameraReady(true);
       }
     }, 1500);
@@ -58,15 +57,13 @@ export default function ScanQRScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.permissionContainer}>
           <FontAwesome name="camera" size={60} color={theme.colors.primary} />
-          <Text style={styles.permissionTitle}>Accès caméra requis</Text>
-          <Text style={styles.permissionText}>
-            Pour scanner le QR code et gagner tes Invasion Coins, autorise l'accès à la caméra.
-          </Text>
+          <Text style={styles.permissionTitle}>{t('cameraAccessRequired')}</Text>
+          <Text style={styles.permissionText}>{t('cameraPermissionScanText')}</Text>
           <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
-            <Text style={styles.permissionButtonText}>Autoriser la caméra</Text>
+            <Text style={styles.permissionButtonText}>{t('allowCamera')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Retour</Text>
+            <Text style={styles.backButtonText}>{t('back')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -74,31 +71,20 @@ export default function ScanQRScreen() {
   }
 
   const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
-    // CRITICAL FIX for iOS: Multiple protection layers against duplicate scans
-    if (scanned || isLoading || isProcessingRef.current) {
-      console.log('Scan blocked - already processing');
+    // CRITICAL FIX for iOS: Use ref as FIRST check (synchronous, no React batching delay)
+    if (isProcessingRef.current) {
       return;
     }
-    
-    // Check if same code scanned (iOS can fire multiple times)
-    if (lastScannedCodeRef.current === data) {
-      console.log('Scan blocked - same QR code');
-      return;
-    }
-    
-    // Set all blockers immediately
+
+    // Lock immediately BEFORE any state update (refs are synchronous)
     isProcessingRef.current = true;
     lastScannedCodeRef.current = data;
     setScanned(true);
     setIsLoading(true);
 
-    console.log('Scanning QR code:', data);
-
     try {
-      console.log('Sending scan request to API...');
       const response = await api.post('/loyalty/scan-event-qr', { qr_code: data });
-      console.log('Scan response:', response.data);
-      
+
       setResult({
         success: true,
         message: response.data.message,
@@ -106,17 +92,29 @@ export default function ScanQRScreen() {
         totalPoints: response.data.total_coins,
       });
     } catch (error: any) {
-      console.log('QR Scan Error:', error.response?.status, error.response?.data || error.message);
-      let errorMessage = 'Erreur lors du scan';
-      if (error.response?.status === 401) {
-        errorMessage = 'Session expirée. Veuillez vous reconnecter.';
-      } else if (error.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
+      // If backend says "already scanned" but we just scanned successfully,
+      // it means a race condition happened - treat as success (coins were already counted)
+      const detail = error.response?.data?.detail || '';
+      const isAlreadyScanned = error.response?.status === 400 && detail.includes('déjà scanné');
+
+      if (isAlreadyScanned) {
+        // Don't show error - the first request already gave the coins
+        setResult({
+          success: true,
+          message: t('qrScanSuccess'),
+        });
+      } else {
+        let errorMessage = t('scanError');
+        if (error.response?.status === 401) {
+          errorMessage = t('sessionExpired');
+        } else if (detail) {
+          errorMessage = detail;
+        }
+        setResult({
+          success: false,
+          message: errorMessage,
+        });
       }
-      setResult({
-        success: false,
-        message: errorMessage,
-      });
     } finally {
       setIsLoading(false);
       // Keep isProcessingRef true to prevent any more scans until reset
@@ -133,7 +131,6 @@ export default function ScanQRScreen() {
   };
 
   const handleCameraReady = () => {
-    console.log('Camera is ready for scanning');
     setIsCameraReady(true);
   };
 
@@ -150,17 +147,17 @@ export default function ScanQRScreen() {
           </View>
           
           <Text style={styles.resultTitle}>
-            {result.success ? 'Félicitations !' : 'Oops !'}
+            {result.success ? t('congratulations') : t('oops')}
           </Text>
           
           <Text style={styles.resultMessage}>{result.message}</Text>
           
           {result.success && result.points != null && (
             <View style={styles.pointsContainer}>
-              <Text style={styles.pointsLabel}>Points gagnés</Text>
+              <Text style={styles.pointsLabel}>{t('pointsEarned')}</Text>
               <Text style={styles.pointsValue}>+{result.points}</Text>
               <Text style={styles.totalPoints}>
-                Total: {result.totalPoints} Invasion Coins
+                {t('totalPoints')}: {result.totalPoints} Invasion Coins
               </Text>
             </View>
           )}
@@ -170,7 +167,7 @@ export default function ScanQRScreen() {
             onPress={result.success ? () => router.back() : resetScanner}
           >
             <Text style={styles.resultButtonText}>
-              {result.success ? 'Retour au profil' : 'Réessayer'}
+              {result.success ? t('backToProfile') : t('tryAgain')}
             </Text>
           </TouchableOpacity>
           
@@ -179,7 +176,7 @@ export default function ScanQRScreen() {
               style={styles.backButton}
               onPress={() => router.back()}
             >
-              <Text style={styles.backButtonText}>Retour</Text>
+              <Text style={styles.backButtonText}>{t('back')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -197,7 +194,7 @@ export default function ScanQRScreen() {
           barcodeTypes: ['qr'],
         }}
         onCameraReady={handleCameraReady}
-        onBarcodeScanned={isCameraReady && !scanned ? handleBarCodeScanned : undefined}
+        onBarcodeScanned={isCameraReady && !isProcessingRef.current ? handleBarCodeScanned : undefined}
       />
 
       {/* UI overlay positioned on top of camera (CameraView does not support children) */}
@@ -206,7 +203,7 @@ export default function ScanQRScreen() {
         <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
           <FontAwesome name="times" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Scanner le QR Code</Text>
+        <Text style={styles.headerTitle}>{t('scanQRCode')}</Text>
         <View style={{ width: 40 }} />
       </SafeAreaView>
 
@@ -222,15 +219,13 @@ export default function ScanQRScreen() {
 
       {/* Instructions */}
       <View style={styles.instructions}>
-        <Text style={styles.instructionsText}>
-          Place le QR code de la soirée dans le cadre pour gagner tes Invasion Coins !
-        </Text>
+        <Text style={styles.instructionsText}>{t('scanInstructions')}</Text>
       </View>
 
       {isLoading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Vérification...</Text>
+          <Text style={styles.loadingText}>{t('verifying')}</Text>
         </View>
       )}
     </View>

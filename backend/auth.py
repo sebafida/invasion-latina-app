@@ -4,8 +4,6 @@ from passlib.context import CryptContext
 from fastapi import HTTPException, Security, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from config import settings
-from database import get_database
-from bson import ObjectId
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
@@ -50,52 +48,6 @@ def decode_token(token: str) -> dict:
     except Exception as e:
         logger.error(f"Token decode error: {e}")
         raise HTTPException(status_code=401, detail="Invalid token")
-
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)):
-    """Get current authenticated user"""
-    token = credentials.credentials
-    payload = decode_token(token)
-    
-    user_id = payload.get("sub")
-    if user_id is None:
-        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-    
-    db = get_database()
-    user = await db.users.find_one({"_id": ObjectId(user_id)})
-    
-    if user is None:
-        raise HTTPException(status_code=401, detail="User not found")
-    
-    return user
-
-async def get_current_admin(current_user: dict = Depends(get_current_user)):
-    """Verify user is admin or DJ"""
-    if current_user.get("role") not in ["admin", "dj"]:
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return current_user
-
-async def verify_firebase_token(token: str) -> dict:
-    """
-    Verify Firebase ID token
-    
-    TODO: Implement real Firebase token verification when you add your Firebase credentials
-    For now, this is a MOCK implementation
-    
-    Real implementation:
-    from firebase_admin import auth
-    decoded_token = auth.verify_id_token(token)
-    return decoded_token
-    """
-    # MOCK: In production, replace this with actual Firebase verification
-    logger.warning("⚠️  Using MOCK Firebase token verification")
-    
-    try:
-        # For development, we'll decode as regular JWT
-        payload = jwt.decode(token, options={"verify_signature": False})
-        return payload
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid Firebase token: {str(e)}")
-
 
 # ============ SUPABASE AUTH FUNCTIONS ============
 

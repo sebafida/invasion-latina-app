@@ -15,6 +15,7 @@ import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
+import logger from '../../src/config/logger';
 
 interface DJRequest {
   id: string;
@@ -70,28 +71,21 @@ export default function DJDashboardScreen() {
     { value: 'technical_issue', label: t('technicalIssue'), icon: 'construct' },
   ];
 
+  // Le contrôle d'accès admin est centralisé dans app/admin/_layout.tsx
   useEffect(() => {
     if (!user) return;
-    
-    // Delay check to allow navigation to mount
+
+    // Delay to allow navigation to mount
     const timer = setTimeout(() => {
-      // Check if admin
-      if (user?.role !== 'admin') {
-        Alert.alert('Accès refusé', 'Cette page est réservée aux admins', [
-          { text: 'OK', onPress: () => router.back() }
-        ]);
-        return;
-      }
-      
       loadEvents();
       loadRequests();
     }, 100);
-    
+
     // Auto-refresh every 30 seconds
     const interval = setInterval(() => {
       loadRequests();
     }, 30000);
-    
+
     return () => {
       clearTimeout(timer);
       clearInterval(interval);
@@ -111,31 +105,28 @@ export default function DJDashboardScreen() {
         setSelectedEvent(response.data[0].id);
       }
     } catch (error) {
-      console.error('Failed to load events:', error);
+      logger.error('Failed to load events:', error);
     }
   };
 
   const loadRequests = async () => {
+    if (!selectedEvent) {
+      // Wait for event to be selected
+      return;
+    }
     try {
       setLoading(true);
       let url = '/dj/requests?';
       if (statusFilter !== 'all') {
         url += `status=${statusFilter}&`;
       }
-      // Only add event_id if an event is selected
-      if (selectedEvent) {
-        url += `event_id=${selectedEvent}`;
-      }
+      url += `event_id=${selectedEvent}`;
       
       const response = await api.get(url);
       setRequests(response.data);
       
-      // Calculate stats from all requests
-      let statsUrl = '/dj/requests?';
-      if (selectedEvent) {
-        statsUrl += `event_id=${selectedEvent}`;
-      }
-      const allResponse = await api.get(statsUrl);
+      // Calculate stats from all requests for this event
+      const allResponse = await api.get(`/dj/requests?event_id=${selectedEvent}`);
       const allData = allResponse.data;
       setStats({
         total: allData.length,
@@ -144,7 +135,7 @@ export default function DJDashboardScreen() {
         rejected: allData.filter((r: any) => r.status === 'rejected').length,
       });
     } catch (error) {
-      console.error('Failed to load requests:', error);
+      logger.error('Failed to load requests:', error);
     } finally {
       setLoading(false);
     }
@@ -196,7 +187,7 @@ export default function DJDashboardScreen() {
       loadRequests();
       loadEvents();
     } catch (error: any) {
-      console.error('Delete error:', error);
+      logger.error('Delete error:', error);
     }
   };
 
@@ -212,7 +203,7 @@ export default function DJDashboardScreen() {
       loadRequests();
       loadEvents();
     } catch (error: any) {
-      console.error('Clear all error:', error);
+      logger.error('Clear all error:', error);
     }
   };
 

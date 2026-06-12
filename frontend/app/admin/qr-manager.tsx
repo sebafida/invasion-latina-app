@@ -17,6 +17,7 @@ import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
+import logger from '../../src/config/logger';
 
 const { width } = Dimensions.get('window');
 
@@ -69,7 +70,7 @@ export default function QRCodeManagerScreen() {
       setEvents(eventsResponse.data.map((e: any) => ({ id: e.id, name: e.name })));
       
     } catch (error) {
-      console.error('Error loading QR data:', error);
+      logger.error('Error loading QR data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -120,7 +121,7 @@ export default function QRCodeManagerScreen() {
         message: `QR Code pour ${activeQR.event_name}\n\nCode: ${activeQR.qr_code}\n\nLes participants scannent ce code pour gagner ${activeQR.points_value} Invasion Coins !`,
       });
     } catch (error) {
-      console.error('Share error:', error);
+      logger.error('Share error:', error);
     }
   };
 

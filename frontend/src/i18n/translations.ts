@@ -95,7 +95,6 @@ export interface Translations {
   noRequests: string;
   modeTest: string;
   requestedBy: string;
-  sendRequest: string;
   songRequested: string;
   
   // DJs Page
@@ -128,7 +127,6 @@ export interface Translations {
   comingSoon: string;
   eventDate: string;
   venue: string;
-  price: string;
   ticketInfo: string;
   secureYourSpot: string;
   informations: string;
@@ -238,7 +236,6 @@ export interface Translations {
   refresh: string;
   noResults: string;
   tryAgain: string;
-  connectionError: string;
   comingSoonFeature: string;
   
   // Success/Error messages
@@ -447,6 +444,118 @@ export interface Translations {
   newsletterEmail: string;
   newsletterEmailDesc: string;
   notificationPrivacyNotice: string;
+
+  // Quick Actions / Media
+  photos: string;
+  aftermovies: string;
+  phoneNumber: string;
+
+  // Shop / booking validation
+  fillContactFields: string;
+  selectTable: string;
+  bookingError: string;
+
+  // Biometric Lock
+  welcomeBack: string;
+  tapToUnlock: string;
+  useAnotherAccount: string;
+
+  // Account deletion
+  deleteAccount: string;
+  deleteAccountConfirm: string;
+  finalConfirmation: string;
+  deleteAccountFinal: string;
+  confirmDelete: string;
+  accountDeleted: string;
+  accountDeletedMessage: string;
+  deleteAccountError: string;
+
+  // Calendar
+  addToCalendar: string;
+
+  // Profile - name setup
+  enterNameError: string;
+  nameUpdated: string;
+  nameSaveError: string;
+  addYourFirstName: string;
+  yourFirstName: string;
+  enterFirstNamePlaceholder: string;
+
+  // Profile - quick actions
+  myBookings: string;
+  viewYourReservedTables: string;
+  earnCoinsEveryParty: string;
+
+  // Galleries / photo download
+  cannotOpenLink: string;
+  permissionRequired: string;
+  allowPhotosAccess: string;
+  downloadSuccess: string;
+  photoSavedToGallery: string;
+  photoDownloadError: string;
+  photosComingSoon: string;
+  downloading: string;
+  downloadHd: string;
+
+  // My bookings
+  statusConfirmed: string;
+  statusRejected: string;
+  statusPending: string;
+  dateNotSet: string;
+  noBookings: string;
+  noBookingsSubtitle: string;
+  bookATable: string;
+  upcoming: string;
+  zone: string;
+  guestsLabel: string;
+  requestSentOn: string;
+  responseWithin24h: string;
+  contactUs: string;
+  history: string;
+  whatsappBookingInquiry: string;
+
+  // Scan QR
+  cameraPermissionScanText: string;
+  qrScanSuccess: string;
+  scanError: string;
+  sessionExpired: string;
+  congratulations: string;
+  oops: string;
+  pointsEarned: string;
+  backToProfile: string;
+  scanInstructions: string;
+
+  // Offline
+  noInternetConnection: string;
+
+  // Free entry card
+  insufficientPoints: string;
+  insufficientPointsMessage: string;
+  getFreeEntry: string;
+  freeEntryConfirmMessage: string;
+  freeEntryCongrats: string;
+  freeEntryClaimError: string;
+  freeEntryActive: string;
+  tapToShowQr: string;
+  freeEntry: string;
+  showQrCodeAtEntrance: string;
+  freeEntryAvailable: string;
+  claimFreeEntryHint: string;
+  pointsRemainingForFreeEntry: string;
+
+  // Auth misc
+  forgotPasswordMessage: string;
+
+  // Home extras
+  venueTbc: string;
+  shareEventMessage: string;
+
+  // Notification preferences - sections
+  eventsSection: string;
+  musicRequestsSection: string;
+  friendsSection: string;
+  socialActivity: string;
+  socialActivityDesc: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -474,17 +583,13 @@ export const translations: Record<Language, Translations> = {
     googleSignInFailed: 'Connexion Google échouée. Veuillez réessayer ou utiliser une autre méthode.',
     loginFailed: 'Connexion échouée. Vérifiez vos identifiants.',
     
-    voteRegistered: 'Vote enregistré! 👍',
-    fillAllFields: 'Veuillez remplir tous les champs',
     
     // Navigation
     home: 'Accueil',
-    djRequests: 'Requests',
     tickets: 'Tickets',
     vipTables: 'Tables VIP',
     profile: 'Profil',
     djs: 'DJs',
-    booking: 'Booking',
     requests: 'Requests',
     
     // Auth
@@ -528,9 +633,7 @@ export const translations: Record<Language, Translations> = {
     // Quick Actions
     djRequests: 'Requests DJ',
     voteForSongs: 'Votez pour les chansons',
-    photos: 'Photos',
     eventGalleries: 'Galeries événements',
-    aftermovies: 'Aftermovies',
     watchRecap: 'Voir les récaps',
     booking: 'Réservation',
     tables: 'Tables VIP',
@@ -564,16 +667,7 @@ export const translations: Record<Language, Translations> = {
     followOnInstagram: 'Suivre sur Instagram',
     masterOfCeremonies: 'Maître de Cérémonie',
     whatSongWant: 'Quelle chanson veux-tu entendre?',
-    residentDj: 'DJ Résident',
-    partyLover: 'Fêtard',
-    testModeActive: '🔧 Mode Test Activé',
-    readyToRequest: '✅ Prêt à demander',
-    bypassGeofencing: 'Bypass geofencing & horaires',
-    sendTheRequest: 'Envoyer la demande',
-    requestSentSuccess: 'Demande envoyée!',
     songAddedToList: 'Ta chanson a été ajoutée à la liste. Le DJ la jouera si possible!',
-    recentHistory: 'Historique récent',
-    coins: 'Coins',
     residentDj: 'DJ Résident',
     partyLover: 'Fêtard',
     testModeActive: 'Mode Test Actif',
@@ -591,7 +685,6 @@ export const translations: Record<Language, Translations> = {
     comingSoon: 'Bientôt disponible',
     eventDate: 'Date',
     venue: 'Lieu',
-    price: 'Prix',
     ticketInfo: 'Infos tickets',
     secureYourSpot: 'Réserve ta place',
     informations: 'Informations',
@@ -620,7 +713,6 @@ export const translations: Record<Language, Translations> = {
     bookingPending: 'En attente de confirmation',
     selectPackage: 'Choisir un package',
     numberOfGuests: 'Nombre de personnes',
-    phoneNumber: 'Numéro de téléphone',
     additionalNotes: 'Notes additionnelles',
     confirmBooking: 'Confirmer la réservation',
     
@@ -703,7 +795,6 @@ export const translations: Record<Language, Translations> = {
     refresh: 'Actualiser',
     noResults: 'Aucun résultat',
     tryAgain: 'Réessayer',
-    connectionError: 'Erreur de connexion',
     comingSoonFeature: 'Fonctionnalité bientôt disponible',
     
     // Success/Error messages
@@ -917,6 +1008,103 @@ export const translations: Record<Language, Translations> = {
     vipRequestAccepted: 'Votre réservation VIP a été confirmée !',
     vipRequestRejected: 'Votre réservation VIP a été refusée',
     rejectionReason: 'Raison',
+
+    // Suppression de compte
+    deleteAccount: 'Supprimer mon compte',
+    deleteAccountConfirm: 'Es-tu sûr de vouloir supprimer définitivement ton compte ? Cette action est irréversible et toutes tes données seront effacées.',
+    finalConfirmation: 'Confirmation finale',
+    deleteAccountFinal: 'Dernière étape : confirme la suppression définitive de ton compte.',
+    confirmDelete: 'Confirmer la suppression',
+    accountDeleted: 'Compte supprimé',
+    accountDeletedMessage: 'Ton compte a été supprimé avec succès. À bientôt sur le dancefloor !',
+    deleteAccountError: 'Erreur lors de la suppression du compte. Réessaie dans un instant.',
+
+    // Calendrier
+    addToCalendar: 'Ajouter au calendrier',
+
+    // Profil - prénom
+    enterNameError: 'Entre ton prénom',
+    nameUpdated: 'Ton nom a été mis à jour',
+    nameSaveError: 'Impossible de sauvegarder le nom',
+    addYourFirstName: 'Ajouter ton prénom',
+    yourFirstName: 'Ton prénom',
+    enterFirstNamePlaceholder: 'Entre ton prénom',
+
+    // Profil - actions rapides
+    myBookings: 'Mes Réservations',
+    viewYourReservedTables: 'Voir tes tables réservées',
+    earnCoinsEveryParty: 'Gagne des Invasion Coins à chaque soirée !',
+
+    // Galeries / téléchargement photos
+    cannotOpenLink: 'Impossible d\'ouvrir le lien',
+    permissionRequired: 'Permission requise',
+    allowPhotosAccess: 'Autorise l\'accès aux photos pour télécharger.',
+    downloadSuccess: 'Téléchargement réussi !',
+    photoSavedToGallery: 'La photo a été enregistrée dans ta galerie.',
+    photoDownloadError: 'Impossible de télécharger la photo.',
+    photosComingSoon: 'Les photos arrivent bientôt !',
+    downloading: 'Téléchargement...',
+    downloadHd: 'Télécharger HD',
+
+    // Mes réservations
+    statusConfirmed: 'Confirmée',
+    statusRejected: 'Refusée',
+    statusPending: 'En attente',
+    dateNotSet: 'Date non définie',
+    noBookings: 'Aucune réservation',
+    noBookingsSubtitle: 'Tes réservations de tables apparaîtront ici',
+    bookATable: 'Réserver une table',
+    upcoming: 'À venir',
+    zone: 'Zone',
+    guestsLabel: 'Personnes',
+    requestSentOn: 'Demande envoyée le',
+    responseWithin24h: 'Réponse sous 24-48h',
+    contactUs: 'Nous contacter',
+    history: 'Historique',
+    whatsappBookingInquiry: 'Bonjour, je souhaite avoir des nouvelles de ma réservation pour {event}. Merci !',
+
+    // Scan QR
+    cameraPermissionScanText: 'Pour scanner le QR code et gagner tes Invasion Coins, autorise l\'accès à la caméra.',
+    qrScanSuccess: 'QR code scanné avec succès !',
+    scanError: 'Erreur lors du scan',
+    sessionExpired: 'Session expirée. Reconnecte-toi pour continuer.',
+    congratulations: 'Félicitations !',
+    oops: 'Oups !',
+    pointsEarned: 'Points gagnés',
+    backToProfile: 'Retour au profil',
+    scanInstructions: 'Place le QR code de la soirée dans le cadre pour gagner tes Invasion Coins !',
+
+    // Hors ligne
+    noInternetConnection: 'Pas de connexion internet',
+
+    // Entrée gratuite
+    insufficientPoints: 'Points insuffisants',
+    insufficientPointsMessage: 'Il te faut 25 points pour obtenir une entrée gratuite. Tu as actuellement {points} points.',
+    getFreeEntry: 'Obtenir une entrée gratuite',
+    freeEntryConfirmMessage: 'Tu vas utiliser 25 points de fidélité pour obtenir une entrée gratuite au prochain event. On continue ?',
+    freeEntryCongrats: 'Tu as obtenu une entrée gratuite ! Présente le QR code à l\'entrée de la prochaine soirée.',
+    freeEntryClaimError: 'Impossible d\'obtenir l\'entrée gratuite',
+    freeEntryActive: '🎫 Entrée Gratuite Active !',
+    tapToShowQr: 'Appuie pour afficher ton QR code',
+    freeEntry: 'Entrée Gratuite',
+    showQrCodeAtEntrance: 'Présente ce QR code à l\'entrée',
+    freeEntryAvailable: '🎁 Entrée Gratuite Disponible !',
+    claimFreeEntryHint: 'Tu as 25 points ! Appuie pour réclamer',
+    pointsRemainingForFreeEntry: 'Encore {points} points pour une entrée gratuite !',
+
+    // Auth divers
+    forgotPasswordMessage: 'Contacte-nous à info@invasionlatina.be pour réinitialiser ton mot de passe.',
+
+    // Accueil divers
+    venueTbc: 'Lieu à confirmer',
+    shareEventMessage: 'Rejoins-moi pour la plus grande soirée latino reggaeton de Belgique !',
+
+    // Préférences de notifications - sections
+    eventsSection: 'Événements',
+    musicRequestsSection: 'Demandes de musique',
+    friendsSection: 'Amis et social',
+    socialActivity: 'Activité sociale',
+    socialActivityDesc: 'Notifications liées à tes amis et activités sociales',
   },
   
   en: {
@@ -943,17 +1131,13 @@ export const translations: Record<Language, Translations> = {
     googleSignInFailed: 'Google sign-in failed. Please try again or use another method.',
     loginFailed: 'Login failed. Please check your credentials.',
     
-    voteRegistered: 'Vote registered! 👍',
-    fillAllFields: 'Please fill in all fields',
     
     // Navigation
     home: 'Home',
-    djRequests: 'Requests',
     tickets: 'Tickets',
     vipTables: 'VIP Tables',
     profile: 'Profile',
     djs: 'DJs',
-    booking: 'Booking',
     requests: 'Requests',
     
     // Auth
@@ -997,9 +1181,7 @@ export const translations: Record<Language, Translations> = {
     // Quick Actions
     djRequests: 'DJ Requests',
     voteForSongs: 'Vote for songs',
-    photos: 'Photos',
     eventGalleries: 'Event galleries',
-    aftermovies: 'Aftermovies',
     watchRecap: 'Watch recap',
     booking: 'Booking',
     tables: 'VIP Tables',
@@ -1033,16 +1215,7 @@ export const translations: Record<Language, Translations> = {
     followOnInstagram: 'Follow on Instagram',
     masterOfCeremonies: 'Master of Ceremonies',
     whatSongWant: 'What song do you want to hear?',
-    residentDj: 'Resident DJ',
-    partyLover: 'Party Lover',
-    testModeActive: '🔧 Test Mode Active',
-    readyToRequest: '✅ Ready to request',
-    bypassGeofencing: 'Bypass geofencing & schedules',
-    sendTheRequest: 'Send request',
-    requestSentSuccess: 'Request sent!',
     songAddedToList: 'Your song was added to the list. The DJ will play it if possible!',
-    recentHistory: 'Recent history',
-    coins: 'Coins',
     residentDj: 'Resident DJ',
     partyLover: 'Party Lover',
     testModeActive: 'Test Mode Active',
@@ -1060,7 +1233,6 @@ export const translations: Record<Language, Translations> = {
     comingSoon: 'Coming soon',
     eventDate: 'Date',
     venue: 'Venue',
-    price: 'Price',
     ticketInfo: 'Ticket info',
     secureYourSpot: 'Secure your spot',
     informations: 'Information',
@@ -1089,7 +1261,6 @@ export const translations: Record<Language, Translations> = {
     bookingPending: 'Pending confirmation',
     selectPackage: 'Select a package',
     numberOfGuests: 'Number of guests',
-    phoneNumber: 'Phone number',
     additionalNotes: 'Additional notes',
     confirmBooking: 'Confirm booking',
     
@@ -1172,7 +1343,6 @@ export const translations: Record<Language, Translations> = {
     refresh: 'Refresh',
     noResults: 'No results',
     tryAgain: 'Try again',
-    connectionError: 'Connection error',
     comingSoonFeature: 'Feature coming soon',
     
     // Success/Error messages
@@ -1386,6 +1556,103 @@ export const translations: Record<Language, Translations> = {
     vipRequestAccepted: 'Your VIP booking has been confirmed!',
     vipRequestRejected: 'Your VIP booking has been rejected',
     rejectionReason: 'Reason',
+
+    // Account deletion
+    deleteAccount: 'Delete my account',
+    deleteAccountConfirm: 'Are you sure you want to permanently delete your account? This action is irreversible and all your data will be erased.',
+    finalConfirmation: 'Final confirmation',
+    deleteAccountFinal: 'Last step: confirm the permanent deletion of your account.',
+    confirmDelete: 'Confirm deletion',
+    accountDeleted: 'Account deleted',
+    accountDeletedMessage: 'Your account has been successfully deleted. See you on the dancefloor!',
+    deleteAccountError: 'Error deleting your account. Please try again in a moment.',
+
+    // Calendar
+    addToCalendar: 'Add to calendar',
+
+    // Profile - name setup
+    enterNameError: 'Please enter a name',
+    nameUpdated: 'Your name has been updated',
+    nameSaveError: 'Unable to save your name',
+    addYourFirstName: 'Add your first name',
+    yourFirstName: 'Your first name',
+    enterFirstNamePlaceholder: 'Enter your first name',
+
+    // Profile - quick actions
+    myBookings: 'My Bookings',
+    viewYourReservedTables: 'View your reserved tables',
+    earnCoinsEveryParty: 'Earn Invasion Coins at every party!',
+
+    // Galleries / photo download
+    cannotOpenLink: 'Unable to open the link',
+    permissionRequired: 'Permission required',
+    allowPhotosAccess: 'Allow access to your photos to download.',
+    downloadSuccess: 'Download complete!',
+    photoSavedToGallery: 'The photo has been saved to your gallery.',
+    photoDownloadError: 'Unable to download the photo.',
+    photosComingSoon: 'Photos coming soon!',
+    downloading: 'Downloading...',
+    downloadHd: 'Download HD',
+
+    // My bookings
+    statusConfirmed: 'Confirmed',
+    statusRejected: 'Declined',
+    statusPending: 'Pending',
+    dateNotSet: 'Date not set',
+    noBookings: 'No bookings yet',
+    noBookingsSubtitle: 'Your table bookings will appear here',
+    bookATable: 'Book a table',
+    upcoming: 'Upcoming',
+    zone: 'Zone',
+    guestsLabel: 'Guests',
+    requestSentOn: 'Request sent on',
+    responseWithin24h: 'Reply within 24-48h',
+    contactUs: 'Contact us',
+    history: 'History',
+    whatsappBookingInquiry: 'Hi, I would like an update on my booking for {event}. Thank you!',
+
+    // Scan QR
+    cameraPermissionScanText: 'To scan the QR code and earn your Invasion Coins, allow camera access.',
+    qrScanSuccess: 'QR code scanned successfully!',
+    scanError: 'Error while scanning',
+    sessionExpired: 'Session expired. Please log in again.',
+    congratulations: 'Congratulations!',
+    oops: 'Oops!',
+    pointsEarned: 'Points earned',
+    backToProfile: 'Back to profile',
+    scanInstructions: 'Place the party QR code inside the frame to earn your Invasion Coins!',
+
+    // Offline
+    noInternetConnection: 'No internet connection',
+
+    // Free entry card
+    insufficientPoints: 'Not enough points',
+    insufficientPointsMessage: 'You need 25 points to get a free entry. You currently have {points} points.',
+    getFreeEntry: 'Get a free entry',
+    freeEntryConfirmMessage: 'You are about to use 25 loyalty points to get a free entry to the next event. Continue?',
+    freeEntryCongrats: 'You got a free entry! Show the QR code at the door of the next party.',
+    freeEntryClaimError: 'Unable to get the free entry',
+    freeEntryActive: '🎫 Free Entry Active!',
+    tapToShowQr: 'Tap to show your QR code',
+    freeEntry: 'Free Entry',
+    showQrCodeAtEntrance: 'Show this QR code at the entrance',
+    freeEntryAvailable: '🎁 Free Entry Available!',
+    claimFreeEntryHint: 'You have 25 points! Tap to claim',
+    pointsRemainingForFreeEntry: '{points} more points to go for a free entry!',
+
+    // Auth misc
+    forgotPasswordMessage: 'Contact us at info@invasionlatina.be to reset your password.',
+
+    // Home extras
+    venueTbc: 'Venue to be confirmed',
+    shareEventMessage: 'Join me for the biggest Latino reggaeton party in Belgium!',
+
+    // Notification preferences - sections
+    eventsSection: 'Events',
+    musicRequestsSection: 'Song requests',
+    friendsSection: 'Friends & social',
+    socialActivity: 'Social activity',
+    socialActivityDesc: 'Notifications about your friends and social activity',
   },
   
   es: {
@@ -1412,17 +1679,13 @@ export const translations: Record<Language, Translations> = {
     googleSignInFailed: 'Error de conexión con Google. Por favor, inténtalo de nuevo o usa otro método.',
     loginFailed: 'Error de inicio de sesión. Verifica tus credenciales.',
     
-    voteRegistered: '¡Voto registrado! 👍',
-    fillAllFields: 'Por favor rellena todos los campos',
     
     // Navigation
     home: 'Inicio',
-    djRequests: 'Requests',
     tickets: 'Tickets',
     vipTables: 'Mesas VIP',
     profile: 'Perfil',
     djs: 'DJs',
-    booking: 'Booking',
     requests: 'Requests',
     
     // Auth
@@ -1466,9 +1729,7 @@ export const translations: Record<Language, Translations> = {
     // Quick Actions
     djRequests: 'Peticiones DJ',
     voteForSongs: 'Vota por canciones',
-    photos: 'Fotos',
     eventGalleries: 'Galerías de eventos',
-    aftermovies: 'Aftermovies',
     watchRecap: 'Ver resúmenes',
     booking: 'Reservas',
     tables: 'Mesas VIP',
@@ -1502,16 +1763,7 @@ export const translations: Record<Language, Translations> = {
     followOnInstagram: 'Seguir en Instagram',
     masterOfCeremonies: 'Maestro de Ceremonias',
     whatSongWant: '¿Qué canción quieres escuchar?',
-    residentDj: 'DJ Residente',
-    partyLover: 'Amante de la Fiesta',
-    testModeActive: '🔧 Modo Prueba Activo',
-    readyToRequest: '✅ Listo para pedir',
-    bypassGeofencing: 'Bypass geofencing y horarios',
-    sendTheRequest: 'Enviar solicitud',
-    requestSentSuccess: '¡Solicitud enviada!',
     songAddedToList: '¡Tu canción fue añadida a la lista. El DJ la pondrá si es posible!',
-    recentHistory: 'Historial reciente',
-    coins: 'Monedas',
     residentDj: 'DJ Residente',
     partyLover: 'Amante de la Fiesta',
     testModeActive: 'Modo Prueba Activo',
@@ -1529,7 +1781,6 @@ export const translations: Record<Language, Translations> = {
     comingSoon: 'Próximamente',
     eventDate: 'Fecha',
     venue: 'Lugar',
-    price: 'Precio',
     ticketInfo: 'Info entradas',
     secureYourSpot: 'Reserva tu lugar',
     informations: 'Información',
@@ -1558,7 +1809,6 @@ export const translations: Record<Language, Translations> = {
     bookingPending: 'Pendiente de confirmación',
     selectPackage: 'Seleccionar paquete',
     numberOfGuests: 'Número de personas',
-    phoneNumber: 'Número de teléfono',
     additionalNotes: 'Notas adicionales',
     confirmBooking: 'Confirmar reserva',
     
@@ -1641,7 +1891,6 @@ export const translations: Record<Language, Translations> = {
     refresh: 'Actualizar',
     noResults: 'Sin resultados',
     tryAgain: 'Intentar de nuevo',
-    connectionError: 'Error de conexión',
     comingSoonFeature: 'Función próximamente',
     
     // Success/Error messages
@@ -1850,6 +2099,108 @@ export const translations: Record<Language, Translations> = {
     vipRequestAccepted: '¡Tu reserva VIP ha sido confirmada!',
     vipRequestRejected: 'Tu reserva VIP ha sido rechazada',
     rejectionReason: 'Razón',
+
+    // Bloqueo biométrico
+    welcomeBack: 'Qué bueno verte de nuevo',
+    tapToUnlock: 'Toca para desbloquear',
+    useAnotherAccount: 'Usar otra cuenta',
+
+    // Eliminación de cuenta
+    deleteAccount: 'Eliminar mi cuenta',
+    deleteAccountConfirm: '¿Seguro que quieres eliminar tu cuenta para siempre? Esta acción es irreversible y todos tus datos serán borrados.',
+    finalConfirmation: 'Confirmación final',
+    deleteAccountFinal: 'Último paso: confirma la eliminación definitiva de tu cuenta.',
+    confirmDelete: 'Confirmar eliminación',
+    accountDeleted: 'Cuenta eliminada',
+    accountDeletedMessage: 'Tu cuenta se ha eliminado con éxito. ¡Nos vemos en la pista!',
+    deleteAccountError: 'Error al eliminar la cuenta. Inténtalo de nuevo en un momento.',
+
+    // Calendario
+    addToCalendar: 'Añadir al calendario',
+
+    // Perfil - nombre
+    enterNameError: 'Escribe tu nombre',
+    nameUpdated: 'Tu nombre se ha actualizado',
+    nameSaveError: 'No se pudo guardar el nombre',
+    addYourFirstName: 'Añadir tu nombre',
+    yourFirstName: 'Tu nombre',
+    enterFirstNamePlaceholder: 'Escribe tu nombre',
+
+    // Perfil - accesos rápidos
+    myBookings: 'Mis Reservas',
+    viewYourReservedTables: 'Ver tus mesas reservadas',
+    earnCoinsEveryParty: '¡Gana Invasion Coins en cada fiesta!',
+
+    // Galerías / descarga de fotos
+    cannotOpenLink: 'No se pudo abrir el enlace',
+    permissionRequired: 'Permiso necesario',
+    allowPhotosAccess: 'Permite el acceso a tus fotos para descargar.',
+    downloadSuccess: '¡Descarga completada!',
+    photoSavedToGallery: 'La foto se ha guardado en tu galería.',
+    photoDownloadError: 'No se pudo descargar la foto.',
+    photosComingSoon: '¡Las fotos llegan pronto!',
+    downloading: 'Descargando...',
+    downloadHd: 'Descargar HD',
+
+    // Mis reservas
+    statusConfirmed: 'Confirmada',
+    statusRejected: 'Rechazada',
+    statusPending: 'Pendiente',
+    dateNotSet: 'Fecha por definir',
+    noBookings: 'Ninguna reserva',
+    noBookingsSubtitle: 'Tus reservas de mesas aparecerán aquí',
+    bookATable: 'Reservar una mesa',
+    upcoming: 'Próximas',
+    zone: 'Zona',
+    guestsLabel: 'Personas',
+    requestSentOn: 'Solicitud enviada el',
+    responseWithin24h: 'Respuesta en 24-48h',
+    contactUs: 'Contáctanos',
+    history: 'Historial',
+    whatsappBookingInquiry: 'Hola, me gustaría saber cómo va mi reserva para {event}. ¡Gracias!',
+
+    // Escanear QR
+    cameraPermissionScanText: 'Para escanear el código QR y ganar tus Invasion Coins, permite el acceso a la cámara.',
+    qrScanSuccess: '¡Código QR escaneado con éxito!',
+    scanError: 'Error al escanear',
+    sessionExpired: 'Sesión caducada. Vuelve a iniciar sesión.',
+    congratulations: '¡Felicidades!',
+    oops: '¡Ups!',
+    pointsEarned: 'Puntos ganados',
+    backToProfile: 'Volver al perfil',
+    scanInstructions: '¡Coloca el código QR de la fiesta en el marco para ganar tus Invasion Coins!',
+
+    // Sin conexión
+    noInternetConnection: 'Sin conexión a internet',
+
+    // Entrada gratis
+    insufficientPoints: 'Puntos insuficientes',
+    insufficientPointsMessage: 'Necesitas 25 puntos para conseguir una entrada gratis. Ahora tienes {points} puntos.',
+    getFreeEntry: 'Conseguir una entrada gratis',
+    freeEntryConfirmMessage: 'Vas a usar 25 puntos de fidelidad para conseguir una entrada gratis al próximo evento. ¿Continuamos?',
+    freeEntryCongrats: '¡Has conseguido una entrada gratis! Muestra el código QR en la puerta de la próxima fiesta.',
+    freeEntryClaimError: 'No se pudo conseguir la entrada gratis',
+    freeEntryActive: '🎫 ¡Entrada Gratis Activa!',
+    tapToShowQr: 'Toca para mostrar tu código QR',
+    freeEntry: 'Entrada Gratis',
+    showQrCodeAtEntrance: 'Muestra este código QR en la entrada',
+    freeEntryAvailable: '🎁 ¡Entrada Gratis Disponible!',
+    claimFreeEntryHint: '¡Tienes 25 puntos! Toca para reclamarla',
+    pointsRemainingForFreeEntry: '¡Te faltan {points} puntos para una entrada gratis!',
+
+    // Auth varios
+    forgotPasswordMessage: 'Escríbenos a info@invasionlatina.be para restablecer tu contraseña.',
+
+    // Inicio varios
+    venueTbc: 'Lugar por confirmar',
+    shareEventMessage: '¡Acompáñame a la fiesta latina y de reggaeton más grande de Bélgica!',
+
+    // Preferencias de notificaciones - secciones
+    eventsSection: 'Eventos',
+    musicRequestsSection: 'Peticiones de música',
+    friendsSection: 'Amigos y social',
+    socialActivity: 'Actividad social',
+    socialActivityDesc: 'Notificaciones sobre tus amigos y tu actividad social',
   },
   
   nl: {
@@ -1876,17 +2227,13 @@ export const translations: Record<Language, Translations> = {
     googleSignInFailed: 'Google inloggen mislukt. Probeer opnieuw of gebruik een andere methode.',
     loginFailed: 'Inloggen mislukt. Controleer je gegevens.',
     
-    voteRegistered: 'Stem geregistreerd! 👍',
-    fillAllFields: 'Vul alle velden in',
     
     // Navigation
     home: 'Home',
-    djRequests: 'Requests',
     tickets: 'Tickets',
     vipTables: 'VIP Tafels',
     profile: 'Profiel',
     djs: 'DJs',
-    booking: 'Booking',
     requests: 'Requests',
     
     // Auth
@@ -1930,9 +2277,7 @@ export const translations: Record<Language, Translations> = {
     // Quick Actions
     djRequests: 'DJ Verzoeken',
     voteForSongs: 'Stem op nummers',
-    photos: 'Foto\'s',
     eventGalleries: 'Evenement galerijen',
-    aftermovies: 'Aftermovies',
     watchRecap: 'Bekijk samenvattingen',
     booking: 'Reservering',
     tables: 'VIP Tafels',
@@ -1966,16 +2311,7 @@ export const translations: Record<Language, Translations> = {
     followOnInstagram: 'Volgen op Instagram',
     masterOfCeremonies: 'Ceremoniemeester',
     whatSongWant: 'Welk nummer wil je horen?',
-    residentDj: 'Resident DJ',
-    partyLover: 'Feestliefhebber',
-    testModeActive: '🔧 Testmodus Actief',
-    readyToRequest: '✅ Klaar om aan te vragen',
-    bypassGeofencing: 'Bypass geofencing & schema\'s',
-    sendTheRequest: 'Verzoek verzenden',
-    requestSentSuccess: 'Verzoek verzonden!',
     songAddedToList: 'Je nummer is toegevoegd aan de lijst. De DJ zal het draaien indien mogelijk!',
-    recentHistory: 'Recente geschiedenis',
-    coins: 'Munten',
     residentDj: 'Resident DJ',
     partyLover: 'Feestliefhebber',
     testModeActive: 'Testmodus Actief',
@@ -1993,7 +2329,6 @@ export const translations: Record<Language, Translations> = {
     comingSoon: 'Binnenkort beschikbaar',
     eventDate: 'Datum',
     venue: 'Locatie',
-    price: 'Prijs',
     ticketInfo: 'Ticket info',
     secureYourSpot: 'Reserveer je plek',
     informations: 'Informatie',
@@ -2022,7 +2357,6 @@ export const translations: Record<Language, Translations> = {
     bookingPending: 'Wacht op bevestiging',
     selectPackage: 'Selecteer een pakket',
     numberOfGuests: 'Aantal personen',
-    phoneNumber: 'Telefoonnummer',
     additionalNotes: 'Extra opmerkingen',
     confirmBooking: 'Reservering bevestigen',
     
@@ -2105,7 +2439,6 @@ export const translations: Record<Language, Translations> = {
     refresh: 'Vernieuwen',
     noResults: 'Geen resultaten',
     tryAgain: 'Opnieuw proberen',
-    connectionError: 'Verbindingsfout',
     comingSoonFeature: 'Functie binnenkort beschikbaar',
     
     // Success/Error messages
@@ -2314,6 +2647,108 @@ export const translations: Record<Language, Translations> = {
     vipRequestAccepted: 'Je VIP reservering is bevestigd!',
     vipRequestRejected: 'Je VIP reservering is afgewezen',
     rejectionReason: 'Reden',
+
+    // Biometrische vergrendeling
+    welcomeBack: 'Welkom terug',
+    tapToUnlock: 'Tik om te ontgrendelen',
+    useAnotherAccount: 'Een ander account gebruiken',
+
+    // Account verwijderen
+    deleteAccount: 'Mijn account verwijderen',
+    deleteAccountConfirm: 'Weet je zeker dat je je account definitief wilt verwijderen? Deze actie is onomkeerbaar en al je gegevens worden gewist.',
+    finalConfirmation: 'Laatste bevestiging',
+    deleteAccountFinal: 'Laatste stap: bevestig de definitieve verwijdering van je account.',
+    confirmDelete: 'Verwijdering bevestigen',
+    accountDeleted: 'Account verwijderd',
+    accountDeletedMessage: 'Je account is succesvol verwijderd. Tot snel op de dansvloer!',
+    deleteAccountError: 'Fout bij het verwijderen van je account. Probeer het zo meteen opnieuw.',
+
+    // Agenda
+    addToCalendar: 'Toevoegen aan agenda',
+
+    // Profiel - voornaam
+    enterNameError: 'Vul je naam in',
+    nameUpdated: 'Je naam is bijgewerkt',
+    nameSaveError: 'Kon je naam niet opslaan',
+    addYourFirstName: 'Voeg je voornaam toe',
+    yourFirstName: 'Je voornaam',
+    enterFirstNamePlaceholder: 'Vul je voornaam in',
+
+    // Profiel - snelle acties
+    myBookings: 'Mijn Reserveringen',
+    viewYourReservedTables: 'Bekijk je gereserveerde tafels',
+    earnCoinsEveryParty: 'Verdien Invasion Coins bij elk feest!',
+
+    // Galerijen / foto's downloaden
+    cannotOpenLink: 'Kan de link niet openen',
+    permissionRequired: 'Toestemming vereist',
+    allowPhotosAccess: 'Geef toegang tot je foto\'s om te downloaden.',
+    downloadSuccess: 'Download voltooid!',
+    photoSavedToGallery: 'De foto is opgeslagen in je galerij.',
+    photoDownloadError: 'Kan de foto niet downloaden.',
+    photosComingSoon: 'De foto\'s komen er snel aan!',
+    downloading: 'Downloaden...',
+    downloadHd: 'Download HD',
+
+    // Mijn reserveringen
+    statusConfirmed: 'Bevestigd',
+    statusRejected: 'Geweigerd',
+    statusPending: 'In afwachting',
+    dateNotSet: 'Datum nog niet bekend',
+    noBookings: 'Geen reserveringen',
+    noBookingsSubtitle: 'Je tafelreserveringen verschijnen hier',
+    bookATable: 'Reserveer een tafel',
+    upcoming: 'Binnenkort',
+    zone: 'Zone',
+    guestsLabel: 'Personen',
+    requestSentOn: 'Aanvraag verzonden op',
+    responseWithin24h: 'Antwoord binnen 24-48u',
+    contactUs: 'Contacteer ons',
+    history: 'Geschiedenis',
+    whatsappBookingInquiry: 'Hallo, ik had graag een update over mijn reservering voor {event}. Bedankt!',
+
+    // QR scannen
+    cameraPermissionScanText: 'Geef toegang tot de camera om de QR-code te scannen en je Invasion Coins te verdienen.',
+    qrScanSuccess: 'QR-code succesvol gescand!',
+    scanError: 'Fout bij het scannen',
+    sessionExpired: 'Sessie verlopen. Log opnieuw in.',
+    congratulations: 'Proficiat!',
+    oops: 'Oeps!',
+    pointsEarned: 'Verdiende punten',
+    backToProfile: 'Terug naar profiel',
+    scanInstructions: 'Plaats de QR-code van het feest in het kader om je Invasion Coins te verdienen!',
+
+    // Offline
+    noInternetConnection: 'Geen internetverbinding',
+
+    // Gratis toegang
+    insufficientPoints: 'Onvoldoende punten',
+    insufficientPointsMessage: 'Je hebt 25 punten nodig voor een gratis toegang. Je hebt er momenteel {points}.',
+    getFreeEntry: 'Gratis toegang krijgen',
+    freeEntryConfirmMessage: 'Je gaat 25 loyaliteitspunten gebruiken voor een gratis toegang tot het volgende event. Doorgaan?',
+    freeEntryCongrats: 'Je hebt een gratis toegang gescoord! Toon de QR-code aan de ingang van het volgende feest.',
+    freeEntryClaimError: 'Kon de gratis toegang niet verkrijgen',
+    freeEntryActive: '🎫 Gratis Toegang Actief!',
+    tapToShowQr: 'Tik om je QR-code te tonen',
+    freeEntry: 'Gratis Toegang',
+    showQrCodeAtEntrance: 'Toon deze QR-code aan de ingang',
+    freeEntryAvailable: '🎁 Gratis Toegang Beschikbaar!',
+    claimFreeEntryHint: 'Je hebt 25 punten! Tik om te claimen',
+    pointsRemainingForFreeEntry: 'Nog {points} punten voor een gratis toegang!',
+
+    // Auth allerlei
+    forgotPasswordMessage: 'Contacteer ons via info@invasionlatina.be om je wachtwoord opnieuw in te stellen.',
+
+    // Home allerlei
+    venueTbc: 'Locatie nog te bevestigen',
+    shareEventMessage: 'Kom mee naar het grootste Latino reggaeton feest van België!',
+
+    // Meldingsvoorkeuren - secties
+    eventsSection: 'Evenementen',
+    musicRequestsSection: 'Muziekverzoeken',
+    friendsSection: 'Vrienden & sociaal',
+    socialActivity: 'Sociale activiteit',
+    socialActivityDesc: 'Meldingen over je vrienden en sociale activiteit',
   },
 };
 

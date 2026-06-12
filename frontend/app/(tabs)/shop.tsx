@@ -8,17 +8,21 @@ import {
   TextInput,
   Alert,
   Dimensions,
-  Image,
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
+import { getDateLocale } from '../../src/i18n/dateLocale';
 import api from '../../src/config/api';
 import { LoginRequiredModal } from '../../src/components/LoginRequiredModal';
 import logger from '../../src/config/logger';
+import { GlassCard } from '../../src/components/ui/GlassCard';
+import { GradientButton } from '../../src/components/ui/GradientButton';
+import { PressableScale } from '../../src/components/ui/PressableScale';
 
 const { width } = Dimensions.get('window');
 
@@ -35,7 +39,7 @@ type RoomKey = 'main_room' | 'classy_room' | 'vip';
 
 export default function VIPBookingScreen() {
   const { user, isAuthenticated } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState('');
   const [selectedRoom, setSelectedRoom] = useState<RoomKey>('main_room');
@@ -49,6 +53,15 @@ export default function VIPBookingScreen() {
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
+  // Quantity stepper (presentation only - state stays a string)
+  const stepGuestCount = (delta: number) => {
+    const current = parseInt(guestCount);
+    const base = isNaN(current) ? 6 : current;
+    const next = Math.max(1, Math.min(20, base + delta));
+    setGuestCount(String(next));
+  };
 
   // Room types with their packages - using translation keys
   const getRooms = () => ({
@@ -155,15 +168,15 @@ export default function VIPBookingScreen() {
   const loadEvents = async () => {
     try {
       const response = await api.get('/events/for-booking');
-      console.log('Events loaded for booking:', response.data);
+      logger.log('Events loaded for booking:', response.data);
       const allEvents = response.data.events || response.data || [];
       setEvents(allEvents);
       if (allEvents.length > 0) {
         setSelectedEvent(allEvents[0].id);
-        console.log('Selected event:', allEvents[0].id);
+        logger.log('Selected event:', allEvents[0].id);
       }
     } catch (error) {
-      console.error('Failed to load events for booking:', error);
+      logger.error('Failed to load events for booking:', error);
       // Fallback to old endpoint
       try {
         const response = await api.get('/events');
@@ -173,7 +186,7 @@ export default function VIPBookingScreen() {
           setSelectedEvent(allEvents[0].id);
         }
       } catch (e) {
-        console.error('Fallback also failed:', e);
+        logger.error('Fallback also failed:', e);
       }
     }
   };
@@ -185,9 +198,9 @@ export default function VIPBookingScreen() {
   };
 
   const handleSubmitBooking = async () => {
-    console.log('handleSubmitBooking called');
-    console.log('selectedEvent:', selectedEvent);
-    console.log('customerName:', customerName);
+    logger.log('handleSubmitBooking called');
+    logger.log('selectedEvent:', selectedEvent);
+    logger.log('customerName:', customerName);
     
     if (!selectedEvent) {
       Alert.alert(t('error'), t('noEventAvailable'));
@@ -266,10 +279,10 @@ export default function VIPBookingScreen() {
         {/* Event Selector - ONLY SHOW IF MULTIPLE EVENTS */}
         {events.length > 1 && (
           <View style={styles.eventSelectorSection}>
-            <Text style={styles.eventSelectorTitle}>🎉 Choisissez l'événement</Text>
+            <Text style={styles.eventSelectorTitle}>Choisissez l'evenement</Text>
             <View style={styles.eventSelectorContainer}>
               {events.map((event) => (
-                <TouchableOpacity
+                <PressableScale
                   key={event.id}
                   style={[
                     styles.eventSelectorCard,
@@ -277,15 +290,11 @@ export default function VIPBookingScreen() {
                     event.is_featured && styles.eventSelectorCardFeatured,
                   ]}
                   onPress={() => setSelectedEvent(event.id)}
+                  accessibilityLabel={event.name}
                 >
-                  {event.is_featured && (
-                    <View style={styles.eventBadge}>
-                      <Text style={styles.eventBadgeText}>⭐ SPÉCIAL</Text>
-                    </View>
-                  )}
-                  {event.event_type === 'open_air' && !event.is_featured && (
+                  {event.event_type === 'open_air' && (
                     <View style={[styles.eventBadge, { backgroundColor: '#4CAF5030' }]}>
-                      <Text style={[styles.eventBadgeText, { color: '#4CAF50' }]}>🌴 OPEN AIR</Text>
+                      <Text style={[styles.eventBadgeText, { color: '#4CAF50' }]}>OPEN AIR</Text>
                     </View>
                   )}
                   <Text style={[
@@ -295,44 +304,35 @@ export default function VIPBookingScreen() {
                     {event.name}
                   </Text>
                   <Text style={styles.eventSelectorDate}>
-                    {new Date(event.event_date).toLocaleDateString('fr-FR', {
+                    {new Date(event.event_date).toLocaleDateString(getDateLocale(language), {
                       weekday: 'short',
                       day: 'numeric',
                       month: 'short',
                     })}
                   </Text>
                   {selectedEvent === event.id && (
-                    <Ionicons 
-                      name="checkmark-circle" 
-                      size={20} 
-                      color={theme.colors.primary} 
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={20}
+                      color={theme.colors.primary}
                       style={styles.eventCheckmark}
                     />
                   )}
-                </TouchableOpacity>
+                </PressableScale>
               ))}
             </View>
           </View>
         )}
 
         {/* Event Flyer */}
-        {currentEvent?.banner_image ? (
-          <View style={styles.flyerSection}>
-            <Image
-              source={{ uri: currentEvent.banner_image }}
-              style={styles.flyerImage}
-              resizeMode="cover"
-            />
-          </View>
-        ) : (
-          <View style={styles.flyerSection}>
-            <Image
-              source={require('../../assets/images/event-flyer.jpg')}
-              style={styles.flyerImage}
-              resizeMode="cover"
-            />
-          </View>
-        )}
+        <View style={styles.flyerSection}>
+          <Image
+            source={currentEvent?.banner_image ? { uri: currentEvent.banner_image } : require('../../assets/images/event-flyer.jpg')}
+            style={styles.flyerImage}
+            contentFit="cover"
+            transition={250}
+          />
+        </View>
 
         {/* Room Tabs */}
         <View style={styles.section}>
@@ -341,21 +341,27 @@ export default function VIPBookingScreen() {
               const room = ROOMS[roomKey];
               const isSelected = selectedRoom === roomKey;
               return (
-                <TouchableOpacity
+                <PressableScale
                   key={roomKey}
                   style={[
                     styles.tab,
                     isSelected && { borderColor: room.color, backgroundColor: room.color + '20' }
                   ]}
                   onPress={() => setSelectedRoom(roomKey)}
+                  accessibilityLabel={room.name}
                 >
+                  <Ionicons
+                    name={room.icon as any}
+                    size={22}
+                    color={isSelected ? room.color : theme.colors.textMuted}
+                  />
                   <Text style={[
                     styles.tabText,
                     isSelected && { color: room.color }
                   ]}>
                     {room.name}
                   </Text>
-                </TouchableOpacity>
+                </PressableScale>
               );
             })}
           </View>
@@ -369,57 +375,81 @@ export default function VIPBookingScreen() {
         {/* Package Selection */}
         <View style={styles.section}>
           {currentRoom.packages.map(pkg => (
-            <TouchableOpacity
+            <PressableScale
               key={pkg.value}
-              style={[
-                styles.packageCard,
-                selectedPackage === pkg.value && { borderColor: currentRoom.color, backgroundColor: currentRoom.color + '10' }
-              ]}
               onPress={() => setSelectedPackage(pkg.value)}
+              accessibilityLabel={pkg.label}
             >
-              <View style={styles.packageHeader}>
-                <View>
-                  <Text style={[
-                    styles.packageName,
-                    selectedPackage === pkg.value && { color: currentRoom.color }
-                  ]}>
-                    {pkg.label}
-                  </Text>
-                  <Text style={styles.packageCapacity}>{pkg.capacity}</Text>
-                </View>
-                <Text style={[styles.packagePrice, { color: currentRoom.color }]}>{pkg.price}€</Text>
-              </View>
-              <View style={styles.packageFeatures}>
-                {pkg.features.map((feature, index) => (
-                  <View key={index} style={styles.featureRow}>
-                    <Ionicons name="checkmark-circle" size={16} color={theme.colors.success} />
-                    <Text style={styles.featureText}>{feature}</Text>
+              <GlassCard
+                variant={selectedPackage === pkg.value ? 'gold' : 'default'}
+                style={[
+                  styles.packageCard,
+                  selectedPackage === pkg.value && { borderColor: currentRoom.color },
+                ]}
+              >
+                <View style={styles.packageHeader}>
+                  <View>
+                    <Text style={[
+                      styles.packageName,
+                      selectedPackage === pkg.value && { color: currentRoom.color }
+                    ]}>
+                      {pkg.label}
+                    </Text>
+                    <Text style={styles.packageCapacity}>{pkg.capacity}</Text>
                   </View>
-                ))}
-              </View>
-            </TouchableOpacity>
+                  <Text style={styles.packagePrice}>{pkg.price}€</Text>
+                </View>
+                <View style={styles.packageFeatures}>
+                  {pkg.features.map((feature, index) => (
+                    <View key={index} style={styles.featureRow}>
+                      <Ionicons name="checkmark-circle" size={16} color={theme.colors.success} />
+                      <Text style={styles.featureText}>{feature}</Text>
+                    </View>
+                  ))}
+                </View>
+              </GlassCard>
+            </PressableScale>
           ))}
         </View>
 
         {/* Guest Count */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('numberOfPeople')}</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: 6"
-              placeholderTextColor={theme.colors.textMuted}
-              value={guestCount}
-              onChangeText={setGuestCount}
-              keyboardType="number-pad"
-            />
+          <View style={styles.stepperRow}>
+            <PressableScale
+              style={styles.stepperButton}
+              onPress={() => stepGuestCount(-1)}
+              accessibilityLabel="-1"
+            >
+              <Ionicons name="remove" size={22} color={theme.colors.primary} />
+            </PressableScale>
+            <View style={[styles.stepperValueBox, focusedField === 'guests' && styles.inputFocused]}>
+              <TextInput
+                style={styles.stepperValue}
+                placeholder="6"
+                placeholderTextColor={theme.colors.textMuted}
+                value={guestCount}
+                onChangeText={setGuestCount}
+                keyboardType="number-pad"
+                textAlign="center"
+                onFocus={() => setFocusedField('guests')}
+                onBlur={() => setFocusedField(null)}
+              />
+            </View>
+            <PressableScale
+              style={styles.stepperButton}
+              onPress={() => stepGuestCount(1)}
+              accessibilityLabel="+1"
+            >
+              <Ionicons name="add" size={22} color={theme.colors.primary} />
+            </PressableScale>
           </View>
         </View>
 
         {/* Bottle Preferences */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('bottlePreferencesOptional')}</Text>
-          <View style={styles.textAreaContainer}>
+          <View style={[styles.textAreaContainer, focusedField === 'bottles' && styles.inputFocused]}>
             <TextInput
               style={styles.textArea}
               placeholder={t('bottlePreferencesPlaceholder')}
@@ -428,6 +458,8 @@ export default function VIPBookingScreen() {
               onChangeText={setBottlePreferences}
               multiline
               numberOfLines={3}
+              onFocus={() => setFocusedField('bottles')}
+              onBlur={() => setFocusedField(null)}
             />
           </View>
         </View>
@@ -435,7 +467,7 @@ export default function VIPBookingScreen() {
         {/* Special Requests */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('specialRequestsOptional')}</Text>
-          <View style={styles.textAreaContainer}>
+          <View style={[styles.textAreaContainer, focusedField === 'requests' && styles.inputFocused]}>
             <TextInput
               style={styles.textArea}
               placeholder={t('specialRequestsPlaceholder')}
@@ -444,6 +476,8 @@ export default function VIPBookingScreen() {
               onChangeText={setSpecialRequests}
               multiline
               numberOfLines={3}
+              onFocus={() => setFocusedField('requests')}
+              onBlur={() => setFocusedField(null)}
             />
           </View>
         </View>
@@ -451,16 +485,18 @@ export default function VIPBookingScreen() {
         {/* Contact Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('contactInfo')}</Text>
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, focusedField === 'name' && styles.inputFocused]}>
             <TextInput
               style={styles.inputNoIcon}
               placeholder={t('fullName')}
               placeholderTextColor={theme.colors.textMuted}
               value={customerName}
               onChangeText={setCustomerName}
+              onFocus={() => setFocusedField('name')}
+              onBlur={() => setFocusedField(null)}
             />
           </View>
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, focusedField === 'email' && styles.inputFocused]}>
             <TextInput
               style={styles.inputNoIcon}
               placeholder={t('email')}
@@ -469,9 +505,11 @@ export default function VIPBookingScreen() {
               onChangeText={setCustomerEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              onFocus={() => setFocusedField('email')}
+              onBlur={() => setFocusedField(null)}
             />
           </View>
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, focusedField === 'phone' && styles.inputFocused]}>
             <TextInput
               style={styles.inputNoIcon}
               placeholder={t('phoneNumber')}
@@ -479,13 +517,15 @@ export default function VIPBookingScreen() {
               value={customerPhone}
               onChangeText={setCustomerPhone}
               keyboardType="phone-pad"
+              onFocus={() => setFocusedField('phone')}
+              onBlur={() => setFocusedField(null)}
             />
           </View>
         </View>
 
         {/* Summary */}
         {packageDetails && (
-          <View style={[styles.summaryCard, { borderLeftColor: currentRoom.color }]}>
+          <GlassCard variant="gold" style={[styles.summaryCard, { borderLeftColor: currentRoom.color }]}>
             <Text style={styles.summaryTitle}>📋 {t('bookingSummary')}</Text>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>{t('room')}:</Text>
@@ -506,12 +546,16 @@ export default function VIPBookingScreen() {
             <Text style={styles.summaryNote}>
               💡 {t('paymentNote')}
             </Text>
-          </View>
+          </GlassCard>
         )}
 
         {/* Submit Button */}
-        <TouchableOpacity
-          style={[styles.submitButton, { backgroundColor: currentRoom.color }, loading && styles.submitButtonDisabled]}
+        <GradientButton
+          title={t('sendRequest')}
+          icon="send"
+          variant="gold"
+          loading={loading}
+          style={styles.submitButton}
           onPress={async () => {
             // Check token directly from AsyncStorage to get the freshest state
             const token = await AsyncStorage.getItem('auth_token');
@@ -521,21 +565,15 @@ export default function VIPBookingScreen() {
               setShowLoginModal(true);
             }
           }}
-          disabled={loading}
-        >
-          <Ionicons name="send" size={20} color="white" />
-          <Text style={styles.submitButtonText}>
-            {loading ? t('sending') : t('sendRequest')}
-          </Text>
-        </TouchableOpacity>
+        />
 
         {/* Info */}
-        <View style={styles.infoBox}>
+        <GlassCard style={styles.infoBox}>
           <Ionicons name="information-circle" size={24} color={theme.colors.primary} />
           <Text style={styles.infoText}>
             {t('contactWithin24h')}
           </Text>
-        </View>
+        </GlassCard>
       </View>
 
       {/* Success Modal */}
@@ -557,12 +595,13 @@ export default function VIPBookingScreen() {
             <Text style={styles.modalSubMessage}>
               {t('contactWithin24h')}
             </Text>
-            <TouchableOpacity
-              style={styles.modalButton}
+            <GradientButton
+              title={t('great')}
+              variant="brand"
+              size="md"
               onPress={() => setShowSuccessModal(false)}
-            >
-              <Text style={styles.modalButtonText}>{t('great')}</Text>
-            </TouchableOpacity>
+              style={styles.modalButton}
+            />
           </View>
         </View>
       </Modal>
@@ -584,7 +623,7 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    paddingBottom: 40,
+    paddingBottom: 110,
   },
 
   // Event Selector
@@ -607,7 +646,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     padding: theme.spacing.md,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: theme.borders.subtle,
     position: 'relative',
   },
   eventSelectorCardActive: {
@@ -681,10 +720,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xl,
   },
   sectionTitle: {
-    fontSize: theme.fontSize.lg,
+    fontSize: theme.fontSize.md,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.md,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
   },
 
   // Picker
@@ -712,7 +753,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: theme.borders.subtle,
     minHeight: 90,
   },
   tabText: {
@@ -738,12 +779,7 @@ const styles = StyleSheet.create({
 
   // Package Card
   packageCard: {
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
     marginBottom: theme.spacing.sm,
-    borderWidth: 2,
-    borderColor: 'transparent',
   },
   packageHeader: {
     flexDirection: 'row',
@@ -764,6 +800,8 @@ const styles = StyleSheet.create({
   packagePrice: {
     fontSize: theme.fontSize.xxl,
     fontWeight: theme.fontWeight.black,
+    color: theme.colors.secondary,
+    fontVariant: ['tabular-nums'],
   },
   packageFeatures: {
     gap: theme.spacing.xs,
@@ -786,13 +824,11 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     paddingHorizontal: theme.spacing.md,
     marginBottom: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.borders.subtle,
   },
-  input: {
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    marginLeft: theme.spacing.sm,
-    fontSize: theme.fontSize.md,
-    color: theme.colors.textPrimary,
+  inputFocused: {
+    borderColor: theme.colors.primary,
   },
   inputNoIcon: {
     flex: 1,
@@ -804,6 +840,39 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.cardBackground,
     borderRadius: theme.borderRadius.md,
     padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.borders.subtle,
+  },
+
+  // Quantity Stepper
+  stepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  stepperButton: {
+    width: 48,
+    height: 48,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: 'rgba(0, 229, 204, 0.08)',
+    borderWidth: 1,
+    borderColor: theme.borders.brand,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepperValueBox: {
+    flex: 1,
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.borders.subtle,
+  },
+  stepperValue: {
+    paddingVertical: theme.spacing.md,
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.textPrimary,
+    fontVariant: ['tabular-nums'],
   },
   textArea: {
     fontSize: theme.fontSize.md,
@@ -815,9 +884,6 @@ const styles = StyleSheet.create({
   // Summary
   summaryCard: {
     marginHorizontal: theme.spacing.xl,
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.lg,
     marginBottom: theme.spacing.xl,
     borderLeftWidth: 4,
   },
@@ -844,6 +910,8 @@ const styles = StyleSheet.create({
   summaryPrice: {
     fontSize: theme.fontSize.xl,
     fontWeight: theme.fontWeight.black,
+    color: theme.colors.secondary,
+    fontVariant: ['tabular-nums'],
   },
   summaryNote: {
     fontSize: theme.fontSize.xs,
@@ -854,31 +922,14 @@ const styles = StyleSheet.create({
 
   // Submit Button
   submitButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: theme.borderRadius.md,
-    paddingVertical: theme.spacing.md,
     marginHorizontal: theme.spacing.xl,
     marginBottom: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  submitButtonDisabled: {
-    opacity: 0.5,
-  },
-  submitButtonText: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold,
-    color: 'white',
   },
 
   // Info Box
   infoBox: {
     flexDirection: 'row',
     marginHorizontal: theme.spacing.xl,
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
     gap: theme.spacing.sm,
   },
   infoText: {
@@ -927,16 +978,6 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   modalButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.xxl,
-    borderRadius: theme.borderRadius.md,
     width: '100%',
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    fontSize: theme.fontSize.md,
-    fontWeight: theme.fontWeight.bold,
-    color: 'white',
   },
 });

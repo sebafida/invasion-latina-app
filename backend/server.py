@@ -42,13 +42,12 @@ from models_supabase import (
 # Import existing modules
 from config import settings, is_using_mock_keys
 from models import UserCreate, UserLogin, UserBase
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 from auth import (
     hash_password, verify_password, create_access_token,
     get_current_user_supabase, get_current_admin_supabase
 )
-from firebase_service import firebase_service
-from stripe_service import stripe_service
+from social_auth import verify_social_token
 from utils import generate_ticket_code, generate_qr_data
 import httpx
 
@@ -252,8 +251,6 @@ class TicketResponse(BaseModel):
     status: str
     purchase_date: datetime
 
-class FirebaseTokenData(BaseModel):
-    firebase_token: str
 
 # 1.7 - Validation Pydantic améliorée
 class TicketPurchase(BaseModel):
@@ -299,20 +296,15 @@ async def lifespan(app: FastAPI):
         logger.warning("⚠️  USING MOCK API KEYS - NOT FOR PRODUCTION!")
         logger.warning("=" * 60)
     
-    # Create master admin account
-    await create_master_admin()
-    
-    # Create sample event
-    await create_sample_event()
-    
-    # Create sample products
-    await create_sample_products()
-    
-    # Initialize app settings
+    # Initialize app settings (needed in every environment)
     await init_app_settings()
-    
-    # Create default DJs
-    await create_default_djs()
+
+    # Demo/seed data only outside production — never pollute the prod DB
+    if settings.app_env != "production" and os.environ.get("RAILWAY_ENVIRONMENT") is None:
+        await create_master_admin()
+        await create_sample_event()
+        await create_sample_products()
+        await create_default_djs()
     
     yield
     
@@ -534,7 +526,8 @@ async def health_check(db: AsyncSession = Depends(get_db)):
         await db.execute(select(1))
         return {"status": "healthy", "database": "connected", "type": "PostgreSQL"}
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Database error: {str(e)}")
+        logger.error(f"Health check DB error: {e}")
+        raise HTTPException(status_code=503, detail="Database unavailable")
 
 # ============ AUTHENTICATION ENDPOINTS ============
 
@@ -544,16 +537,22 @@ class AdminSetupRequest(BaseModel):
 @app.post("/api/admin/setup")
 @limiter.limit("2/minute")
 async def setup_admin_account(request: Request, data: AdminSetupRequest, db: AsyncSession = Depends(get_db)):
-    """Create or reset admin account (secured by secret key)"""
-    # Secret key for admin setup - must match the one in .env or use a default for setup
-    SETUP_SECRET = os.environ.get("ADMIN_SETUP_SECRET", "invasion-latina-2009-setup")
-    
-    if data.secret_key != SETUP_SECRET:
+    """Create or reset admin account (secured by secret key).
+
+    Disabled unless BOTH ADMIN_SETUP_SECRET and ADMIN_PASSWORD env vars are
+    set — there are no default values on purpose (the old defaults were
+    public in the git history and must never be reused).
+    """
+    SETUP_SECRET = os.environ.get("ADMIN_SETUP_SECRET")
+    admin_password = os.environ.get("ADMIN_PASSWORD")
+
+    if not SETUP_SECRET or not admin_password:
+        raise HTTPException(status_code=503, detail="Admin setup is disabled")
+
+    if not secrets.compare_digest(data.secret_key, SETUP_SECRET):
         raise HTTPException(status_code=403, detail="Invalid setup key")
-    
-    admin_email = "info@invasionlatina.be"
-    # 1.1 - Utiliser variable d'environnement pour le mot de passe admin
-    admin_password = os.environ.get("ADMIN_PASSWORD", "Invasion2009-")
+
+    admin_email = os.environ.get("ADMIN_EMAIL", "info@invasionlatina.be")
     
     # Check if admin exists
     result = await db.execute(select(User).where(User.email == admin_email))
@@ -658,59 +657,22 @@ async def login(request: Request, credentials: UserLogin, db: AsyncSession = Dep
         access_token=access_token
     )
 
-@app.post("/api/auth/firebase-login", response_model=UserResponse)
-@limiter.limit("10/minute")
-async def firebase_login(request: Request, token_data: FirebaseTokenData, db: AsyncSession = Depends(get_db)):
-    """Login with Firebase token"""
-    try:
-        user_info = await firebase_service.verify_token(token_data.firebase_token)
-        
-        result = await db.execute(select(User).where(User.email == user_info["email"]))
-        user = result.scalar_one_or_none()
-        
-        if not user:
-            user = User(
-                email=user_info["email"],
-                name=user_info.get("name", "Firebase User"),
-                firebase_uid=user_info["uid"],
-                role="user",
-                loyalty_points=0,
-                badges=[],
-                friends=[],
-                language="en"
-            )
-            db.add(user)
-            await db.commit()
-            await db.refresh(user)
-        
-        access_token = create_access_token(data={"sub": user.id})
-        
-        return UserResponse(
-            id=user.id,
-            email=user.email,
-            name=user.name,
-            role=user.role,
-            loyalty_points=user.loyalty_points or 0,
-            badges=user.badges or [],
-            friends=user.friends or [],
-            language=user.language or "en",
-            access_token=access_token
-        )
-        
-    except Exception as e:
-        logger.error(f"Firebase login error: {str(e)}")
-        raise HTTPException(status_code=401, detail="Invalid Firebase token")
-
 @app.post("/api/auth/social", response_model=UserResponse)
 @limiter.limit("10/minute")
 async def social_login(request: Request, auth_data: SocialAuthData, db: AsyncSession = Depends(get_db)):
-    """Login/Register with Apple or Google"""
+    """Login/Register with Apple or Google.
+
+    The identity (provider user id + email) comes EXCLUSIVELY from the
+    verified token — client-supplied email/user_id are never trusted.
+    """
     try:
-        email = auth_data.email
-        name = auth_data.name  # Don't use fallback here, check later
-        provider_id = auth_data.user_id or (auth_data.id_token[:50] if auth_data.id_token else None)
-        
-        # For Apple Sign In, email might be null on subsequent logins
+        verified = await verify_social_token(auth_data.provider, auth_data.id_token)
+        email = verified["email"]
+        provider_id = verified["provider_id"]
+        # Name is cosmetic only — Apple sends it client-side on first login
+        name = verified.get("name") or auth_data.name
+
+        # For Apple Sign In, email might be absent from the token on rare cases
         if not email and auth_data.provider == 'apple' and provider_id:
             result = await db.execute(select(User).where(User.apple_id == provider_id))
             existing_user = result.scalar_one_or_none()
@@ -812,7 +774,7 @@ async def social_login(request: Request, auth_data: SocialAuthData, db: AsyncSes
         raise
     except Exception as e:
         logger.error(f"Social login error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Social login failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Social login failed")
 
 @app.get("/api/auth/me", response_model=UserResponse)
 async def get_current_user_info(
@@ -1737,7 +1699,9 @@ async def get_all_qrcodes(
     ]
 
 @app.post("/api/scan-event-qrcode")
+@limiter.limit("10/minute")
 async def scan_event_qrcode(
+    request: Request,
     data: ScanEventQRCode,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_supabase)
@@ -1777,20 +1741,19 @@ async def scan_event_qrcode(
     # Update QR scan count
     qr.scan_count = (qr.scan_count or 0) + 1
     
-    # CRITICAL FIX: Re-query user in current db session to avoid detached object error
-    # The current_user from JWT might be detached from this session
-    user_result = await db.execute(select(User).where(User.id == user_id))
+    # Re-query user with row lock to avoid race conditions on loyalty_points
+    user_result = await db.execute(select(User).where(User.id == user_id).with_for_update())
     user_in_session = user_result.scalar_one_or_none()
-    
+
     if not user_in_session:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-    
+
     # Update user loyalty points on the properly attached user object
     user_in_session.loyalty_points = (user_in_session.loyalty_points or 0) + qr.coins_reward
-    
+
     await db.commit()
     await db.refresh(user_in_session)
-    
+
     return {
         "success": True,
         "message": f"Félicitations! Tu as gagné {qr.coins_reward} Invasion Coins! 🎉",
@@ -1905,13 +1868,17 @@ async def get_my_loyalty_points(
         .limit(10)
     )
     checkins = result.scalars().all()
-    
+
+    # Fetch all related events in one query (avoid N+1)
+    event_ids = {c.event_id for c in checkins if c.event_id}
+    events_by_id = {}
+    if event_ids:
+        events_result = await db.execute(select(Event).where(Event.id.in_(event_ids)))
+        events_by_id = {e.id: e for e in events_result.scalars().all()}
+
     recent_check_ins = []
     for checkin in checkins:
-        # Get event name
-        event_result = await db.execute(select(Event).where(Event.id == checkin.event_id))
-        event = event_result.scalar_one_or_none()
-        
+        event = events_by_id.get(checkin.event_id)
         recent_check_ins.append({
             "event_name": event.name if event else "Événement",
             "points": checkin.points_earned or 5,
@@ -1955,7 +1922,9 @@ async def check_free_entry_voucher(
     return {"has_voucher": False, "voucher": None}
 
 @app.post("/api/loyalty/free-entry/claim")
+@limiter.limit("10/minute")
 async def claim_free_entry(
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_supabase)
 ):
@@ -1975,20 +1944,20 @@ async def claim_free_entry(
     if existing:
         raise HTTPException(status_code=400, detail="Tu as déjà une entrée gratuite active")
     
-    # CRITICAL FIX: Re-query user in current db session to avoid detached object error
-    user_result = await db.execute(select(User).where(User.id == current_user.id))
+    # Re-query user with row lock to avoid race conditions on loyalty_points
+    user_result = await db.execute(select(User).where(User.id == current_user.id).with_for_update())
     user_in_session = user_result.scalar_one_or_none()
-    
+
     if not user_in_session:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-    
+
     # Re-check points with fresh data
     if (user_in_session.loyalty_points or 0) < 25:
         raise HTTPException(status_code=400, detail="Tu as besoin de 25 points de fidélité")
-    
+
     # Deduct points from the properly attached user object
     user_in_session.loyalty_points = (user_in_session.loyalty_points or 0) - 25
-    
+
     # Create voucher
     voucher = FreeEntryVoucher(
         user_id=user_in_session.id,
@@ -1996,11 +1965,11 @@ async def claim_free_entry(
         user_email=user_in_session.email,
         expires_at=datetime.now(timezone.utc) + timedelta(days=90)
     )
-    
+
     db.add(voucher)
     await db.commit()
     await db.refresh(voucher)
-    
+
     return {
         "message": "Entrée gratuite obtenue!",
         "voucher": {
@@ -2036,7 +2005,7 @@ async def get_leaderboard(db: AsyncSession = Depends(get_db)):
 class VIPBookingCreate(BaseModel):
     event_id: str
     name: str
-    email: str
+    email: EmailStr
     phone: str
     guests: int = 1
     message: Optional[str] = None
@@ -2099,12 +2068,18 @@ async def get_my_vip_bookings(
         .order_by(VIPBooking.submitted_at.desc())
     )
     bookings = result.scalars().all()
-    
+
+    # Fetch all related events in one query (avoid N+1)
+    event_ids = {b.event_id for b in bookings if b.event_id}
+    events_by_id = {}
+    if event_ids:
+        events_result = await db.execute(select(Event).where(Event.id.in_(event_ids)))
+        events_by_id = {e.id: e for e in events_result.scalars().all()}
+
     booking_list = []
     for booking in bookings:
-        event_result = await db.execute(select(Event).where(Event.id == booking.event_id))
-        event = event_result.scalar_one_or_none()
-        
+        event = events_by_id.get(booking.event_id)
+
         booking_list.append({
             "id": booking.id,
             "event_name": event.name if event else "Événement inconnu",
@@ -2164,7 +2139,9 @@ class ApplyReferralCode(BaseModel):
     referral_code: str
 
 @app.post("/api/referral/apply")
+@limiter.limit("5/minute")
 async def apply_referral_code(
+    request: Request,
     data: ApplyReferralCode,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_supabase)
@@ -2177,20 +2154,20 @@ async def apply_referral_code(
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Tu as déjà utilisé un code de parrainage")
     
-    # Find referrer
+    # Find referrer (row lock to avoid race conditions on loyalty_points)
     result = await db.execute(
-        select(User).where(User.referral_code == data.referral_code.upper())
+        select(User).where(User.referral_code == data.referral_code.upper()).with_for_update()
     )
     referrer = result.scalar_one_or_none()
-    
+
     if not referrer:
         raise HTTPException(status_code=404, detail="Code de parrainage invalide")
-    
+
     if referrer.id == current_user.id:
         raise HTTPException(status_code=400, detail="Tu ne peux pas utiliser ton propre code")
-    
-    # CRITICAL FIX: Re-query current user in current db session to avoid detached object error
-    user_result = await db.execute(select(User).where(User.id == current_user.id))
+
+    # Re-query current user with row lock to avoid race conditions on loyalty_points
+    user_result = await db.execute(select(User).where(User.id == current_user.id).with_for_update())
     user_in_session = user_result.scalar_one_or_none()
     
     if not user_in_session:
@@ -2230,26 +2207,26 @@ async def get_gallery_events(db: AsyncSession = Depends(get_db)):
         .order_by(Event.event_date.desc())
     )
     events = result.scalars().all()
-    
+
+    # Grouped photo counts + cover urls in one query (avoid N+1)
+    stats_result = await db.execute(
+        select(Photo.event_id, func.count(Photo.id), func.min(Photo.url))
+        .group_by(Photo.event_id)
+    )
+    photo_stats = {event_id: (count, cover) for event_id, count, cover in stats_result.all()}
+
     gallery_events = []
     for event in events:
-        photo_count = (await db.execute(
-            select(func.count()).select_from(Photo).where(Photo.event_id == event.id)
-        )).scalar()
-        
-        cover_result = await db.execute(
-            select(Photo).where(Photo.event_id == event.id).limit(1)
-        )
-        cover_photo = cover_result.scalar_one_or_none()
-        
+        photo_count, cover_image = photo_stats.get(event.id, (0, None))
+
         gallery_events.append({
             "id": event.id,
             "name": event.name,
             "event_date": event.event_date.isoformat() if event.event_date else None,
             "photo_count": photo_count,
-            "cover_image": cover_photo.url if cover_photo else None
+            "cover_image": cover_image
         })
-    
+
     return gallery_events
 
 @app.get("/api/gallery/{event_id}")
@@ -2804,8 +2781,8 @@ class VIPBookCreate(BaseModel):
     # Support both naming conventions
     name: Optional[str] = None
     customer_name: Optional[str] = None
-    email: Optional[str] = None
-    customer_email: Optional[str] = None
+    email: Optional[EmailStr] = None
+    customer_email: Optional[EmailStr] = None
     phone: Optional[str] = None
     customer_phone: Optional[str] = None
     guests: Optional[int] = None
@@ -2881,20 +2858,31 @@ async def book_vip_table(
 
 @app.get("/api/admin/vip-bookings")
 async def get_all_vip_bookings(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_admin_supabase)
 ):
     """Get all VIP bookings (Admin only)"""
     result = await db.execute(
-        select(VIPBooking).order_by(VIPBooking.submitted_at.desc())
+        select(VIPBooking)
+        .order_by(VIPBooking.submitted_at.desc())
+        .offset(skip)
+        .limit(limit)
     )
     bookings = result.scalars().all()
-    
+
+    # Fetch all related events in one query (avoid N+1)
+    event_ids = {b.event_id for b in bookings if b.event_id}
+    events_by_id = {}
+    if event_ids:
+        events_result = await db.execute(select(Event).where(Event.id.in_(event_ids)))
+        events_by_id = {e.id: e for e in events_result.scalars().all()}
+
     booking_list = []
     for booking in bookings:
-        event_result = await db.execute(select(Event).where(Event.id == booking.event_id))
-        event = event_result.scalar_one_or_none()
-        
+        event = events_by_id.get(booking.event_id)
+
         booking_list.append({
             "id": booking.id,
             "user_id": booking.user_id,
@@ -2947,10 +2935,10 @@ async def update_vip_booking_status(
     booking.status = data.status
     if data.status == "confirmed":
         booking.confirmed_at = datetime.now(timezone.utc)
-        # Note: confirmation_message stored in data but not in DB (column needs to be added to Supabase)
+        booking.confirmation_message = data.confirmation_message
     elif data.status == "rejected":
         booking.rejected_at = datetime.now(timezone.utc)
-        # Note: rejection_reason stored in data but not in DB (column needs to be added to Supabase)
+        booking.rejection_reason = data.rejection_reason
     
     await db.commit()
     
@@ -3233,26 +3221,25 @@ async def get_media_galleries(db: AsyncSession = Depends(get_db)):
         .order_by(Event.event_date.desc())
     )
     events = result.scalars().all()
-    
+
+    # Grouped photo counts + cover urls in one query (avoid N+1)
+    stats_result = await db.execute(
+        select(Photo.event_id, func.count(Photo.id), func.min(Photo.url))
+        .group_by(Photo.event_id)
+    )
+    photo_stats = {event_id: (count, cover) for event_id, count, cover in stats_result.all()}
+
     galleries = []
     for event in events:
-        photo_count = (await db.execute(
-            select(func.count()).select_from(Photo).where(Photo.event_id == event.id)
-        )).scalar() or 0
-        
+        photo_count, first_photo_url = photo_stats.get(event.id, (0, None))
+
         # Show event if gallery_visible OR if it has photos
         if not event.gallery_visible and photo_count == 0:
             continue
-        
+
         # Use banner_image as cover, fallback to first photo if available
-        cover_image = event.banner_image
-        if not cover_image:
-            cover_result = await db.execute(
-                select(Photo).where(Photo.event_id == event.id).limit(1)
-            )
-            cover_photo = cover_result.scalar_one_or_none()
-            cover_image = cover_photo.url if cover_photo else None
-        
+        cover_image = event.banner_image or first_photo_url
+
         galleries.append({
             "id": event.id,
             "name": event.name,
@@ -3299,7 +3286,9 @@ async def get_media_gallery(event_id: str, db: AsyncSession = Depends(get_db)):
 # ============ LOYALTY ADDITIONAL ENDPOINTS ============
 
 @app.post("/api/loyalty/scan-event-qr")
+@limiter.limit("10/minute")
 async def scan_loyalty_qr(
+    request: Request,
     data: ScanEventQRCode,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_supabase)
@@ -3341,13 +3330,13 @@ async def scan_loyalty_qr(
         # Update QR scan count
         qr.scan_count = (qr.scan_count or 0) + 1
         
-        # CRITICAL FIX: Re-query user in current db session to avoid detached object error
-        user_result = await db.execute(select(User).where(User.id == user_id))
+        # Re-query user with row lock to avoid race conditions on loyalty_points
+        user_result = await db.execute(select(User).where(User.id == user_id).with_for_update())
         user_in_session = user_result.scalar_one_or_none()
-        
+
         if not user_in_session:
             raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-        
+
         # Update user loyalty points on the properly attached user object
         user_in_session.loyalty_points = (user_in_session.loyalty_points or 0) + qr.coins_reward
         
@@ -3370,7 +3359,9 @@ async def scan_loyalty_qr(
         raise HTTPException(status_code=500, detail="Erreur lors du scan. Veuillez réessayer.")
 
 @app.post("/api/loyalty/claim-reward")
+@limiter.limit("10/minute")
 async def claim_loyalty_reward(
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_supabase)
 ):
@@ -3390,20 +3381,20 @@ async def claim_loyalty_reward(
     if existing:
         raise HTTPException(status_code=400, detail="Tu as déjà une entrée gratuite active")
     
-    # CRITICAL FIX: Re-query user in current db session to avoid detached object error
-    user_result = await db.execute(select(User).where(User.id == current_user.id))
+    # Re-query user with row lock to avoid race conditions on loyalty_points
+    user_result = await db.execute(select(User).where(User.id == current_user.id).with_for_update())
     user_in_session = user_result.scalar_one_or_none()
-    
+
     if not user_in_session:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-    
+
     # Re-check points with fresh data
     if (user_in_session.loyalty_points or 0) < 25:
         raise HTTPException(status_code=400, detail="Tu as besoin de 25 points de fidélité")
-    
+
     # Deduct points from the properly attached user object
     user_in_session.loyalty_points = (user_in_session.loyalty_points or 0) - 25
-    
+
     # Create voucher
     voucher = FreeEntryVoucher(
         user_id=user_in_session.id,
@@ -3411,11 +3402,11 @@ async def claim_loyalty_reward(
         user_email=user_in_session.email,
         expires_at=datetime.now(timezone.utc) + timedelta(days=90)
     )
-    
+
     db.add(voucher)
     await db.commit()
     await db.refresh(voucher)
-    
+
     return {
         "success": True,
         "message": "Entrée gratuite obtenue!",
@@ -3472,13 +3463,13 @@ async def admin_scan_checkin(
     if existing:
         raise HTTPException(status_code=400, detail="Déjà check-in pour cet événement")
     
-    # Get user
-    result = await db.execute(select(User).where(User.id == user_id))
+    # Get user (row lock to avoid race conditions on loyalty_points)
+    result = await db.execute(select(User).where(User.id == user_id).with_for_update())
     user = result.scalar_one_or_none()
-    
+
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     # Create check-in
     checkin = LoyaltyCheckin(
         user_id=user_id,
@@ -3513,30 +3504,24 @@ async def get_all_dj_requests(
     # Get all events
     events_result = await db.execute(select(Event).order_by(Event.event_date.desc()))
     events = events_result.scalars().all()
-    
+
+    # Grouped request counts by event + status in one query (avoid N+1)
+    counts_result = await db.execute(
+        select(SongRequest.event_id, SongRequest.status, func.count(SongRequest.id))
+        .group_by(SongRequest.event_id, SongRequest.status)
+    )
+    counts = {}
+    for event_id, status, count in counts_result.all():
+        counts.setdefault(event_id, {})[status] = count
+
     event_stats = []
     for event in events:
-        # Count requests by status for this event
-        pending_count = (await db.execute(
-            select(func.count()).select_from(SongRequest)
-            .where(SongRequest.event_id == event.id)
-            .where(SongRequest.status == 'pending')
-        )).scalar() or 0
-        
-        played_count = (await db.execute(
-            select(func.count()).select_from(SongRequest)
-            .where(SongRequest.event_id == event.id)
-            .where(SongRequest.status == 'played')
-        )).scalar() or 0
-        
-        rejected_count = (await db.execute(
-            select(func.count()).select_from(SongRequest)
-            .where(SongRequest.event_id == event.id)
-            .where(SongRequest.status == 'rejected')
-        )).scalar() or 0
-        
+        event_counts = counts.get(event.id, {})
+        pending_count = event_counts.get('pending', 0)
+        played_count = event_counts.get('played', 0)
+        rejected_count = event_counts.get('rejected', 0)
         total = pending_count + played_count + rejected_count
-        
+
         event_stats.append({
             "id": event.id,
             "name": event.name,
@@ -3546,26 +3531,13 @@ async def get_all_dj_requests(
             "rejected": rejected_count,
             "total": total
         })
-    
+
     # Also add a "default_event" for requests without event_id
-    default_pending = (await db.execute(
-        select(func.count()).select_from(SongRequest)
-        .where(SongRequest.event_id == "default_event")
-        .where(SongRequest.status == 'pending')
-    )).scalar() or 0
-    
-    default_played = (await db.execute(
-        select(func.count()).select_from(SongRequest)
-        .where(SongRequest.event_id == "default_event")
-        .where(SongRequest.status == 'played')
-    )).scalar() or 0
-    
-    default_rejected = (await db.execute(
-        select(func.count()).select_from(SongRequest)
-        .where(SongRequest.event_id == "default_event")
-        .where(SongRequest.status == 'rejected')
-    )).scalar() or 0
-    
+    default_counts = counts.get("default_event", {})
+    default_pending = default_counts.get('pending', 0)
+    default_played = default_counts.get('played', 0)
+    default_rejected = default_counts.get('rejected', 0)
+
     default_total = default_pending + default_played + default_rejected
     
     if default_total > 0:
@@ -3979,7 +3951,7 @@ async def delete_dj(
 
 class MultiPhotoUpload(BaseModel):
     event_id: str
-    photo_urls: List[str]
+    photo_urls: List[str] = Field(..., max_length=100)  # max 100 URLs par requête
 
 @app.post("/api/admin/media/photos/bulk")
 async def bulk_upload_photos(

@@ -53,6 +53,18 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+# Railway sets RAILWAY_ENVIRONMENT — treat any deployed environment as production
+_is_production = (
+    settings.app_env == "production"
+    or os.environ.get("RAILWAY_ENVIRONMENT") is not None
+)
+
+if _is_production and settings.secret_key == "dev-only-secret-key-not-for-production":
+    raise RuntimeError(
+        "FATAL: SECRET_KEY is not set. Anyone could forge admin JWTs with the "
+        "default key. Set a strong SECRET_KEY env var before deploying."
+    )
+
 # Helper function to check if we're using mock keys
 def is_using_mock_keys() -> bool:
     """Check if the app is using mock/placeholder API keys"""

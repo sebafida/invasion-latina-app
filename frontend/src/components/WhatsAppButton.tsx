@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, Linking, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import logger from '../config/logger';
 
 const WHATSAPP_NUMBER = '32478814497';
 const DEFAULT_MESSAGE = 'Bonjour, j\'ai une question concernant Invasion Latina...';
@@ -14,7 +15,7 @@ export const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({ bottom = 90, scr
   const handlePress = () => {
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(DEFAULT_MESSAGE)}`;
     Linking.openURL(url).catch((err) => {
-      console.error('Failed to open WhatsApp:', err);
+      logger.error('Failed to open WhatsApp:', err);
     });
   };
 

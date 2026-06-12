@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
   Modal,
   Dimensions,
@@ -15,12 +14,16 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image as ExpoImage } from 'expo-image';
+import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
 import { theme } from '../../src/config/theme';
 import api from '../../src/config/api';
 import { useAuth } from '../../src/context/AuthContext';
+import { useLanguage } from '../../src/context/LanguageContext';
+import logger from '../../src/config/logger';
 
 const { width } = Dimensions.get('window');
 const PHOTO_SIZE = (width - theme.spacing.xl * 2 - theme.spacing.xs * 2) / 3;
@@ -37,7 +40,8 @@ export default function EventGalleryScreen() {
   const { eventId } = useLocalSearchParams();
   const router = useRouter();
   const { user } = useAuth();
-  
+  const { t } = useLanguage();
+
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [eventName, setEventName] = useState('');
@@ -55,7 +59,7 @@ export default function EventGalleryScreen() {
       setPhotos(response.data.photos || []);
       setEventName(response.data.event_name || 'Galerie');
     } catch (error) {
-      console.error('Failed to load gallery:', error);
+      logger.error('Failed to load gallery:', error);
       // Use mock data if API fails
       setPhotos([]);
     } finally {
@@ -70,7 +74,7 @@ export default function EventGalleryScreen() {
       // Request permissions
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission requise', 'Autorisez l\'accès aux photos pour télécharger.');
+        Alert.alert(t('permissionRequired'), t('allowPhotosAccess'));
         return;
       }
       
@@ -84,14 +88,15 @@ export default function EventGalleryScreen() {
         // Save to media library
         const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
         await MediaLibrary.createAlbumAsync('Invasion Latina', asset, false);
-        
-        Alert.alert('Téléchargement réussi !', 'La photo a été enregistrée dans ta galerie.');
+
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        Alert.alert(t('downloadSuccess'), t('photoSavedToGallery'));
       } else {
-        Alert.alert('Erreur', 'Impossible de télécharger la photo.');
+        Alert.alert(t('error'), t('photoDownloadError'));
       }
     } catch (error) {
-      console.error('Download error:', error);
-      Alert.alert('Erreur', 'Impossible de télécharger la photo.');
+      logger.error('Download error:', error);
+      Alert.alert(t('error'), t('photoDownloadError'));
     } finally {
       setDownloading(false);
     }
@@ -104,7 +109,7 @@ export default function EventGalleryScreen() {
         url: Platform.OS === 'ios' ? photoUrl : undefined,
       });
     } catch (error) {
-      console.error('Share error:', error);
+      logger.error('Share error:', error);
     }
   };
 
@@ -113,10 +118,13 @@ export default function EventGalleryScreen() {
       style={styles.photoItem}
       onPress={() => setSelectedPhoto(item)}
     >
-      <Image
+      <ExpoImage
         source={{ uri: item.thumbnail_url || item.url }}
         style={styles.photoImage}
-        resizeMode="cover"
+        contentFit="cover"
+        transition={150}
+        cachePolicy="memory-disk"
+        recyclingKey={item.id}
       />
     </TouchableOpacity>
   );
@@ -137,13 +145,13 @@ export default function EventGalleryScreen() {
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Chargement des photos...</Text>
+          <Text style={styles.loadingText}>{t('loading')}</Text>
         </View>
       ) : photos.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="images-outline" size={64} color={theme.colors.textMuted} />
-          <Text style={styles.emptyText}>Aucune photo disponible</Text>
-          <Text style={styles.emptySubtext}>Les photos seront ajoutées bientôt!</Text>
+          <Text style={styles.emptyText}>{t('noGalleryAvailable')}</Text>
+          <Text style={styles.emptySubtext}>{t('photosComingSoon')}</Text>
         </View>
       ) : (
         <FlatList
@@ -168,10 +176,12 @@ export default function EventGalleryScreen() {
 
           {selectedPhoto && (
             <>
-              <Image
+              <ExpoImage
                 source={{ uri: selectedPhoto.url }}
                 style={styles.fullImage}
-                resizeMode="contain"
+                contentFit="contain"
+                transition={150}
+                cachePolicy="memory-disk"
               />
 
               <View style={styles.photoActions}>
@@ -186,7 +196,7 @@ export default function EventGalleryScreen() {
                     <Ionicons name="download" size={24} color="white" />
                   )}
                   <Text style={styles.actionText}>
-                    {downloading ? 'Téléchargement...' : 'Télécharger HD'}
+                    {downloading ? t('downloading') : t('downloadHd')}
                   </Text>
                 </TouchableOpacity>
 
@@ -195,7 +205,7 @@ export default function EventGalleryScreen() {
                   onPress={() => handleSharePhoto(selectedPhoto.url)}
                 >
                   <Ionicons name="share-social" size={24} color="white" />
-                  <Text style={styles.actionText}>Partager</Text>
+                  <Text style={styles.actionText}>{t('sharePhoto')}</Text>
                 </TouchableOpacity>
               </View>
             </>

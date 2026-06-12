@@ -5,16 +5,23 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   Linking,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { theme } from '../src/config/theme';
 import api from '../src/config/api';
+import logger from '../src/config/logger';
 import { useLanguage } from '../src/context/LanguageContext';
+import { getDateLocale } from '../src/i18n/dateLocale';
+import { ErrorRetry } from '../src/components/ErrorRetry';
+import { SkeletonCard, SkeletonRow } from '../src/components/ui/Skeleton';
+import { EmptyState } from '../src/components/ui/EmptyState';
+import { PressableScale } from '../src/components/ui/PressableScale';
+import { GlassCard } from '../src/components/ui/GlassCard';
 
 interface Aftermovie {
   id: string;
@@ -28,9 +35,10 @@ interface Aftermovie {
 
 export default function AftermoviesScreen() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [videos, setVideos] = useState<Aftermovie[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     loadVideos();
@@ -39,6 +47,7 @@ export default function AftermoviesScreen() {
   const loadVideos = async () => {
     try {
       setLoading(true);
+      setError(false);
       // Load events that have aftermovie_visible + aftermovie_url
       const response = await api.get('/events');
       const eventsList = Array.isArray(response.data) ? response.data : (response.data.events || []);
@@ -55,8 +64,9 @@ export default function AftermoviesScreen() {
         }));
       setVideos(eventVideos);
     } catch (error) {
-      console.error('Failed to load aftermovies:', error);
+      logger.error('Failed to load aftermovies:', error);
       setVideos([]);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -72,10 +82,10 @@ export default function AftermoviesScreen() {
       if (canOpen) {
         await Linking.openURL(video.video_url);
       } else {
-        console.error('Cannot open URL:', video.video_url);
+        logger.error('Cannot open URL:', video.video_url);
       }
     } catch (error) {
-      console.error('Error opening video:', error);
+      logger.error('Error opening video:', error);
     }
   };
 
@@ -115,20 +125,27 @@ export default function AftermoviesScreen() {
         {videos.length > 0 && (
           <View style={styles.featuredSection}>
             <Text style={styles.sectionTitle}>{t('latestVideo')}</Text>
-            <TouchableOpacity
+            <PressableScale
               style={styles.featuredCard}
               onPress={() => openVideo(videos[0])}
-              activeOpacity={0.8}
+              accessibilityLabel={videos[0].title || t('latestVideo')}
             >
               <Image
                 source={{ uri: videos[0].thumbnail_url || 'https://via.placeholder.com/800x450?text=Video' }}
                 style={styles.featuredImage}
-                resizeMode="cover"
+                contentFit="cover"
+                transition={200}
+                cachePolicy="memory-disk"
               />
               <View style={styles.playOverlay}>
-                <View style={styles.playButton}>
-                  <Ionicons name="play" size={40} color="white" />
-                </View>
+                <LinearGradient
+                  colors={theme.gradients.brand}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.playButton}
+                >
+                  <Ionicons name="play" size={40} color="#000" />
+                </LinearGradient>
               </View>
               <View style={styles.featuredInfo}>
                 <Text style={styles.featuredTitle}>{videos[0].title || 'Aftermovie'}</Text>
@@ -147,7 +164,7 @@ export default function AftermoviesScreen() {
                   )}
                 </View>
               </View>
-            </TouchableOpacity>
+            </PressableScale>
           </View>
         )}
 
@@ -156,29 +173,34 @@ export default function AftermoviesScreen() {
           <Text style={styles.sectionTitle}>{t('allVideos')}</Text>
           
           {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme.colors.primary} />
-              <Text style={styles.loadingText}>{t('loadingVideos')}</Text>
+            <View style={styles.skeletons}>
+              <SkeletonCard imageHeight={200} />
+              <SkeletonRow />
+              <SkeletonRow />
             </View>
+          ) : error ? (
+            <ErrorRetry onRetry={loadVideos} />
           ) : videos.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="film-outline" size={64} color={theme.colors.textMuted} />
-              <Text style={styles.emptyText}>{t('noVideoAvailable')}</Text>
-              <Text style={styles.emptySubtext}>{t('aftermoviesComingSoon')}</Text>
-            </View>
+            <EmptyState
+              icon="film-outline"
+              title={t('noVideoAvailable')}
+              subtitle={t('aftermoviesComingSoon')}
+            />
           ) : (
             videos.map((video, index) => (
-              <TouchableOpacity
+              <PressableScale
                 key={video.id}
                 style={styles.videoCard}
                 onPress={() => openVideo(video)}
-                activeOpacity={0.8}
+                accessibilityLabel={video.title}
               >
                 <View style={styles.thumbnailContainer}>
                   <Image
                     source={{ uri: video.thumbnail_url }}
                     style={styles.thumbnail}
-                    resizeMode="cover"
+                    contentFit="cover"
+                    transition={200}
+                    cachePolicy="memory-disk"
                   />
                   <View style={styles.durationBadge}>
                     <Text style={styles.durationText}>{video.duration}</Text>
@@ -190,49 +212,52 @@ export default function AftermoviesScreen() {
                 <View style={styles.videoInfo}>
                   <Text style={styles.videoTitle} numberOfLines={2}>{video.title}</Text>
                   <Text style={styles.videoDate}>
-                    {video.event_date ? new Date(video.event_date).toLocaleDateString('fr-FR', {
+                    {video.event_date ? new Date(video.event_date).toLocaleDateString(getDateLocale(language), {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric'
-                    }) : 'Date non disponible'}
+                    }) : t('dateNotSet')}
                   </Text>
                   <View style={styles.videoStats}>
                     <Ionicons name="eye" size={12} color={theme.colors.textMuted} />
                     <Text style={styles.statsText}>{formatViews(video.views)} {t('views')}</Text>
                   </View>
                 </View>
-              </TouchableOpacity>
+              </PressableScale>
             ))
           )}
         </View>
 
         {/* Social CTA */}
-        <View style={styles.socialSection}>
+        <GlassCard variant="glow" style={styles.socialSection}>
           <Text style={styles.socialTitle}>🔔 {t('stayConnected')}</Text>
           <Text style={styles.socialText}>
             {t('followUsForAftermovies')}
           </Text>
           <View style={styles.socialButtons}>
-            <TouchableOpacity 
+            <PressableScale
               style={[styles.socialButton, { backgroundColor: '#E4405F' }]}
               onPress={() => Linking.openURL('https://www.instagram.com/invasionlatina/')}
+              accessibilityLabel="Instagram"
             >
               <Ionicons name="logo-instagram" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity 
+            </PressableScale>
+            <PressableScale
               style={[styles.socialButton, { backgroundColor: '#000' }]}
               onPress={() => Linking.openURL('https://www.tiktok.com/@invasionlatina')}
+              accessibilityLabel="TikTok"
             >
               <Ionicons name="logo-tiktok" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity 
+            </PressableScale>
+            <PressableScale
               style={[styles.socialButton, { backgroundColor: '#FF0000' }]}
               onPress={() => Linking.openURL('https://www.youtube.com/@invasionlatina')}
+              accessibilityLabel="YouTube"
             >
               <Ionicons name="logo-youtube" size={24} color="white" />
-            </TouchableOpacity>
+            </PressableScale>
           </View>
-        </View>
+        </GlassCard>
       </View>
     </ScrollView>
   );
@@ -295,6 +320,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     backgroundColor: theme.colors.cardBackground,
+    borderWidth: 1,
+    borderColor: theme.borders.brand,
+    ...theme.shadows.neon,
   },
   featuredImage: {
     width: '100%',
@@ -310,10 +338,10 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     paddingLeft: 5,
+    ...theme.shadows.neon,
   },
   featuredInfo: {
     padding: theme.spacing.md,
@@ -349,6 +377,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.cardBackground,
     borderRadius: theme.borderRadius.md,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.borders.subtle,
   },
   thumbnailContainer: {
     width: 140,
@@ -414,39 +444,13 @@ const styles = StyleSheet.create({
   },
 
   // Loading
-  loadingContainer: {
-    paddingVertical: theme.spacing.xxl,
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-  },
-
-  // Empty State
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.xxl * 2,
+  skeletons: {
     paddingHorizontal: theme.spacing.xl,
-  },
-  emptyText: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: theme.fontWeight.bold,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-  },
-  emptySubtext: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textMuted,
-    marginTop: theme.spacing.xs,
   },
 
   // Social CTA
   socialSection: {
     marginHorizontal: theme.spacing.xl,
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
     alignItems: 'center',
   },
   socialTitle: {
