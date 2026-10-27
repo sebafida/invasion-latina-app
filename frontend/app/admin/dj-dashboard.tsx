@@ -449,7 +449,7 @@ export default function DJDashboardScreen() {
           <View style={styles.deleteModalContent}>
             <Ionicons name="trash" size={48} color={theme.colors.error} />
             <Text style={styles.deleteModalTitle}>{t('deleteRequest')}?</Text>
-            <Text style={styles.deleteModalSubtitle}>"{deleteTarget?.title}"</Text>
+            <Text style={styles.deleteModalSubtitle}>&quot;{deleteTarget?.title}&quot;</Text>
             
             <View style={styles.deleteModalButtons}>
               <TouchableOpacity

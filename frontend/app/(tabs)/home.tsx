@@ -27,6 +27,7 @@ import { GradientButton } from '../../src/components/ui/GradientButton';
 import { PressableScale } from '../../src/components/ui/PressableScale';
 import { Countdown } from '../../src/components/ui/Countdown';
 import { Skeleton } from '../../src/components/ui/Skeleton';
+import { EventFlyer } from '../../src/components/EventFlyer';
 
 const { width } = Dimensions.get('window');
 
@@ -244,7 +245,7 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* Hero Events - flyer + fade + countdown */}
+          {/* Event flyer, separate details and countdown */}
           {upcomingEvents.length > 0 && upcomingEvents.filter(e => e && e.id).map((event, index) => (
             <View key={event.id} style={[styles.eventSection, index > 0 && { marginTop: 0 }]}>
               {index === 0 && (
@@ -256,73 +257,36 @@ export default function HomeScreen() {
                 noPadding
                 style={styles.eventCard}
               >
-                {event.banner_image ? (
-                  <View style={styles.flyerWrap}>
-                    <Image
-                      source={{ uri: event.banner_image }}
-                      style={styles.flyerImage}
-                      contentFit="cover"
-                      transition={200}
-                      cachePolicy="memory-disk"
-                    />
-                    <LinearGradient
-                      colors={theme.gradients.overlayBottom}
-                      style={styles.flyerFade}
-                    />
-
-                    {/* Date badge - gold glass */}
-                    {event.event_date && (
-                      <GlassCard variant="gold" noPadding style={styles.dateBadge}>
-                        <View style={styles.dateBadgeInner}>
-                          <Ionicons name="calendar" size={13} color={theme.colors.secondary} />
-                          <Text style={styles.dateBadgeText}>
-                            {new Date(event.event_date).toLocaleDateString(getDateLocale(language), {
-                              day: 'numeric',
-                              month: 'short',
-                            })}
-                          </Text>
-                        </View>
-                      </GlassCard>
-                    )}
-
-                    {/* Title on the fade */}
-                    <View style={styles.flyerContent}>
-                      {event.event_type === 'open_air' && (
-                        <View style={styles.openAirBadge}>
-                          <Text style={styles.openAirBadgeText}>OPEN AIR</Text>
-                        </View>
-                      )}
-                      <Text style={styles.eventName}>{event.name || 'Evenement'}</Text>
-                      <View style={styles.venueRow}>
-                        <Ionicons name="location" size={14} color={theme.colors.primary} />
-                        <Text style={styles.eventVenue}>{event.venue_name || t('venueTbc')}</Text>
-                      </View>
-                    </View>
-                  </View>
-                ) : (
-                  <View style={styles.noFlyerHeader}>
-                    {event.event_type === 'open_air' && (
-                      <View style={styles.openAirBadge}>
-                        <Text style={styles.openAirBadgeText}>OPEN AIR</Text>
-                      </View>
-                    )}
-                    <Text style={styles.eventName}>{event.name || 'Evenement'}</Text>
-                    <View style={styles.venueRow}>
-                      <Ionicons name="location" size={14} color={theme.colors.primary} />
-                      <Text style={styles.eventVenue}>{event.venue_name || t('venueTbc')}</Text>
-                    </View>
-                    {event.event_date && (
-                      <Text style={styles.eventDate}>
-                        {new Date(event.event_date).toLocaleDateString(getDateLocale(language), {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </Text>
-                    )}
-                  </View>
+                {event.banner_image && (
+                  <EventFlyer uri={event.banner_image} accessibilityLabel={event.name || t('nextEvent')} />
                 )}
+                <View style={styles.eventHeader}>
+                  {event.event_date && (
+                    <GlassCard variant="gold" noPadding style={styles.dateBadge}>
+                      <View style={styles.dateBadgeInner}>
+                        <Ionicons name="calendar" size={13} color={theme.colors.secondary} />
+                        <Text style={styles.dateBadgeText}>
+                          {new Date(event.event_date).toLocaleDateString(getDateLocale(language), {
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })}
+                        </Text>
+                      </View>
+                    </GlassCard>
+                  )}
+                  {event.event_type === 'open_air' && (
+                    <View style={styles.openAirBadge}>
+                      <Text style={styles.openAirBadgeText}>OPEN AIR</Text>
+                    </View>
+                  )}
+                  <Text style={styles.eventName}>{event.name || 'Evenement'}</Text>
+                  <View style={styles.venueRow}>
+                    <Ionicons name="location" size={14} color={theme.colors.primary} />
+                    <Text style={styles.eventVenue}>{event.venue_name || t('venueTbc')}</Text>
+                  </View>
+                </View>
 
                 <View style={styles.eventBody}>
                   {/* Countdown - isolated memoized component (no full-screen re-render) */}
@@ -618,32 +582,11 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
 
-  // Flyer hero
-  flyerWrap: {
-    position: 'relative',
-  },
-  flyerImage: {
-    width: '100%',
-    height: 320,
-  },
-  flyerFade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 180,
-  },
-  flyerContent: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    padding: theme.spacing.lg,
-  },
+  // Keep event details outside the printed flyer.
   dateBadge: {
-    position: 'absolute',
-    top: theme.spacing.md,
-    right: theme.spacing.md,
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+    marginBottom: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
   },
   dateBadgeInner: {
@@ -654,13 +597,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   dateBadgeText: {
+    flexShrink: 1,
     color: theme.colors.secondary,
     fontSize: theme.fontSize.xs,
     fontWeight: theme.fontWeight.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  noFlyerHeader: {
+  eventHeader: {
     padding: theme.spacing.lg,
     paddingBottom: 0,
   },
@@ -691,13 +635,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   eventVenue: {
+    flex: 1,
     fontSize: theme.fontSize.md,
     color: theme.colors.textSecondary,
-  },
-  eventDate: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textMuted,
-    marginTop: theme.spacing.xs,
   },
   eventBody: {
     padding: theme.spacing.lg,

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,13 +11,14 @@ import {
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Location from 'expo-location';
+import { getRequestLocation } from '../../src/utils/requestLocation';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/native';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
+import { apiErrorMessage } from '../../src/utils/apiError';
 import { LoginRequiredModal } from '../../src/components/LoginRequiredModal';
 import logger from '../../src/config/logger';
 import { GlassCard } from '../../src/components/ui/GlassCard';
@@ -51,6 +52,7 @@ export default function DJRequestsScreen() {
   const [devMode, setDevMode] = useState(user?.role === 'admin' || __DEV__);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const votesInFlight = useRef(new Set<string>());
 
   // 2.1 - Fix memory leak : utiliser useFocusEffect au lieu de useEffect
   useFocusEffect(
@@ -84,24 +86,7 @@ export default function DJRequestsScreen() {
     try {
       setLoading(true);
       
-      // Get real location
-      let latitude = null;
-      let longitude = null;
-      
-      // Request location permission
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      
-      if (status === 'granted') {
-        try {
-          const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.High,
-          });
-          latitude = location.coords.latitude.toString();
-          longitude = location.coords.longitude.toString();
-        } catch (locError) {
-          logger.log('Could not get location:', locError);
-        }
-      }
+      const { latitude, longitude } = await getRequestLocation();
 
       const requestData = {
         song_title: songTitle.trim(),
@@ -119,7 +104,7 @@ export default function DJRequestsScreen() {
       loadRequests();
       Alert.alert(t('success'), t('songRequested'));
     } catch (error: any) {
-      const message = error.response?.data?.detail || t('error');
+      const message = apiErrorMessage(error, t('error'));
       Alert.alert(t('error'), message);
     } finally {
       setLoading(false);
@@ -136,16 +121,24 @@ export default function DJRequestsScreen() {
   };
 
   const handleVote = async (requestId: string) => {
+    if (!isAuthenticated || !user) {
+      setShowLoginModal(true);
+      return;
+    }
+    if (votesInFlight.current.has(requestId)) return;
+    votesInFlight.current.add(requestId);
     try {
       // 4.2 - Haptic feedback sur les votes
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
       
       await api.post(`/dj/vote/${requestId}`);
       Alert.alert(t('success'), t('voteRegistered'));
       loadRequests();
     } catch (error: any) {
-      const message = error.response?.data?.detail || t('error');
+      const message = apiErrorMessage(error, t('error'));
       Alert.alert(t('error'), message);
+    } finally {
+      votesInFlight.current.delete(requestId);
     }
   };
 

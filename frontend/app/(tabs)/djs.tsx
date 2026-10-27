@@ -19,6 +19,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../../src/config/theme';
 import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
+import { getRequestLocation } from '../../src/utils/requestLocation';
+import { apiErrorMessage } from '../../src/utils/apiError';
 import { useAuth } from '../../src/context/AuthContext';
 import { LoginRequiredModal } from '../../src/components/LoginRequiredModal';
 import { GlassCard } from '../../src/components/ui/GlassCard';
@@ -174,7 +176,9 @@ export default function DJsScreen() {
 
     try {
       setSubmitting(true);
+      const location = await getRequestLocation();
       await api.post('/dj/request-song', {
+        ...location,
         song_title: songTitle.trim(),
         artist_name: artistName.trim(),
         user_name: user?.name || t('partyLover')
@@ -188,7 +192,7 @@ export default function DJsScreen() {
       // Show success modal
       setShowSuccessModal(true);
     } catch (error: any) {
-      const message = error.response?.data?.detail || t('error');
+      const message = apiErrorMessage(error, t('error'));
       Alert.alert(t('error'), message);
     } finally {
       setSubmitting(false);

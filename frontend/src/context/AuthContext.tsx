@@ -1,8 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import api, { warmupBackend } from '../config/api';
+import api from '../config/api';
 import { registerForPushNotifications } from '../config/notifications';
+import { apiErrorMessage } from '../utils/apiError';
 import logger from '../config/logger';
+import { useLanguage } from './LanguageContext';
 
 interface User {
   id: string;
@@ -14,268 +16,209 @@ interface User {
   auth_provider?: string;
 }
 
+interface LoginResponse extends User {
+  access_token: string;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  /** Initial session restoration only; submitting a form must not unmount it. */
   isLoading: boolean;
   isAuthenticated: boolean;
-  isAuthenticating: boolean; // BUG 4 FIX: Flag to prevent race condition
+  isAuthenticating: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, phone?: string, acceptMarketing?: boolean) => Promise<void>;
+  completeLogin: (response: LoginResponse) => Promise<void>;
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
   setUser: (user: User | null) => void;
-  setToken: (token: string | null) => void;
-  setIsAuthenticating: (value: boolean) => void; // BUG 4 FIX
+  setIsAuthenticating: (value: boolean) => void;
 }
 
+const AUTH_VERSION = 'supabase_v3';
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function normalizeUser(data: User): User {
+  if (!data || typeof data.id !== 'string' || !data.id) {
+    throw new Error('Invalid user response');
+  }
+  // Never cache access_token inside the profile object returned by social login.
+  return {
+    id: data.id, email: data.email, name: data.name, role: data.role,
+    loyalty_points: data.loyalty_points ?? 0, badges: data.badges ?? [],
+    auth_provider: data.auth_provider,
+  };
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useLanguage();
   const [user, setUserState] = useState<User | null>(null);
   const [token, setTokenState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAuthenticating, setIsAuthenticating] = useState(false); // BUG 4 FIX: Flag to prevent race condition
+  const [isAuthenticating, setAuthenticatingState] = useState(false);
+  const authenticating = useRef(false);
+  const sessionRevision = useRef(0);
+  const refreshRevision = useRef(0);
+  const storageQueue = useRef<Promise<void>>(Promise.resolve());
 
-  const login = async (email: string, password: string, retryCount = 0) => {
+  // Keep logout's storage removal after any already-started cache write.
+  const writeStorage = useCallback((action: () => Promise<void>) => {
+    const next = storageQueue.current.catch(() => {}).then(action);
+    storageQueue.current = next;
+    return next;
+  }, []);
+
+  const clearState = useCallback(() => {
+    setUserState(null);
+    setTokenState(null);
+  }, []);
+
+  const setIsAuthenticating = useCallback((value: boolean) => {
+    if (value && !authenticating.current) sessionRevision.current++;
+    authenticating.current = value;
+    setAuthenticatingState(value);
+  }, []);
+
+  const completeLogin = useCallback(async (response: LoginResponse) => {
+    if (!authenticating.current) return;
+    const nextUser = normalizeUser(response);
+    if (typeof response.access_token !== 'string' || !response.access_token) {
+      throw new Error('Invalid authentication response');
+    }
+    const revision = ++sessionRevision.current;
+    await writeStorage(async () => {
+      if (revision !== sessionRevision.current) return;
+      await AsyncStorage.multiSet([
+        ['auth_token', response.access_token],
+        ['auth_version', AUTH_VERSION],
+        ['cached_user_data', JSON.stringify(nextUser)],
+      ]);
+    });
+    if (revision !== sessionRevision.current) return;
+    setTokenState(response.access_token);
+    setUserState(nextUser);
+  }, [writeStorage]);
+
+  const login = async (email: string, password: string) => {
+    setIsAuthenticating(true);
+    const revision = sessionRevision.current;
     try {
-      setIsLoading(true);
-      logger.log(`Login attempt... (try ${retryCount + 1})`);
-      const response = await api.post('/auth/login', { email, password }, { timeout: 15000 });
-      
-      const { access_token, id, email: userEmail, name, role, loyalty_points, badges } = response.data;
-      
-      if (!access_token || !id) {
-        throw new Error('Invalid response from server');
-      }
-      
-      await AsyncStorage.setItem('auth_token', access_token);
-      await AsyncStorage.setItem('auth_version', 'supabase_v3');
-      
-      setTokenState(access_token);
-      setUserState({ 
-        id, 
-        email: userEmail, 
-        name, 
-        role, 
-        loyalty_points: loyalty_points || 0, 
-        badges: badges || [] 
-      });
-      setIsAuthenticated(true);
-      logger.log('Login successful!');
-      
-      // 2.2 - Activer les notifications push après login
-      registerForPushNotifications().catch(err => {
-        logger.error('Push notification registration failed:', err);
-      });
-    } catch (error: any) {
-      logger.error('Login error:', error);
-      
-      // Retry on network errors (not on 401/403)
-      if (!error.response && retryCount < 2) {
-        logger.log(`Login: Network error, retrying in 1 second...`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return login(email, password, retryCount + 1);
-      }
-      
-      throw new Error(error.response?.data?.detail || error.message || 'Login failed');
+      const response = await api.post('/auth/login', { email: email.trim(), password }, { timeout: 20000 });
+      if (revision === sessionRevision.current) await completeLogin(response.data);
+    } catch (error) {
+      throw new Error(apiErrorMessage(error, t('connectionError')));
     } finally {
-      setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
 
   const register = async (name: string, email: string, password: string, phone?: string, acceptMarketing?: boolean) => {
+    setIsAuthenticating(true);
+    const revision = sessionRevision.current;
     try {
-      setIsLoading(true);
       const response = await api.post('/auth/register', {
-        name,
-        email,
-        password,
-        phone: phone || '',
-        accept_marketing: acceptMarketing || false,
-        role: 'user',
+        name: name.trim(), email: email.trim(), password,
+        phone: phone?.trim() || '', accept_marketing: acceptMarketing || false,
       });
-      
-      const { access_token, user_id } = response.data;
-      await AsyncStorage.setItem('auth_token', access_token);
-      await AsyncStorage.setItem('auth_version', 'supabase_v3'); // BUG 3 FIX
-      
-      setTokenState(access_token);
-      setUserState({ id: user_id, email, name, role: 'user', loyalty_points: 0, badges: [] });
-      setIsAuthenticated(true);
-      logger.log('Registration successful!');
-      
-      // 2.2 - Activer les notifications push après register
-      registerForPushNotifications().catch(err => {
-        logger.error('Push notification registration failed:', err);
-      });
-    } catch (error: any) {
-      throw new Error(error.response?.data?.detail || 'Registration failed');
+      // Registration returns `id`, just like login and /auth/me.
+      if (revision === sessionRevision.current) await completeLogin(response.data);
+    } catch (error) {
+      throw new Error(apiErrorMessage(error, t('registrationFailed')));
     } finally {
-      setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
+    sessionRevision.current++;
+    setIsAuthenticating(false);
+    clearState();
     try {
-      await AsyncStorage.removeItem('auth_token');
-      await AsyncStorage.removeItem('cached_user_data');
+      await writeStorage(() => AsyncStorage.multiRemove(['auth_token', 'cached_user_data']));
     } catch (error) {
       logger.error('Error clearing auth storage:', error);
     }
-    setUserState(null);
-    setTokenState(null);
-    setIsAuthenticated(false);
-  };
+  }, [clearState, setIsAuthenticating, writeStorage]);
 
-  const loadUser = async () => {
-    // BUG 4 FIX: Skip loadUser if currently authenticating (social login in progress)
-    if (isAuthenticating) {
-      logger.log('loadUser: Skipped - authentication in progress');
-      return;
-    }
-    
+  const loadUser = useCallback(async () => {
+    if (authenticating.current) return;
+    const revision = sessionRevision.current;
+    const refresh = ++refreshRevision.current;
+    const isCurrent = () => revision === sessionRevision.current && refresh === refreshRevision.current;
     try {
-      logger.log('loadUser: Checking for stored token...');
-      
-      // Check if we need to clear old tokens (after database migration)
-      const AUTH_VERSION = 'supabase_v3'; // Incremented to force re-login for all users
-      const storedAuthVersion = await AsyncStorage.getItem('auth_version');
-      
-      if (storedAuthVersion !== AUTH_VERSION) {
-        logger.log('loadUser: Auth version changed - clearing old token');
-        await AsyncStorage.removeItem('auth_token');
-        await AsyncStorage.setItem('auth_version', AUTH_VERSION);
-        setIsAuthenticated(false);
-        setIsLoading(false);
-        return;
-      }
-      
+      await storageQueue.current.catch(() => {});
+      const storedVersion = await AsyncStorage.getItem('auth_version');
       const storedToken = await AsyncStorage.getItem('auth_token');
-      
-      if (!storedToken) {
-        logger.log('loadUser: No token - show login page');
-        setIsAuthenticated(false);
-        setIsLoading(false);
+      if (!isCurrent()) return;
+      if (storedVersion !== AUTH_VERSION || !storedToken) {
+        clearState();
+        await writeStorage(async () => {
+          if (!isCurrent()) return;
+          await AsyncStorage.multiRemove(['auth_token', 'cached_user_data']);
+          await AsyncStorage.setItem('auth_version', AUTH_VERSION);
+        });
         return;
       }
-      
-      logger.log('loadUser: Token found - verifying...');
-      
       try {
-        // Use a longer timeout for token verification (cold start can take 10-15s)
         const response = await api.get('/auth/me', { timeout: 20000 });
-        setUserState(response.data);
+        if (!isCurrent()) return;
+        const nextUser = normalizeUser(response.data);
+        setUserState(nextUser);
         setTokenState(storedToken);
-        setIsAuthenticated(true);
-        // Cache user data for offline use
-        await AsyncStorage.setItem('cached_user_data', JSON.stringify(response.data));
-        logger.log('loadUser: Token valid - user authenticated');
-      } catch (error: any) {
-        logger.log('loadUser: Token verification failed -', error.message);
-        
-        // Only clear token on 401 (truly invalid/expired token)
-        // 503 = server temporarily down, network error = connectivity issue
-        // Both should keep the token for retry
-        if (error.response?.status === 401) {
-          logger.log('loadUser: Token invalid (401) - clearing auth data');
-          await AsyncStorage.removeItem('auth_token');
-          await AsyncStorage.removeItem('cached_user_data');
-          setUserState(null);
-          setTokenState(null);
-          setIsAuthenticated(false);
+        await writeStorage(async () => {
+          if (isCurrent()) await AsyncStorage.setItem('cached_user_data', JSON.stringify(nextUser));
+        });
+      } catch (error) {
+        if (!isCurrent()) return;
+        if ((error as { response?: { status?: number } }).response?.status === 401) {
+          await logout();
         } else {
-          // Network error, timeout, OR 503 - KEEP token and try cached data
-          logger.log('loadUser: Temporary error (not 401) - keeping token');
-          setTokenState(storedToken);
-          const cachedUserData = await AsyncStorage.getItem('cached_user_data');
-          if (cachedUserData) {
+          // Keep an existing session through temporary outages. A 401 always clears it.
+          const cached = await AsyncStorage.getItem('cached_user_data');
+          if (!isCurrent()) return;
+          if (cached) {
             try {
-              setUserState(JSON.parse(cachedUserData));
-              setIsAuthenticated(true);
-              logger.log('loadUser: Using cached user data');
+              setUserState(normalizeUser(JSON.parse(cached)));
+              setTokenState(storedToken);
             } catch {
-              setIsAuthenticated(false);
+              clearState();
             }
-          } else {
-            // No cache - still keep token, set not authenticated but DON'T delete token
-            // Next foreground event will retry
-            setIsAuthenticated(false);
-            logger.log('loadUser: No cache available, will retry on next foreground');
           }
         }
       }
     } catch (error) {
-      logger.error('loadUser error:', error);
-      setIsAuthenticated(false);
+      logger.error('Session restoration failed:', error);
+      if (isCurrent()) clearState();
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [clearState, logout, writeStorage]);
 
-  const setUser = (newUser: User | null) => {
-    setUserState(newUser);
-    if (newUser) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
-  };
+  const setUser = useCallback((nextUser: User | null) => {
+    const normalized = nextUser ? normalizeUser(nextUser) : null;
+    setUserState(normalized);
+    const revision = sessionRevision.current;
+    void writeStorage(async () => {
+      if (revision !== sessionRevision.current) return;
+      if (normalized) await AsyncStorage.setItem('cached_user_data', JSON.stringify(normalized));
+      else await AsyncStorage.removeItem('cached_user_data');
+    }).catch(error => logger.error('Profile cache failed:', error));
+  }, [writeStorage]);
 
-  const setToken = async (newToken: string | null) => {
-    setTokenState(newToken);
-    if (newToken) {
-      await AsyncStorage.setItem('auth_token', newToken);
-    } else {
-      await AsyncStorage.removeItem('auth_token');
-    }
-  };
+  useEffect(() => { void loadUser(); }, [loadUser]);
 
+  const isAuthenticated = !!user && !!token;
+  const userId = user?.id;
   useEffect(() => {
-    const init = async () => {
-      try {
-        await warmupBackend();
-      } catch (e) {
-        logger.log('Initial warmup failed, continuing anyway');
-      }
-      loadUser();
-    };
-    init();
-  }, []);
-
-  // Re-register push tokens when user becomes authenticated
-  // This ensures users who are already logged in get their push tokens registered
-  useEffect(() => {
-    if (isAuthenticated && user && !isLoading) {
-      logger.info('User authenticated, registering push notifications...');
-      registerForPushNotifications().then(token => {
-        if (token) {
-          logger.info('Push token registered successfully');
-        }
-      }).catch(err => {
-        logger.error('Push re-registration failed:', err);
-      });
+    if (isAuthenticated && !isLoading) {
+      registerForPushNotifications().catch(error => logger.error('Push registration failed:', error));
     }
-  }, [isAuthenticated, user, isLoading]);
+  }, [isAuthenticated, userId, isLoading]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        isLoading,
-        isAuthenticated,
-        isAuthenticating,
-        login,
-        register,
-        logout,
-        loadUser,
-        setUser,
-        setToken,
-        setIsAuthenticating,
-      }}
-    >
+    <AuthContext.Provider value={{ user, token, isLoading, isAuthenticated, isAuthenticating,
+      login, register, completeLogin, logout, loadUser, setUser, setIsAuthenticating }}>
       {children}
     </AuthContext.Provider>
   );
@@ -283,8 +226,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

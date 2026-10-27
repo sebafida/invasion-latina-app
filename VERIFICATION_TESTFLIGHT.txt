@@ -1,0 +1,143 @@
+INVASION LATINA — Vérification avant TestFlight, 27 octobre 2026
+
+État : version 1.0.29 (113) compilée et signée avec succès par EAS.
+Apple confirme : processingState VALID, internalState IN_BETA_TESTING.
+La version 1.0.29 (113) est disponible pour les testeurs internes TestFlight. La version publique vérifiée
+auprès d’Apple est 1.0.28 (110). Aucun déploiement Railway ni publication
+App Store, aucune écriture dans les comptes/réservations/événements de production.
+
+CORRECTIONS
+- Flyers entiers : correction précédente conservée sur cinq écrans.
+- Inscription : utilisation du véritable champ id renvoyé par le serveur.
+- Connexion : les champs restent remplis après un mauvais mot de passe.
+- Déconnexion : fin du chargement bloqué ; une ancienne réponse réseau ne
+  peut plus restaurer une session déconnectée.
+- Session : cache créé dès la connexion/inscription (également Apple/Google),
+  conservé en cas de panne temporaire, supprimé en cas de refus 401.
+- Démarrage invité : ne dépend plus du réveil préalable du serveur.
+- Navigation : un lien direct vers une réservation reste sur cet écran ;
+  les écrans personnels demandent une connexion en l'absence de session.
+- Fidélité : progression et points restants calculés depuis le solde réel ;
+  aucun nombre de récompenses inventé si le serveur ne le fournit pas.
+- Entrée gratuite : lecture de response.voucher.id, code manuel conservant
+  sa casse, suppression d'un ancien voucher devenu indisponible ; clics
+  répétés bloqués pendant la demande dans les deux composants concernés.
+- Réservations : erreur de chargement et bouton Réessayer ; état annulé
+  reconnu ; validation de l'email, du téléphone et du nombre entier d'invités.
+- Requêtes DJ : les deux formulaires transmettent la localisation ; délai
+  maximal de 15 secondes pour obtenir une position après autorisation.
+  Votes invités orientés vers la connexion ; doubles clics limités.
+- Affichage : largeur réelle des boutons animés, textes de CTA ajustables,
+  compte à rebours et barre d'onglets adaptés aux petits téléphones.
+- Photos : permissions iOS explicites et sauvegarde avec accès en ajout
+  seulement. Le fichier temporaire est supprimé après une sauvegarde réussie.
+- Dépendances : alignement sur Expo 54, corrections compatibles, déclaration
+  explicite d'expo-file-system, suppression de la déclaration Yarn obsolète.
+- Version marketing 1.0.29, build iOS 113. App Store ID 6758810207, équipe
+  C3V222SFFY, bundle com.invasionlatina.app, projet Expo @sebafida/frontend.
+- Environnement EAS fixé à Node 24.13.0/npm 11.6.2 pour correspondre aux
+  vérifications locales. Suppression d’une copie Expo 58 imbriquée dans
+  Expo 54 ; override Expo et déduplication du verrouillage.
+- Référence de l’icône Android remplacée par l’icône carrée déjà présente.
+
+VÉRIFICATIONS EFFECTUÉES
+- TypeScript : aucune erreur.
+- ESLint : aucune erreur ; des avertissements préexistants restent à traiter.
+- Expo install --check : versions compatibles avec Expo 54.
+- Expo Doctor après déduplication : 18/18 contrôles réussis.
+- Installation propre npm ci --include=dev réussie avant l’envoi EAS.
+- TypeScript, 7 tests et export iOS/Hermes revérifiés après déduplication.
+- Exports de production web et iOS/Hermes réussis. Ceci ne constitue pas une
+  compilation native Apple, une signature ou une installation sur iPhone.
+- 7 tests automatisés de contrat API : npm test dans frontend.
+- Parcours navigateur avec API simulée : inscription, cache du profil,
+  conservation du formulaire après refus, déconnexion, réponse /auth/me
+  retardée après déconnexion, panne 503, session expirée, lien direct,
+  obtention d'une entrée gratuite, réservation annulée et erreur + réessai.
+- 40 cas flyers : quatre ratios, deux largeurs, cinq écrans ; changement
+  d'événement et image absente/inaccessible vérifiés.
+- Onze écrans ouverts sur 320, 393 et 440 pixels ; votes invités et doubles
+  clics vérifiés. Les données de test ne sont pas enregistrées en production.
+- Configuration native générée : permissions Photos présentes.
+- Le pont de test d'authentification a été supprimé avant l'export final.
+- API de production lue sans mutation : health 200 (PostgreSQL connecté),
+  welcome-content, events/next et events/upcoming 200 ; événement actif
+  Temporada 18 EP 1 du 7 novembre 2026.
+
+POINTS À VÉRIFIER SUR UN IPHONE / TESTFLIGHT
+1. Connexion Apple et Google avec un vrai compte, puis fermeture/réouverture.
+2. Notifications sur appareil réel et ouverture d'une réservation depuis
+   une notification (app ouverte, en arrière-plan, puis complètement fermée).
+3. Appareil photo : scan d'un QR événement et d'une entrée gratuite avec un
+   compte de test ; refus de permission puis réactivation dans Réglages.
+4. Localisation : demandes depuis les deux pages DJs et Requests, dans et
+   hors du lieu. Tester aussi le refus de permission.
+5. Téléchargement d'une photo : autorisation d'ajout, refus et deuxième essai.
+6. Réservation réelle de test puis confirmation/refus dans l'administration.
+7. Réseau mobile lent, mode avion, clavier, grande taille de texte et petit iPhone.
+8. Installer la version 1.0.29 (113) lorsque le traitement Apple est terminé.
+
+AMÉLIORATIONS RESTANTES / LIMITES
+- Audit npm final après déduplication : 39 alertes (37 modérées, 2 élevées),
+  aucune critique. Ce résultat remplace le précédent décompte de 12 obtenu
+  avant la correction de l’arbre de dépendances. Les deux alertes élevées
+  concernent image-size et postcss dans l’outillage. Correctifs ciblés ou
+  migration Expo à évaluer séparément ; aucun npm audit fix --force.
+- Le backend n'a pas été déployé ou testé sur sa base de production. Avant
+  diffusion publique, confirmer la branche réellement déployée sur Railway.
+- Revue du backend local : les demandes simultanées de récompense vérifient
+  l'existence du voucher avant le verrou utilisateur ; le chargement SQLAlchemy
+  verrouillé ne force pas le rafraîchissement de l'objet déjà en session.
+  Cela mérite un correctif transactionnel et un test de concurrence PostgreSQL.
+  La protection des doubles clics dans l'app ne remplace pas ce correctif.
+- Le script backend/start.sh stamp automatiquement Alembic à head lorsqu'une
+  base users existe sans table alembic_version. Vérifier le schéma réel avant
+  toute prochaine mise à jour du backend pour éviter de sauter une migration.
+- Améliorations suivantes : vrai mot de passe oublié, suivi des crashes,
+  préférences d'accessibilité et de taille de texte, puis cache des événements.
+
+Les vérifications locales ne garantissent pas l'absence de tout bug natif
+ou l'état du serveur actuellement déployé.
+
+SUIVI DE LIVRAISON
+- Build EAS : https://expo.dev/accounts/sebafida/projects/frontend/builds/c1ced0c6-ccd3-4917-87a2-167c86835b61
+- Envoi Apple : https://expo.dev/accounts/sebafida/projects/frontend/submissions/fcedda2a-0abd-4cc5-97fa-87106fd7e8a1
+- Tentative 111 : arrêt sur installation npm incompatible avec le verrouillage.
+- Tentative 112 : annulée avant envoi Apple pour supprimer le doublon Expo.
+- Build 113 : compilation et signature iOS réussies ; Xcode 26.0.
+- Premier transfert du build 113 interrompu par une erreur serveur Apple 500.
+- Nouvel envoi du même binaire : https://expo.dev/accounts/sebafida/projects/frontend/submissions/2984d68f-acca-4eda-aad4-3c0bb04058a5
+- Deuxième transfert : fichier reçu entièrement par Apple, puis état
+  PROCESSING. Le suivi Expo s’est interrompu sur une erreur Apple 500 après
+  le transfert ; ne pas renvoyer le binaire sans vérifier son état Apple.
+- Build Apple : https://appstoreconnect.apple.com/apps/6758810207/testflight/ios/f308549e-615a-4ed0-b676-40652805434e
+- Confirmation directe via l’API Apple : build f308549e-615a-4ed0-b676-40652805434e,
+  version 1.0.29, numéro 113, processingState VALID, internalState
+  IN_BETA_TESTING, non expiré. ExternalState READY_FOR_BETA_SUBMISSION :
+  aucune soumission aux tests externes ni publication App Store.
+- L’erreur de suivi affichée par Expo ne signifie pas un refus du binaire :
+  Apple confirme la disponibilité interne du fichier reçu.
+
+SOUMISSION APP STORE — 27/10/2026 à 14:38 (Bruxelles)
+- Validation utilisateur : version 1.0.29 (113) essayée sur TestFlight,
+  puis demande explicite de publication sur l’App Store.
+- Même binaire validé, sans nouvelle compilation ni déploiement backend.
+- App confirmée : Invasion Latina, 6758810207, com.invasionlatina.app.
+- Version App Store : 0d313815-7075-4387-ac49-79231915de16.
+- Build sélectionné : f308549e-615a-4ed0-b676-40652805434e (113), VALID.
+- Soumission : 4c964ece-8910-4572-86b1-50834df89e73.
+- État confirmé par Apple après envoi : WAITING_FOR_REVIEW.
+- Publication automatique après approbation (AFTER_APPROVAL).
+  La nouvelle version n’est donc pas encore confirmée en ligne.
+- Description et six captures existantes conservées ; notes de mise à jour
+  renseignées pour les flyers, la connexion, les réservations et la stabilité.
+- Ancien compte de démonstration Apple invalide : création d’un compte
+  standard dédié à la validation, connexion vérifiée, promotions désactivées.
+  Ses identifiants sont enregistrés uniquement dans App Store Connect.
+  Cette création constitue une écriture en production pour la revue Apple,
+  distincte des vérifications précédentes effectuées en lecture seule.
+- Nouveau questionnaire Apple complété : fonctions sociales et contenu
+  utilisateur déclarés pour les demandes de chansons partagées et les votes ;
+  absence de restriction par Declared Age Range API déclarée, classification
+  adulte 18+ existante conservée.
+- Aucun changement des sources du build 113 pendant cette soumission.

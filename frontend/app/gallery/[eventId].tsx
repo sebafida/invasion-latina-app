@@ -72,7 +72,7 @@ export default function EventGalleryScreen() {
       setDownloading(true);
       
       // Request permissions
-      const { status } = await MediaLibrary.requestPermissionsAsync();
+      const { status } = await MediaLibrary.requestPermissionsAsync(true, ['photo']);
       if (status !== 'granted') {
         Alert.alert(t('permissionRequired'), t('allowPhotosAccess'));
         return;
@@ -80,14 +80,14 @@ export default function EventGalleryScreen() {
       
       // Download the file
       const filename = `invasion_latina_${Date.now()}.jpg`;
-      const fileUri = FileSystem.documentDirectory + filename;
+      const fileUri = FileSystem.cacheDirectory + filename;
       
       const downloadResult = await FileSystem.downloadAsync(photoUrl, fileUri);
       
       if (downloadResult.status === 200) {
         // Save to media library
-        const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
-        await MediaLibrary.createAlbumAsync('Invasion Latina', asset, false);
+        await MediaLibrary.saveToLibraryAsync(downloadResult.uri);
+        await FileSystem.deleteAsync(downloadResult.uri, { idempotent: true }).catch(() => {});
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         Alert.alert(t('downloadSuccess'), t('photoSavedToGallery'));

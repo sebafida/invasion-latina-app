@@ -438,7 +438,7 @@ Merci et à bientôt! 🔥`;
           <View style={styles.deleteModalContent}>
             <Ionicons name="trash" size={48} color={theme.colors.error} />
             <Text style={styles.deleteModalTitle}>{t('deleteBooking')}</Text>
-            <Text style={styles.deleteModalSubtitle}>{t('bookingOf')} "{deleteTarget?.name}"</Text>
+            <Text style={styles.deleteModalSubtitle}>{t('bookingOf')} &quot;{deleteTarget?.name}&quot;</Text>
             
             <View style={styles.deleteModalButtons}>
               <TouchableOpacity
@@ -505,7 +505,7 @@ Merci et à bientôt! 🔥`;
           <View style={styles.deleteModalContent}>
             <Ionicons name="close-circle" size={48} color={theme.colors.error} />
             <Text style={styles.deleteModalTitle}>{t('cancelBooking')}</Text>
-            <Text style={styles.deleteModalSubtitle}>{t('bookingOf')} "{cancelTarget?.name}"</Text>
+            <Text style={styles.deleteModalSubtitle}>{t('bookingOf')} &quot;{cancelTarget?.name}&quot;</Text>
             
             <View style={styles.deleteModalButtons}>
               <TouchableOpacity

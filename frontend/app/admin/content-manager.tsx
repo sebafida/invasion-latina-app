@@ -635,9 +635,9 @@ export default function ContentManagerScreen() {
   // Render Welcome Tab (for the landing page flyer)
   const renderWelcomeTab = () => (
     <View style={styles.tabContent}>
-      <Text style={styles.sectionTitle}>🏠 Page d'accueil</Text>
+      <Text style={styles.sectionTitle}>🏠 Page d&apos;accueil</Text>
       <Text style={styles.helpText}>
-        Modifiez le flyer et les informations qui s'affichent sur la page d'accueil (avant connexion)
+        Modifiez le flyer et les informations qui s&apos;affichent sur la page d&apos;accueil (avant connexion)
       </Text>
 
       {/* Upload Button */}
@@ -719,9 +719,9 @@ export default function ContentManagerScreen() {
 
   const renderFlyerTab = () => (
     <View style={styles.tabContent}>
-      <Text style={styles.sectionTitle}>📸 Modifier le Flyer de l'événement</Text>
+      <Text style={styles.sectionTitle}>📸 Modifier le Flyer de l&apos;événement</Text>
       <Text style={styles.helpText}>
-        Le flyer apparaîtra sur la page d'accueil et la page Tickets
+        Le flyer apparaîtra sur la page d&apos;accueil et la page Tickets
       </Text>
 
       {/* Event Selector */}
@@ -805,14 +805,14 @@ export default function ContentManagerScreen() {
       <View style={styles.infoBox}>
         <Ionicons name="information-circle" size={20} color={theme.colors.primary} />
         <Text style={styles.infoText}>
-          💡 Le flyer de l'événement sera utilisé comme couverture d'album dans les sections Photos et Aftermovies.
+          💡 Le flyer de l&apos;événement sera utilisé comme couverture d&apos;album dans les sections Photos et Aftermovies.
         </Text>
       </View>
 
       <View style={styles.infoBox}>
         <Ionicons name="information-circle" size={20} color={theme.colors.primary} />
         <Text style={styles.infoText}>
-          💡 Astuce: Uploadez votre image sur un service comme Imgur, Google Drive (lien public), ou Cloudinary, puis collez l'URL ici.
+          💡 Astuce: Uploadez votre image sur un service comme Imgur, Google Drive (lien public), ou Cloudinary, puis collez l&apos;URL ici.
         </Text>
       </View>
     </View>
@@ -882,14 +882,14 @@ export default function ContentManagerScreen() {
     <View style={styles.tabContent}>
       <Text style={styles.sectionTitle}>Lien Photos par evenement</Text>
       <Text style={styles.helpText}>
-        Collez le lien de l'album Facebook pour chaque evenement. Activez "Photos visibles" dans l'onglet Events d'abord.
+        Collez le lien de l&apos;album Facebook pour chaque evenement. Activez &quot;Photos visibles&quot; dans l&apos;onglet Events d&apos;abord.
       </Text>
 
       {events.length === 0 ? (
         <View style={styles.noEventsWarning}>
           <Ionicons name="warning" size={20} color={theme.colors.warning} />
           <Text style={styles.noEventsText}>
-            Aucun evenement disponible. Creez d'abord un evenement dans l'onglet "Events".
+            Aucun evenement disponible. Creez d&apos;abord un evenement dans l&apos;onglet &quot;Events&quot;.
           </Text>
         </View>
       ) : (
@@ -952,14 +952,14 @@ export default function ContentManagerScreen() {
     <View style={styles.tabContent}>
       <Text style={styles.sectionTitle}>Lien Aftermovie par evenement</Text>
       <Text style={styles.helpText}>
-        Collez le lien Instagram ou YouTube de l'aftermovie pour chaque evenement. Activez "Aftermovie visible" dans l'onglet Events d'abord.
+        Collez le lien Instagram ou YouTube de l&apos;aftermovie pour chaque evenement. Activez &quot;Aftermovie visible&quot; dans l&apos;onglet Events d&apos;abord.
       </Text>
 
       {events.length === 0 ? (
         <View style={styles.noEventsWarning}>
           <Ionicons name="warning" size={20} color={theme.colors.warning} />
           <Text style={styles.noEventsText}>
-            Aucun evenement disponible. Creez d'abord un evenement dans l'onglet "Events".
+            Aucun evenement disponible. Creez d&apos;abord un evenement dans l&apos;onglet &quot;Events&quot;.
           </Text>
         </View>
       ) : (
@@ -1033,7 +1033,7 @@ export default function ContentManagerScreen() {
           </Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Nom de l'événement *</Text>
+            <Text style={styles.inputLabel}>Nom de l&apos;événement *</Text>
             <TextInput
               style={styles.input}
               placeholder="Invasion Latina - Edition XXX"
@@ -1044,7 +1044,7 @@ export default function ContentManagerScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Date de l'événement * (AAAA-MM-JJ)</Text>
+            <Text style={styles.inputLabel}>Date de l&apos;événement * (AAAA-MM-JJ)</Text>
             <TextInput
               style={styles.input}
               placeholder="2025-03-15"
@@ -1055,7 +1055,7 @@ export default function ContentManagerScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Heure de l'événement * (HH:MM)</Text>
+            <Text style={styles.inputLabel}>Heure de l&apos;événement * (HH:MM)</Text>
             <TextInput
               style={styles.input}
               placeholder="23:00"
@@ -1114,7 +1114,7 @@ export default function ContentManagerScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>📸 Flyer de l'événement</Text>
+            <Text style={styles.inputLabel}>📸 Flyer de l&apos;événement</Text>
             
             {/* Upload Button */}
             <TouchableOpacity 
@@ -1238,7 +1238,7 @@ export default function ContentManagerScreen() {
 
           {/* Event Type Selector */}
           <View style={styles.eventTypeSection}>
-            <Text style={styles.eventTypeLabel}>Type d'evenement:</Text>
+            <Text style={styles.eventTypeLabel}>Type d&apos;evenement:</Text>
             <View style={styles.eventTypeButtons}>
               {[
                 { key: 'regular', label: 'Mensuel' },
