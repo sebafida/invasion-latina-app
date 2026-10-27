@@ -11,8 +11,7 @@ import {
   Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
+import { EventFlyer } from '../../src/components/EventFlyer';
 import { theme } from '../../src/config/theme';
 import { useLanguage } from '../../src/context/LanguageContext';
 import { getDateLocale } from '../../src/i18n/dateLocale';
@@ -40,9 +39,6 @@ interface Event {
   xceed_ticket_url?: string;
   status: string;
 }
-
-// Default event flyer image
-const DEFAULT_EVENT_FLYER = require('../../assets/images/event-flyer.jpg');
 
 export default function TicketsScreen() {
   const { t, language } = useLanguage();
@@ -170,28 +166,15 @@ export default function TicketsScreen() {
               noPadding
               style={styles.eventCard}
             >
-              {/* Event Flyer + overlay caption */}
-              <View style={styles.bannerContainer}>
-                <Image
-                  source={event.banner_image ? { uri: event.banner_image } : DEFAULT_EVENT_FLYER}
-                  style={styles.eventBanner}
-                  contentFit="cover"
-                  transition={250}
-                />
-                <LinearGradient
-                  colors={theme.gradients.overlayBottom}
-                  style={styles.bannerOverlay}
-                >
-                  <Text style={styles.bannerTitle} numberOfLines={2}>{event.name}</Text>
-                  <View style={styles.bannerDateRow}>
-                    <Ionicons name="calendar" size={14} color={theme.colors.primary} />
-                    <Text style={styles.bannerDate}>{formatDate(event.event_date)}</Text>
-                  </View>
-                </LinearGradient>
-              </View>
+              <EventFlyer uri={event.banner_image} accessibilityLabel={event.name} />
 
-              {/* Event Info */}
+              {/* Event Info — kept outside the flyer so no printed text is hidden. */}
               <View style={styles.eventInfo}>
+                <Text style={styles.bannerTitle}>{event.name}</Text>
+                <View style={styles.bannerDateRow}>
+                  <Ionicons name="calendar" size={14} color={theme.colors.primary} />
+                  <Text style={styles.bannerDate}>{formatDate(event.event_date)}</Text>
+                </View>
                 {/* Venue */}
                 <View style={styles.infoRow}>
                   <Ionicons name="location" size={16} color={theme.colors.primary} />
@@ -284,23 +267,6 @@ const styles = StyleSheet.create({
     marginHorizontal: theme.spacing.xl,
     marginBottom: theme.spacing.xl,
   },
-  bannerContainer: {
-    position: 'relative',
-  },
-  eventBanner: {
-    width: '100%',
-    height: 220,
-  },
-  bannerOverlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.xxl,
-    paddingBottom: theme.spacing.md,
-    justifyContent: 'flex-end',
-  },
   bannerTitle: {
     fontSize: theme.fontSize.xl,
     fontWeight: theme.fontWeight.black,
@@ -312,8 +278,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: theme.spacing.xs,
     marginTop: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
   },
   bannerDate: {
+    flex: 1,
     fontSize: theme.fontSize.sm,
     color: theme.colors.textSecondary,
     fontWeight: theme.fontWeight.semibold,

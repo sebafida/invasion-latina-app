@@ -11,7 +11,7 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
+import { EventFlyer } from '../../src/components/EventFlyer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
@@ -326,11 +326,10 @@ export default function VIPBookingScreen() {
 
         {/* Event Flyer */}
         <View style={styles.flyerSection}>
-          <Image
-            source={currentEvent?.banner_image ? { uri: currentEvent.banner_image } : require('../../assets/images/event-flyer.jpg')}
+          <EventFlyer
+            uri={currentEvent?.banner_image}
+            accessibilityLabel={currentEvent?.name || t('nextEvent')}
             style={styles.flyerImage}
-            contentFit="cover"
-            transition={250}
           />
         </View>
 
@@ -709,8 +708,6 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   flyerImage: {
-    width: '100%',
-    height: 200,
     borderRadius: theme.borderRadius.lg,
   },
 

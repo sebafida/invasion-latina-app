@@ -22,9 +22,7 @@ import { GlassCard } from '../src/components/ui/GlassCard';
 import { GradientButton } from '../src/components/ui/GradientButton';
 import { PressableScale } from '../src/components/ui/PressableScale';
 import { Skeleton } from '../src/components/ui/Skeleton';
-
-// Default content (fallback)
-const DEFAULT_FLYER = require('../assets/images/event-flyer.jpg');
+import { EventFlyer } from '../src/components/EventFlyer';
 
 const LANGUAGES = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -175,25 +173,17 @@ export default function WelcomeScreen() {
 
             {/* Event Flyer */}
             <View style={styles.flyerContainer}>
-              {isLoadingContent ? (
-                <Skeleton width="100%" height={320} borderRadius={theme.borderRadius.lg} />
-              ) : (
-                <Image
-                  source={content?.flyer_url ? { uri: content.flyer_url } : DEFAULT_FLYER}
-                  style={styles.flyerImage}
-                  contentFit="cover"
-                  transition={200}
-                  cachePolicy="memory-disk"
-                />
-              )}
-              <LinearGradient
-                colors={theme.gradients.overlayBottom}
-                style={styles.flyerFade}
-                pointerEvents="none"
-              />
               <GlassCard variant="gold" noPadding style={styles.flyerBadge}>
                 <Text style={styles.flyerBadgeText}>{t('nextEventBadge')}</Text>
               </GlassCard>
+              {isLoadingContent ? (
+                <Skeleton width="100%" height={320} borderRadius={theme.borderRadius.lg} />
+              ) : (
+                <EventFlyer
+                  uri={content?.flyer_url}
+                  accessibilityLabel={t('nextEventBadge')}
+                />
+              )}
             </View>
           </View>
 
@@ -283,26 +273,12 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
-    position: 'relative',
     borderWidth: 1,
     borderColor: theme.borders.subtle,
   },
-  flyerImage: {
-    width: '100%',
-    height: 320,
-    borderRadius: theme.borderRadius.lg,
-  },
-  flyerFade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 110,
-  },
   flyerBadge: {
-    position: 'absolute',
-    top: theme.spacing.sm,
-    left: theme.spacing.sm,
+    alignSelf: 'flex-start',
+    margin: theme.spacing.sm,
     borderRadius: theme.borderRadius.full,
   },
   flyerBadgeText: {

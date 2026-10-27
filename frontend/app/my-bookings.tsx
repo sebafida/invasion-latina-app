@@ -9,7 +9,7 @@ import {
   Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
+import { EventFlyer } from '../src/components/EventFlyer';
 import { useRouter } from 'expo-router';
 import { SkeletonCard, SkeletonRow } from '../src/components/ui/Skeleton';
 import { EmptyState } from '../src/components/ui/EmptyState';
@@ -158,12 +158,9 @@ export default function MyBookingsScreen() {
                     <View key={booking.id} style={styles.bookingCard}>
                       {/* Event Banner */}
                       {booking.event_banner && (
-                        <Image
-                          source={{ uri: booking.event_banner }}
-                          style={styles.eventBanner}
-                          contentFit="cover"
-                          transition={200}
-                          cachePolicy="memory-disk"
+                        <EventFlyer
+                          uri={booking.event_banner}
+                          accessibilityLabel={booking.event_name}
                         />
                       )}
                       
@@ -384,10 +381,6 @@ const styles = StyleSheet.create({
   },
   pastCard: {
     opacity: 0.7,
-  },
-  eventBanner: {
-    width: '100%',
-    height: 120,
   },
   statusBadge: {
     flexDirection: 'row',
