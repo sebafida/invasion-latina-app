@@ -1,18 +1,18 @@
 import React, { useEffect, useRef } from 'react';
 import { View, ActivityIndicator, StyleSheet, AppState, AppStateStatus } from 'react-native';
-import { Slot, useRouter } from 'expo-router';
+import { Slot, useRouter, usePathname } from 'expo-router';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { LanguageProvider } from '../src/context/LanguageContext';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { OfflineBanner } from '../src/components/OfflineBanner';
 import { theme } from '../src/config/theme';
 import logger from '../src/config/logger';
-import { warmupBackend } from '../src/config/api';
 import { setupNotificationListeners } from '../src/config/notifications';
 
 function AppContent() {
   const { isLoading, isAuthenticated, isAuthenticating, loadUser } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const appState = useRef(AppState.currentState);
   const wasAuthenticated = useRef(false); // Track previous auth state for logout redirect
 
@@ -22,11 +22,7 @@ function AppContent() {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
         // BUG 4 FIX: Only re-verify auth if not currently authenticating (social login)
         if (!isAuthenticating) {
-          logger.log('App came to foreground - warming up backend...');
-          warmupBackend().then(() => {
-            logger.log('App came to foreground - re-verifying auth...');
-            loadUser();
-          });
+          void loadUser();
         } else {
           logger.log('App came to foreground - skipping auth check (authentication in progress)');
         }
@@ -73,31 +69,20 @@ function AppContent() {
   }, [isAuthenticated]);
 
   // Handle navigation based on auth state changes
-  const isLoggingOut = useRef(false);
 
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated) {
-        isLoggingOut.current = false;
         wasAuthenticated.current = true;
-        router.replace('/(tabs)/home');
+        if (pathname === '/' || pathname.startsWith('/auth/')) router.replace('/(tabs)/home');
       } else if (wasAuthenticated.current) {
-        // User just logged out - show loading while redirecting
-        isLoggingOut.current = true;
         wasAuthenticated.current = false;
         router.replace('/');
+      } else if (pathname === '/my-bookings' || pathname === '/scan-qr' || pathname.startsWith('/settings/')) {
+        router.replace('/auth/login');
       }
     }
-  }, [isLoading, isAuthenticated]);
-
-  // Show loading screen during logout (prevents "Oups" flash from ErrorBoundary)
-  if (isLoggingOut.current) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
-    );
-  }
+  }, [isLoading, isAuthenticated, pathname, router]);
 
   // Show loading screen while checking auth status
   if (isLoading) {

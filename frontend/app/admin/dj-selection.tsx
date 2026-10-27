@@ -193,7 +193,7 @@ export default function DJSelectionScreen() {
         <View style={styles.instructionCard}>
           <Ionicons name="information-circle" size={24} color={theme.colors.primary} />
           <Text style={styles.instructionText}>
-            Sélectionne les DJs qui seront présents au prochain event. Les DJs sélectionnés seront affichés dans l'app.
+            Sélectionne les DJs qui seront présents au prochain event. Les DJs sélectionnés seront affichés dans l&apos;app.
           </Text>
         </View>
 

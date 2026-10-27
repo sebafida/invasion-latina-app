@@ -185,7 +185,7 @@ export default function FreeEntryScanner() {
                 )}
               </View>
               <Text style={styles.scanInstructions}>
-                Place le QR code d'entrée gratuite dans le cadre
+                Place le QR code d&apos;entrée gratuite dans le cadre
               </Text>
             </View>
           </>

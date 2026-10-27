@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.invasionlatina.app",
-      "buildNumber": "109",
+      "buildNumber": "110",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Pour activer les requêtes DJ quand tu es à la soirée",
@@ -74,6 +74,16 @@
         "expo-camera",
         {
           "cameraPermission": "Pour scanner ton QR code fidélité à l'entrée"
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Autorise Invasion Latina à accéder aux photos sélectionnées.",
+          "savePhotosPermission": "Autorise Invasion Latina à enregistrer les photos des soirées dans ta galerie.",
+          "granularPermissions": [
+            "photo"
+          ]
         }
       ]
     ],

@@ -1,0 +1,89 @@
+INVASION LATINA — Vérification avant TestFlight, 27 octobre 2026
+
+État : corrections préparées dans le code de l’app mobile. Aucun build EAS
+lancé, aucune soumission TestFlight, aucun déploiement Railway et aucune
+écriture dans les comptes/réservations/événements de production.
+
+CORRECTIONS
+- Flyers entiers : correction précédente conservée sur cinq écrans.
+- Inscription : utilisation du véritable champ id renvoyé par le serveur.
+- Connexion : les champs restent remplis après un mauvais mot de passe.
+- Déconnexion : fin du chargement bloqué ; une ancienne réponse réseau ne
+  peut plus restaurer une session déconnectée.
+- Session : cache créé dès la connexion/inscription (également Apple/Google),
+  conservé en cas de panne temporaire, supprimé en cas de refus 401.
+- Démarrage invité : ne dépend plus du réveil préalable du serveur.
+- Navigation : un lien direct vers une réservation reste sur cet écran ;
+  les écrans personnels demandent une connexion en l'absence de session.
+- Fidélité : progression et points restants calculés depuis le solde réel ;
+  aucun nombre de récompenses inventé si le serveur ne le fournit pas.
+- Entrée gratuite : lecture de response.voucher.id, code manuel conservant
+  sa casse, suppression d'un ancien voucher devenu indisponible ; clics
+  répétés bloqués pendant la demande dans les deux composants concernés.
+- Réservations : erreur de chargement et bouton Réessayer ; état annulé
+  reconnu ; validation de l'email, du téléphone et du nombre entier d'invités.
+- Requêtes DJ : les deux formulaires transmettent la localisation ; délai
+  maximal de 15 secondes pour obtenir une position après autorisation.
+  Votes invités orientés vers la connexion ; doubles clics limités.
+- Affichage : largeur réelle des boutons animés, textes de CTA ajustables,
+  compte à rebours et barre d'onglets adaptés aux petits téléphones.
+- Photos : permissions iOS explicites et sauvegarde avec accès en ajout
+  seulement. Le fichier temporaire est supprimé après une sauvegarde réussie.
+- Dépendances : alignement sur Expo 54, corrections compatibles, déclaration
+  explicite d'expo-file-system, suppression de la déclaration Yarn obsolète.
+- Compteur iOS local positionné à 110 (déjà construit précédemment) ; le
+  profil production autoIncrement préparera 111. Version marketing 1.0.28
+  conservée : confirmer dans App Store Connect qu'elle accepte encore des builds.
+
+VÉRIFICATIONS EFFECTUÉES
+- TypeScript : aucune erreur.
+- ESLint : aucune erreur ; des avertissements préexistants restent à traiter.
+- Expo install --check : versions compatibles avec Expo 54.
+- Exports de production web et iOS/Hermes réussis. Ceci ne constitue pas une
+  compilation native Apple, une signature ou une installation sur iPhone.
+- 7 tests automatisés de contrat API : npm test dans frontend.
+- Parcours navigateur avec API simulée : inscription, cache du profil,
+  conservation du formulaire après refus, déconnexion, réponse /auth/me
+  retardée après déconnexion, panne 503, session expirée, lien direct,
+  obtention d'une entrée gratuite, réservation annulée et erreur + réessai.
+- 40 cas flyers : quatre ratios, deux largeurs, cinq écrans ; changement
+  d'événement et image absente/inaccessible vérifiés.
+- Onze écrans ouverts sur 320, 393 et 440 pixels ; votes invités et doubles
+  clics vérifiés. Les données de test ne sont pas enregistrées en production.
+- Configuration native générée : permissions Photos présentes.
+- Le pont de test d'authentification a été supprimé avant l'export final.
+
+POINTS À VÉRIFIER SUR UN IPHONE / TESTFLIGHT
+1. Connexion Apple et Google avec un vrai compte, puis fermeture/réouverture.
+2. Notifications sur appareil réel et ouverture d'une réservation depuis
+   une notification (app ouverte, en arrière-plan, puis complètement fermée).
+3. Appareil photo : scan d'un QR événement et d'une entrée gratuite avec un
+   compte de test ; refus de permission puis réactivation dans Réglages.
+4. Localisation : demandes depuis les deux pages DJs et Requests, dans et
+   hors du lieu. Tester aussi le refus de permission.
+5. Téléchargement d'une photo : autorisation d'ajout, refus et deuxième essai.
+6. Réservation réelle de test puis confirmation/refus dans l'administration.
+7. Réseau mobile lent, mode avion, clavier, grande taille de texte et petit iPhone.
+8. Version et numéro de build disponibles dans App Store Connect avant envoi.
+
+AMÉLIORATIONS RESTANTES / LIMITES
+- Audit npm après corrections : 12 alertes (6 modérées, 6 élevées), aucune
+  critique, contre 32 alertes au début. Plusieurs proviennent de l'outillage
+  Expo ; decode-uri-component intervient aussi dans le routage. Une migration
+  Expo et/ou des correctifs ciblés restent à évaluer. Pas de npm audit fix
+  --force ni de migration majeure dans cette préparation.
+- Le backend n'a pas été déployé ou testé sur sa base de production. Avant
+  diffusion publique, confirmer la branche réellement déployée sur Railway.
+- Revue du backend local : les demandes simultanées de récompense vérifient
+  l'existence du voucher avant le verrou utilisateur ; le chargement SQLAlchemy
+  verrouillé ne force pas le rafraîchissement de l'objet déjà en session.
+  Cela mérite un correctif transactionnel et un test de concurrence PostgreSQL.
+  La protection des doubles clics dans l'app ne remplace pas ce correctif.
+- Le script backend/start.sh stamp automatiquement Alembic à head lorsqu'une
+  base users existe sans table alembic_version. Vérifier le schéma réel avant
+  toute prochaine mise à jour du backend pour éviter de sauter une migration.
+- Améliorations suivantes : vrai mot de passe oublié, suivi des crashes,
+  préférences d'accessibilité et de taille de texte, puis cache des événements.
+
+Les vérifications locales ne garantissent pas l'absence de tout bug natif
+ou l'état du serveur actuellement déployé.

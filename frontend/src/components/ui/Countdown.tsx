@@ -23,7 +23,7 @@ interface TimeLeft {
 
 function computeTimeLeft(target: Date): TimeLeft {
   const diff = target.getTime() - Date.now();
-  if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, done: true };
+  if (!Number.isFinite(diff) || diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, done: true };
   return {
     days: Math.floor(diff / 86_400_000),
     hours: Math.floor((diff / 3_600_000) % 24),
@@ -35,6 +35,7 @@ function computeTimeLeft(target: Date): TimeLeft {
 
 function CountdownInner({ targetDate, labels, onComplete }: CountdownProps) {
   const target = typeof targetDate === 'string' ? new Date(targetDate) : targetDate;
+  const [rowWidth, setRowWidth] = useState(0);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => computeTimeLeft(target));
 
   useEffect(() => {
@@ -58,15 +59,15 @@ function CountdownInner({ targetDate, labels, onComplete }: CountdownProps) {
   ];
 
   return (
-    <View style={styles.row}>
+    <View style={styles.row} onLayout={event => setRowWidth(event.nativeEvent.layout.width)}>
       {units.map(([value, label], i) => (
         <React.Fragment key={label}>
           {i > 0 && <Text style={styles.separator}>:</Text>}
           <View style={styles.unit}>
             <View style={styles.valueBox}>
-              <Text style={styles.value}>{String(value).padStart(2, '0')}</Text>
+              <Text style={[styles.value, rowWidth > 0 && { fontSize: Math.min(theme.fontSize.xl, Math.max(12, ((rowWidth - 36) / 4 - 6) / (Math.max(2, String(value).length) * 0.65))) }]} numberOfLines={1} adjustsFontSizeToFit>{String(value).padStart(2, '0')}</Text>
             </View>
-            <Text style={styles.label}>{label}</Text>
+            <Text style={styles.label} numberOfLines={1} adjustsFontSizeToFit>{label}</Text>
           </View>
         </React.Fragment>
       ))}
@@ -84,7 +85,8 @@ const styles = StyleSheet.create({
   },
   unit: {
     alignItems: 'center',
-    minWidth: 64,
+    flex: 1,
+    minWidth: 0,
   },
   valueBox: {
     backgroundColor: theme.colors.elevated,
@@ -92,8 +94,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.borders.brand,
     paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.sm,
-    minWidth: 58,
+    paddingHorizontal: 2,
+    width: '100%',
     alignItems: 'center',
   },
   value: {
@@ -113,7 +115,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontSize: theme.fontSize.xl,
     fontWeight: theme.fontWeight.bold,
-    marginHorizontal: 4,
+    marginHorizontal: 2,
     marginTop: theme.spacing.sm,
   },
 });

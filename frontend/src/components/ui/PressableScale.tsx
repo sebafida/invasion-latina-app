@@ -6,6 +6,8 @@ import React, { useRef } from 'react';
 import { Animated, Pressable, ViewStyle, StyleProp, GestureResponderEvent } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 interface PressableScaleProps {
   onPress?: (e: GestureResponderEvent) => void;
   onLongPress?: (e: GestureResponderEvent) => void;
@@ -47,7 +49,8 @@ export function PressableScale({
   };
 
   return (
-    <Pressable
+    <AnimatedPressable
+      style={[style, { transform: [{ scale }] }, disabled && { opacity: 0.5 }]}
       onPress={handlePress}
       onLongPress={onLongPress}
       disabled={disabled}
@@ -57,10 +60,8 @@ export function PressableScale({
       accessibilityRole={accessibilityRole}
       accessibilityState={{ disabled: !!disabled }}
     >
-      <Animated.View style={[style, { transform: [{ scale }] }, disabled && { opacity: 0.5 }]}>
-        {children}
-      </Animated.View>
-    </Pressable>
+      {children}
+    </AnimatedPressable>
   );
 }
 

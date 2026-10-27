@@ -18,6 +18,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
 import { getDateLocale } from '../../src/i18n/dateLocale';
 import api from '../../src/config/api';
+import { apiErrorMessage } from '../../src/utils/apiError';
 import { LoginRequiredModal } from '../../src/components/LoginRequiredModal';
 import logger from '../../src/config/logger';
 import { GlassCard } from '../../src/components/ui/GlassCard';
@@ -212,6 +213,15 @@ export default function VIPBookingScreen() {
       return;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())) {
+      Alert.alert(t('error'), t('invalidEmail'));
+      return;
+    }
+    if (!/^\+?[\d\s()\-]{7,20}$/.test(customerPhone.trim()) || customerPhone.replace(/\D/g, '').length < 7) {
+      Alert.alert(t('error'), t('invalidPhone'));
+      return;
+    }
+
     const packageDetails = getSelectedPackageDetails();
     if (!packageDetails) {
       Alert.alert(t('error'), t('selectTable'));
@@ -219,8 +229,8 @@ export default function VIPBookingScreen() {
     }
 
     // 2.5 - Validation parseInt
-    const guests = parseInt(guestCount);
-    if (isNaN(guests) || guests < 1 || guests > 20) {
+    const guests = Number(guestCount);
+    if (!Number.isInteger(guests) || guests < 1 || guests > 20) {
       Alert.alert(t('error'), t('invalidGuestCount'));
       setLoading(false);
       return;
@@ -260,7 +270,7 @@ export default function VIPBookingScreen() {
       
     } catch (error: any) {
       logger.error('Booking error:', error);
-      const message = error.response?.data?.detail || t('bookingError');
+      const message = apiErrorMessage(error, t('bookingError'));
       Alert.alert(t('error'), message);
     } finally {
       setLoading(false);
@@ -279,7 +289,7 @@ export default function VIPBookingScreen() {
         {/* Event Selector - ONLY SHOW IF MULTIPLE EVENTS */}
         {events.length > 1 && (
           <View style={styles.eventSelectorSection}>
-            <Text style={styles.eventSelectorTitle}>Choisissez l'evenement</Text>
+            <Text style={styles.eventSelectorTitle}>Choisissez l&apos;evenement</Text>
             <View style={styles.eventSelectorContainer}>
               {events.map((event) => (
                 <PressableScale

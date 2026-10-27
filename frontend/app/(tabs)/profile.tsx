@@ -29,24 +29,8 @@ import { GlassCard } from '../../src/components/ui/GlassCard';
 import { GradientButton } from '../../src/components/ui/GradientButton';
 import { PressableScale } from '../../src/components/ui/PressableScale';
 
-interface LoyaltyData {
-  points: number;
-  check_ins_count: number;
-  progress_to_next_reward: number;
-  points_needed: number;
-  rewards_earned: number;
-  recent_check_ins: Array<{
-    event_name: string;
-    points: number;
-    date: string;
-  }>;
-}
-
-interface FreeEntryVoucher {
-  id: string;
-  code: string;
-  used: boolean;
-}
+import { LoyaltyData, FreeEntryVoucher, normalizeLoyalty, normalizeVoucher } from '../../src/utils/loyalty';
+import { apiErrorMessage } from '../../src/utils/apiError';
 
 const LANGUAGES: { code: Language; name: string; flag: string }[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -56,11 +40,13 @@ const LANGUAGES: { code: Language; name: string; flag: string }[] = [
 ];
 
 export default function ProfileScreen() {
-  const { user, logout, setUser } = useAuth();
+  const { user, logout, setUser, loadUser } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const router = useRouter();
   const [loyaltyData, setLoyaltyData] = useState<LoyaltyData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [claiming, setClaiming] = useState(false);
+  const claimInProgress = useRef(false);
   const [showQR, setShowQR] = useState(false);
   const [showFreeEntryQR, setShowFreeEntryQR] = useState(false);
   const [freeEntryVoucher, setFreeEntryVoucher] = useState<FreeEntryVoucher | null>(null);
@@ -167,7 +153,7 @@ export default function ProfileScreen() {
     try {
       setLoading(true);
       const response = await api.get('/loyalty/my-points');
-      setLoyaltyData(response.data);
+      setLoyaltyData(normalizeLoyalty(response.data));
     } catch (error) {
       logger.error('Failed to load loyalty data:', error);
     } finally {
@@ -179,32 +165,36 @@ export default function ProfileScreen() {
     if (!user) return;
     try {
       const response = await api.get('/loyalty/free-entry/check');
-      if (response.data.voucher && !response.data.voucher.used) {
-        setFreeEntryVoucher(response.data.voucher);
-      }
+      const voucher = normalizeVoucher(response.data.voucher);
+      setFreeEntryVoucher(voucher);
+      if (!voucher) setShowFreeEntryQR(false);
     } catch (error) {
       // No voucher exists
     }
   };
 
   const handleClaimFreeEntry = async () => {
+    if (claimInProgress.current) return;
     if (!loyaltyData || loyaltyData.points < 25) {
       Alert.alert(t('notEnoughCoins'), `${loyaltyData?.points_needed || 25} ${t('coinsForFreeGuest')}`);
       return;
     }
 
+    claimInProgress.current = true;
+    setClaiming(true);
     try {
       const response = await api.post('/loyalty/claim-reward');
-      setFreeEntryVoucher({
-        id: response.data.id || response.data.code,
-        code: response.data.code,
-        used: false
-      });
-      loadLoyaltyData();
+      const voucher = normalizeVoucher(response.data.voucher);
+      if (!voucher) throw new Error('Missing voucher');
+      setFreeEntryVoucher(voucher);
+      await loadLoyaltyData();
+      void loadUser();
       setShowFreeEntryQR(true);
-    } catch (error: any) {
-      const message = error.response?.data?.detail || t('error');
-      Alert.alert(t('error'), message);
+    } catch (error) {
+      Alert.alert(t('error'), apiErrorMessage(error, t('freeEntryClaimError')));
+    } finally {
+      claimInProgress.current = false;
+      setClaiming(false);
     }
   };
 
@@ -232,14 +222,7 @@ export default function ProfileScreen() {
           onPress: async () => {
             try {
               await logout();
-              // Small delay to let state update before navigation
-              setTimeout(() => {
-                try {
-                  router.replace('/');
-                } catch (e) {
-                  // Navigation error is expected during logout
-                }
-              }, 100);
+
             } catch (error) {
               logger.log('Logout error (expected):', error);
             }
@@ -604,11 +587,11 @@ export default function ProfileScreen() {
                   <Text style={styles.statNumber}>{loyaltyData.check_ins_count}</Text>
                   <Text style={styles.statLabel}>{t('visits')}</Text>
                 </View>
-                <View style={styles.statItem}>
+                {loyaltyData.rewards_earned !== undefined && <View style={styles.statItem}>
                   <Ionicons name="gift" size={24} color={theme.colors.neonPink} />
                   <Text style={styles.statNumber}>{loyaltyData.rewards_earned}</Text>
                   <Text style={styles.statLabel}>{t('rewards')}</Text>
-                </View>
+                </View>}
               </View>
 
               {/* Claim Button or Show QR */}
@@ -627,9 +610,9 @@ export default function ProfileScreen() {
                     loyaltyData.points < 25 && styles.claimButtonDisabled
                   ]}
                   onPress={handleClaimFreeEntry}
-                  disabled={loyaltyData.points < 25}
+                  disabled={claiming || loyaltyData.points < 25}
                 >
-                  <Ionicons name="ticket" size={20} color="white" />
+                  {claiming ? <ActivityIndicator color="white" /> : <Ionicons name="ticket" size={20} color="white" />}
                   <Text style={styles.claimButtonText}>
                     {loyaltyData.points >= 25 ? t('claimReward') : t('notEnoughCoins')}
                   </Text>
@@ -893,7 +876,7 @@ export default function ProfileScreen() {
             )}
 
             <Text style={styles.qrCodeText}>
-              Code: {freeEntryVoucher?.code?.toUpperCase()}
+              Code: {freeEntryVoucher?.code}
             </Text>
 
             <View style={styles.warningBox}>

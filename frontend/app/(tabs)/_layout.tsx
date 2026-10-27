@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image, Animated, useWindowDimensions } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -54,6 +54,7 @@ const TabBarBackground = () => (
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
 
   return (
     <Tabs
@@ -67,15 +68,15 @@ export default function TabLayout() {
           borderTopColor: theme.borders.subtle,
           borderTopWidth: StyleSheet.hairlineWidth,
           elevation: 0,
-          height: 60 + insets.bottom,
+          height: 68 + insets.bottom,
           paddingBottom: insets.bottom + 6,
           paddingTop: 6,
-          paddingHorizontal: 10,
+          paddingHorizontal: 4,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: width < 360 ? 10 : 11,
           fontWeight: '600',
-          letterSpacing: 0.3,
+          letterSpacing: 0,
         },
         tabBarItemStyle: {
           paddingHorizontal: 0,

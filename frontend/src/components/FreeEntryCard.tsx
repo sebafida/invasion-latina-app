@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import api from '../../src/config/api';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import logger from '../config/logger';
+import { apiErrorMessage } from '../utils/apiError';
 
 interface FreeEntryVoucher {
   id: string;
@@ -31,12 +32,13 @@ interface FreeEntryCardProps {
 }
 
 export function FreeEntryCard({ visible = true }: FreeEntryCardProps) {
-  const { user } = useAuth();
+  const { user, loadUser } = useAuth();
   const { t } = useLanguage();
   const [showQRModal, setShowQRModal] = useState(false);
   const [voucher, setVoucher] = useState<FreeEntryVoucher | null>(null);
   const [loading, setLoading] = useState(false);
   const [claiming, setClaiming] = useState(false);
+  const claimInProgress = useRef(false);
 
   const loyaltyPoints = user?.loyalty_points || 0;
   const canClaimFreeEntry = loyaltyPoints >= 25;
@@ -51,9 +53,7 @@ export function FreeEntryCard({ visible = true }: FreeEntryCardProps) {
     try {
       setLoading(true);
       const response = await api.get('/loyalty/free-entry/check');
-      if (response.data.voucher) {
-        setVoucher(response.data.voucher);
-      }
+      setVoucher(response.data.voucher?.id && !response.data.voucher.used ? response.data.voucher : null);
     } catch (error) {
       logger.log('No existing voucher');
     } finally {
@@ -78,17 +78,21 @@ export function FreeEntryCard({ visible = true }: FreeEntryCardProps) {
         {
           text: t('confirm'),
           onPress: async () => {
+            if (claimInProgress.current) return;
+            claimInProgress.current = true;
             try {
               setClaiming(true);
               const response = await api.post('/loyalty/free-entry/claim');
               setVoucher(response.data.voucher);
+              void loadUser();
               Alert.alert(
                 `🎉 ${t('congratulations')}`,
                 t('freeEntryCongrats')
               );
             } catch (error: any) {
-              Alert.alert(t('error'), error.response?.data?.detail || t('freeEntryClaimError'));
+              Alert.alert(t('error'), apiErrorMessage(error, t('freeEntryClaimError')));
             } finally {
+              claimInProgress.current = false;
               setClaiming(false);
             }
           }

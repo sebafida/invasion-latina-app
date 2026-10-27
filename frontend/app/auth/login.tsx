@@ -17,12 +17,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from '../../src/config/theme';
 import { useAuth } from '../../src/context/AuthContext';
 import { useLanguage } from '../../src/context/LanguageContext';
 import api from '../../src/config/api';
-import { registerForPushNotifications } from '../../src/config/notifications';
 import logger from '../../src/config/logger';
 import { GlassCard } from '../../src/components/ui/GlassCard';
 import { GradientButton } from '../../src/components/ui/GradientButton';
@@ -34,12 +32,11 @@ if (Platform.OS === 'ios') {
   AppleAuthentication = require('expo-apple-authentication');
 }
 
-// Only import Google Auth on native platforms
-let useAuthRequest: any = null;
-if (Platform.OS !== 'web') {
-  const Google = require('expo-auth-session/providers/google');
-  useAuthRequest = Google.useAuthRequest;
-}
+// Select once per platform; each render always calls the same hook.
+const useGoogleAuth: typeof import('expo-auth-session/providers/google').useAuthRequest =
+  Platform.OS === 'web'
+    ? () => [null, null, async () => ({ type: 'dismiss' })]
+    : require('expo-auth-session/providers/google').useAuthRequest;
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -56,7 +53,7 @@ const LANGUAGES = [
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, setUser, setToken, setIsAuthenticating } = useAuth();
+  const { login, completeLogin, setIsAuthenticating } = useAuth();
   const { t, language, setLanguage } = useLanguage();
 
   const [email, setEmail] = useState('');
@@ -71,10 +68,10 @@ export default function LoginScreen() {
   };
 
   // Google Auth - only on native platforms
-  const googleAuth = isNativePlatform && useAuthRequest ? useAuthRequest({
+  const googleAuth = useGoogleAuth({
     iosClientId: GOOGLE_IOS_CLIENT_ID,
     androidClientId: GOOGLE_ANDROID_CLIENT_ID,
-  }) : [null, null, () => {}];
+  });
 
   const [request, response, promptAsync] = googleAuth;
 
@@ -114,20 +111,7 @@ export default function LoginScreen() {
         name: userInfo.name,
       });
 
-      if (result.data.access_token) {
-        // BUG 3 FIX: Save auth_version after Google login
-        await AsyncStorage.setItem('auth_token', result.data.access_token);
-        await AsyncStorage.setItem('auth_version', 'supabase_v3');
-        setToken(result.data.access_token);
-        setUser(result.data);
-
-        // 2.2 - Activer les notifications push après Google login
-        registerForPushNotifications().catch(err => {
-          logger.error('Push notification registration failed:', err);
-        });
-
-        // Navigation is handled by _layout.tsx useEffect when isAuthenticated changes
-      }
+      await completeLogin(result.data);
     } catch (error: any) {
       logger.error('Google sign in error:', error);
       Alert.alert(t('error'), t('googleSignInFailed') || 'Google sign in failed. Please try again.');
@@ -186,19 +170,7 @@ export default function LoginScreen() {
           name: userName,
         }, { timeout: 15000 });
 
-        if (result.data.access_token) {
-          await AsyncStorage.setItem('auth_token', result.data.access_token);
-          await AsyncStorage.setItem('auth_version', 'supabase_v3');
-          setToken(result.data.access_token);
-          setUser(result.data);
-
-          // 2.2 - Activer les notifications push après Apple login
-          registerForPushNotifications().catch(err => {
-            logger.error('Push notification registration failed:', err);
-          });
-
-          // Navigation is handled by _layout.tsx useEffect when isAuthenticated changes
-        }
+        await completeLogin(result.data);
       } catch (apiError: any) {
         // Retry on network errors
         if (!apiError.response && retryCount < 2) {

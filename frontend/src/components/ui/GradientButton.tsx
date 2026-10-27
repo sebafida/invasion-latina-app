@@ -93,6 +93,8 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.sm,
   },
   text: {
+    flexShrink: 1,
+    textAlign: 'center',
     fontSize: theme.fontSize.md,
     fontWeight: theme.fontWeight.bold,
     letterSpacing: 0.4,

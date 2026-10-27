@@ -29,7 +29,7 @@ interface Booking {
   venue_name: string | null;
   zone: string;
   guests: number;
-  status: 'pending' | 'confirmed' | 'rejected';
+  status: 'pending' | 'confirmed' | 'rejected' | 'cancelled';
   admin_notes: string | null;
   submitted_at: string | null;
   confirmed_at: string | null;
@@ -43,6 +43,7 @@ export default function MyBookingsScreen() {
   
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -51,11 +52,12 @@ export default function MyBookingsScreen() {
 
   const loadBookings = async () => {
     try {
-      setLoading(true);
+      setLoadFailed(false);
       const response = await api.get('/vip/my-bookings');
       setBookings(response.data);
     } catch (error) {
       logger.error('Failed to load bookings:', error);
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -71,6 +73,8 @@ export default function MyBookingsScreen() {
     switch (status) {
       case 'confirmed':
         return { icon: 'checkmark-circle', color: theme.colors.success, label: t('statusConfirmed') };
+      case 'cancelled':
+        return { icon: 'close-circle', color: theme.colors.textSecondary, label: t('cancelled') };
       case 'rejected':
         return { icon: 'close-circle', color: theme.colors.error, label: t('statusRejected') };
       default:
@@ -107,15 +111,6 @@ export default function MyBookingsScreen() {
   const upcomingBookings = bookings.filter(b => isUpcoming(b.event_date));
   const pastBookings = bookings.filter(b => !isUpcoming(b.event_date));
 
-  if (loading) {
-    return (
-      <View style={[styles.container, styles.skeletons]}>
-        <SkeletonCard imageHeight={120} />
-        <SkeletonRow />
-        <SkeletonRow />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -138,7 +133,12 @@ export default function MyBookingsScreen() {
           />
         }
       >
-        {bookings.length === 0 ? (
+        {loading ? (
+          <View style={styles.skeletons}><SkeletonCard imageHeight={120} /><SkeletonRow /></View>
+        ) : loadFailed ? (
+          <EmptyState icon="cloud-offline-outline" title={t('connectionError')}
+            actionLabel={t('retry')} onAction={onRefresh} />
+        ) : bookings.length === 0 ? (
           <EmptyState
             icon="calendar-outline"
             title={t('noBookings')}

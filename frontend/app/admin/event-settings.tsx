@@ -137,7 +137,7 @@ export default function EventSettingsScreen() {
         </TouchableOpacity>
         <View style={styles.headerText}>
           <Text style={styles.title}>⚙️ Paramètres Événement</Text>
-          <Text style={styles.subtitle}>Gérer l'événement en cours</Text>
+          <Text style={styles.subtitle}>Gérer l&apos;événement en cours</Text>
         </View>
       </View>
 
@@ -221,7 +221,7 @@ export default function EventSettingsScreen() {
               <>
                 <Ionicons name="play-circle" size={28} color="white" />
                 <View style={styles.actionTextContainer}>
-                  <Text style={styles.actionButtonText}>Démarrer l'événement</Text>
+                  <Text style={styles.actionButtonText}>Démarrer l&apos;événement</Text>
                   <Text style={styles.actionButtonDesc}>Active les demandes de chansons</Text>
                 </View>
               </>
@@ -240,7 +240,7 @@ export default function EventSettingsScreen() {
               <>
                 <Ionicons name="stop-circle" size={28} color="white" />
                 <View style={styles.actionTextContainer}>
-                  <Text style={styles.actionButtonText}>Terminer l'événement</Text>
+                  <Text style={styles.actionButtonText}>Terminer l&apos;événement</Text>
                   <Text style={styles.actionButtonDesc}>Désactive tout & nouveau QR code</Text>
                 </View>
               </>
@@ -269,7 +269,7 @@ export default function EventSettingsScreen() {
           <View style={styles.infoCard}>
             <Ionicons name="time" size={20} color={theme.colors.primary} />
             <Text style={styles.infoText}>
-              Heures d'événement: 23h00 - 06h00
+              Heures d&apos;événement: 23h00 - 06h00
             </Text>
           </View>
         </View>

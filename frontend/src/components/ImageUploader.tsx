@@ -197,7 +197,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         <View style={styles.warningBox}>
           <Ionicons name="information-circle" size={16} color={theme.colors.warning} />
           <Text style={styles.warningText}>
-            Cloudinary non configuré. Utilisez une URL externe pour l'instant.
+            Cloudinary non configuré. Utilisez une URL externe pour l&apos;instant.
           </Text>
         </View>
       )}
