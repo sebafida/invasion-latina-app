@@ -1,7 +1,8 @@
 INVASION LATINA — Vérification avant TestFlight, 27 octobre 2026
 
 État : version 1.0.29 (113) compilée et signée avec succès par EAS.
-Binaire transmis à App Store Connect, traitement Apple encore à confirmer. La version publique vérifiée
+Apple confirme : processingState VALID, internalState IN_BETA_TESTING.
+La version 1.0.29 (113) est disponible pour les testeurs internes TestFlight. La version publique vérifiée
 auprès d’Apple est 1.0.28 (110). Aucun déploiement Railway ni publication
 App Store, aucune écriture dans les comptes/réservations/événements de production.
 
@@ -110,4 +111,9 @@ SUIVI DE LIVRAISON
   PROCESSING. Le suivi Expo s’est interrompu sur une erreur Apple 500 après
   le transfert ; ne pas renvoyer le binaire sans vérifier son état Apple.
 - Build Apple : https://appstoreconnect.apple.com/apps/6758810207/testflight/ios/f308549e-615a-4ed0-b676-40652805434e
-- Disponibilité pour les testeurs encore à confirmer.
+- Confirmation directe via l’API Apple : build f308549e-615a-4ed0-b676-40652805434e,
+  version 1.0.29, numéro 113, processingState VALID, internalState
+  IN_BETA_TESTING, non expiré. ExternalState READY_FOR_BETA_SUBMISSION :
+  aucune soumission aux tests externes ni publication App Store.
+- L’erreur de suivi affichée par Expo ne signifie pas un refus du binaire :
+  Apple confirme la disponibilité interne du fichier reçu.
