@@ -117,3 +117,27 @@ SUIVI DE LIVRAISON
   aucune soumission aux tests externes ni publication App Store.
 - L’erreur de suivi affichée par Expo ne signifie pas un refus du binaire :
   Apple confirme la disponibilité interne du fichier reçu.
+
+SOUMISSION APP STORE — 27/10/2026 à 14:38 (Bruxelles)
+- Validation utilisateur : version 1.0.29 (113) essayée sur TestFlight,
+  puis demande explicite de publication sur l’App Store.
+- Même binaire validé, sans nouvelle compilation ni déploiement backend.
+- App confirmée : Invasion Latina, 6758810207, com.invasionlatina.app.
+- Version App Store : 0d313815-7075-4387-ac49-79231915de16.
+- Build sélectionné : f308549e-615a-4ed0-b676-40652805434e (113), VALID.
+- Soumission : 4c964ece-8910-4572-86b1-50834df89e73.
+- État confirmé par Apple après envoi : WAITING_FOR_REVIEW.
+- Publication automatique après approbation (AFTER_APPROVAL).
+  La nouvelle version n’est donc pas encore confirmée en ligne.
+- Description et six captures existantes conservées ; notes de mise à jour
+  renseignées pour les flyers, la connexion, les réservations et la stabilité.
+- Ancien compte de démonstration Apple invalide : création d’un compte
+  standard dédié à la validation, connexion vérifiée, promotions désactivées.
+  Ses identifiants sont enregistrés uniquement dans App Store Connect.
+  Cette création constitue une écriture en production pour la revue Apple,
+  distincte des vérifications précédentes effectuées en lecture seule.
+- Nouveau questionnaire Apple complété : fonctions sociales et contenu
+  utilisateur déclarés pour les demandes de chansons partagées et les votes ;
+  absence de restriction par Declared Age Range API déclarée, classification
+  adulte 18+ existante conservée.
+- Aucun changement des sources du build 113 pendant cette soumission.
