@@ -1,8 +1,9 @@
 INVASION LATINA — Vérification avant TestFlight, 27 octobre 2026
 
-État : corrections préparées dans le code de l’app mobile. Aucun build EAS
-lancé, aucune soumission TestFlight, aucun déploiement Railway et aucune
-écriture dans les comptes/réservations/événements de production.
+État : version 1.0.29 (113) compilée et signée avec succès par EAS.
+Binaire transmis à App Store Connect, traitement Apple encore à confirmer. La version publique vérifiée
+auprès d’Apple est 1.0.28 (110). Aucun déploiement Railway ni publication
+App Store, aucune écriture dans les comptes/réservations/événements de production.
 
 CORRECTIONS
 - Flyers entiers : correction précédente conservée sur cinq écrans.
@@ -31,14 +32,20 @@ CORRECTIONS
   seulement. Le fichier temporaire est supprimé après une sauvegarde réussie.
 - Dépendances : alignement sur Expo 54, corrections compatibles, déclaration
   explicite d'expo-file-system, suppression de la déclaration Yarn obsolète.
-- Compteur iOS local positionné à 110 (déjà construit précédemment) ; le
-  profil production autoIncrement préparera 111. Version marketing 1.0.28
-  conservée : confirmer dans App Store Connect qu'elle accepte encore des builds.
+- Version marketing 1.0.29, build iOS 113. App Store ID 6758810207, équipe
+  C3V222SFFY, bundle com.invasionlatina.app, projet Expo @sebafida/frontend.
+- Environnement EAS fixé à Node 24.13.0/npm 11.6.2 pour correspondre aux
+  vérifications locales. Suppression d’une copie Expo 58 imbriquée dans
+  Expo 54 ; override Expo et déduplication du verrouillage.
+- Référence de l’icône Android remplacée par l’icône carrée déjà présente.
 
 VÉRIFICATIONS EFFECTUÉES
 - TypeScript : aucune erreur.
 - ESLint : aucune erreur ; des avertissements préexistants restent à traiter.
 - Expo install --check : versions compatibles avec Expo 54.
+- Expo Doctor après déduplication : 18/18 contrôles réussis.
+- Installation propre npm ci --include=dev réussie avant l’envoi EAS.
+- TypeScript, 7 tests et export iOS/Hermes revérifiés après déduplication.
 - Exports de production web et iOS/Hermes réussis. Ceci ne constitue pas une
   compilation native Apple, une signature ou une installation sur iPhone.
 - 7 tests automatisés de contrat API : npm test dans frontend.
@@ -52,6 +59,9 @@ VÉRIFICATIONS EFFECTUÉES
   clics vérifiés. Les données de test ne sont pas enregistrées en production.
 - Configuration native générée : permissions Photos présentes.
 - Le pont de test d'authentification a été supprimé avant l'export final.
+- API de production lue sans mutation : health 200 (PostgreSQL connecté),
+  welcome-content, events/next et events/upcoming 200 ; événement actif
+  Temporada 18 EP 1 du 7 novembre 2026.
 
 POINTS À VÉRIFIER SUR UN IPHONE / TESTFLIGHT
 1. Connexion Apple et Google avec un vrai compte, puis fermeture/réouverture.
@@ -64,14 +74,14 @@ POINTS À VÉRIFIER SUR UN IPHONE / TESTFLIGHT
 5. Téléchargement d'une photo : autorisation d'ajout, refus et deuxième essai.
 6. Réservation réelle de test puis confirmation/refus dans l'administration.
 7. Réseau mobile lent, mode avion, clavier, grande taille de texte et petit iPhone.
-8. Version et numéro de build disponibles dans App Store Connect avant envoi.
+8. Installer la version 1.0.29 (113) lorsque le traitement Apple est terminé.
 
 AMÉLIORATIONS RESTANTES / LIMITES
-- Audit npm après corrections : 12 alertes (6 modérées, 6 élevées), aucune
-  critique, contre 32 alertes au début. Plusieurs proviennent de l'outillage
-  Expo ; decode-uri-component intervient aussi dans le routage. Une migration
-  Expo et/ou des correctifs ciblés restent à évaluer. Pas de npm audit fix
-  --force ni de migration majeure dans cette préparation.
+- Audit npm final après déduplication : 39 alertes (37 modérées, 2 élevées),
+  aucune critique. Ce résultat remplace le précédent décompte de 12 obtenu
+  avant la correction de l’arbre de dépendances. Les deux alertes élevées
+  concernent image-size et postcss dans l’outillage. Correctifs ciblés ou
+  migration Expo à évaluer séparément ; aucun npm audit fix --force.
 - Le backend n'a pas été déployé ou testé sur sa base de production. Avant
   diffusion publique, confirmer la branche réellement déployée sur Railway.
 - Revue du backend local : les demandes simultanées de récompense vérifient
@@ -87,3 +97,17 @@ AMÉLIORATIONS RESTANTES / LIMITES
 
 Les vérifications locales ne garantissent pas l'absence de tout bug natif
 ou l'état du serveur actuellement déployé.
+
+SUIVI DE LIVRAISON
+- Build EAS : https://expo.dev/accounts/sebafida/projects/frontend/builds/c1ced0c6-ccd3-4917-87a2-167c86835b61
+- Envoi Apple : https://expo.dev/accounts/sebafida/projects/frontend/submissions/fcedda2a-0abd-4cc5-97fa-87106fd7e8a1
+- Tentative 111 : arrêt sur installation npm incompatible avec le verrouillage.
+- Tentative 112 : annulée avant envoi Apple pour supprimer le doublon Expo.
+- Build 113 : compilation et signature iOS réussies ; Xcode 26.0.
+- Premier transfert du build 113 interrompu par une erreur serveur Apple 500.
+- Nouvel envoi du même binaire : https://expo.dev/accounts/sebafida/projects/frontend/submissions/2984d68f-acca-4eda-aad4-3c0bb04058a5
+- Deuxième transfert : fichier reçu entièrement par Apple, puis état
+  PROCESSING. Le suivi Expo s’est interrompu sur une erreur Apple 500 après
+  le transfert ; ne pas renvoyer le binaire sans vérifier son état Apple.
+- Build Apple : https://appstoreconnect.apple.com/apps/6758810207/testflight/ios/f308549e-615a-4ed0-b676-40652805434e
+- Disponibilité pour les testeurs encore à confirmer.

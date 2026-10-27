@@ -31,13 +31,15 @@
       },
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://invasion-latina-app-production.up.railway.app"
-      }
+      },
+      "node": "24.13.0"
     }
   },
   "submit": {
     "production": {
       "ios": {
-        "appleTeamId": "C3V222SFFY"
+        "appleTeamId": "C3V222SFFY",
+        "ascAppId": "6758810207"
       }
     }
   }
